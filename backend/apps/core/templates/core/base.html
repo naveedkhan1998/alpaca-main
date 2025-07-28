@@ -1,0 +1,47 @@
+<!-- core/base.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+  {% load static tailwind_tags %}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% block title %}
+        Your Website
+      {% endblock %}
+    </title>
+    {% load static %}
+    {% block additional_head %}
+      {% tailwind_css %}
+    {% endblock %}
+  </head>
+
+  <body class="font-sans bg-gray-100">
+    <nav class="bg-opacity-25 backdrop-blur-lg fixed inset-x-0 top-0 bg-blue-500 p-4">
+      <div class="container mx-auto flex justify-between items-center">
+        <a href="#" class="text-white font-bold text-lg">Your Logo</a>
+        <div class="space-x-4">
+          <a href="#" class="text-white hover:underline">Home</a>
+          <a href="#" class="text-white hover:underline">Converter</a>
+          <a href="#" class="text-white hover:underline">About</a>
+          <a href="#" class="text-white hover:underline">Contact</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container mx-auto mt-16">
+      {% block content %}
+        {% load static %}
+      {% endblock %}
+    </main>
+
+    <footer class="bg-gray-200 py-4">
+      <div class="container mx-auto text-center">
+        <p class="text-gray-600">&copy; 2024 Your Website. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <script src="{% static 'core/scripts/main.js' %}"></script>
+  </body>
+</html>

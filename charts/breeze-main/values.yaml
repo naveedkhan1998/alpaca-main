@@ -1,0 +1,124 @@
+# Default values for breeze-main.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+backend:
+  image:
+    repository: your-backend-image
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 8000
+  env:
+    DJANGO_SETTINGS_MODULE: main.settings.production
+    DATABASE_URL: postgresql://user:password@postgres:5432/breeze
+    REDIS_URL: redis://redis:6379/0
+
+frontend:
+  image:
+    repository: your-frontend-image
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 80
+
+nginx:
+  image:
+    repository: nginx
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: LoadBalancer
+    port: 80
+  config: |
+    server {
+        listen 80;
+        location / {
+            proxy_pass http://frontend:80;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+        location /api/ {
+            proxy_pass http://backend:8000;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+        location /ws/ {
+            proxy_pass http://backend:8000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+    }
+
+postgres:
+  enabled: true
+  image:
+    repository: postgres
+    pullPolicy: IfNotPresent
+    tag: "13"
+  auth:
+    username: user
+    password: password
+    database: breeze
+  service:
+    type: ClusterIP
+    port: 5432
+
+redis:
+  enabled: true
+  image:
+    repository: redis
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 6379
+
+celeryWorker:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: your-backend-image
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  env:
+    DJANGO_SETTINGS_MODULE: main.settings.production
+    DATABASE_URL: postgresql://user:password@postgres:5432/breeze
+    REDIS_URL: redis://redis:6379/0
+
+celeryBeat:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: your-backend-image
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  env:
+    DJANGO_SETTINGS_MODULE: main.settings.production
+    DATABASE_URL: postgresql://user:password@postgres:5432/breeze
+    REDIS_URL: redis://redis:6379/0
+
+flower:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: your-backend-image
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 5555
+  env:
+    DJANGO_SETTINGS_MODULE: main.settings.production
+    DATABASE_URL: postgresql://user:password@postgres:5432/breeze
+    REDIS_URL: redis://redis:6379/0

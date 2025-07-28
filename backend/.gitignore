@@ -1,0 +1,14 @@
+__pycache__
+.envs
+media
+venv
+celerybeat-schedule
+celerybeat-schedule-*
+.env*
+static
+.flaskenv*
+!.env.project
+!.env.vault
+.ruff_cache
+logs
+gcpCredentials.json

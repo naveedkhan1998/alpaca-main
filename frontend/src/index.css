@@ -1,0 +1,253 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Mode - Professional Trading Theme */
+    --background: 210 25% 98%; /* Crisp off-white */
+    --foreground: 215 25% 15%; /* Deep charcoal */
+
+    --card: 210 20% 99%;
+    --card-foreground: 215 25% 15%;
+
+    --popover: 210 20% 99%;
+    --popover-foreground: 215 25% 15%;
+
+    --primary: 215 85% 35%; /* Deep professional blue */
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 215 15% 92%; /* Subtle blue-gray */
+    --secondary-foreground: 215 25% 25%;
+
+    --muted: 215 15% 94%;
+    --muted-foreground: 215 15% 45%;
+
+    --accent: 215 75% 45%; /* Vibrant accent blue */
+    --accent-foreground: 210 20% 98%;
+
+    --destructive: 0 75% 45%; /* Professional red */
+    --destructive-foreground: 210 20% 98%;
+
+    --success: 145 65% 35%; /* Trading green */
+    --success-foreground: 210 20% 98%;
+
+    --warning: 35 85% 50%; /* Alert orange */
+    --warning-foreground: 215 25% 15%;
+
+    --border: 215 15% 88%;
+    --input: 215 15% 90%;
+    --ring: 215 85% 35%;
+
+    /* Chart colors optimized for trading data */
+    --chart-1: 215 85% 35%; /* Primary blue */
+    --chart-2: 145 65% 35%; /* Success green */
+    --chart-3: 0 75% 45%; /* Danger red */
+    --chart-4: 35 85% 50%; /* Warning orange */
+    --chart-5: 270 65% 45%; /* Purple accent */
+
+    --radius: 0.5rem;
+
+    /* Sidebar with sophisticated dark theme */
+    --sidebar-background: 215 30% 12%;
+    --sidebar-foreground: 215 15% 85%;
+    --sidebar-primary: 215 75% 55%;
+    --sidebar-primary-foreground: 215 30% 12%;
+    --sidebar-accent: 215 25% 18%;
+    --sidebar-accent-foreground: 215 15% 85%;
+    --sidebar-border: 215 25% 20%;
+    --sidebar-ring: 215 75% 55%;
+
+    --vh: 1vh;
+  }
+
+  .dark {
+    /* Dark Mode - Optimized for extended trading sessions */
+    --background: 215 30% 8%; /* Rich dark blue-gray */
+    --foreground: 215 15% 88%; /* Soft light gray */
+
+    --card: 215 25% 12%;
+    --card-foreground: 215 15% 88%;
+
+    --popover: 215 25% 12%;
+    --popover-foreground: 215 15% 88%;
+
+    --primary: 215 75% 55%; /* Bright professional blue */
+    --primary-foreground: 215 30% 8%;
+
+    --secondary: 215 20% 18%; /* Dark blue-gray */
+    --secondary-foreground: 215 15% 75%;
+
+    --muted: 215 20% 15%;
+    --muted-foreground: 215 15% 60%;
+
+    --accent: 215 80% 65%; /* Vibrant light blue */
+    --accent-foreground: 215 30% 8%;
+
+    --destructive: 0 70% 55%; /* Bright red for visibility */
+    --destructive-foreground: 215 15% 88%;
+
+    --success: 145 60% 45%; /* Bright trading green */
+    --success-foreground: 215 30% 8%;
+
+    --warning: 35 80% 60%; /* Bright orange */
+    --warning-foreground: 215 30% 8%;
+
+    --border: 215 20% 22%;
+    --input: 215 20% 18%;
+    --ring: 215 75% 55%;
+
+    /* Dark mode chart colors with better contrast */
+    --chart-1: 215 75% 55%;
+    --chart-2: 145 60% 45%;
+    --chart-3: 0 70% 55%;
+    --chart-4: 35 80% 60%;
+    --chart-5: 270 60% 55%;
+
+    /* Sidebar maintains consistent dark theme */
+    --sidebar-background: 215 35% 6%;
+    --sidebar-foreground: 215 15% 85%;
+    --sidebar-primary: 215 75% 55%;
+    --sidebar-primary-foreground: 215 35% 6%;
+    --sidebar-accent: 215 25% 12%;
+    --sidebar-accent-foreground: 215 15% 85%;
+    --sidebar-border: 215 25% 15%;
+    --sidebar-ring: 215 75% 55%;
+  }
+
+  @layer base {
+    * {
+      @apply border-border;
+    }
+    body {
+      @apply bg-background text-foreground;
+    }
+  }
+
+  /* Enhanced scrollbar for trading app */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: hsl(var(--muted) / 0.3);
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar-thumb {
+    background-color: transparent;
+  }
+
+  /* Trading-specific enhancements */
+  .chart-container {
+    @apply relative overflow-hidden rounded-lg shadow-lg ring-1 ring-border/50 dark:ring-border;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card)) 0%,
+      hsl(var(--muted)) 100%
+    );
+  }
+
+  /* Professional button styles for trading actions */
+  .action-button {
+    @apply relative overflow-hidden transition-all duration-200 ease-out hover:scale-[1.02] active:scale-[0.98];
+    box-shadow: 0 1px 3px hsl(var(--foreground) / 0.1);
+  }
+
+  .action-button::before {
+    @apply absolute inset-0 transition-transform duration-500 -translate-x-full;
+    content: '';
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--primary) / 0.1),
+      transparent
+    );
+  }
+
+  .action-button:hover::before {
+    @apply translate-x-full;
+  }
+
+  /* Trading status indicators */
+  .status-positive {
+    @apply text-green-600 dark:text-green-400;
+  }
+
+  .status-negative {
+    @apply text-red-600 dark:text-red-400;
+  }
+
+  .status-neutral {
+    @apply text-muted-foreground;
+  }
+
+  /* Live data pulse animation */
+  .live-pulse {
+    animation: live-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes live-pulse {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.85;
+      transform: scale(1.02);
+    }
+  }
+
+  /* Market hours indicator */
+  .market-open {
+    @apply text-success;
+  }
+
+  .market-closed {
+    @apply text-destructive;
+  }
+
+  .market-pre-post {
+    @apply text-warning;
+  }
+
+  /* Data table enhancements */
+  .data-table {
+    @apply border-separate border-spacing-0;
+  }
+
+  .data-table th {
+    @apply font-semibold border-b bg-muted/50 text-muted-foreground border-border;
+  }
+
+  .data-table td {
+    @apply border-b border-border/50;
+  }
+
+  .data-table tr:hover {
+    @apply bg-muted/30;
+  }
+
+  /* Price change indicators */
+  .price-up {
+    @apply px-2 py-1 font-medium rounded-sm text-success bg-success/10;
+  }
+
+  .price-down {
+    @apply px-2 py-1 font-medium rounded-sm text-destructive bg-destructive/10;
+  }
+
+  .price-unchanged {
+    @apply px-2 py-1 font-medium rounded-sm text-muted-foreground bg-muted/50;
+  }
+}

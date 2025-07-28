@@ -1,0 +1,122 @@
+services:
+  postgres:
+    image: postgres:16.0
+    container_name: breeze-postgres
+    env_file:
+      - ./.envs/.env.local
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2.4-alpine
+    container_name: breeze-redis
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    build:
+      context: nginx
+      dockerfile: Dockerfile.dev
+    restart: always
+    container_name: breeze-nginx
+    ports:
+      - "8000:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_started
+
+  backend:
+    build:
+      context: backend/
+      dockerfile: Dockerfile.dev
+    container_name: breeze-backend
+    image: naveedkhan1998/breeze-backend
+    env_file:
+      - ./.envs/.env.local
+    volumes:
+      - ./backend/:/app/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: frontend/
+      dockerfile: Dockerfile.dev
+    container_name: breeze-frontend
+    environment:
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./frontend/src/:/usr/app/src/
+      - ./frontend/public/:/usr/app/public/
+      - ./frontend/package.json:/usr/app/package.json
+      - ./frontend/package-lock.json:/usr/app/package-lock.json
+
+  celery-beat:
+    image: naveedkhan1998/breeze-backend
+    container_name: breeze-celery-beat
+    env_file:
+      - ./.envs/.env.local
+    depends_on:
+      backend:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend/:/app/
+    entrypoint: ["./scripts/run_celery_beat.sh"]
+    restart: always
+
+  celery-worker:
+    image: naveedkhan1998/breeze-backend
+    container_name: breeze-celery-worker
+    env_file:
+      - ./.envs/.env.local
+    depends_on:
+      backend:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend/:/app/
+    entrypoint: ["./scripts/run_celery_worker.sh"]
+    restart: always
+
+  flower:
+    image: naveedkhan1998/breeze-backend
+    container_name: breeze-flower
+    volumes:
+      - ./backend/:/app/
+    env_file:
+      - ./.envs/.env.local
+    ports:
+      - "5555:5555"
+    entrypoint: celery -A main flower --loglevel=INFO
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: always
+
+volumes:
+  redis-data:

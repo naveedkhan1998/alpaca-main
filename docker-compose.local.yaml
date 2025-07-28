@@ -1,0 +1,50 @@
+services:
+  # ─── log collector ─────────────────────────────────────────
+  vector:
+    image: timberio/vector:0.40.0-alpine
+    container_name: breeze-vector
+    user: "0:0" # Run as root to access docker socket
+    command: ["--config", "/etc/vector/vector.toml"]
+    environment:
+      - VECTOR_LOG=debug
+      - RUST_LOG=vector=debug
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./vector.toml:/etc/vector/vector.toml:ro
+    depends_on:
+      loki:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ─── log store / index ─────────────────────────────────────
+  loki:
+    image: grafana/loki:3.0.1
+    container_name: breeze-loki
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    volumes:
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── dashboards / search UI ────────────────────────────────
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: breeze-grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      loki:
+        condition: service_healthy
+    environment:
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    restart: unless-stopped
+
+volumes:
+  loki-data:

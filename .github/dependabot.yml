@@ -1,0 +1,55 @@
+# Dependabot configuration for breeze-main
+# Docs: https://docs.github.com/en/code-security/dependabot
+version: 2
+
+updates:
+  # ────────────────────────── Python (backend/) ──────────────────────────
+  - package-ecosystem: "pip"           # Looks at requirements.txt or pyproject.toml
+    directory: "/backend"              # Path to your Django code
+    schedule:
+      interval: "weekly"               # Mon‑Sun; defaults to Monday
+      # day: "tuesday"                # uncomment to pin a specific day
+    open-pull-requests-limit: 10
+    groups:
+      python-deps:                     # Roll all Python bumps into one PR
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "python"
+
+  # ────────────────────────── JavaScript (frontend/) ─────────────────────
+  - package-ecosystem: "npm"           # Works for npm / yarn / pnpm lockfiles
+    directory: "/frontend"             # Path to your Vite + React UI
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      js-deps:
+        patterns:
+          - "*"
+    # Example: ignore big majors until you’re ready
+    # ignore:
+    #   - dependency-name: "react"
+    #     update-types: ["version-update:semver-major"]
+    labels:
+      - "dependencies"
+      - "javascript"
+
+  # ────────────────────────── GitHub Actions (root) ──────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"                     # Always root
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "ci"
+
+  # ────────────────────────── Dockerfiles (root) ─────────────────────────
+  - package-ecosystem: "docker"
+    directory: "/"                     # Dependabot scans all Dockerfiles here
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"

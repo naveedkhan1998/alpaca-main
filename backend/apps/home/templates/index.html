@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>User-Auth-MNK</title>
+    <meta charset="UTF-8">
+    <style>
+      body {
+        background-color: #f5f5f5;
+        color: #333;
+        font-family: 'Roboto', sans-serif;
+        font-size: 16px;
+        line-height: 1.5;
+        margin: 0;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 30px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+
+      h1 {
+        font-size: 36px;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin: 0;
+      }
+
+      p {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 20px;
+      }
+
+      button {
+        margin-top: 30px;
+        padding: 10px 20px;
+        background-color: #3f51b5;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease-in-out;
+      }
+
+      button:hover {
+        background-color: #2c3e50;
+      }
+
+      #endpoints {
+        margin-top: 50px;
+        text-align: center;
+        font-size: 20px;
+        line-height: 1.5;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #f5f5f5;
+        box-shadow: 0px -5px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px 0;
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      li {
+        margin-top: 20px;
+        animation: slide-in 0.5s ease-in-out;
+      }
+
+      @keyframes slide-in {
+        from {
+          transform: translateX(-100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Welcome to the User-Auth-MNK Backend Server.</h1>
+      <p>This server provides several API endpoints to interact with the data.</p>
+      <button onclick="showEndpoints()">Show Endpoints</button>
+    </div>
+    <div id="endpoints"></div>
+    <script>
+      const endpoints = [
+        "/api/user/login/",
+        "/api/user/register/",
+        "api/user/profile/",
+        "/api/user/changepassword/",
+        "/api/user/send-reset-password-email/",
+        "/api/user/send-reset-password-email/"
+      ];
+
+      function showEndpoints() {
+        const endpointsDiv = document.getElementById('endpoints');
+        endpointsDiv.innerHTML = '<h2>API Endpoints:</h2><ul>';
+        endpoints.forEach(endpoint => {
+          endpointsDiv.innerHTML += `<li>${endpoint}</li>`;
+        });
+        endpointsDiv.innerHTML += '</ul>';
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Your One Time Password</title>
+    <style>
+      /* Add CSS styles here */
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.5;
+        color: #333;
+        background-color: #f5f5f5;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        border: 1px solid #ccc;
+      }
+      .otp {
+        font-size: 28px;
+        font-weight: bold;
+        color: #ff5722;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Your One Time Password</h1>
+      <p>Hello, {{ name }}!</p>
+      <p>Your OTP is <span class="otp">{{ otp }}</span>.</p>
+      <p>Please use this OTP to complete your registration.</p>
+    </div>
+  </body>
+</html>

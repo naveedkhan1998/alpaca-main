@@ -1,0 +1,12 @@
+.git
+tests
+docs
+*.pytest_cache
+__pycache__
+*.pyc
+*.pyo
+node_modules
+.vscode
+.venv
+ruff_cache
+gcpCredentials.json

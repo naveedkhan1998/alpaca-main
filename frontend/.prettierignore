@@ -1,0 +1,27 @@
+# Ignore artifacts:
+build
+coverage
+dist
+node_modules
+.next
+out
+
+# Package files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Cache directories
+.cache
+.parcel-cache
+.eslintcache
+
+# Generated files
+*.tsbuildinfo

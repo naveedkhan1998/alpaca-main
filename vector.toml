@@ -1,0 +1,45 @@
+# 1) Source: Docker API
+[sources.docker]
+type = "docker_logs"
+
+# Simple filter to exclude logging infrastructure
+[transforms.filter_real_logs]
+type = "filter"
+inputs = ["docker"]
+condition = '''
+!contains(string!(.container_name), "breeze-vector") &&
+!contains(string!(.container_name), "breeze-loki") &&
+!contains(string!(.container_name), "breeze-grafana")
+'''
+
+# Optional: parse JSON if your apps log structured messages
+[transforms.parse_json]
+type = "remap"
+inputs = ["filter_real_logs"]
+source = '''
+# Add container info and try to parse JSON
+.container = .container_name
+.structured, err = parse_json(.message)
+if err == null && is_object(.structured) { 
+  ., merge_err = merge(., .structured)
+}
+'''
+
+# 2) Sink: Loki
+[sinks.loki]
+type = "loki"
+inputs = ["parse_json"]
+endpoint = "http://breeze-loki:3100"
+encoding.codec = "json"
+
+# Attach useful labels
+labels.container = "{{ container_name }}"
+labels.image = "{{ image }}"
+labels.stack_env = "local"
+
+# Add console sink for debugging
+[sinks.console]
+type = "console"
+inputs = ["parse_json"]
+encoding.codec = "json"
+target = "stdout"
