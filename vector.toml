@@ -7,9 +7,9 @@ type = "docker_logs"
 type = "filter"
 inputs = ["docker"]
 condition = '''
-!contains(string!(.container_name), "breeze-vector") &&
-!contains(string!(.container_name), "breeze-loki") &&
-!contains(string!(.container_name), "breeze-grafana")
+!contains(string!(.container_name), "alpaca-vector") &&
+!contains(string!(.container_name), "alpaca-loki") &&
+!contains(string!(.container_name), "alpaca-grafana")
 '''
 
 # Optional: parse JSON if your apps log structured messages
@@ -29,7 +29,7 @@ if err == null && is_object(.structured) {
 [sinks.loki]
 type = "loki"
 inputs = ["parse_json"]
-endpoint = "http://breeze-loki:3100"
+endpoint = "http://alpaca-loki:3100"
 encoding.codec = "json"
 
 # Attach useful labels

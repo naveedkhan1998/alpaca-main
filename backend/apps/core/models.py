@@ -6,12 +6,11 @@ from apps.account.models import User
 # Create your models here.
 
 
-class BreezeAccount(models.Model):
+class AlpacaAccount(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(default="ADMIN", max_length=255)
     api_key = models.CharField(default=" ", max_length=255)
     api_secret = models.CharField(default=" ", max_length=255)
-    session_token = models.CharField(max_length=255, null=True, blank=True)
     last_updated = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
 
@@ -19,157 +18,171 @@ class BreezeAccount(models.Model):
         return self.name
 
 
-class Exchanges(models.Model):
-    title = models.CharField(default="NSE", max_length=255)
-    file = models.FileField(blank=False)
-    code = models.CharField(default="1", max_length=255)
-    exchange = models.CharField(default="NSE", max_length=255)
-    is_option = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+class Asset(models.Model):
+    """Model representing an Alpaca asset/instrument"""
 
-    def __str__(self):
-        return str(self.exchange)
+    ASSET_CLASS_CHOICES = [
+        ("us_equity", "US Equity"),
+        ("us_option", "US Option"),
+        ("crypto", "Cryptocurrency"),
+    ]
 
+    EXCHANGE_CHOICES = [
+        ("AMEX", "AMEX"),
+        ("ARCA", "ARCA"),
+        ("BATS", "BATS"),
+        ("NYSE", "NYSE"),
+        ("NASDAQ", "NASDAQ"),
+        ("NYSEARCA", "NYSEARCA"),
+        ("OTC", "OTC"),
+    ]
 
-class Instrument(models.Model):
-    exchange = models.ForeignKey(Exchanges, on_delete=models.CASCADE)
-    stock_token = models.CharField(blank=True, null=True, max_length=255)
-    token = models.CharField(blank=True, null=True, max_length=255)
-    instrument = models.CharField(null=True, blank=True, max_length=255)
-    short_name = models.CharField(blank=True, null=True, max_length=255)
-    series = models.CharField(blank=True, null=True, max_length=255)
-    company_name = models.CharField(null=True, blank=True, max_length=255)
-    expiry = models.DateField(blank=True, null=True)
-    strike_price = models.FloatField(blank=True, null=True)
-    option_type = models.CharField(blank=True, null=True, max_length=255)
-    exchange_code = models.CharField(blank=True, null=True, max_length=255)
+    STATUS_CHOICES = [
+        ("active", "Active"),
+        ("inactive", "Inactive"),
+    ]
 
-    def __str__(self):
-        return (
-            "Token:"
-            + str(self.token)
-            + " Instrument:"
-            + str(self.instrument)
-            + " Expiry:"
-            + str(self.expiry)
-            + " Strike Price"
-            + str(self.strike_price)
-            + "Short Name: "
-            + str(self.short_name)
-        )
-
-
-class SubscribedInstruments(models.Model):
-    exchange = models.ForeignKey(Exchanges, on_delete=models.CASCADE)
-    stock_token = models.CharField(blank=True, null=True, max_length=255)
-    token = models.CharField(blank=True, null=True, max_length=255)
-    instrument = models.CharField(null=True, blank=True, max_length=255)
-    short_name = models.CharField(blank=True, null=True, max_length=255)
-    series = models.CharField(blank=True, null=True, max_length=255)
-    company_name = models.CharField(null=True, blank=True, max_length=255)
-    expiry = models.DateField(blank=True, null=True)
-    strike_price = models.FloatField(blank=True, null=True)
-    option_type = models.CharField(blank=True, null=True, max_length=255)
-    exchange_code = models.CharField(blank=True, null=True, max_length=255)
-
-    def __str__(self):
-        return (
-            "Token:"
-            + str(self.token)
-            + " Instrument:"
-            + str(self.instrument)
-            + " Expiry:"
-            + str(self.expiry)
-            + " Strike Price"
-            + str(self.strike_price)
-        )
-
-
-class PercentageInstrument(models.Model):
-    instrument = models.OneToOneField(
-        SubscribedInstruments, related_name="percentage", on_delete=models.CASCADE
+    # Core Alpaca asset fields
+    alpaca_id = models.CharField(max_length=255, unique=True)  # Alpaca's asset ID
+    symbol = models.CharField(max_length=50, db_index=True)
+    name = models.CharField(max_length=500, blank=True, null=True)
+    asset_class = models.CharField(
+        max_length=20, choices=ASSET_CLASS_CHOICES, default="us_equity"
     )
-    percentage = models.FloatField(default=0.0)
-    is_loading = models.BooleanField(default=False)
+    exchange = models.CharField(
+        max_length=20, choices=EXCHANGE_CHOICES, blank=True, null=True
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
 
-    def __str__(self) -> str:
-        return (
-            "Instrument:"
-            + str(self.instrument.short_name)
-            + " Percentage:"
-            + str(self.percentage)
-            + " %"
-            + "Is Finished:"
-            + str("TRUE" if self.is_loading else "False")
-        )
+    # Trading properties
+    tradable = models.BooleanField(default=False)
+    marginable = models.BooleanField(default=False)
+    shortable = models.BooleanField(default=False)
+    easy_to_borrow = models.BooleanField(default=False)
+    fractionable = models.BooleanField(default=False)
+
+    # Margin requirements
+    maintenance_margin_requirement = models.FloatField(blank=True, null=True)
+    margin_requirement_long = models.CharField(max_length=10, blank=True, null=True)
+    margin_requirement_short = models.CharField(max_length=10, blank=True, null=True)
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["symbol", "asset_class"]),
+            models.Index(fields=["status", "tradable"]),
+        ]
+
+    def __str__(self):
+        return f"{self.symbol} ({self.name})"
+
+
+class WatchList(models.Model):
+    """Model for organizing assets into watchlists"""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ["user", "name"]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.name}"
+
+
+class WatchListAsset(models.Model):
+    """Many-to-many relationship between watchlists and assets"""
+
+    watchlist = models.ForeignKey(WatchList, on_delete=models.CASCADE)
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
+    added_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ["watchlist", "asset"]
+
+    def __str__(self):
+        return f"{self.watchlist.name} - {self.asset.symbol}"
 
 
 class Tick(models.Model):
-    instrument = models.ForeignKey(
-        SubscribedInstruments, on_delete=models.CASCADE, null=True, blank=True
-    )
-    ltp = models.FloatField(blank=True, null=True)
-    ltq = models.FloatField(blank=True, null=True)
-    date = models.DateTimeField(blank=True, null=True)
+    """Real-time tick data from Alpaca stream"""
+
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
+
+    # Alpaca trade fields
+    alpaca_trade_id = models.BigIntegerField(blank=True, null=True)  # 'i' field
+    exchange_code = models.CharField(max_length=10, blank=True, null=True)  # 'x' field
+    price = models.FloatField()  # 'p' field (ltp)
+    size = models.IntegerField(blank=True, null=True)  # 's' field
+    conditions = models.JSONField(blank=True, null=True)  # 'c' field
+    tape = models.CharField(max_length=10, blank=True, null=True)  # 'z' field
+
+    timestamp = models.DateTimeField()  # 't' field
+    received_at = models.DateTimeField(auto_now_add=True)
     used = models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["asset", "-timestamp"]),
+            models.Index(fields=["timestamp"]),
+        ]
 
     def __str__(self) -> str:
         return (
-            f"Name:{self.instrument.short_name}| LTP:{self.ltp} | TimeStamp:{self.date}"
+            f"Name:{self.asset.symbol}| Price:{self.price} | TimeStamp:{self.timestamp}"
         )
 
 
 class Candle(models.Model):
-    instrument = models.ForeignKey(
-        SubscribedInstruments, on_delete=models.CASCADE, null=True, blank=True
-    )
-    open = models.FloatField(null=False)
-    high = models.FloatField(null=False)
-    low = models.FloatField(null=False)
-    close = models.FloatField(null=False)
-    volume = models.FloatField(null=True)
-    date = models.DateTimeField(null=False)
+    """Historical OHLCV candle data from Alpaca"""
+
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
+
+    # OHLCV data
+    open = models.FloatField()
+    high = models.FloatField()
+    low = models.FloatField()
+    close = models.FloatField()
+    volume = models.BigIntegerField()
+
+    # Additional Alpaca fields
+    trade_count = models.IntegerField(blank=True, null=True)  # 'n' field
+    vwap = models.FloatField(
+        blank=True, null=True
+    )  # 'vw' field (volume weighted average price)
+
+    # Timeframe and timestamp
+    timeframe = models.CharField(max_length=10, default="1T")  # e.g., '1D', '1H', '5T'
+    timestamp = models.DateTimeField()  # 't' field
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
 
     class Meta:
         indexes = [
-            # Fast point/range look‑ups + ORDER BY on the B‑tree
             models.Index(
-                fields=[
-                    "instrument",
-                    "-date",
-                ],  # DESC so “latest first” scans are sequential
-                name="idx_candle_instr_date_desc",
+                fields=["asset", "timeframe", "-timestamp"],
+                name="idx_candle_asset_tf_time_desc",
             ),
-            # Optional: ultra‑cheap BRIN for big historical range scans
             BrinIndex(
-                fields=["date"],
-                name="brin_candle_date",
+                fields=["timestamp"],
+                name="brin_candle_timestamp",
             ),
         ]
-        ordering = [
-            "date"
-        ]  # ASC by default; your queryset can still .order_by('-date')
+        unique_together = ["asset", "timeframe", "timestamp"]
+        ordering = ["timestamp"]
 
     def __str__(self):
         return (
-            str(self.date)
-            + " o:"
-            + str(self.open)
-            + " h:"
-            + str(self.high)
-            + " l:"
-            + str(self.low)
-            + " c:"
-            + str(self.close)
+            f"{self.asset.symbol} {self.timeframe} {self.timestamp} "
+            f"O:{self.open} H:{self.high} L:{self.low} C:{self.close}"
         )
-
-
-class Percentage(models.Model):
-    source = models.CharField(blank=True, null=True, max_length=255)
-    value = models.FloatField(blank=True, null=True)
-
-    def __str__(self) -> str:
-        return f"Source:{self.source}| Value:{self.value:.2f} %"

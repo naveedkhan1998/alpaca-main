@@ -1,7 +1,7 @@
 [project]
 name = "backend"
 version = "0.1.0"
-description = "An ICICI Breeze Api wrapper for Python"
+description = "An Alpaca API wrapper for Python"
 authors = [
     { name = "Mohammad Naveed Khan", email = "naveedkhan13041998@gmail.com" },
 ]
@@ -18,7 +18,6 @@ dependencies = [
     "bidict>=0.23.1",
     "billiard>=4.2.1",
     "binaryornot>=0.4.4",
-    "breeze-connect>=1.0.63",
     "celery>=5.5.3",
     "certifi>=2025.4.26",
     "cffi>=1.17.1",
@@ -34,6 +33,7 @@ dependencies = [
     "cookiecutter>=2.6.0",
     "cryptography>=45.0.4",
     "cython>=3.1.2",
+    "websocket-client>=1.8.0",
     "daphne>=4.2.0",
     "django>=5.2.3",
     "django-browser-reload>=1.18.0",
