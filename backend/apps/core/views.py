@@ -34,8 +34,8 @@ from apps.core.serializers import (
     TickSerializer,
     AggregatedCandleSerializer,
 )
-from apps.core.services.alpaca_service import AlpacaService, alpaca_service_obj
-from apps.core.tasks import load_historical_data, start_alpaca_stream
+from apps.core.services.alpaca_service import AlpacaService
+from apps.core.tasks import alpaca_sync_task, start_alpaca_stream, fetch_historical_data
 
 logger = logging.getLogger(__name__)
 
@@ -140,60 +140,11 @@ class AlpacaAccountViewSet(viewsets.ModelViewSet):
                     {"msg": "No active Alpaca account found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
-
-            service = AlpacaService(
-                api_key=account.api_key,
-                secret_key=account.api_secret,
-            )
-
-            # Fetch assets from Alpaca
-            assets_data = service.list_assets(
-                status="active",
-                asset_class="us_equity",
-                fallback_symbols=["AAPL", "GOOGL", "MSFT", "TSLA", "NVDA"],
-            )
-
-            created_count = 0
-            updated_count = 0
-
-            for asset_data in assets_data:
-                asset, created = Asset.objects.update_or_create(
-                    alpaca_id=asset_data.get("id", asset_data["symbol"]),
-                    defaults={
-                        "symbol": asset_data["symbol"],
-                        "name": asset_data.get("name", ""),
-                        "asset_class": asset_data.get("class", "us_equity"),
-                        "exchange": asset_data.get("exchange"),
-                        "status": asset_data.get("status", "active"),
-                        "tradable": asset_data.get("tradable", False),
-                        "marginable": asset_data.get("marginable", False),
-                        "shortable": asset_data.get("shortable", False),
-                        "easy_to_borrow": asset_data.get("easy_to_borrow", False),
-                        "fractionable": asset_data.get("fractionable", False),
-                        "maintenance_margin_requirement": asset_data.get(
-                            "maintenance_margin_requirement"
-                        ),
-                        "margin_requirement_long": asset_data.get(
-                            "margin_requirement_long"
-                        ),
-                        "margin_requirement_short": asset_data.get(
-                            "margin_requirement_short"
-                        ),
-                    },
-                )
-                if created:
-                    created_count += 1
-                else:
-                    updated_count += 1
-
+            alpaca_sync_task.delay(account.id)
             return Response(
                 {
-                    "msg": "Assets synced successfully",
-                    "data": {
-                        "created": created_count,
-                        "updated": updated_count,
-                        "total": len(assets_data),
-                    },
+                    "msg": "Assets synced started successfully",
+                    "data": "Syncing in progress. You can check the status later.",
                 },
                 status=status.HTTP_200_OK,
             )
@@ -232,7 +183,7 @@ class AlpacaAccountViewSet(viewsets.ModelViewSet):
                 )
 
             # Start streaming task
-            start_alpaca_stream.delay(request.user.id, symbols)
+            start_alpaca_stream.delay(account.id, symbols)
 
             return Response(
                 {"msg": "Streaming started successfully", "data": {"symbols": symbols}},
@@ -260,6 +211,7 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
         filters.SearchFilter,
         filters.OrderingFilter,
     ]
+    pagination_class = OffsetPagination
     search_fields = ["symbol", "name"]
     ordering_fields = ["symbol", "name", "created_at"]
     ordering = ["symbol"]
@@ -369,7 +321,7 @@ class WatchListViewSet(viewsets.ModelViewSet):
         watchlist_asset, created = WatchListAsset.objects.get_or_create(
             watchlist=watchlist, asset=asset, defaults={"is_active": True}
         )
-
+        fetch_historical_data.delay(watchlist_asset.id)
         if not created and not watchlist_asset.is_active:
             watchlist_asset.is_active = True
             watchlist_asset.save()
@@ -412,39 +364,6 @@ class WatchListViewSet(viewsets.ModelViewSet):
                 {"msg": "Asset not found in watchlist"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-
-    @action(detail=True, methods=["post"], url_path="load_historical")
-    def load_historical_data(self, request, pk=None):
-        """
-        Load historical data for all assets in the watchlist.
-        """
-        watchlist = self.get_object()
-        timeframe = request.data.get("timeframe", "1D")
-        days = int(request.data.get("days", 30))
-
-        # Get active assets in watchlist
-        symbols = list(
-            watchlist.watchlistasset_set.filter(is_active=True).values_list(
-                "asset__symbol", flat=True
-            )
-        )
-
-        if not symbols:
-            return Response(
-                {"msg": "No assets in watchlist"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Start loading historical data task
-        load_historical_data.delay(request.user.id, symbols, timeframe, days)
-
-        return Response(
-            {
-                "msg": "Historical data loading started",
-                "data": {"symbols": symbols, "timeframe": timeframe, "days": days},
-            },
-            status=status.HTTP_200_OK,
-        )
 
 
 class CandleViewSet(viewsets.ReadOnlyModelViewSet):

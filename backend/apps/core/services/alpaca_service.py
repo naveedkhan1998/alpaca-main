@@ -13,11 +13,12 @@ from __future__ import annotations
 import json
 import time
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Callable, Iterable, List, Optional, Literal, Union
-from ..models import AlpacaAccount
+from typing import Callable, Iterable, List, Optional, Literal
 import requests
 import websocket
+from celery.utils.log import get_task_logger
+
+logger = get_task_logger(__name__)
 
 
 @dataclass
@@ -234,15 +235,15 @@ class AlpacaService:
                 if on_message:
                     on_message(parsed)
                 else:
-                    print(parsed)
+                    logger.info(f"Received WebSocket message: {parsed}")
             except json.JSONDecodeError as e:
-                print(f"Failed to parse message: {e}")
+                logger.error(f"Failed to parse message: {e}")
 
         def _on_error(ws, error):
-            print(f"WebSocket error: {error}")
+            logger.error(f"WebSocket error: {error}")
 
         def _on_close(ws, close_status_code, close_msg):
-            print(
+            logger.info(
                 f"WebSocket closed with code={close_status_code}, message={close_msg}"
             )
 
@@ -281,10 +282,10 @@ class AlpacaService:
         )
 
         try:
-            print(f"Connecting to {ws_url}")
+            logger.info(f"Connecting to {ws_url}")
             ws_app.run_forever()
         except KeyboardInterrupt:
-            print("Streaming stopped by user")
+            logger.info("Streaming stopped by user")
         finally:
             ws_app.close()
 
@@ -301,7 +302,3 @@ class AlpacaService:
             unsub_msg = {"action": "unsubscribe"}
             unsub_msg.update({ch: list(symbols) for ch, symbols in channels.items()})
             ws_app.send(json.dumps(unsub_msg))
-
-
-account = AlpacaAccount.objects.first()
-alpaca_service_obj = AlpacaService(api_key=account.api_key, secret_key=account.api_secret)
