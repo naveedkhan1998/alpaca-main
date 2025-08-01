@@ -12,48 +12,48 @@ export const breezeApi = baseApi.injectEndpoints({
     getBreeze: builder.query<ApiResponse<BreezeAccount[]>, void>({
       query: () => {
         return {
-          url: 'core/breeze/',
+          url: 'core/alpaca/',
           method: 'GET',
           headers: {
             'Content-type': 'application/json',
           },
         };
       },
-      providesTags: ['Breeze'],
+      providesTags: ['Alpaca'],
     }),
     checkBreezeStatus: builder.query<BreezeStatusResponse, void>({
       query: () => {
         return {
-          url: 'core/breeze/breeze_status',
+          url: 'core/alpaca/alpaca_status',
           method: 'GET',
           headers: {
             'Content-type': 'application/json',
           },
         };
       },
-      providesTags: ['Breeze'],
+      providesTags: ['Alpaca'],
     }),
     createBreeze: builder.mutation<BreezeAccount, CreateBreezeAccount>({
       query: data => ({
-        url: 'core/breeze/',
+        url: 'core/alpaca/',
         method: 'POST',
         body: data,
         headers: {
           'Content-type': 'application/json',
         },
       }),
-      invalidatesTags: ['Breeze'],
+      invalidatesTags: ['Alpaca'],
     }),
     updateBreeze: builder.mutation<BreezeAccount, UpdateBreezeParams>({
       query: ({ data }) => ({
-        url: `core/breeze/${data.id}/`,
+        url: `core/alpaca/${data.id}/`,
         method: 'PUT',
         body: data,
         headers: {
           'Content-type': 'application/json',
         },
       }),
-      invalidatesTags: ['Breeze'],
+      invalidatesTags: ['Alpaca'],
     }),
     startWebsocket: builder.mutation<void, void>({
       query: () => ({
@@ -63,7 +63,7 @@ export const breezeApi = baseApi.injectEndpoints({
           'Content-type': 'application/json',
         },
       }),
-      invalidatesTags: ['Breeze'],
+      invalidatesTags: ['Alpaca'],
     }),
   }),
 });
