@@ -55,10 +55,3 @@ jobs:
           echo "- Black formatting: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           echo "- Ruff linting: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           echo "- Tests: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v5
-        with:
-          file: ./backend/coverage.xml
-          flags: backend
-          name: backend-coverage

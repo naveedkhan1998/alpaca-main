@@ -47,8 +47,8 @@ jobs:
           file: ./backend/Dockerfile.dev # adjust if you rename
           push: true # actually push, not just build
           tags: |
-            naveedkhan1998/breeze-backend:latest
-            naveedkhan1998/breeze-backend:sha-${{ github.sha }}
+            naveedkhan1998/alpaca-backend:latest
+            naveedkhan1998/alpaca-backend:sha-${{ github.sha }}
           # optional BuildKit cache (makes rebuilds much faster)
           cache-from: type=gha
           cache-to: type=gha,mode=max

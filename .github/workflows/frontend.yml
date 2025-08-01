@@ -65,11 +65,3 @@ jobs:
           echo "- Type check: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           echo "- Tests: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           echo "- Build: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v5
-        if: matrix.node-version == '20'
-        with:
-          file: ./frontend/coverage/coverage-final.json
-          flags: frontend
-          name: frontend-coverage
