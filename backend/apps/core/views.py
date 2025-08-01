@@ -36,6 +36,7 @@ from apps.core.serializers import (
 )
 from apps.core.services.alpaca_service import AlpacaService
 from apps.core.tasks import alpaca_sync_task, start_alpaca_stream, fetch_historical_data
+from apps.core.utils import resample_qs
 
 logger = logging.getLogger(__name__)
 
@@ -267,6 +268,25 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
             )
 
         return Response({"msg": "No assets found"}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=["get"], url_path="candles")
+    def candles(self, request, pk=None):
+        """
+        Retrieves paginated candles for a subscribed asset.
+        The candles are ordered by date in descending order.
+        """
+        asset = self.get_object()
+        tf = int(request.query_params.get("tf", 1))
+
+        qs = resample_qs(asset.id, tf)
+        # Fix the count aggregation by using a simpler approach
+        total = qs.count()
+
+        paginator = CandleBucketPagination()
+        page = paginator.paginate_queryset(qs, request)
+        paginator.count = total
+        serializer = AggregatedCandleSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 
 class WatchListViewSet(viewsets.ModelViewSet):

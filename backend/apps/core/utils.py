@@ -16,7 +16,7 @@ def resample_qs(asset_id: int, minutes: int):
     anchor = "1970-01-01 09:30:00-05:00"  # US market open (Eastern Time)
     bucket = Func(
         Value(f"{minutes} minutes"),
-        F("timestamp"),  # Changed from "date" to "timestamp"
+        F("timestamp"),
         Value(anchor),
         function="date_bin",
         output_field=models.DateTimeField(),
@@ -27,18 +27,35 @@ def resample_qs(asset_id: int, minutes: int):
         .annotate(bucket=bucket)
         .annotate(
             o=Window(
-                FirstValue("open"), partition_by=[F("bucket")], order_by=F("timestamp").asc()  # Changed from "date"
+                FirstValue("open"),
+                partition_by=[F("bucket")],
+                order_by=F("timestamp").asc(),
+                output_field=models.FloatField(),
             ),
             c=Window(
                 FirstValue("close"),
                 partition_by=[F("bucket")],
-                order_by=F("timestamp").desc(),  # Changed from "date"
+                order_by=F("timestamp").desc(),
+                output_field=models.FloatField(),
             ),
-            h_=Window(Max("high"), partition_by=[F("bucket")]),
-            l_=Window(Min("low"), partition_by=[F("bucket")]),
-            v_=Window(Sum(Coalesce("volume", Value(0.0))), partition_by=[F("bucket")]),
+            h_=Window(
+                Max("high"),
+                partition_by=[F("bucket")],
+                output_field=models.FloatField(),
+            ),
+            l_=Window(
+                Min("low"), partition_by=[F("bucket")], output_field=models.FloatField()
+            ),
+            v_=Window(
+                Sum(Coalesce("volume", Value(0))),
+                partition_by=[F("bucket")],
+                output_field=models.BigIntegerField(),
+            ),
             rn=Window(
-                RowNumber(), partition_by=[F("bucket")], order_by=F("timestamp").asc()  # Changed from "date"
+                RowNumber(),
+                partition_by=[F("bucket")],
+                order_by=F("timestamp").asc(),
+                output_field=models.IntegerField(),
             ),
         )
         .filter(rn=1)
