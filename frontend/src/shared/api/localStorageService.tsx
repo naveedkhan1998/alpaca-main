@@ -23,29 +23,29 @@ const removeToken = () => {
 };
 
 const storeUser = (user: User) => {
-  localStorage.setItem('breeze_user', JSON.stringify(user));
+  localStorage.setItem('alpaca_user', JSON.stringify(user));
 };
 
 const getUser = (): User | null => {
-  const user = localStorage.getItem('breeze_user');
+  const user = localStorage.getItem('alpaca_user');
   return user ? JSON.parse(user) : null;
 };
 
 const removeUser = () => {
-  localStorage.removeItem('breeze_user');
+  localStorage.removeItem('alpaca_user');
 };
 
-const storeBreezeAccountExists = (exists: boolean) => {
-  localStorage.setItem('has_breeze_account', JSON.stringify(exists));
+const storeAlpacaAccountExists = (exists: boolean) => {
+  localStorage.setItem('has_alpaca_account', JSON.stringify(exists));
 };
 
-const getBreezeAccountExists = (): boolean => {
-  const exists = localStorage.getItem('has_breeze_account');
+const getAlpacaAccountExists = (): boolean => {
+  const exists = localStorage.getItem('has_alpaca_account');
   return exists ? JSON.parse(exists) : false;
 };
 
-const removeBreezeAccountExists = () => {
-  localStorage.removeItem('has_breeze_account');
+const removeAlpacaAccountExists = () => {
+  localStorage.removeItem('has_alpaca_account');
 };
 
 export {
@@ -55,7 +55,7 @@ export {
   storeUser,
   getUser,
   removeUser,
-  storeBreezeAccountExists,
-  getBreezeAccountExists,
-  removeBreezeAccountExists,
+  storeAlpacaAccountExists,
+  getAlpacaAccountExists,
+  removeAlpacaAccountExists,
 };

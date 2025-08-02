@@ -126,14 +126,14 @@ const Navbar: React.FC = () => {
               </div>
               <div className="flex-col sm:flex">
                 <span className="text-xl font-bold tracking-tight text-transparent bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text">
-                  ICICI Breeze
+                  Alpaca Trading
                 </span>
                 <div className="items-center hidden space-x-2 sm:flex">
                   <Badge
                     variant="secondary"
                     className="text-xs px-2 py-0.5 font-medium"
                   >
-                    Wrapper
+                    Platform
                   </Badge>
                 </div>
               </div>

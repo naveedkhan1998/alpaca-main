@@ -68,7 +68,7 @@ const extractTextContent = (element: React.ReactNode): string => {
     }
     return extractTextContent(element.props.children);
   }
-  return 'ICICI Breeze';
+  return 'Alpaca Trading';
 };
 
 export const PageLayout: React.FC<PageLayoutProps> = ({
@@ -80,7 +80,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   contentClassName = '',
   variant = 'default',
 }) => {
-  const pageTitle = header ? extractTextContent(header) : 'ICICI Breeze';
+  const pageTitle = header ? extractTextContent(header) : 'Alpaca Trading';
   const isMobile = useIsMobile();
 
   // Use clean variant on mobile by default
@@ -112,7 +112,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   return (
     <>
       <Helmet>
-        <title>{pageTitle} - ICICI Breeze</title>
+        <title>{pageTitle} - Alpaca Trading</title>
       </Helmet>
       <div
         className={`flex flex-col min-h-[100dvh] bg-gradient-to-br from-background via-background to-background/95 ${className}`}
@@ -171,7 +171,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
                   className="w-6 h-6 rounded"
                 />
                 <span className="text-sm text-muted-foreground">
-                  © 2024 ICICI Breeze. All rights reserved.
+                  © {new Date().getFullYear()} MNK All rights reserved.
                 </span>
               </div>
               <div className="flex items-center space-x-4 text-sm text-muted-foreground">

@@ -19,7 +19,7 @@ const baseQuery = fetchBaseQuery({
 export const baseApi = createApi({
   reducerPath: 'baseApi',
   baseQuery,
-  tagTypes: ['Alpaca', 'Asset','Watchlist', 'User'],
+  tagTypes: ['Alpaca', 'Asset', 'Watchlist', 'User', 'Tick', 'Candle'],
   endpoints: builder => ({
     healthCheck: builder.query<void, void>({
       query: () => ({
