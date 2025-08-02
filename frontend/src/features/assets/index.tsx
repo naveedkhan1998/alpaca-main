@@ -40,6 +40,8 @@ import {
   ChevronUp,
   ChevronDown,
   ChevronsUpDown,
+  Heart,
+  Loader2,
 } from 'lucide-react';
 
 import {
@@ -47,8 +49,20 @@ import {
   useGetAssetByIdQuery,
   useGetAssetStatsQuery,
 } from '@/api/assetService';
+import {
+  useGetWatchListsQuery,
+  useAddAssetToWatchListMutation,
+} from '@/api/watchlistService';
 import { Asset, GetAssetsParams } from '@/types/common-types';
 import { useDebounce } from '@/hooks/useDebounce';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 // Sort header component
 const SortableHeader: React.FC<{
@@ -81,6 +95,113 @@ const SortableHeader: React.FC<{
   );
 };
 
+// Add to Watchlist Dialog
+const AddToWatchlistDialog: React.FC<{
+  asset: Asset | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}> = ({ asset, open, onOpenChange }) => {
+  const [selectedWatchlistId, setSelectedWatchlistId] = useState<number | null>(
+    null
+  );
+  const { data: watchlistsData, isLoading: loadingWatchlists } =
+    useGetWatchListsQuery({});
+  const [addAssetToWatchlist, { isLoading: isAdding }] =
+    useAddAssetToWatchListMutation();
+
+  const watchlists = watchlistsData?.data || [];
+
+  const handleAddToWatchlist = async () => {
+    if (!asset || !selectedWatchlistId) return;
+
+    try {
+      await addAssetToWatchlist({
+        watchlist_id: selectedWatchlistId,
+        asset_id: asset.id,
+      }).unwrap();
+
+      onOpenChange(false);
+      setSelectedWatchlistId(null);
+    } catch (error) {
+      console.error('Error adding asset to watchlist:', error);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Add to Watchlist</DialogTitle>
+          <DialogDescription>
+            Add {asset?.symbol} to one of your watchlists.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="py-4 space-y-4">
+          {loadingWatchlists ? (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="w-full h-12" />
+              ))}
+            </div>
+          ) : watchlists.length === 0 ? (
+            <div className="py-4 text-center">
+              <p className="text-muted-foreground">
+                You don't have any watchlists yet. Create one first to add
+                assets.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select Watchlist</label>
+              <Select
+                value={selectedWatchlistId?.toString() || ''}
+                onValueChange={value => setSelectedWatchlistId(parseInt(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a watchlist" />
+                </SelectTrigger>
+                <SelectContent>
+                  {watchlists.map(watchlist => (
+                    <SelectItem
+                      key={watchlist.id}
+                      value={watchlist.id.toString()}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span>{watchlist.name}</span>
+                        <Badge variant="secondary" className="ml-2">
+                          {watchlist.asset_count} assets
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isAdding}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleAddToWatchlist}
+            disabled={!selectedWatchlistId || isAdding}
+          >
+            {isAdding && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            Add to Watchlist
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 // Asset table component
 const AssetTable: React.FC<{
   onAssetSelect: (asset: Asset) => void;
@@ -95,6 +216,9 @@ const AssetTable: React.FC<{
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [assetClassFilter, setAssetClassFilter] = useState<string>('');
   const [tradableFilter, setTradableFilter] = useState<string>('');
+  const [addToWatchlistAsset, setAddToWatchlistAsset] = useState<Asset | null>(
+    null
+  );
 
   const debouncedQuickFilter = useDebounce(quickFilterText, 300);
 
@@ -193,6 +317,14 @@ const AssetTable: React.FC<{
   const refreshTable = useCallback(() => {
     refetch();
   }, [refetch]);
+
+  const handleAddToWatchlist = useCallback(
+    (asset: Asset, e: React.MouseEvent) => {
+      e.stopPropagation();
+      setAddToWatchlistAsset(asset);
+    },
+    []
+  );
 
   return (
     <div className="space-y-4">
@@ -338,7 +470,7 @@ const AssetTable: React.FC<{
               >
                 Shortable
               </SortableHeader>
-              <TableHead className="w-20">Actions</TableHead>
+              <TableHead className="w-32">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -413,17 +545,28 @@ const AssetTable: React.FC<{
                       {asset.shortable ? 'Yes' : 'No'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="w-20">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={e => {
-                        e.stopPropagation();
-                        onAssetSelect(asset);
-                      }}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
+                  <TableCell className="w-32">
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={e => handleAddToWatchlist(asset, e)}
+                        title="Add to Watchlist"
+                      >
+                        <Heart className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={e => {
+                          e.stopPropagation();
+                          onAssetSelect(asset);
+                        }}
+                        title="View Details"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -496,6 +639,12 @@ const AssetTable: React.FC<{
           </div>
         </div>
       )}
+
+      <AddToWatchlistDialog
+        asset={addToWatchlistAsset}
+        open={!!addToWatchlistAsset}
+        onOpenChange={open => !open && setAddToWatchlistAsset(null)}
+      />
     </div>
   );
 };

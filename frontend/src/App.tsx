@@ -15,7 +15,6 @@ import {
 import { useHealthCheckQuery } from '@/api/baseApi';
 import LoadingScreen from './shared/components/LoadingScreen';
 
-import HomePage from './features/home';
 import AboutPage from './features/about';
 import GraphsPage from './features/graphs';
 import AccountsPage from './features/accounts';
@@ -33,6 +32,7 @@ import { Toaster } from 'sonner';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useGetLoggedUserQuery } from '@/api/userAuthService';
 import { useAlpacaAccount } from './features/auth/hooks';
+import WatchlistsPage from './features/watchlists';
 
 const HEALTH_CHECK_INTERVAL = 120000; // 2 minutes
 const clientId = GOOGLE_CLIENT_ID || '';
@@ -156,7 +156,7 @@ export default function App() {
   }
 
   const routes = [
-    { path: '/', element: <HomePage />, private: true },
+    { path: '/', element: <WatchlistsPage />, private: true },
     { path: '/about', element: <AboutPage />, private: true },
     { path: '/profile', element: <ProfilePage />, private: true },
     { path: '/dashboard', element: <DashBoardPage />, private: true },
