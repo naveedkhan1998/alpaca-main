@@ -167,9 +167,9 @@ const assetApi = baseApi.injectEndpoints({
 
     getAssetCandles: builder.query<
       PaginatedApiResponse<Candle>,
-      { assetId: number; tf?: number; limit?: number; offset?: number }
+      { id: number; tf?: number; limit?: number; offset?: number }
     >({
-      query: ({ assetId, tf = 1, limit, offset }) => {
+      query: ({ id, tf = 1, limit, offset }) => {
         const searchParams = new URLSearchParams();
         searchParams.append('tf', tf.toString());
 
@@ -177,15 +177,15 @@ const assetApi = baseApi.injectEndpoints({
         if (offset) searchParams.append('offset', offset.toString());
 
         return {
-          url: `core/assets/${assetId}/candles/?${searchParams.toString()}`,
+          url: `core/assets/${id}/candles/?${searchParams.toString()}`,
           method: 'GET',
           headers: {
             'Content-type': 'application/json',
           },
         };
       },
-      providesTags: (_result, _error, { assetId }) => [
-        { type: 'Asset', id: assetId },
+      providesTags: (_result, _error, { id }) => [
+        { type: 'Asset', id: id },
         'Candle',
       ],
     }),

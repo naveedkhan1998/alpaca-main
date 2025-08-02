@@ -109,7 +109,7 @@ const AddToWatchlistDialog: React.FC<{
   const [addAssetToWatchlist, { isLoading: isAdding }] =
     useAddAssetToWatchListMutation();
 
-  const watchlists = watchlistsData?.data || [];
+  const watchlists = watchlistsData?.results || [];
 
   const handleAddToWatchlist = async () => {
     if (!asset || !selectedWatchlistId) return;
@@ -257,7 +257,7 @@ const AssetTable: React.FC<{
 
   const { data, isLoading, error, refetch } = useGetAssetsQuery(queryParams);
 
-  const assets = data?.data || [];
+  const assets = data?.results || [];
   const totalCount = data?.count || 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 

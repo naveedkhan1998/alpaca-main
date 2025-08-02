@@ -133,6 +133,7 @@ export type Candle = {
   vwap?: number;
   timeframe?: string;
   timestamp: string;
+  date: string; // For legacy support
   created_at?: string;
   is_active?: boolean;
 };
@@ -295,14 +296,14 @@ export interface PaginatedResponse<T> {
   next: string | null;
   previous: string | null;
   count: number;
-  data: T[];
+  results: T[];
 }
 
 export interface PaginatedApiResponse<T> {
   next: string | null;
   previous: string | null;
   count: number;
-  data: T[];
+  results: T[];
   msg?: string;
 }
 

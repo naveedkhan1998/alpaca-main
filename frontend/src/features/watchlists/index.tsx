@@ -461,7 +461,7 @@ const WatchListsList: React.FC<{
   const { data, isLoading, error, refetch } = useGetWatchListsQuery({});
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  const watchlists = data?.data || [];
+  const watchlists = data?.results || [];
 
   const handleCreateSuccess = useCallback(() => {
     setCreateDialogOpen(false);

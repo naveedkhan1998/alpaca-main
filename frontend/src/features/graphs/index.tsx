@@ -34,7 +34,6 @@ import { HiChartBar, HiCog } from 'react-icons/hi';
 
 import type { Asset, Candle } from '@/types/common-types';
 import { useTheme } from '@/components/ThemeProvider';
-
 import {
   formatDate,
   calculateRSI,
@@ -95,7 +94,7 @@ const GraphsPage: React.FC = () => {
     isLoading,
     isError,
   } = useGetAssetCandlesQuery({
-    assetId: obj?.id,
+    id: obj?.id,
     tf: timeframe,
     limit: initialLimit,
     offset: 0,
@@ -106,9 +105,9 @@ const GraphsPage: React.FC = () => {
 
   // Initialize data when initial fetch completes
   useEffect(() => {
-    if (initialData?.data) {
-      setAllCandles(initialData.data);
-      setCurrentOffset(initialData.data.length);
+    if (initialData?.results) {
+      setAllCandles(initialData.results);
+      setCurrentOffset(initialData.results.length);
       // Check if there's more data using the 'next' field from Django pagination
       setHasMoreData(!!initialData.next);
     }
@@ -125,7 +124,7 @@ const GraphsPage: React.FC = () => {
 
   // Load more data function
   const loadMoreHistoricalData = useCallback(async () => {
-    if (!obj?.id || isLoadingMore || !hasMoreData) {
+    if (!obj?.id || isLoadingMore || !hasMoreData || currentOffset === 0) {
       return;
     }
 
@@ -133,30 +132,27 @@ const GraphsPage: React.FC = () => {
 
     try {
       const response = await fetchMoreData({
-        assetId: obj.id,
+        id: obj.id,
         tf: timeframe,
         limit: loadMoreLimit,
         offset: currentOffset,
       }).unwrap();
 
-      if (response?.data && response.data.length > 0) {
+      if (response?.results && response.results.length > 0) {
         setAllCandles(prevCandles => {
-          const existingDates = new Set(prevCandles.map(c => c.timestamp));
-          const newCandles: Candle[] = response.data.filter(
-            (candle: Candle) => !existingDates.has(candle.timestamp)
+          const existingDates = new Set(prevCandles.map(c => c.date));
+          const newCandles: Candle[] = response.results.filter(
+            (candle: Candle) => !existingDates.has(candle.date)
           );
 
+          // Only update the offset by the number of unique new candles
           if (newCandles.length > 0) {
-            // Update the offset based on the total number of candles we now have
-            setCurrentOffset(prev => prev + newCandles.length);
-            
-            return [...prevCandles, ...newCandles].sort(
-              (a, b) =>
-                new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-            );
+            setCurrentOffset(currentOffset + newCandles.length);
           }
-          
-          return prevCandles;
+
+          return [...prevCandles, ...newCandles].sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          );
         });
 
         setHasMoreData(!!response.next);
@@ -190,9 +186,9 @@ const GraphsPage: React.FC = () => {
   // Use the data that's available - either from allCandles or initialData
   const data = useMemo(() => {
     const candles =
-      allCandles.length > 0 ? allCandles : initialData?.data || [];
+      allCandles.length > 0 ? allCandles : initialData?.results || [];
     return {
-      data: candles,
+      results: candles,
       count: candles.length,
     };
   }, [allCandles, initialData]);
@@ -217,52 +213,23 @@ const GraphsPage: React.FC = () => {
 
   const seriesData = useMemo(() => {
     if (!data) return [];
-    
-    // Filter out invalid data entries
-    const validData = data.data.filter((candle: Candle) => {
-      const dateField = candle.timestamp || (candle as any).date;
-      return candle && 
-             dateField && 
-             typeof dateField === 'string' &&
-             !isNaN(Date.parse(dateField)) &&
-             typeof candle.close === 'number' &&
-             !isNaN(candle.close);
-    });
-
     if (seriesType === 'ohlc') {
-      return validData
-        .filter((candle: Candle) => 
-          typeof candle.open === 'number' && !isNaN(candle.open) &&
-          typeof candle.high === 'number' && !isNaN(candle.high) &&
-          typeof candle.low === 'number' && !isNaN(candle.low)
-        )
-        .map((candle: Candle) => {
-          const { open, high, low, close } = candle;
-          const dateField = candle.timestamp || (candle as any).date;
-          const formattedTime = formatDate(dateField);
-          return {
-            time: formattedTime as Time,
-            open,
-            high,
-            low,
-            close,
-          };
-        })
-        .filter(item => !isNaN(item.time as number)) // Additional safety check
+      return data.results
+        .map(({ date, open, high, low, close }: Candle) => ({
+          time: formatDate(date) as Time,
+          open,
+          high,
+          low,
+          close,
+        }))
         .reverse();
     }
     if (seriesType === 'price') {
-      return validData
-        .map((candle: Candle) => {
-          const { close } = candle;
-          const dateField = candle.timestamp || (candle as any).date;
-          const formattedTime = formatDate(dateField);
-          return {
-            time: formattedTime as Time,
-            value: close,
-          };
-        })
-        .filter(item => !isNaN(item.time as number)) // Additional safety check
+      return data.results
+        .map(({ date, close }: Candle) => ({
+          time: formatDate(date) as Time,
+          value: close,
+        }))
         .reverse();
     }
     return [];
@@ -270,29 +237,13 @@ const GraphsPage: React.FC = () => {
 
   const volumeData = useMemo(() => {
     if (!data) return [];
-    
-    // Filter out invalid data entries
-    const validData = data.data.filter((candle: Candle) => {
-      const dateField = candle.timestamp || (candle as any).date;
-      return candle && 
-             dateField && 
-             typeof dateField === 'string' &&
-             !isNaN(Date.parse(dateField)) &&
-             typeof candle.close === 'number' &&
-             !isNaN(candle.close) &&
-             typeof candle.volume === 'number' &&
-             !isNaN(candle.volume);
-    });
-
-    return validData
+    return data.results
       .map(
         (
-          candle: Candle,
+          { date, close, volume = 0 }: Candle,
           index: number,
           array: Candle[]
         ) => {
-          const { close, volume = 0 } = candle;
-          const dateField = candle.timestamp || (candle as any).date;
           const previousClose = index > 0 ? array[index - 1].close : close;
           const color =
             close >= previousClose
@@ -302,22 +253,20 @@ const GraphsPage: React.FC = () => {
               : isDarkMode
                 ? 'rgba(239, 68, 68, 0.8)'
                 : 'rgba(220, 38, 38, 0.8)';
-          const formattedTime = formatDate(dateField);
           return {
-            time: formattedTime as Time,
+            time: formatDate(date) as Time,
             value: volume,
             color,
           };
         }
       )
-      .filter(item => !isNaN(item.time as number)) // Additional safety check
       .reverse();
   }, [data, isDarkMode]);
 
   // Check if all volume values are zero
   const hasValidVolume = useMemo(() => {
     if (!data) return false;
-    return data.data.some(({ volume = 0 }: Candle) => volume > 0);
+    return data.results.some(({ volume = 0 }: Candle) => volume > 0);
   }, [data]);
 
   // Only show volume if user enabled it AND there's valid volume data
@@ -325,108 +274,58 @@ const GraphsPage: React.FC = () => {
 
   const rsiData = useMemo(() => {
     if (!data || !activeIndicators.includes('RSI')) return [];
-    
-    // Filter and prepare data for RSI calculation
-    const validData = data.data.filter((candle: Candle) => {
-      const dateField = candle.timestamp || (candle as any).date;
-      return candle && 
-             dateField && 
-             typeof dateField === 'string' &&
-             !isNaN(Date.parse(dateField)) &&
-             typeof candle.close === 'number' &&
-             !isNaN(candle.close);
-    });
-
-    if (validData.length < 15) return []; // Need at least 15 data points for RSI
-
-    return calculateRSI(validData)
-      .filter(item => item.time !== undefined && !isNaN(item.time))
+    return calculateRSI(
+      data.results.map(d => ({
+        ...d,
+        time: formatDate(d.date),
+      }))
+    )
+      .filter(item => item.time !== undefined)
       .map(item => ({ ...item, time: item.time as Time }))
       .reverse();
   }, [data, activeIndicators]);
 
   const atrData = useMemo(() => {
     if (!data || !activeIndicators.includes('ATR')) return [];
-    
-    // Filter and prepare data for ATR calculation
-    const validData = data.data.filter((candle: Candle) => {
-      const dateField = candle.timestamp || (candle as any).date;
-      return candle && 
-             dateField && 
-             typeof dateField === 'string' &&
-             !isNaN(Date.parse(dateField)) &&
-             typeof candle.close === 'number' &&
-             !isNaN(candle.close) &&
-             typeof candle.high === 'number' &&
-             !isNaN(candle.high) &&
-             typeof candle.low === 'number' &&
-             !isNaN(candle.low);
-    });
-
-    if (validData.length < 15) return []; // Need at least 15 data points for ATR
-
-    return calculateATR(validData)
-      .filter(item => item.time !== undefined && !isNaN(item.time))
+    return calculateATR(
+      data.results.map(d => ({
+        ...d,
+        time: formatDate(d.date),
+      }))
+    )
       .map(item => ({ ...item, time: item.time as Time }))
       .reverse();
   }, [data, activeIndicators]);
 
   const emaData = useMemo(() => {
     if (!data || !activeIndicators.includes('EMA')) return [];
-    
-    // Filter and prepare data for EMA calculation
-    const validData = data.data.filter((candle: Candle) => {
-      const dateField = candle.timestamp || (candle as any).date;
-      return candle && 
-             dateField && 
-             typeof dateField === 'string' &&
-             !isNaN(Date.parse(dateField)) &&
-             typeof candle.close === 'number' &&
-             !isNaN(candle.close);
-    });
-
-    if (validData.length < 15) return []; // Need at least 15 data points for EMA
-
-    // Convert to CandlestickData format that calculateMA expects
-    const candlestickData = validData.map(candle => {
-      const dateField = candle.timestamp || (candle as any).date;
-      return {
-        time: formatDate(dateField) as Time,
-        open: candle.open,
-        high: candle.high,
-        low: candle.low,
-        close: candle.close,
-      };
-    }).filter(item => !isNaN(item.time as number));
-
-    return calculateMA(candlestickData, 14).reverse(); // Default period 14
+    // Assuming EMA is calculated on close prices
+    return calculateMA(
+      data.results.map(d => ({
+        ...d,
+        time: formatDate(d.date) as Time,
+      })),
+      14
+    ).reverse(); // Default period 14
   }, [data, activeIndicators]);
 
   const bollingerBandsData = useMemo(() => {
     if (!data || !activeIndicators.includes('BollingerBands')) return [];
-    
-    // Filter and prepare data for Bollinger Bands calculation
-    const validData = data.data.filter((candle: Candle) => {
-      const dateField = candle.timestamp || (candle as any).date;
-      return candle && 
-             dateField && 
-             typeof dateField === 'string' &&
-             !isNaN(Date.parse(dateField)) &&
-             typeof candle.close === 'number' &&
-             !isNaN(candle.close);
-    });
-
-    if (validData.length < 21) return []; // Need at least 21 data points for Bollinger Bands
-
-    const bands = calculateBollingerBands(validData.reverse());
-    
-    // Filter out any entries with undefined time values and ensure proper typing
-    return bands
-      .filter(band => band.time !== undefined && !isNaN(band.time))
-      .map(band => ({
-        ...band,
-        time: band.time as Time,
-      }));
+    const bands = calculateBollingerBands(
+      data.results
+        .map(d => ({
+          ...d,
+          time: formatDate(d.date),
+        }))
+        .reverse()
+    );
+    // Filter out any entries with undefined time values
+    return bands.filter(band => band.time !== undefined) as {
+      time: Time;
+      upper: number;
+      middle: number;
+      lower: number;
+    }[];
   }, [data, activeIndicators]);
 
   useEffect(() => {
