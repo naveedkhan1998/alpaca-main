@@ -21,6 +21,7 @@ export interface RefreshTokenResult {
 export interface ApiResponse<T> {
   data: T;
   msg: string;
+  count?: number;
 }
 
 export interface ApiError {
@@ -204,6 +205,12 @@ export interface GetAssetsParams {
   offset?: number;
 }
 
+export interface SearchAssetsParams {
+  q: string;
+  limit?: number;
+  offset?: number;
+}
+
 export interface GetWatchListsParams {
   limit?: number;
   offset?: number;
@@ -285,12 +292,20 @@ export interface GoogleLoginParams {
   token: string;
 }
 
-// Response types for Alpaca APIs
+// Response types for Alpaca APIs - Updated to match Django pagination format
 export interface PaginatedResponse<T> {
-  count: number;
   next: string | null;
   previous: string | null;
+  count: number;
   data: T[];
+}
+
+export interface PaginatedApiResponse<T> {
+  next: string | null;
+  previous: string | null;
+  count: number;
+  data: T[];
+  msg?: string;
 }
 
 export type PaginatedAssets = PaginatedResponse<Asset>;

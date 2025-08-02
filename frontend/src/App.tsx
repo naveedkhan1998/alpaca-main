@@ -17,7 +17,6 @@ import LoadingScreen from './shared/components/LoadingScreen';
 
 import HomePage from './features/home';
 import AboutPage from './features/about';
-import InstrumentsPage from './features/instruments';
 import GraphsPage from './features/graphs';
 import AccountsPage from './features/accounts';
 import ContactPage from './features/contact';
@@ -26,6 +25,7 @@ import NotFoundPage from './features/notFound';
 import AnnouncementBanner from './shared/components/AnnouncementBanner';
 import ProfilePage from './features/profile';
 import DashBoardPage from './features/dashboard';
+import AssetsPage from './features/assets';
 
 import { checkEnvironment, GOOGLE_CLIENT_ID } from './shared/lib/environment';
 import { ThemeProvider } from './shared/components/ThemeProvider';
@@ -160,7 +160,7 @@ export default function App() {
     { path: '/about', element: <AboutPage />, private: true },
     { path: '/profile', element: <ProfilePage />, private: true },
     { path: '/dashboard', element: <DashBoardPage />, private: true },
-    { path: '/instruments', element: <InstrumentsPage />, private: true },
+    { path: '/instruments', element: <AssetsPage />, private: true },
     { path: '/graphs/:id', element: <GraphsPage />, private: true },
     { path: '/accounts', element: <AccountsPage />, private: true },
     { path: '/contact', element: <ContactPage />, private: true },

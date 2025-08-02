@@ -4,8 +4,8 @@ import json
 import logging
 from datetime import datetime, timedelta
 
+from django.db.models import Count, Q, Case, When, IntegerField
 from django.core.cache import cache
-from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets, filters
@@ -201,10 +201,10 @@ class AlpacaAccountViewSet(viewsets.ModelViewSet):
 
 class AssetViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    A ViewSet for viewing Asset instances.
+    A ViewSet for viewing Asset instances with optimized filtering and search.
     """
 
-    queryset = Asset.objects.filter(status="active")
+    queryset = Asset.objects.filter(status="active").select_related().prefetch_related()
     serializer_class = AssetSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [
@@ -214,39 +214,95 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
     ]
     pagination_class = OffsetPagination
     search_fields = ["symbol", "name"]
-    ordering_fields = ["symbol", "name", "created_at"]
+    ordering_fields = ["symbol", "name", "created_at", "asset_class", "exchange", "tradable"]
     ordering = ["symbol"]
 
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        # Filter by asset class
-        asset_class = self.request.query_params.get("asset_class")
-        if asset_class:
-            queryset = queryset.filter(asset_class=asset_class)
+        # Optimize with select_related for foreign keys if any
+        queryset = queryset.select_related()
 
-        # Filter by exchange
-        exchange = self.request.query_params.get("exchange")
-        if exchange:
-            queryset = queryset.filter(exchange=exchange)
+        # Filter by asset class (support multiple values)
+        asset_classes = self.request.query_params.getlist("asset_class")
+        if asset_classes:
+            queryset = queryset.filter(asset_class__in=asset_classes)
+
+        # Filter by exchange (support multiple values)
+        exchanges = self.request.query_params.getlist("exchange")
+        if exchanges:
+            queryset = queryset.filter(exchange__in=exchanges)
 
         # Filter by tradable status
         tradable = self.request.query_params.get("tradable")
         if tradable is not None:
             queryset = queryset.filter(tradable=tradable.lower() == "true")
 
+        # Filter by marginable status
+        marginable = self.request.query_params.get("marginable")
+        if marginable is not None:
+            queryset = queryset.filter(marginable=marginable.lower() == "true")
+
+        # Filter by shortable status
+        shortable = self.request.query_params.get("shortable")
+        if shortable is not None:
+            queryset = queryset.filter(shortable=shortable.lower() == "true")
+
+        # Filter by fractionable status
+        fractionable = self.request.query_params.get("fractionable")
+        if fractionable is not None:
+            queryset = queryset.filter(fractionable=fractionable.lower() == "true")
+
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        """
+        List all assets with pagination and caching.
+        """
+        # Create cache key based on query parameters
+        cache_key = f"assets_list_{hash(str(sorted(request.query_params.items())))}"
+        
+        # Try to get cached result for non-paginated, non-sorted requests
+        if not any(param in request.query_params for param in ['limit', 'offset', 'ordering']):
+            cached_result = cache.get(cache_key)
+            if cached_result:
+                return Response(cached_result)
+
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            response_data = self.get_paginated_response(serializer.data).data
+            
+            # Cache small result sets
+            if len(serializer.data) <= 100:
+                cache.set(cache_key, response_data, 300)  # 5 minutes
+            
+            return Response(response_data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = {
+            "msg": "Assets retrieved successfully",
+            "data": serializer.data,
+            "count": len(serializer.data),
+        }
+        
+        # Cache non-paginated results
+        cache.set(cache_key, response_data, 300)
+        return Response(response_data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["get"], url_path="search")
     def search_assets(self, request):
         """
-        Search assets by symbol or name with minimum 2 character requirement.
+        Optimized search assets by symbol or name with pagination and caching.
         """
         search_term = request.query_params.get("q", "").strip()
 
         if not search_term:
             return Response(
-                {"msg": "Search term is required"}, status=status.HTTP_400_BAD_REQUEST
+                {"msg": "Search term is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         if len(search_term) < 2:
@@ -255,19 +311,104 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Cache search results
+        cache_key = f"asset_search_{search_term.lower()}_{request.query_params.get('limit', 50)}_{request.query_params.get('offset', 0)}"
+        cached_result = cache.get(cache_key)
+        if cached_result:
+            return Response(cached_result)
+
+        # Optimized search with ranking
         queryset = self.get_queryset().filter(
             Q(symbol__icontains=search_term) | Q(name__icontains=search_term)
-        )[
-            :50
-        ]  # Limit results
+        ).annotate(
+            # Rank exact matches higher
+            search_rank=Case(
+                When(symbol__iexact=search_term, then=1),
+                When(symbol__istartswith=search_term, then=2),
+                When(name__istartswith=search_term, then=3),
+                default=4,
+                output_field=IntegerField()
+            )
+        ).order_by('search_rank', 'symbol')
+
+        # Apply pagination to search results
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            response_data = self.get_paginated_response(serializer.data).data
+            cache.set(cache_key, response_data, 180)  # 3 minutes
+            return Response(response_data)
 
         if queryset.exists():
             serializer = self.get_serializer(queryset, many=True)
-            return Response(
-                {"msg": "Ok", "data": serializer.data}, status=status.HTTP_200_OK
-            )
+            response_data = {
+                "msg": "Assets found",
+                "data": serializer.data,
+                "count": len(serializer.data),
+            }
+            cache.set(cache_key, response_data, 180)
+            return Response(response_data, status=status.HTTP_200_OK)
 
-        return Response({"msg": "No assets found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({
+            "msg": "No assets found",
+            "data": [],
+            "count": 0
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["get"], url_path="stats")
+    def get_stats(self, request):
+        """
+        Get asset statistics for filter options.
+        """
+        cache_key = "asset_stats"
+        cached_stats = cache.get(cache_key)
+        if cached_stats:
+            return Response(cached_stats)
+
+        queryset = self.get_queryset()
+
+        # Get asset class counts
+        asset_class_stats = (
+            queryset.values("asset_class")
+            .annotate(count=Count("id"))
+            .order_by("asset_class")
+        )
+
+        # Get exchange counts
+        exchange_stats = (
+            queryset.values("exchange")
+            .annotate(count=Count("id"))
+            .order_by("exchange")
+        )
+
+        asset_class_choices = dict(Asset.ASSET_CLASS_CHOICES)
+        exchange_choices = dict(Asset.EXCHANGE_CHOICES)
+
+        stats = {
+            "asset_classes": [
+                {
+                    "value": stat["asset_class"],
+                    "label": asset_class_choices.get(stat["asset_class"], stat["asset_class"]),
+                    "count": stat["count"],
+                }
+                for stat in asset_class_stats
+            ],
+            "exchanges": [
+                {
+                    "value": stat["exchange"],
+                    "label": exchange_choices.get(stat["exchange"], stat["exchange"]),
+                    "count": stat["count"],
+                }
+                for stat in exchange_stats
+                if stat["exchange"]  # Filter out null exchanges
+            ],
+            "total_count": queryset.count(),
+        }
+
+        # Cache for 30 minutes
+        cache.set(cache_key, stats, 1800)
+        return Response(stats)
 
     @action(detail=True, methods=["get"], url_path="candles")
     def candles(self, request, pk=None):

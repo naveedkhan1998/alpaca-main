@@ -28,13 +28,14 @@ class Asset(models.Model):
     ]
 
     EXCHANGE_CHOICES = [
-        ("AMEX", "AMEX"),
-        ("ARCA", "ARCA"),
-        ("BATS", "BATS"),
-        ("NYSE", "NYSE"),
+        ("AMEX", "American Stock Exchange"),
+        ("ARCA", "NYSE Arca"),
+        ("BATS", "BATS Global Markets"),
+        ("NYSE", "New York Stock Exchange"),
         ("NASDAQ", "NASDAQ"),
-        ("NYSEARCA", "NYSEARCA"),
-        ("OTC", "OTC"),
+        ("NYSEARCA", "NYSE Arca"),
+        ("OTC", "Over-the-Counter"),
+        ("CRYPTO", "Cryptocurrency Exchange"),
     ]
 
     STATUS_CHOICES = [
