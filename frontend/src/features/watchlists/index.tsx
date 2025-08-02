@@ -48,6 +48,7 @@ import {
   MoreVertical,
   Loader2,
   AlertCircle,
+  ChartBarIcon,
 } from 'lucide-react';
 
 import {
@@ -59,6 +60,7 @@ import {
   useRemoveAssetFromWatchListMutation,
 } from '@/api/watchlistService';
 import { WatchList, CreateWatchListParams } from '@/types/common-types';
+import { Link } from 'react-router-dom';
 
 // Create/Edit Watchlist Dialog
 const WatchListDialog: React.FC<{
@@ -276,14 +278,30 @@ const WatchListAssets: React.FC<{
                   {new Date(watchlistAsset.added_at).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemoveAsset(watchlistAsset.asset.id)}
-                    disabled={isRemoving}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="icon"
+                      className="w-8 h-8"
+                    >
+                      <Link
+                        to={`/graphs/${watchlistAsset.asset.id}`}
+                        state={{ obj: watchlistAsset.asset }}
+                      >
+                        <ChartBarIcon className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="w-8 h-8 text-destructive hover:text-destructive"
+                      onClick={() => handleRemoveAsset(watchlistAsset.asset.id)}
+                      disabled={isRemoving}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

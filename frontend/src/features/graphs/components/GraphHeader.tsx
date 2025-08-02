@@ -42,14 +42,14 @@ import {
   setShowControls,
   setShowVolume,
 } from '../graphSlice';
-import { Instrument } from '@/types/common-types';
+import { Asset } from '@/types/common-types';
 import { ModeToggle } from '@/components/ModeToggle';
 import { useIsMobile } from '@/hooks/useMobile';
 
 interface GraphHeaderProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
-  obj: Instrument;
+  obj: Asset;
   handleDownload: () => void;
   refetch: () => void;
   toggleFullscreen: () => void;
@@ -74,7 +74,7 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
   return (
     <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur-sm">
       <Helmet>
-        <title>{obj?.company_name} - Breeze</title>
+        <title>{obj?.name} - Alpaca</title>
       </Helmet>
       <div
         className={`flex items-center justify-between ${
@@ -105,11 +105,11 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                 isMobile ? 'text-base' : 'text-lg'
               } font-semibold text-foreground`}
             >
-              {obj?.company_name || 'Chart'}
+              {obj?.name || 'Chart'}
             </h1>
             {!isMobile && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>{obj?.exchange_code || 'N/A'}</span>
+                <span>{obj?.symbol || 'N/A'}</span>
                 <Separator orientation="vertical" className="h-3" />
                 <span>{timeframe}m</span>
                 <Separator orientation="vertical" className="h-3" />

@@ -32,12 +32,9 @@ import { Button } from '@/components/ui/button';
 
 import { HiChartBar, HiCog } from 'react-icons/hi';
 
-import type { Candle, Instrument } from '@/types/common-types';
+import type { Asset, Candle } from '@/types/common-types';
 import { useTheme } from '@/components/ThemeProvider';
-import {
-  useGetPaginatedCandlesQuery,
-  useLazyGetPaginatedCandlesQuery,
-} from '@/api/instrumentService';
+
 import {
   formatDate,
   calculateRSI,
@@ -57,9 +54,13 @@ import { X } from 'lucide-react';
 import IndicatorChart from './components/IndicatorChart';
 import { useIsMobile } from '@/hooks/useMobile';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
+import {
+  useGetAssetCandlesQuery,
+  useLazyGetAssetCandlesQuery,
+} from '@/api/assetService';
 
 interface LocationState {
-  obj: Instrument;
+  obj: Asset;
 }
 
 const GraphsPage: React.FC = () => {
@@ -93,21 +94,21 @@ const GraphsPage: React.FC = () => {
     refetch,
     isLoading,
     isError,
-  } = useGetPaginatedCandlesQuery({
-    id: obj?.id,
+  } = useGetAssetCandlesQuery({
+    assetId: obj?.id,
     tf: timeframe,
     limit: initialLimit,
     offset: 0,
   });
 
   // Lazy query for loading more data
-  const [fetchMoreData] = useLazyGetPaginatedCandlesQuery();
+  const [fetchMoreData] = useLazyGetAssetCandlesQuery();
 
   // Initialize data when initial fetch completes
   useEffect(() => {
-    if (initialData?.results) {
-      setAllCandles(initialData.results);
-      setCurrentOffset(initialData.results.length);
+    if (initialData?.data) {
+      setAllCandles(initialData.data);
+      setCurrentOffset(initialData.data.length);
       // Check if there's more data using the 'next' field from Django pagination
       setHasMoreData(!!initialData.next);
     }
@@ -132,17 +133,17 @@ const GraphsPage: React.FC = () => {
 
     try {
       const response = await fetchMoreData({
-        id: obj.id,
+        assetId: obj.id,
         tf: timeframe,
         limit: loadMoreLimit,
         offset: currentOffset,
       }).unwrap();
 
-      if (response?.results && response.results.length > 0) {
+      if (response?.data && response.data.length > 0) {
         setAllCandles(prevCandles => {
-          const existingDates = new Set(prevCandles.map(c => c.date));
-          const newCandles: Candle[] = response.results.filter(
-            (candle: Candle) => !existingDates.has(candle.date)
+          const existingDates = new Set(prevCandles.map(c => c.timestamp));
+          const newCandles: Candle[] = response.data.filter(
+            (candle: Candle) => !existingDates.has(candle.timestamp)
           );
 
           // Only update the offset by the number of unique new candles
@@ -151,7 +152,8 @@ const GraphsPage: React.FC = () => {
           }
 
           return [...prevCandles, ...newCandles].sort(
-            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+            (a, b) =>
+              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
           );
         });
 
@@ -186,9 +188,9 @@ const GraphsPage: React.FC = () => {
   // Use the data that's available - either from allCandles or initialData
   const data = useMemo(() => {
     const candles =
-      allCandles.length > 0 ? allCandles : initialData?.results || [];
+      allCandles.length > 0 ? allCandles : initialData?.data || [];
     return {
-      results: candles,
+      data: candles,
       count: candles.length,
     };
   }, [allCandles, initialData]);
@@ -214,9 +216,9 @@ const GraphsPage: React.FC = () => {
   const seriesData = useMemo(() => {
     if (!data) return [];
     if (seriesType === 'ohlc') {
-      return data.results
-        .map(({ date, open, high, low, close }: Candle) => ({
-          time: formatDate(date) as Time,
+      return data.data
+        .map(({ timestamp, open, high, low, close }: Candle) => ({
+          time: formatDate(timestamp) as Time,
           open,
           high,
           low,
@@ -225,9 +227,9 @@ const GraphsPage: React.FC = () => {
         .reverse();
     }
     if (seriesType === 'price') {
-      return data.results
-        .map(({ date, close }: Candle) => ({
-          time: formatDate(date) as Time,
+      return data.data
+        .map(({ timestamp, close }: Candle) => ({
+          time: formatDate(timestamp) as Time,
           value: close,
         }))
         .reverse();
@@ -237,10 +239,10 @@ const GraphsPage: React.FC = () => {
 
   const volumeData = useMemo(() => {
     if (!data) return [];
-    return data.results
+    return data.data
       .map(
         (
-          { date, close, volume = 0 }: Candle,
+          { timestamp, close, volume = 0 }: Candle,
           index: number,
           array: Candle[]
         ) => {
@@ -254,7 +256,7 @@ const GraphsPage: React.FC = () => {
                 ? 'rgba(239, 68, 68, 0.8)'
                 : 'rgba(220, 38, 38, 0.8)';
           return {
-            time: formatDate(date) as Time,
+            time: formatDate(timestamp) as Time,
             value: volume,
             color,
           };
@@ -266,7 +268,7 @@ const GraphsPage: React.FC = () => {
   // Check if all volume values are zero
   const hasValidVolume = useMemo(() => {
     if (!data) return false;
-    return data.results.some(({ volume = 0 }: Candle) => volume > 0);
+    return data.data.some(({ volume = 0 }: Candle) => volume > 0);
   }, [data]);
 
   // Only show volume if user enabled it AND there's valid volume data
@@ -275,9 +277,9 @@ const GraphsPage: React.FC = () => {
   const rsiData = useMemo(() => {
     if (!data || !activeIndicators.includes('RSI')) return [];
     return calculateRSI(
-      data.results.map(d => ({
+      data.data.map(d => ({
         ...d,
-        time: formatDate(d.date),
+        time: formatDate(d.timestamp),
       }))
     )
       .filter(item => item.time !== undefined)
@@ -288,9 +290,9 @@ const GraphsPage: React.FC = () => {
   const atrData = useMemo(() => {
     if (!data || !activeIndicators.includes('ATR')) return [];
     return calculateATR(
-      data.results.map(d => ({
+      data.data.map(d => ({
         ...d,
-        time: formatDate(d.date),
+        time: formatDate(d.timestamp),
       }))
     )
       .map(item => ({ ...item, time: item.time as Time }))
@@ -301,9 +303,9 @@ const GraphsPage: React.FC = () => {
     if (!data || !activeIndicators.includes('EMA')) return [];
     // Assuming EMA is calculated on close prices
     return calculateMA(
-      data.results.map(d => ({
+      data.data.map(d => ({
         ...d,
-        time: formatDate(d.date) as Time,
+        time: formatDate(d.timestamp) as Time,
       })),
       14
     ).reverse(); // Default period 14
@@ -312,10 +314,10 @@ const GraphsPage: React.FC = () => {
   const bollingerBandsData = useMemo(() => {
     if (!data || !activeIndicators.includes('BollingerBands')) return [];
     const bands = calculateBollingerBands(
-      data.results
+      data.data
         .map(d => ({
           ...d,
-          time: formatDate(d.date),
+          time: formatDate(d.timestamp),
         }))
         .reverse()
     );
@@ -408,7 +410,7 @@ const GraphsPage: React.FC = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `${obj?.company_name}_${timeframe}_data.csv`);
+    link.setAttribute('download', `${obj?.name}_${timeframe}_data.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

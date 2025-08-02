@@ -135,8 +135,6 @@ export type Candle = {
   timestamp: string;
   created_at?: string;
   is_active?: boolean;
-  date?: string; // For backward compatibility
-  time?: string | number; // For backward compatibility
 };
 
 export interface AlpacaAccount {

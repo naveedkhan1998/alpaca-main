@@ -199,5 +199,6 @@ export const {
   useGetAssetStatsQuery,
   useGetAssetByIdQuery,
   useGetAssetCandlesQuery,
+  useLazyGetAssetCandlesQuery,
 } = assetApi;
 export { assetApi };
