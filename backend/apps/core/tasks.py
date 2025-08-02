@@ -56,48 +56,206 @@ class SingleInstanceTask(Task):
 
 
 @shared_task(name="alpaca_sync", base=SingleInstanceTask)
-def alpaca_sync_task(alpaca_account_id: int):
-    account = AlpacaAccount.objects.filter(id=alpaca_account_id).first()
-    service = AlpacaService(
-        api_key=account.api_key,
-        secret_key=account.api_secret,
-    )
+def alpaca_sync_task(
+    alpaca_account_id: int, asset_classes: list = None, batch_size: int = 1000
+):
+    """
+    Optimized sync task that efficiently syncs assets from Alpaca API.
 
-    # Fetch assets from Alpaca
-    assets_data = service.list_assets(
-        status="active",
-        asset_class="us_equity",
-        fallback_symbols=["AAPL", "GOOGL", "MSFT", "TSLA", "NVDA"],
-    )
+    Args:
+        alpaca_account_id: ID of the Alpaca account to use for API calls
+        asset_classes: List of asset classes to sync (defaults to all: ["us_equity", "us_option", "crypto"])
+        batch_size: Number of assets to process in each batch
+    """
+    if asset_classes is None:
+        asset_classes = ["us_equity", "us_option", "crypto"]
 
-    created_count = 0
-    updated_count = 0
+    try:
+        account = AlpacaAccount.objects.filter(id=alpaca_account_id).first()
+        if not account:
+            logger.error(f"AlpacaAccount with ID {alpaca_account_id} not found")
+            return {"error": f"Account {alpaca_account_id} not found"}
 
-    for asset_data in assets_data:
-        asset, created = Asset.objects.update_or_create(
-            alpaca_id=asset_data.get("id", asset_data["symbol"]),
-            defaults={
-                "symbol": asset_data["symbol"],
-                "name": asset_data.get("name", ""),
-                "asset_class": asset_data.get("class", "us_equity"),
-                "exchange": asset_data.get("exchange"),
-                "status": asset_data.get("status", "active"),
-                "tradable": asset_data.get("tradable", False),
-                "marginable": asset_data.get("marginable", False),
-                "shortable": asset_data.get("shortable", False),
-                "easy_to_borrow": asset_data.get("easy_to_borrow", False),
-                "fractionable": asset_data.get("fractionable", False),
-                "maintenance_margin_requirement": asset_data.get(
-                    "maintenance_margin_requirement"
-                ),
-                "margin_requirement_long": asset_data.get("margin_requirement_long"),
-                "margin_requirement_short": asset_data.get("margin_requirement_short"),
-            },
+        service = AlpacaService(
+            api_key=account.api_key,
+            secret_key=account.api_secret,
         )
-        if created:
-            created_count += 1
-        else:
-            updated_count += 1
+
+        total_created = 0
+        total_updated = 0
+        total_errors = 0
+
+        # Process each asset class
+        for asset_class in asset_classes:
+            logger.info(f"Starting sync for asset class: {asset_class}")
+
+            try:
+                # Fetch assets from Alpaca with fallback for data-only keys
+                fallback_symbols = (
+                    ["AAPL", "GOOGL", "MSFT", "TSLA", "NVDA"]
+                    if asset_class == "us_equity"
+                    else None
+                )
+
+                assets_data = service.list_assets(
+                    status="active",
+                    asset_class=asset_class,
+                    fallback_symbols=fallback_symbols,
+                )
+
+                if not assets_data:
+                    logger.warning(f"No assets returned for asset class: {asset_class}")
+                    continue
+
+                logger.info(f"Fetched {len(assets_data)} assets for {asset_class}")
+
+                # Get existing assets in batches to avoid memory issues
+                existing_alpaca_ids = set(
+                    Asset.objects.filter(asset_class=asset_class).values_list(
+                        "alpaca_id", flat=True
+                    )
+                )
+
+                assets_to_create = []
+                assets_to_update = []
+
+                # Separate assets into create vs update batches
+                for asset_data in assets_data:
+                    alpaca_id = asset_data.get("id", asset_data["symbol"])
+
+                    asset_dict = {
+                        "alpaca_id": alpaca_id,
+                        "symbol": asset_data["symbol"],
+                        "name": asset_data.get("name", ""),
+                        "asset_class": asset_data.get("class", asset_class),
+                        "exchange": asset_data.get("exchange"),
+                        "status": asset_data.get("status", "active"),
+                        "tradable": asset_data.get("tradable", False),
+                        "marginable": asset_data.get("marginable", False),
+                        "shortable": asset_data.get("shortable", False),
+                        "easy_to_borrow": asset_data.get("easy_to_borrow", False),
+                        "fractionable": asset_data.get("fractionable", False),
+                        "maintenance_margin_requirement": asset_data.get(
+                            "maintenance_margin_requirement"
+                        ),
+                        "margin_requirement_long": asset_data.get(
+                            "margin_requirement_long"
+                        ),
+                        "margin_requirement_short": asset_data.get(
+                            "margin_requirement_short"
+                        ),
+                    }
+
+                    if alpaca_id in existing_alpaca_ids:
+                        assets_to_update.append(asset_dict)
+                    else:
+                        assets_to_create.append(Asset(**asset_dict))
+
+                # Bulk create new assets
+                if assets_to_create:
+                    try:
+                        created_assets = Asset.objects.bulk_create(
+                            assets_to_create,
+                            batch_size=batch_size,
+                            ignore_conflicts=True,
+                        )
+                        created_count = len(created_assets)
+                        total_created += created_count
+                        logger.info(
+                            f"Bulk created {created_count} new assets for {asset_class}"
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"Error bulk creating assets for {asset_class}: {e}"
+                        )
+                        total_errors += len(assets_to_create)
+
+                # Bulk update existing assets
+                if assets_to_update:
+                    try:
+                        # For updates, we need to fetch existing objects and update them
+                        alpaca_ids_to_update = [
+                            asset["alpaca_id"] for asset in assets_to_update
+                        ]
+                        existing_assets = {
+                            asset.alpaca_id: asset
+                            for asset in Asset.objects.filter(
+                                alpaca_id__in=alpaca_ids_to_update,
+                                asset_class=asset_class,
+                            )
+                        }
+
+                        assets_to_bulk_update = []
+                        for asset_data in assets_to_update:
+                            alpaca_id = asset_data["alpaca_id"]
+                            if alpaca_id in existing_assets:
+                                existing_asset = existing_assets[alpaca_id]
+
+                                # Update fields
+                                for field, value in asset_data.items():
+                                    if field != "alpaca_id":  # Don't update the ID
+                                        setattr(existing_asset, field, value)
+
+                                assets_to_bulk_update.append(existing_asset)
+
+                        if assets_to_bulk_update:
+                            Asset.objects.bulk_update(
+                                assets_to_bulk_update,
+                                [
+                                    "symbol",
+                                    "name",
+                                    "asset_class",
+                                    "exchange",
+                                    "status",
+                                    "tradable",
+                                    "marginable",
+                                    "shortable",
+                                    "easy_to_borrow",
+                                    "fractionable",
+                                    "maintenance_margin_requirement",
+                                    "margin_requirement_long",
+                                    "margin_requirement_short",
+                                ],
+                                batch_size=batch_size,
+                            )
+                            updated_count = len(assets_to_bulk_update)
+                            total_updated += updated_count
+                            logger.info(
+                                f"Bulk updated {updated_count} existing assets for {asset_class}"
+                            )
+
+                    except Exception as e:
+                        logger.error(
+                            f"Error bulk updating assets for {asset_class}: {e}"
+                        )
+                        total_errors += len(assets_to_update)
+
+                logger.info(
+                    f"Completed sync for {asset_class}: {len(assets_to_create)} created, {len(assets_to_update)} updated"
+                )
+
+            except Exception as e:
+                logger.error(
+                    f"Error syncing asset class {asset_class}: {e}", exc_info=True
+                )
+                total_errors += 1
+                continue
+
+        result = {
+            "success": True,
+            "total_created": total_created,
+            "total_updated": total_updated,
+            "total_errors": total_errors,
+            "asset_classes_processed": asset_classes,
+        }
+
+        logger.info(f"Asset sync completed: {result}")
+        return result
+
+    except Exception as e:
+        error_msg = f"Critical error in alpaca_sync_task: {e}"
+        logger.error(error_msg, exc_info=True)
+        return {"success": False, "error": error_msg}
 
 
 @shared_task(name="start_alpaca_stream", base=SingleInstanceTask)
@@ -137,7 +295,7 @@ def fetch_historical_data(watchlist_asset_id: int):
     if not watchlist_asset:
         logger.error(f"WatchListAsset with ID {watchlist_asset_id} does not exist.")
         return
-    
+
     user_id = watchlist_asset.watchlist.user.id
     account = AlpacaAccount.objects.filter(user_id=user_id).first()
     if not account:
@@ -145,54 +303,54 @@ def fetch_historical_data(watchlist_asset_id: int):
             f"No Alpaca account found for user {user_id}. Cannot fetch historical data."
         )
         return
-    
+
     service = AlpacaService(
         api_key=account.api_key,
         secret_key=account.api_secret,
     )
-    
+
     # Define date range - 1 year of data
     end_date = datetime.now()
     start_date = end_date - timedelta(days=365)
-    
+
     # Check if we already have data and adjust start date
-    existing_candles = Candle.objects.filter(
-        asset=watchlist_asset.asset
-    ).order_by("timestamp")
-    
+    existing_candles = Candle.objects.filter(asset=watchlist_asset.asset).order_by(
+        "timestamp"
+    )
+
     if existing_candles.exists():
         start_date = existing_candles.last().timestamp
-    
+
     try:
         # Fetch data in 2-day chunks similar to load_instrument_candles
         chunk_size = timedelta(days=2)
         date_ranges = []
         current_date = start_date
-        
+
         while current_date < end_date:
             range_end = min(current_date + chunk_size, end_date)
             date_ranges.append((current_date, range_end))
             current_date = range_end
-        
+
         # Process in reverse order (newest first)
         date_ranges.reverse()
-        
+
         total_chunks = len(date_ranges)
         completed_chunks = 0
-        
+
         def process_candle_batch(batch_data, asset):
             """Process a batch of candle data and create Candle objects"""
             candles_to_create = []
-            
+
             batch_start = datetime.now()
             logger.info(
                 f"Processing batch of {len(batch_data)} candles for asset {asset.symbol}"
             )
-            
+
             for bar in batch_data:
                 # Parse datetime from Alpaca format
                 timestamp = datetime.fromisoformat(bar["t"].replace("Z", "+00:00"))
-                
+
                 candle = Candle(
                     asset=asset,
                     timestamp=timestamp,
@@ -206,35 +364,35 @@ def fetch_historical_data(watchlist_asset_id: int):
                     timeframe="1Min",
                 )
                 candles_to_create.append(candle)
-            
+
             # Bulk create the batch of candles
             if candles_to_create:
                 db_start = datetime.now()
                 Candle.objects.bulk_create(candles_to_create, ignore_conflicts=True)
                 db_time = datetime.now() - db_start
                 batch_time = datetime.now() - batch_start
-                
+
                 logger.info(
                     f"Created {len(candles_to_create)} candles for asset {asset.symbol}. "
                     f"DB time: {db_time.total_seconds():.2f}s, Total time: {batch_time.total_seconds():.2f}s"
                 )
-        
+
         logger.info(
             f"Starting historical data fetch for asset {watchlist_asset.asset.symbol} from {start_date} to {end_date}"
         )
-        
+
         for current_start, current_end in date_ranges:
             fetch_start_time = datetime.now()
-            
+
             try:
                 # Format dates for Alpaca API (ISO format)
                 start_str = current_start.strftime("%Y-%m-%dT%H:%M:%SZ")
                 end_str = current_end.strftime("%Y-%m-%dT%H:%M:%SZ")
-                
+
                 logger.info(
                     f"Requesting data for {watchlist_asset.asset.symbol} from {current_start} to {current_end}..."
                 )
-                
+
                 # Fetch historical data from Alpaca
                 response = service.get_historic_bars(
                     symbol=watchlist_asset.asset.symbol,
@@ -243,21 +401,21 @@ def fetch_historical_data(watchlist_asset_id: int):
                     end=end_str,
                     limit=10000,  # Maximum allowed
                     adjustment="raw",
-                    feed="iex"
+                    feed="iex",
                 )
-                
+
                 api_time = datetime.now() - fetch_start_time
                 logger.info(
                     f"API request completed in {api_time.total_seconds():.2f} seconds"
                 )
-                
+
                 bars_data = response.get("bars", [])
-                
+
                 if bars_data:
                     process_start_time = datetime.now()
                     process_candle_batch(bars_data, watchlist_asset.asset)
                     process_time = datetime.now() - process_start_time
-                    
+
                     logger.info(
                         f"Batch processing completed in {process_time.total_seconds():.2f} seconds"
                     )
@@ -268,20 +426,24 @@ def fetch_historical_data(watchlist_asset_id: int):
                     logger.info(
                         f"No data returned for period {current_start} to {current_end}"
                     )
-                
+
             except Exception as inner_e:
                 logger.error(
                     f"Error fetching chunk {current_start} to {current_end}: {inner_e}",
-                    exc_info=True
+                    exc_info=True,
                 )
                 # Continue with next chunk despite errors
-            
+
             completed_chunks += 1
             progress = (completed_chunks / total_chunks) * 100
-            logger.info(f"Progress: {progress:.1f}% ({completed_chunks}/{total_chunks} chunks)")
-        
-        logger.info(f"Completed fetching historical data for asset {watchlist_asset.asset.symbol}.")
-        
+            logger.info(
+                f"Progress: {progress:.1f}% ({completed_chunks}/{total_chunks} chunks)"
+            )
+
+        logger.info(
+            f"Completed fetching historical data for asset {watchlist_asset.asset.symbol}."
+        )
+
     except Exception as e:
         logger.error(
             f"Error fetching historical data for WatchListAsset {watchlist_asset_id}: {e}",
