@@ -3,7 +3,7 @@
 import json
 import logging
 from datetime import datetime, timedelta
-
+from django.db import connection
 from django.db.models import Count, Q, Case, When, IntegerField
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
@@ -36,7 +36,7 @@ from apps.core.serializers import (
 )
 from apps.core.services.alpaca_service import AlpacaService
 from apps.core.tasks import alpaca_sync_task, start_alpaca_stream, fetch_historical_data
-from apps.core.utils import resample_qs
+from apps.core.utils import resample_qs, get_aggregated_candles, get_timeframe
 
 logger = logging.getLogger(__name__)
 
@@ -214,7 +214,14 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
     ]
     pagination_class = OffsetPagination
     search_fields = ["symbol", "name"]
-    ordering_fields = ["symbol", "name", "created_at", "asset_class", "exchange", "tradable"]
+    ordering_fields = [
+        "symbol",
+        "name",
+        "created_at",
+        "asset_class",
+        "exchange",
+        "tradable",
+    ]
     ordering = ["symbol"]
 
     def get_queryset(self):
@@ -261,9 +268,11 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
         """
         # Create cache key based on query parameters
         cache_key = f"assets_list_{hash(str(sorted(request.query_params.items())))}"
-        
+
         # Try to get cached result for non-paginated, non-sorted requests
-        if not any(param in request.query_params for param in ['limit', 'offset', 'ordering']):
+        if not any(
+            param in request.query_params for param in ["limit", "offset", "ordering"]
+        ):
             cached_result = cache.get(cache_key)
             if cached_result:
                 return Response(cached_result)
@@ -274,11 +283,11 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             response_data = self.get_paginated_response(serializer.data).data
-            
+
             # Cache small result sets
             if len(serializer.data) <= 100:
                 cache.set(cache_key, response_data, 300)  # 5 minutes
-            
+
             return Response(response_data)
 
         serializer = self.get_serializer(queryset, many=True)
@@ -287,7 +296,7 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
             "data": serializer.data,
             "count": len(serializer.data),
         }
-        
+
         # Cache non-paginated results
         cache.set(cache_key, response_data, 300)
         return Response(response_data, status=status.HTTP_200_OK)
@@ -301,8 +310,7 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
 
         if not search_term:
             return Response(
-                {"msg": "Search term is required"}, 
-                status=status.HTTP_400_BAD_REQUEST
+                {"msg": "Search term is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
         if len(search_term) < 2:
@@ -318,18 +326,21 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(cached_result)
 
         # Optimized search with ranking
-        queryset = self.get_queryset().filter(
-            Q(symbol__icontains=search_term) | Q(name__icontains=search_term)
-        ).annotate(
-            # Rank exact matches higher
-            search_rank=Case(
-                When(symbol__iexact=search_term, then=1),
-                When(symbol__istartswith=search_term, then=2),
-                When(name__istartswith=search_term, then=3),
-                default=4,
-                output_field=IntegerField()
+        queryset = (
+            self.get_queryset()
+            .filter(Q(symbol__icontains=search_term) | Q(name__icontains=search_term))
+            .annotate(
+                # Rank exact matches higher
+                search_rank=Case(
+                    When(symbol__iexact=search_term, then=1),
+                    When(symbol__istartswith=search_term, then=2),
+                    When(name__istartswith=search_term, then=3),
+                    default=4,
+                    output_field=IntegerField(),
+                )
             )
-        ).order_by('search_rank', 'symbol')
+            .order_by("search_rank", "symbol")
+        )
 
         # Apply pagination to search results
         page = self.paginate_queryset(queryset)
@@ -350,11 +361,10 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
             cache.set(cache_key, response_data, 180)
             return Response(response_data, status=status.HTTP_200_OK)
 
-        return Response({
-            "msg": "No assets found",
-            "data": [],
-            "count": 0
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {"msg": "No assets found", "data": [], "count": 0},
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=False, methods=["get"], url_path="stats")
     def get_stats(self, request):
@@ -377,9 +387,7 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
 
         # Get exchange counts
         exchange_stats = (
-            queryset.values("exchange")
-            .annotate(count=Count("id"))
-            .order_by("exchange")
+            queryset.values("exchange").annotate(count=Count("id")).order_by("exchange")
         )
 
         asset_class_choices = dict(Asset.ASSET_CLASS_CHOICES)
@@ -389,7 +397,9 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
             "asset_classes": [
                 {
                     "value": stat["asset_class"],
-                    "label": asset_class_choices.get(stat["asset_class"], stat["asset_class"]),
+                    "label": asset_class_choices.get(
+                        stat["asset_class"], stat["asset_class"]
+                    ),
                     "count": stat["count"],
                 }
                 for stat in asset_class_stats
@@ -412,22 +422,37 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=True, methods=["get"], url_path="candles")
     def candles(self, request, pk=None):
-        """
-        Retrieves paginated candles for a subscribed asset.
-        The candles are ordered by date in descending order.
-        """
         asset = self.get_object()
-        tf = int(request.query_params.get("tf", 1))
+        tf = get_timeframe(request)
+        offset = int(request.query_params.get("offset", 0))
+        limit = int(request.query_params.get("limit", 1000))
 
-        qs = resample_qs(asset.id, tf)
-        # Fix the count aggregation by using a simpler approach
-        total = qs.count()
+        # FAST COUNT!
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                SELECT COUNT(DISTINCT date_bin(INTERVAL '{tf} minutes', timestamp, TIMESTAMP '1970-01-01 09:30:00-05:00'))
+                FROM core_candle
+                WHERE asset_id = %s
+                """,
+                [asset.id],
+            )
+            total = cursor.fetchone()[0]
 
-        paginator = CandleBucketPagination()
-        page = paginator.paginate_queryset(qs, request)
-        paginator.count = total
-        serializer = AggregatedCandleSerializer(page, many=True)
-        return paginator.get_paginated_response(serializer.data)
+        candles = get_aggregated_candles(asset.id, tf, offset, limit)
+        serializer = AggregatedCandleSerializer(candles, many=True)
+
+        has_next = total > (offset + limit)
+        has_previous = offset > 0
+        return Response(
+            {
+                "results": serializer.data,
+                "count": total,
+                "next": has_next,
+                "previous": has_previous,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class WatchListViewSet(viewsets.ModelViewSet):
