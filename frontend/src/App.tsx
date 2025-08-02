@@ -7,7 +7,7 @@ import {
   getLoggedInUser,
   setCredentials,
 } from './features/auth/authSlice';
-import { useBreezeAccount } from './features/auth/hooks/useBreezeAccount';
+
 import {
   checkHealth as checkWorkersHealth,
   setServiceStatus,
@@ -32,6 +32,7 @@ import { ThemeProvider } from './shared/components/ThemeProvider';
 import { Toaster } from 'sonner';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useGetLoggedUserQuery } from '@/api/userAuthService';
+import { useAlpacaAccount } from './features/auth/hooks';
 
 const HEALTH_CHECK_INTERVAL = 120000; // 2 minutes
 const clientId = GOOGLE_CLIENT_ID || '';
@@ -54,8 +55,8 @@ export default function App() {
     skip: !accessToken,
   });
 
-  // Initialize Breeze account when user is logged in
-  const { isBreezeAccountLoading } = useBreezeAccount();
+  // Initialize Alpaca account when user is logged in
+  const { isAlpacaAccountLoading } = useAlpacaAccount();
 
   const {
     data: healthCheckData,
@@ -88,7 +89,7 @@ export default function App() {
     if (
       hasInitialApiHealthCheck &&
       !isLoadingComplete &&
-      (!accessToken || !isBreezeAccountLoading)
+      (!accessToken || !isAlpacaAccountLoading)
     ) {
       setIsLoadingComplete(true);
     }
@@ -96,7 +97,7 @@ export default function App() {
     hasInitialApiHealthCheck,
     isLoadingComplete,
     accessToken,
-    isBreezeAccountLoading,
+    isAlpacaAccountLoading,
   ]);
 
   // Start worker health checks only after initial API health check succeeds

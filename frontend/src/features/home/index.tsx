@@ -26,8 +26,8 @@ import {
   useDeleteInstrumentMutation,
   useGetSubscribedInstrumentsQuery,
 } from '@/api/instrumentService';
-import { useStartWebsocketMutation } from '@/api/breezeServices';
-import BreezeStatusCard from '@/components/BreezeStatusCard';
+import { useStartWebsocketMutation } from '@/api/alpacaService';
+import AlpacaStatusCard from '@/components/AlpacaStatusCard';
 import InstrumentCard from './components/InstrumentCard';
 import { Instrument } from '@/types/common-types';
 
@@ -162,7 +162,7 @@ const HomePage: React.FC = () => {
             variants={itemVariants}
             className="grid gap-6 mb-8 md:grid-cols-1 lg:grid-cols-1"
           >
-            <BreezeStatusCard />
+            <AlpacaStatusCard />
           </motion.div>
 
           {/* Enhanced Controls Section */}

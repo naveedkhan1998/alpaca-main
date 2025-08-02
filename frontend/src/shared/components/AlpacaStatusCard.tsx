@@ -17,7 +17,7 @@ import {
   CheckCircle2,
   XCircle,
 } from 'lucide-react';
-import { useCheckBreezeStatusQuery } from '@/api/breezeServices';
+import { useCheckAlpacaStatusQuery } from '@/api/alpacaService';
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -44,14 +44,14 @@ const itemVariants = {
   },
 };
 
-const BreezeStatusCard: React.FC = () => {
+const AlpacaStatusCard: React.FC = () => {
   const {
-    data: breezeStatusData,
+    data: alpacaStatusData,
     error,
     isLoading,
     isFetching,
     refetch,
-  } = useCheckBreezeStatusQuery(undefined, {
+  } = useCheckAlpacaStatusQuery(undefined, {
     pollingInterval: 60000,
   });
 
@@ -64,10 +64,9 @@ const BreezeStatusCard: React.FC = () => {
   }, [error]);
 
   const getOverallStatus = () => {
-    if (!breezeStatusData?.data) return 'unknown';
-    const { session_status, websocket_status } = breezeStatusData.data;
-    if (session_status && websocket_status) return 'healthy';
-    if (session_status || websocket_status) return 'partial';
+    if (!alpacaStatusData?.data) return 'unknown';
+    const { connection_status } = alpacaStatusData.data;
+    if (connection_status) return 'healthy';
     return 'down';
   };
 
@@ -143,15 +142,15 @@ const BreezeStatusCard: React.FC = () => {
             <motion.div variants={itemVariants} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <StatusItem
-                  title="Session Status"
-                  status={breezeStatusData?.data.session_status ?? false}
+                  title="Connection Status"
+                  status={alpacaStatusData?.data.connection_status ?? false}
                   isLoading={isLoading || isFetching}
                   icon={Radio}
                   description="Authentication & account access"
                 />
                 <StatusItem
                   title="Live Data Feed"
-                  status={breezeStatusData?.data.websocket_status ?? false}
+                  status={alpacaStatusData?.data.connection_status ?? false}
                   isLoading={isLoading || isFetching}
                   icon={Zap}
                   description="Real-time market data stream"
@@ -400,4 +399,4 @@ const OverallStatusIndicator: React.FC<{
   );
 };
 
-export default BreezeStatusCard;
+export default AlpacaStatusCard;

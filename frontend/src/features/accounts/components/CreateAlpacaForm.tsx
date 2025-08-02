@@ -31,18 +31,17 @@ import {
   PageSubHeader,
   PageContent,
 } from '@/components/PageLayout';
-import { useCreateBreezeMutation } from '@/api/breezeServices';
+import { useCreateAlpacaMutation } from '@/api/alpacaService';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   api_key: z.string().min(1, 'API Key is required'),
   api_secret: z.string().min(1, 'API Secret is required'),
-  session_token: z.string().optional(),
   is_active: z.boolean().default(true),
 });
 
-const CreateBreezeForm = () => {
-  const [createBreeze, { isLoading }] = useCreateBreezeMutation();
+const CreateAlpacaForm = () => {
+  const [createAlpaca, { isLoading }] = useCreateAlpacaMutation();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,20 +49,19 @@ const CreateBreezeForm = () => {
       name: '',
       api_key: '',
       api_secret: '',
-      session_token: '',
       is_active: true,
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await createBreeze(values).unwrap();
-      toast.success('Breeze account created successfully!');
+      await createAlpaca(values).unwrap();
+      toast.success('Alpaca account created successfully!');
       form.reset();
       window.location.reload();
     } catch (error) {
-      toast.error('Failed to create breeze account.');
-      console.error('Failed to create breeze account:', error);
+      toast.error('Failed to create alpaca account.');
+      console.error('Failed to create alpaca account:', error);
     }
   };
 
@@ -204,4 +202,4 @@ const CreateBreezeForm = () => {
   );
 };
 
-export default CreateBreezeForm;
+export default CreateAlpacaForm;

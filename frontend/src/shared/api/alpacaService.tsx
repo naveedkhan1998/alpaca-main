@@ -1,15 +1,15 @@
 import {
-  BreezeAccount,
-  CreateBreezeAccount,
   ApiResponse,
-  BreezeStatusResponse,
-  UpdateBreezeParams,
+  AlpacaAccount,
+  CreateAlpacaAccount,
+  UpdateAlpacaParams,
+  AlpacaStatusResponse,
 } from '@/types/common-types';
 import { baseApi } from './baseApi';
 
-export const breezeApi = baseApi.injectEndpoints({
+export const alpacaApi = baseApi.injectEndpoints({
   endpoints: builder => ({
-    getBreeze: builder.query<ApiResponse<BreezeAccount[]>, void>({
+    getAlpaca: builder.query<ApiResponse<AlpacaAccount[]>, void>({
       query: () => {
         return {
           url: 'core/alpaca/',
@@ -21,7 +21,7 @@ export const breezeApi = baseApi.injectEndpoints({
       },
       providesTags: ['Alpaca'],
     }),
-    checkBreezeStatus: builder.query<BreezeStatusResponse, void>({
+    checkAlpacaStatus: builder.query<AlpacaStatusResponse, void>({
       query: () => {
         return {
           url: 'core/alpaca/alpaca_status',
@@ -33,7 +33,7 @@ export const breezeApi = baseApi.injectEndpoints({
       },
       providesTags: ['Alpaca'],
     }),
-    createBreeze: builder.mutation<BreezeAccount, CreateBreezeAccount>({
+    createAlpaca: builder.mutation<AlpacaAccount, CreateAlpacaAccount>({
       query: data => ({
         url: 'core/alpaca/',
         method: 'POST',
@@ -44,7 +44,7 @@ export const breezeApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Alpaca'],
     }),
-    updateBreeze: builder.mutation<BreezeAccount, UpdateBreezeParams>({
+    updateAlpaca: builder.mutation<AlpacaAccount, UpdateAlpacaParams>({
       query: ({ data }) => ({
         url: `core/alpaca/${data.id}/`,
         method: 'PUT',
@@ -57,7 +57,7 @@ export const breezeApi = baseApi.injectEndpoints({
     }),
     startWebsocket: builder.mutation<void, void>({
       query: () => ({
-        url: `core/breeze/websocket_start/`,
+        url: `core/alpaca/websocket_start/`,
         method: 'POST',
         headers: {
           'Content-type': 'application/json',
@@ -69,9 +69,9 @@ export const breezeApi = baseApi.injectEndpoints({
 });
 
 export const {
-  useGetBreezeQuery,
-  useCheckBreezeStatusQuery,
-  useUpdateBreezeMutation,
-  useCreateBreezeMutation,
+  useGetAlpacaQuery,
+  useCheckAlpacaStatusQuery,
+  useUpdateAlpacaMutation,
+  useCreateAlpacaMutation,
   useStartWebsocketMutation,
-} = breezeApi;
+} = alpacaApi;

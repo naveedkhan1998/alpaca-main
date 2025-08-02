@@ -30,11 +30,12 @@ import {
 } from '@/components/ui/drawer';
 import type { Instrument } from '@/types/common-types';
 import { useAppSelector } from 'src/app/hooks';
-import {
-  getHasBreezeAccount,
-  getIsBreezeAccountLoading,
-} from 'src/features/auth/authSlice';
+
 import { useIsMobile } from '@/hooks/useMobile';
+import {
+  getHasAlpacaAccount,
+  getIsAlpacaAccountLoading,
+} from 'src/features/auth/authSlice';
 
 interface InstrumentCardProps {
   instrument: Instrument;
@@ -47,15 +48,15 @@ export const InstrumentCard: React.FC<InstrumentCardProps> = ({
   onDelete,
   isDeleting,
 }) => {
-  const hasBreezeAccount = useAppSelector(getHasBreezeAccount);
-  const isBreezeAccountLoading = useAppSelector(getIsBreezeAccountLoading);
+  const hasAlpacaAccount = useAppSelector(getHasAlpacaAccount);
+  const isAlpacaAccountLoading = useAppSelector(getIsAlpacaAccountLoading);
   const [showAccountDialog, setShowAccountDialog] = useState(false);
   const isMobile = useIsMobile();
 
   const isLoading = !instrument.percentage?.is_loading;
 
   const handleDeleteClick = () => {
-    if (!hasBreezeAccount && !isBreezeAccountLoading) {
+    if (!hasAlpacaAccount && !isAlpacaAccountLoading) {
       setShowAccountDialog(true);
       return;
     }
@@ -214,7 +215,7 @@ export const InstrumentCard: React.FC<InstrumentCardProps> = ({
                 variant="outline"
                 onClick={handleDeleteClick}
                 className="gap-2 text-destructive hover:text-destructive-foreground hover:bg-destructive"
-                disabled={isDeleting || isBreezeAccountLoading}
+                disabled={isDeleting || isAlpacaAccountLoading}
               >
                 <TrashIcon className="w-4 h-4" />
                 Delete

@@ -1,32 +1,15 @@
 import { motion } from 'framer-motion';
-import {
-  RefreshCw,
-  ExternalLink,
-  CheckCircle,
-  Power,
-  User,
-  KeyRound,
-  Clock,
-  Info,
-} from 'lucide-react';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { CheckCircle, Power, User, Clock, Info } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import type { BreezeAccount } from '@/types/common-types';
+import type { AlpacaAccount } from '@/types/common-types';
 
 interface AccountDashboardProps {
-  account: BreezeAccount;
+  account: AlpacaAccount;
   lastUpdatedHours: number | null;
-  onUpdateSession: () => void;
-  onOpenLink: (apiKey: string) => void;
 }
 
 const iconVariants = {
@@ -41,8 +24,6 @@ const iconVariants = {
 const AccountDashboard = ({
   account,
   lastUpdatedHours,
-  onUpdateSession,
-  onOpenLink,
 }: AccountDashboardProps) => (
   <motion.div
     initial="hidden"
@@ -56,7 +37,7 @@ const AccountDashboard = ({
           className="flex items-center justify-between"
         >
           <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
-            Breeze Account Dashboard
+            Alpaca Account Dashboard
           </CardTitle>
           <Badge
             variant={account.is_active ? 'success' : 'destructive'}
@@ -84,17 +65,6 @@ const AccountDashboard = ({
             </h3>
             <p className="text-xl font-semibold text-foreground">
               {account.name}
-            </p>
-          </div>
-          <div className="p-4 space-y-4 rounded-lg bg-background/50">
-            <h3 className="flex items-center font-semibold text-muted-foreground">
-              <KeyRound className="w-5 h-5 mr-3 text-primary" />
-              Session Token
-            </h3>
-            <p
-              className={`text-xl font-semibold ${account.session_token ? 'text-foreground' : 'text-destructive'}`}
-            >
-              {account.session_token ? '••••••••' : 'Not Set'}
             </p>
           </div>
         </motion.div>
@@ -134,28 +104,6 @@ const AccountDashboard = ({
           </Alert>
         </motion.div>
       </CardContent>
-
-      <CardFooter className="flex flex-col gap-3 p-6 bg-muted/50 md:flex-row">
-        <motion.div variants={iconVariants} className="w-full md:w-auto">
-          <Button
-            className="w-full text-white bg-primary hover:bg-primary/90"
-            onClick={onUpdateSession}
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Update Session Token
-          </Button>
-        </motion.div>
-        <motion.div variants={iconVariants} className="w-full md:w-auto">
-          <Button
-            variant="outline"
-            className="w-full bg-transparent"
-            onClick={() => onOpenLink(account.api_key)}
-          >
-            <ExternalLink className="w-4 h-4 mr-2" />
-            ICICI Breeze Portal
-          </Button>
-        </motion.div>
-      </CardFooter>
     </Card>
   </motion.div>
 );
