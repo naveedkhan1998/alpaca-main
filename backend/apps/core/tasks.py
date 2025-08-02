@@ -5,7 +5,8 @@ import time as PythonTime
 from celery import Task, shared_task
 from celery.utils.log import get_task_logger
 from django.core.cache import cache
-from pytz import timezone
+from django.utils import timezone
+import pytz
 
 from apps.account.models import User
 from .services.alpaca_service import AlpacaService
@@ -347,9 +348,33 @@ def fetch_historical_data(watchlist_asset_id: int):
                 f"Processing batch of {len(batch_data)} candles for asset {asset.symbol}"
             )
 
+            def is_market_hours(dt):
+                """Check if the given datetime is within US market hours (9:30 AM - 4:00 PM ET, Monday-Friday)"""
+                # Convert to US Eastern timezone
+                eastern = pytz.timezone("US/Eastern")
+                if dt.tzinfo is None:
+                    dt = timezone.make_aware(dt, timezone=pytz.UTC)
+
+                eastern_time = dt.astimezone(eastern)
+
+                # Check if it's a weekday (Monday=0, Sunday=6)
+                if eastern_time.weekday() > 4:  # Saturday or Sunday
+                    return False
+
+                # Check if it's within market hours (9:30 AM - 4:00 PM ET)
+                market_open = time(9, 30)  # 9:30 AM
+                market_close = time(16, 0)  # 4:00 PM
+
+                current_time = eastern_time.time()
+                return market_open <= current_time < market_close
+
             for bar in batch_data:
                 # Parse datetime from Alpaca format
                 timestamp = datetime.fromisoformat(bar["t"].replace("Z", "+00:00"))
+
+                # Skip candles outside market hours
+                if not is_market_hours(timestamp):
+                    continue
 
                 candle = Candle(
                     asset=asset,
@@ -373,8 +398,14 @@ def fetch_historical_data(watchlist_asset_id: int):
                 batch_time = datetime.now() - batch_start
 
                 logger.info(
-                    f"Created {len(candles_to_create)} candles for asset {asset.symbol}. "
+                    f"Created {len(candles_to_create)} market-hours candles for asset {asset.symbol} "
+                    f"(filtered from {len(batch_data)} total bars). "
                     f"DB time: {db_time.total_seconds():.2f}s, Total time: {batch_time.total_seconds():.2f}s"
+                )
+            else:
+                logger.info(
+                    f"No market-hours candles to create for asset {asset.symbol} "
+                    f"(filtered from {len(batch_data)} total bars)"
                 )
 
         logger.info(

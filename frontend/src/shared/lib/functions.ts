@@ -2,12 +2,48 @@ import { Candle } from '@/types/common-types';
 import { CandlestickData, LineData } from 'lightweight-charts';
 
 export function formatDate(originalDate: string) {
-  const parsedDate = Date.parse(originalDate);
-  const indianTimeZoneOffset = 5.5 * 60 * 60 * 1000;
-  const indianTime = parsedDate + indianTimeZoneOffset;
-  const parsedIndianDate = indianTime / 1000;
+  // Handle null, undefined, or empty strings
+  if (!originalDate || typeof originalDate !== 'string') {
+    console.warn('Invalid date string provided to formatDate:', originalDate);
+    return Math.floor(Date.now() / 1000); // Return current timestamp as fallback
+  }
 
-  return parsedIndianDate;
+  try {
+    // Use the original date string which includes timezone information
+    // This will parse correctly and maintain the original timezone
+    const parsedDate = new Date(originalDate);
+    
+    // Check if the parsed date is valid
+    if (isNaN(parsedDate.getTime())) {
+      console.warn('Failed to parse date string:', originalDate);
+      return Math.floor(Date.now() / 1000);
+    }
+
+    // Extract timezone offset from the original string
+    // Example: "2025-07-09T13:30:00-04:00" -> "-04:00"
+    const timezoneMatch = originalDate.match(/([+-]\d{2}:\d{2})$/);
+    
+    if (timezoneMatch) {
+      // If timezone is present, we need to adjust to show the original market time
+      const timezoneOffset = timezoneMatch[1];
+      const offsetMatch = timezoneOffset.match(/([+-])(\d{2}):(\d{2})/);
+      
+      if (offsetMatch) {
+        const [, sign, hours, minutes] = offsetMatch;
+        const offsetMinutes = (parseInt(hours) * 60 + parseInt(minutes)) * (sign === '-' ? -1 : 1);
+        
+        // Adjust the timestamp to show the time as it was in the original timezone
+        const adjustedTime = parsedDate.getTime() + (offsetMinutes * 60 * 1000);
+        return adjustedTime / 1000;
+      }
+    }
+
+    // If no timezone info, return as is
+    return parsedDate.getTime() / 1000;
+  } catch (error) {
+    console.warn('Error parsing date:', originalDate, error);
+    return Math.floor(Date.now() / 1000);
+  }
 }
 
 export const calculateMA = (
@@ -58,8 +94,9 @@ export const calculateBollingerBands = (
     const variance = sumSquares / period - mean ** 2;
     const stdDevValue = Math.sqrt(variance);
 
+    const dateField = data[i].timestamp || (data[i] as unknown as { date: string }).date;
     bands.push({
-      time: data[i].time,
+      time: formatDate(dateField),
       upper: mean + stdDev * stdDevValue,
       middle: mean,
       lower: mean - stdDev * stdDevValue,
@@ -85,8 +122,9 @@ export const calculateRSI = (data: Candle[], period: number = 14) => {
 
   let avgGain = gains / period;
   let avgLoss = losses / period;
+  const dateField = data[period].timestamp || (data[period] as unknown as { date: string }).date;
   rsi.push({
-    time: data[period].time,
+    time: formatDate(dateField),
     value: 100 - 100 / (1 + avgGain / avgLoss),
   });
 
@@ -99,8 +137,9 @@ export const calculateRSI = (data: Candle[], period: number = 14) => {
       avgGain = (avgGain * (period - 1)) / period;
       avgLoss = (avgLoss * (period - 1) - diff) / period;
     }
+    const dateFieldCurrent = data[i].timestamp || (data[i] as unknown as { date: string }).date;
     rsi.push({
-      time: data[i].time,
+      time: formatDate(dateFieldCurrent),
       value: 100 - 100 / (1 + avgGain / avgLoss),
     });
   }
@@ -130,17 +169,20 @@ export const calculateMACD = (
   const macdLine = shortEma.map((value, index) => value - longEma[index]);
   const signalLine = ema(
     //@ts-expect-error no shit 2
-    macdLine.map((value, index) => ({ close: value, time: data[index].time })),
+    macdLine.map((value, index) => ({ close: value, timestamp: data[index].timestamp || (data[index] as unknown as { date: string }).date })),
     signalPeriod
   );
   const histogram = macdLine.map((value, index) => value - signalLine[index]);
 
-  return data.map((_, index) => ({
-    time: data[index].time,
-    macd: macdLine[index],
-    signal: signalLine[index],
-    histogram: histogram[index],
-  }));
+  return data.map((candle, index) => {
+    const dateField = candle.timestamp || (candle as unknown as { date: string }).date;
+    return {
+      time: formatDate(dateField),
+      macd: macdLine[index],
+      signal: signalLine[index],
+      histogram: histogram[index],
+    };
+  });
 };
 
 export const calculateATR = (data: Candle[], period: number = 14) => {
@@ -166,7 +208,8 @@ export const calculateATR = (data: Candle[], period: number = 14) => {
       } else {
         atr = (atrs[atrs.length - 1].value * (period - 1) + tr) / period;
       }
-      atrs.push({ time: formatDate(data[i].date), value: atr });
+      const dateField = data[i].timestamp || (data[i] as unknown as { date: string }).date;
+      atrs.push({ time: formatDate(dateField), value: atr });
     }
   }
   return atrs;
