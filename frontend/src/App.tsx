@@ -12,7 +12,7 @@ import {
   checkHealth as checkWorkersHealth,
   setServiceStatus,
 } from './features/health/healthSlice';
-import { useHealthCheckQuery } from './shared/api/baseApi';
+import { useHealthCheckQuery } from '@/api/baseApi';
 import LoadingScreen from './shared/components/LoadingScreen';
 
 import HomePage from './features/home';
