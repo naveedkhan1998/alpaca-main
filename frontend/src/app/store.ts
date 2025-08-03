@@ -4,6 +4,8 @@ import { baseApi } from '@/api/baseApi';
 import authSlice from '../features/auth/authSlice';
 import graphSlice from '../features/graphs/graphSlice';
 import healthSlice from '../features/health/healthSlice';
+import watchlistSlice from '../features/watchlists/watchlistSlice';
+import assetSlice from '../features/assets/assetSlice';
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +13,8 @@ export const store = configureStore({
     auth: authSlice,
     graph: graphSlice,
     health: healthSlice,
+    watchlist: watchlistSlice,
+    asset: assetSlice,
   },
 
   middleware: getDefaultMiddleware =>
