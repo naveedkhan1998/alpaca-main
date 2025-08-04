@@ -43,6 +43,9 @@ class WebsocketClient:
         self.ws_app = None
         self.subscribed_symbols = set()
         self.running = False
+        self.authenticated = False
+        self.auth_timeout = 30  # 30 seconds timeout for authentication
+        self.auth_start_time = None
         self.lock = threading.Lock()
 
         # In-memory cache for assets {symbol: asset_id}
@@ -89,6 +92,7 @@ class WebsocketClient:
         # Start background threads
         threading.Thread(target=self.subscription_manager, daemon=True).start()
         threading.Thread(target=self.batch_processor, daemon=True).start()
+        threading.Thread(target=self.auth_timeout_checker, daemon=True).start()
         # Start the WebSocket connection in the main thread
         self.run_forever()
 
@@ -115,8 +119,7 @@ class WebsocketClient:
         """Handles the WebSocket connection opening."""
         logger.info("WebSocket connection opened.")
         self.authenticate()
-        # Immediately subscribe to the current watchlist
-        self.update_subscriptions()
+        # Do NOT subscribe immediately - wait for authentication confirmation
 
     def authenticate(self):
         """Sends the authentication message to Alpaca."""
@@ -125,8 +128,13 @@ class WebsocketClient:
             "key": self.api_key,
             "secret": self.secret_key,
         }
-        self.ws_app.send(json.dumps(auth_msg))
-        logger.info("Authentication request sent.")
+        try:
+            self.auth_start_time = time.time()
+            self.ws_app.send(json.dumps(auth_msg))
+            logger.info("Authentication request sent.")
+        except Exception as e:
+            logger.error(f"Failed to send authentication message: {e}")
+            self.stop()
 
     def on_message(self, ws, message):
         """
@@ -135,26 +143,49 @@ class WebsocketClient:
         logger.info(f"Received raw message: {message}")  # Log raw message
         try:
             data = json.loads(message)
+
+            # Handle the case where data might be a single item or a list
+            if not isinstance(data, list):
+                data = [data]
+
             for item in data:
                 msg_type = item.get("T")
 
-                # Explicitly check for authentication error
-                if msg_type == "error" and item.get("msg") == "authentication failed":
-                    logger.error(
-                        "Authentication failed! Please check your API keys and permissions."
-                    )
-                    self.stop()  # Stop the client on auth failure
-                    return
+                # Handle authentication responses
+                if msg_type == "error":
+                    error_msg = item.get("msg", "Unknown error")
+                    if "authentication" in error_msg.lower():
+                        logger.error(
+                            f"Authentication failed: {error_msg}. Please check your API keys and permissions."
+                        )
+                        self.stop()  # Stop the client on auth failure
+                        return
+                    else:
+                        logger.error(f"WebSocket error: {error_msg}")
 
-                if msg_type == "success" and item.get("msg") == "authenticated":
-                    logger.info("Successfully authenticated.")
+                elif msg_type == "success":
+                    success_msg = item.get("msg", "")
+                    if "authenticated" in success_msg.lower():
+                        logger.info("Successfully authenticated.")
+                        self.authenticated = True
+                        # Now that we're authenticated, subscribe to watchlists
+                        self.update_subscriptions()
+                    else:
+                        logger.info(f"Success message: {success_msg}")
+
                 elif msg_type == "subscription":
                     logger.info(f"Subscription update: {item}")
+
                 elif msg_type == "t":
                     # Add trade to buffer for batch processing
                     self.tick_buffer.append(item)
+                    logger.debug(f"Received trade tick for {item.get('S', 'UNKNOWN')}: price={item.get('p', 'N/A')}, volume={item.get('s', 'N/A')}")
+
                 else:
-                    logger.debug(f"Received unhandled message type: {item}")
+                    logger.debug(
+                        f"Received unhandled message type: {msg_type}, content: {item}"
+                    )
+
         except json.JSONDecodeError:
             logger.error(f"Failed to decode message: {message}")
         except Exception as e:
@@ -166,17 +197,21 @@ class WebsocketClient:
 
     def on_close(self, ws, close_status_code, close_msg):
         """Handles the WebSocket connection closing."""
+        self.authenticated = False
+        self.auth_start_time = None
         logger.info(
             f"WebSocket connection closed: code={close_status_code}, msg={close_msg}"
         )
 
     def get_watchlist_symbols(self) -> set:
         """Fetches the current set of symbols from all active watchlists."""
-        return set(
+        symbols = set(
             WatchListAsset.objects.filter(
                 watchlist__is_active=True, is_active=True
             ).values_list("asset__symbol", flat=True)
         )
+        logger.info(f"Found {len(symbols)} active watchlist symbols: {symbols}")
+        return symbols
 
     def update_asset_cache(self, symbols: set):
         """Updates the in-memory asset cache."""
@@ -186,19 +221,41 @@ class WebsocketClient:
 
     def subscription_manager(self):
         """Periodically checks for watchlist changes and updates subscriptions."""
+        logger.info("Subscription manager thread started")
         while self.running:
             try:
-                self.update_subscriptions()
+                # Only update subscriptions if we're authenticated
+                if self.authenticated:
+                    logger.debug("Subscription manager: checking for watchlist changes...")
+                    self.update_subscriptions()
+                else:
+                    logger.debug("Subscription manager waiting for authentication...")
             except Exception as e:
                 logger.error(f"Error in subscription manager: {e}", exc_info=True)
-            time.sleep(60)  # Check for updates every 60 seconds
+            
+            # Sleep for 60 seconds, but check every 5 seconds if we should stop
+            for i in range(12):  # 12 * 5 = 60 seconds
+                if not self.running:
+                    break
+                time.sleep(5)
+        logger.info("Subscription manager thread stopped")
 
     def update_subscriptions(self):
         """Updates subscriptions based on watchlist changes."""
+        # Don't run if not authenticated
+        if not self.authenticated:
+            logger.debug("Skipping subscription update - not authenticated yet")
+            return
+            
+        logger.info("Updating subscriptions...")
         with self.lock:
             current_symbols = self.get_watchlist_symbols()
             new_symbols = current_symbols - self.subscribed_symbols
             removed_symbols = self.subscribed_symbols - current_symbols
+
+            logger.info(f"Current symbols: {current_symbols}")
+            logger.info(f"New symbols to subscribe: {new_symbols}")
+            logger.info(f"Symbols to unsubscribe: {removed_symbols}")
 
             if new_symbols:
                 self.subscribe(list(new_symbols))
@@ -213,24 +270,57 @@ class WebsocketClient:
                 for symbol in removed_symbols:
                     self.asset_cache.pop(symbol, None)
                 logger.info(f"Unsubscribed from symbols: {removed_symbols}")
+                
+            if not new_symbols and not removed_symbols:
+                logger.info("No subscription changes needed - no active watchlist symbols found")
+                # If no watchlist symbols and no current subscriptions, subscribe to test symbols
+                if not self.subscribed_symbols:
+                    test_symbols = ["AAPL", "MSFT", "GOOGL"]
+                    logger.info(f"No watchlist symbols found. Subscribing to test symbols: {test_symbols}")
+                    self.subscribe(test_symbols)
+                    self.subscribed_symbols.update(test_symbols)
 
     def subscribe(self, symbols: list):
         """Subscribes to trades for the given symbols."""
-        if self.ws_app and self.ws_app.sock and self.ws_app.sock.connected:
+        if not self.authenticated:
+            logger.warning("Cannot subscribe: not authenticated yet")
+            return
+        if not (self.ws_app and self.ws_app.sock and self.ws_app.sock.connected):
+            logger.warning("Cannot subscribe: WebSocket not connected")
+            return
+
+        try:
             sub_msg = {"action": "subscribe", "trades": symbols}
             self.ws_app.send(json.dumps(sub_msg))
+            logger.info(f"Subscription request sent for symbols: {symbols}")
+        except Exception as e:
+            logger.error(f"Failed to send subscription message: {e}")
 
     def unsubscribe(self, symbols: list):
         """Unsubscribes from trades for the given symbols."""
-        if self.ws_app and self.ws_app.sock and self.ws_app.sock.connected:
+        if not self.authenticated:
+            logger.warning("Cannot unsubscribe: not authenticated yet")
+            return
+        if not (self.ws_app and self.ws_app.sock and self.ws_app.sock.connected):
+            logger.warning("Cannot unsubscribe: WebSocket not connected")
+            return
+
+        try:
             unsub_msg = {"action": "unsubscribe", "trades": symbols}
             self.ws_app.send(json.dumps(unsub_msg))
+            logger.info(f"Unsubscription request sent for symbols: {symbols}")
+        except Exception as e:
+            logger.error(f"Failed to send unsubscription message: {e}")
 
     def batch_processor(self):
         """Processes ticks from the buffer in batches."""
+        logger.info("Batch processor thread started")
         while self.running:
             try:
                 if not self.tick_buffer:
+                    # Log every 30 seconds to show thread is alive
+                    if int(time.time()) % 30 == 0:
+                        logger.debug("Batch processor: waiting for trade ticks...")
                     time.sleep(1)  # Wait if buffer is empty
                     continue
 
@@ -240,10 +330,12 @@ class WebsocketClient:
                     ticks_to_process.append(self.tick_buffer.popleft())
 
                 if ticks_to_process:
+                    logger.info(f"Processing batch of {len(ticks_to_process)} trade ticks")
                     self.process_batch(ticks_to_process)
 
             except Exception as e:
                 logger.error(f"Error in batch processor: {e}", exc_info=True)
+        logger.info("Batch processor thread stopped")
 
     def process_batch(self, ticks: list):
         """
@@ -345,3 +437,32 @@ class WebsocketClient:
 
         except Exception as e:
             logger.error(f"Error saving candles: {e}", exc_info=True)
+
+    def auth_timeout_checker(self):
+        """Checks for authentication timeout and restarts connection if needed."""
+        logger.info("Auth timeout checker thread started")
+        while self.running:
+            try:
+                if (
+                    self.auth_start_time
+                    and not self.authenticated
+                    and time.time() - self.auth_start_time > self.auth_timeout
+                ):
+                    logger.error(
+                        f"Authentication timeout after {self.auth_timeout} seconds. Restarting connection..."
+                    )
+                    self.auth_start_time = None
+                    if self.ws_app:
+                        self.ws_app.close()
+                else:
+                    # Log every 30 seconds to show thread is alive
+                    if int(time.time()) % 30 == 0:
+                        if self.authenticated:
+                            logger.debug("Auth timeout checker: connection healthy")
+                        else:
+                            logger.debug("Auth timeout checker: waiting for authentication")
+                            
+                time.sleep(5)  # Check every 5 seconds
+            except Exception as e:
+                logger.error(f"Error in auth timeout checker: {e}", exc_info=True)
+        logger.info("Auth timeout checker thread stopped")
