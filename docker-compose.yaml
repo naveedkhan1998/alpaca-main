@@ -118,5 +118,20 @@ services:
         condition: service_healthy
     restart: always
 
+  websocket:
+    image: naveedkhan1998/alpaca-backend
+    container_name: alpaca-websocket
+    env_file:
+      - ./.envs/.env.local
+    volumes:
+      - ./backend/:/app/
+    depends_on:
+      backend:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    entrypoint: ["./scripts/run_websocket.sh"]
+    restart: always
+
 volumes:
   redis-data:
