@@ -507,7 +507,11 @@ class WatchListViewSet(viewsets.ModelViewSet):
         watchlist_asset, created = WatchListAsset.objects.get_or_create(
             watchlist=watchlist, asset=asset, defaults={"is_active": True}
         )
+        
+        # Always trigger historical data fetch when adding to ensure continuity
+        # The task itself will determine if any data needs to be fetched
         fetch_historical_data.delay(watchlist_asset.id)
+        
         if not created and not watchlist_asset.is_active:
             watchlist_asset.is_active = True
             watchlist_asset.save()
@@ -515,6 +519,7 @@ class WatchListViewSet(viewsets.ModelViewSet):
 
         if created:
             serializer = WatchListAssetSerializer(watchlist_asset)
+            logger.info(f"Asset {asset.symbol} added to watchlist {watchlist.name}. Historical data fetch triggered.")
             return Response(
                 {"msg": "Asset added to watchlist", "data": serializer.data},
                 status=status.HTTP_201_CREATED,

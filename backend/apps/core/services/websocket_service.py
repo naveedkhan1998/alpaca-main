@@ -189,6 +189,25 @@ class WebsocketClient:
             new_mappings = {a["symbol"]: a["id"] for a in assets}
             self.asset_cache.update(new_mappings)
             logger.debug("Updated asset cache with %d symbols: %s", len(new_mappings), new_mappings)
+            
+        # When adding new assets, trigger historical data fetch for any gaps
+        for symbol in symbols:
+            if symbol in new_mappings:
+                asset_id = new_mappings[symbol]
+                # Check if we have recent data for this asset
+                latest_candle = Candle.objects.filter(
+                    asset_id=asset_id, 
+                    timeframe="1Min"
+                ).order_by("-timestamp").first()
+                
+                if latest_candle:
+                    time_diff = timezone.now() - latest_candle.timestamp
+                    # If latest candle is more than 2 minutes old, log it
+                    if time_diff.total_seconds() > 120:
+                        logger.warning(
+                            f"Asset {symbol} latest candle is {time_diff} old. "
+                            f"Historical fetch may be needed to fill gap."
+                        )
 
     def subscription_manager(self):
         logger.debug("subscription_manager started")

@@ -310,7 +310,7 @@ def fetch_historical_data(watchlist_asset_id: int):
         secret_key=account.api_secret,
     )
 
-    # Define date range - 1 year of data
+    # Define date range - 1 year of data, but fetch up to current minute
     end_date = datetime.now()
     start_date = end_date - timedelta(days=365)
 
@@ -320,7 +320,36 @@ def fetch_historical_data(watchlist_asset_id: int):
     )
 
     if existing_candles.exists():
-        start_date = existing_candles.last().timestamp
+        last_candle_time = existing_candles.last().timestamp
+        # Only update start_date if we need to fill a gap
+        # Add 1 minute to avoid duplicate data
+        start_date = last_candle_time + timedelta(minutes=1)
+
+        # If the last candle is very recent (within last 5 minutes),
+        # we might not need to fetch anything
+        if start_date >= end_date:
+            logger.info(
+                f"Asset {watchlist_asset.asset.symbol} already has recent data up to {last_candle_time}"
+            )
+            return
+
+        # During market hours, prioritize fetching recent data first
+        eastern = pytz.timezone("US/Eastern")
+        current_eastern = datetime.now(eastern)
+        is_market_open = current_eastern.weekday() < 5 and PythonTime(  # Monday-Friday
+            9, 30
+        ) <= current_eastern.time() < PythonTime(
+            16, 0
+        )  # 9:30 AM - 4:00 PM ET
+
+        if is_market_open:
+            # Limit the date range to last 7 days during market hours for faster processing
+            market_start_date = max(start_date, end_date - timedelta(days=7))
+            if market_start_date > start_date:
+                logger.info(
+                    f"Market is open - prioritizing recent data for {watchlist_asset.asset.symbol} from {market_start_date}"
+                )
+                start_date = market_start_date
 
     try:
         # Fetch data in 2-day chunks similar to load_instrument_candles
