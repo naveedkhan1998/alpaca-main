@@ -111,7 +111,7 @@ class WebsocketClient:
                 logger.exception("run_forever blew up: %s", exc)
 
             if self.running:
-                logger.warning("Socket closed — reconnect in 10 s")
+                logger.warning("Socket closed — reconnect in 10 s")
                 time.sleep(10)
 
     def stop(self):
@@ -399,7 +399,7 @@ class WebsocketClient:
                 and not self.authenticated
                 and time.time() - self.auth_start_time > self.auth_timeout
             ):
-                logger.error("Auth timeout — restart socket")
+                logger.error("Auth timeout — restart socket")
                 self.auth_start_time = None
                 if self.ws_app:
                     self.ws_app.close()
