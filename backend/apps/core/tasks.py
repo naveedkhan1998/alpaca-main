@@ -289,7 +289,7 @@ def start_alpaca_stream(account_id: int, symbols: list):
 @shared_task(name="fetch_historical_data")
 def fetch_historical_data(watchlist_asset_id: int):
     """
-    Fetches 1 year of historical data for the asset in the watchlist using 2-day batches.
+    Fetches 2 year of historical data for the asset in the watchlist using 2-day batches.
     Creates Candle objects for the fetched data.
     """
     watchlist_asset = WatchListAsset.objects.filter(id=watchlist_asset_id).first()
@@ -310,9 +310,9 @@ def fetch_historical_data(watchlist_asset_id: int):
         secret_key=account.api_secret,
     )
 
-    # Define date range - 1 year of data, but fetch up to current minute
+    # Define date range - 2 year of data, but fetch up to current minute
     end_date = datetime.now()
-    start_date = end_date - timedelta(days=365)
+    start_date = end_date - timedelta(days=730)
 
     # Check if we already have data and adjust start date
     existing_candles = Candle.objects.filter(asset=watchlist_asset.asset).order_by(
@@ -352,8 +352,8 @@ def fetch_historical_data(watchlist_asset_id: int):
                 start_date = market_start_date
 
     try:
-        # Fetch data in 2-day chunks similar to load_instrument_candles
-        chunk_size = timedelta(days=2)
+        # Fetch data in 10-day chunks similar to load_instrument_candles
+        chunk_size = timedelta(days=10)
         date_ranges = []
         current_date = start_date
 
