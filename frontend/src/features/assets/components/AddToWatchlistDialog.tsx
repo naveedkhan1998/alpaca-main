@@ -52,13 +52,13 @@ export const AddToWatchlistDialog: React.FC<AddToWatchlistDialogProps> = ({ asse
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Add to Watchlist</DialogTitle>
           <DialogDescription>Add {asset?.symbol} to one of your watchlists.</DialogDescription>
         </DialogHeader>
 
-        <div className="py-4 space-y-4">
+        <div className="py-2 space-y-4">
           {loadingWatchlists ? (
             <div className="space-y-2">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -76,7 +76,7 @@ export const AddToWatchlistDialog: React.FC<AddToWatchlistDialogProps> = ({ asse
                 value={selectedWatchlistId?.toString() || ''}
                 onValueChange={value => setSelectedWatchlistId(parseInt(value))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="Choose a watchlist" />
                 </SelectTrigger>
                 <SelectContent>
@@ -96,7 +96,7 @@ export const AddToWatchlistDialog: React.FC<AddToWatchlistDialogProps> = ({ asse
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isAdding}>
             Cancel
           </Button>

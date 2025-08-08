@@ -10,6 +10,8 @@ interface AssetState {
   assetClassFilter: string;
   tradableFilter: string;
   quickFilterText: string;
+  viewMode: 'table' | 'grid';
+  density: 'comfortable' | 'compact';
 }
 
 const initialState: AssetState = {
@@ -21,6 +23,8 @@ const initialState: AssetState = {
   assetClassFilter: '',
   tradableFilter: '',
   quickFilterText: '',
+  viewMode: 'table',
+  density: 'comfortable',
 };
 
 const assetSlice = createSlice({
@@ -55,6 +59,18 @@ const assetSlice = createSlice({
     setQuickFilterText: (state, action: PayloadAction<string>) => {
       state.quickFilterText = action.payload;
     },
+    setViewMode: (state, action: PayloadAction<'table' | 'grid'>) => {
+      state.viewMode = action.payload;
+    },
+    setDensity: (state, action: PayloadAction<'comfortable' | 'compact'>) => {
+      state.density = action.payload;
+    },
+    clearFilters: state => {
+      state.assetClassFilter = '';
+      state.tradableFilter = '';
+      state.quickFilterText = '';
+      state.currentPage = 0;
+    },
   },
 });
 
@@ -66,6 +82,9 @@ export const {
   setAssetClassFilter,
   setTradableFilter,
   setQuickFilterText,
+  setViewMode,
+  setDensity,
+  clearFilters,
 } = assetSlice.actions;
 
 export default assetSlice.reducer;

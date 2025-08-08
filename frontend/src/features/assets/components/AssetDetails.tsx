@@ -18,13 +18,13 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Skeleton className="w-10 h-10" />
+          <Skeleton className="w-10 h-10 rounded-md" />
           <div className="flex-1 space-y-2">
-            <Skeleton className="w-48 h-8" />
+            <Skeleton className="w-48 h-7" />
             <Skeleton className="w-64 h-4" />
           </div>
         </div>
-        <Skeleton className="w-full h-64" />
+        <Skeleton className="w-full h-56 rounded-md" />
       </div>
     );
   }
@@ -61,20 +61,18 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-2xl">{asset.symbol}</CardTitle>
+              <CardTitle className="text-2xl tracking-tight">{asset.symbol}</CardTitle>
               <p className="mt-1 text-muted-foreground">{asset.name}</p>
             </div>
-            <Badge className={getAssetClassColor(asset.asset_class)}>
-              {asset.asset_class.replace('_', ' ').toUpperCase()}
-            </Badge>
+            <Badge className={`${getAssetClassColor(asset.asset_class)} shadow-sm`}>{asset.asset_class.replace('_', ' ').toUpperCase()}</Badge>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {detailsData.map((item, index) => (
               <div key={index} className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">{item.label}</p>
-                <p className="text-base">{item.value}</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{item.label}</p>
+                <p className="text-base leading-snug">{item.value}</p>
               </div>
             ))}
           </div>
@@ -107,7 +105,7 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
           )}
 
           <Separator className="my-6" />
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-muted-foreground">
             <div className="flex items-center gap-1"><Calendar className="w-4 h-4" />Created: {new Date(asset.created_at).toLocaleDateString()}</div>
             <div className="flex items-center gap-1"><Calendar className="w-4 h-4" />Updated: {new Date(asset.updated_at).toLocaleDateString()}</div>
           </div>
