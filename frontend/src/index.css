@@ -4,115 +4,121 @@
 
 @layer base {
   :root {
-    /* Light Mode - Clean Trading Dashboard */
-    --background: 210 20% 98%; /* soft neutral */
-    --foreground: 222 47% 11%; /* slate-900 */
+  /* Light Mode – Graphite & Emerald (focused, high-contrast, readable) */
+  --background: 220 20% 98%;
+  --foreground: 220 25% 12%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 25% 12%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 25% 12%;
 
-    --primary: 220 70% 45%; /* finance blue */
-    --primary-foreground: 210 40% 98%;
+  /* Primary: clear trading blue */
+  --primary: 200 100% 40%;
+  --primary-foreground: 210 40% 98%;
 
-    --secondary: 220 14% 96%; /* subtle slate */
-    --secondary-foreground: 222 47% 11%;
+  /* Neutrals */
+  --secondary: 220 18% 96%;
+  --secondary-foreground: 220 25% 18%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 215 16% 45%;
+  --muted: 220 16% 95%;
+  --muted-foreground: 220 10% 42%;
 
-    --accent: 200 80% 45%; /* cyan/blue accent */
-    --accent-foreground: 210 40% 98%;
+  /* Accent: crisp cyan */
+  --accent: 190 90% 42%;
+  --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 72% 50%;
-    --destructive-foreground: 0 0% 98%;
+  /* Semantic */
+  --destructive: 0 75% 45%;
+  --destructive-foreground: 0 0% 98%;
 
-    --success: 145 60% 35%;
-    --success-foreground: 0 0% 98%;
+  --success: 155 60% 35%;
+  --success-foreground: 0 0% 98%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 222 47% 11%;
+  --warning: 45 100% 49%;
+  --warning-foreground: 220 25% 12%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 220 70% 45%;
+  --border: 220 20% 88%;
+  --input: 220 20% 88%;
+  --ring: 200 100% 40%;
 
-    /* Chart colors optimized for trading data */
-    --chart-1: 220 70% 45%; /* Primary blue */
-    --chart-2: 145 60% 40%; /* Success green */
-    --chart-3: 0 72% 50%; /* Danger red */
-    --chart-4: 38 92% 50%; /* Warning orange */
-    --chart-5: 268 70% 50%; /* Purple accent */
+  /* Chart palette (light) */
+  --chart-1: 200 100% 40%;
+  --chart-2: 155 60% 42%;
+  --chart-3: 0 75% 45%;
+  --chart-4: 45 100% 51%;
+  --chart-5: 265 70% 55%;
 
-    --radius: 0.5rem;
+  --radius: 0.5rem;
 
-    /* Sidebar */
-    --sidebar-background: 220 18% 97%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 220 70% 45%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 220 70% 45%;
+  /* Sidebar */
+  --sidebar-background: 220 18% 97%;
+  --sidebar-foreground: 220 25% 14%;
+  --sidebar-primary: 200 100% 40%;
+  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-accent: 220 14% 96%;
+  --sidebar-accent-foreground: 220 25% 18%;
+  --sidebar-border: 220 20% 86%;
+  --sidebar-ring: 200 100% 40%;
 
-    --vh: 1vh;
+  --vh: 1vh;
   }
 
   .dark {
-    /* Dark Mode - Focused for long sessions */
-    --background: 224 15% 9%; /* deep slate */
-    --foreground: 210 20% 94%;
+  /* Dark Mode – Midnight Terminal (low-glare, vibrant accents) */
+  --background: 220 17% 7%;
+  --foreground: 210 20% 95%;
 
-    --card: 222 22% 12%;
-    --card-foreground: 210 20% 94%;
+  --card: 220 15% 12%;
+  --card-foreground: 210 20% 95%;
 
-    --popover: 222 22% 12%;
-    --popover-foreground: 210 20% 94%;
+  --popover: 220 15% 12%;
+  --popover-foreground: 210 20% 95%;
 
-    --primary: 217 92% 60%; /* vivid blue */
-    --primary-foreground: 222 47% 11%;
+  /* Primary: electric cyan-blue */
+  --primary: 200 100% 55%;
+  --primary-foreground: 222 47% 11%;
 
-    --secondary: 225 15% 14%;
-    --secondary-foreground: 210 20% 94%;
+  --secondary: 220 12% 16%;
+  --secondary-foreground: 210 20% 92%;
 
-    --muted: 225 15% 14%;
-    --muted-foreground: 215 20% 65%;
+  --muted: 220 12% 16%;
+  --muted-foreground: 220 12% 65%;
 
-    --accent: 200 90% 55%;
-    --accent-foreground: 222 47% 11%;
+  /* Accent: saturated violet for highlights */
+  --accent: 265 85% 62%;
+  --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 20% 94%;
+  --destructive: 0 75% 58%;
+  --destructive-foreground: 210 20% 95%;
 
-    --success: 145 60% 45%;
-    --success-foreground: 222 47% 11%;
+  --success: 155 60% 48%;
+  --success-foreground: 222 47% 11%;
 
-    --warning: 38 92% 60%;
-    --warning-foreground: 222 47% 11%;
+  --warning: 45 100% 55%;
+  --warning-foreground: 222 47% 11%;
 
-    --border: 215 19% 25%;
-    --input: 215 19% 23%;
-    --ring: 217 92% 60%;
+  --border: 220 10% 24%;
+  --input: 220 10% 22%;
+  --ring: 200 100% 55%;
 
-    /* Dark charts */
-    --chart-1: 217 92% 60%;
-    --chart-2: 145 60% 45%;
-    --chart-3: 0 84% 60%;
-    --chart-4: 38 92% 60%;
-    --chart-5: 268 70% 60%;
+  /* Chart palette (dark) */
+  --chart-1: 200 100% 55%;
+  --chart-2: 155 60% 52%;
+  --chart-3: 0 75% 58%;
+  --chart-4: 45 100% 55%;
+  --chart-5: 265 85% 62%;
 
-    /* Sidebar */
-    --sidebar-background: 224 15% 8%;
-    --sidebar-foreground: 210 20% 94%;
-    --sidebar-primary: 217 92% 60%;
-    --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-accent: 225 15% 13%;
-    --sidebar-accent-foreground: 210 20% 94%;
-    --sidebar-border: 215 19% 22%;
-    --sidebar-ring: 217 92% 60%;
+  /* Sidebar */
+  --sidebar-background: 220 17% 6%;
+  --sidebar-foreground: 210 20% 95%;
+  --sidebar-primary: 200 100% 55%;
+  --sidebar-primary-foreground: 222 47% 11%;
+  --sidebar-accent: 220 12% 14%;
+  --sidebar-accent-foreground: 210 20% 92%;
+  --sidebar-border: 220 10% 20%;
+  --sidebar-ring: 200 100% 55%;
   }
 
   @layer base {
