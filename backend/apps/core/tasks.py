@@ -329,7 +329,11 @@ def fetch_historical_data(watchlist_asset_id: int):
             .order_by("-timestamp")
             .first()
         )
-        start_date_1t = last_1t.timestamp + timedelta(minutes=1) if last_1t else end_date - timedelta(days=730)
+        start_date_1t = (
+            last_1t.timestamp + timedelta(minutes=1)
+            if last_1t
+            else end_date - timedelta(days=730)
+        )
 
         if start_date_1t < end_date:
             # chunk by 10 days
@@ -398,13 +402,16 @@ def fetch_historical_data(watchlist_asset_id: int):
             )
             # Determine start bucket to (re)build
             start_ts = (
-                last_tf.timestamp + delta if last_tf else (end_date - timedelta(days=730))
+                last_tf.timestamp + delta
+                if last_tf
+                else (end_date - timedelta(days=730))
             )
 
             # Build buckets using SQL for efficiency; collect minute IDs
             # anchor for date_bin is market open ET to align intraday buckets
             anchor = "1970-01-01 09:30:00-05:00"
             from django.db import connection
+
             with connection.cursor() as cur:
                 cur.execute(
                     """
@@ -474,7 +481,9 @@ def fetch_historical_data(watchlist_asset_id: int):
                     )
                 )
             Candle.objects.bulk_create(to_create, ignore_conflicts=True)
-            logger.info("Built %d %s candles for %s from 1T", len(to_create), tf, symbol)
+            logger.info(
+                "Built %d %s candles for %s from 1T", len(to_create), tf, symbol
+            )
         except Exception as e:
             logger.error("Error resampling %s for %s: %s", tf, symbol, e, exc_info=True)
 

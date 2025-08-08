@@ -42,9 +42,7 @@ class AssetFilter(django_filters.FilterSet):
         """Search across symbol and name fields"""
         if not value:
             return queryset.none()
-        return queryset.filter(
-            Q(symbol__icontains=value) | Q(name__icontains=value)
-        )
+        return queryset.filter(Q(symbol__icontains=value) | Q(name__icontains=value))
 
 
 class CandleFilter(django_filters.FilterSet):
@@ -55,7 +53,9 @@ class CandleFilter(django_filters.FilterSet):
     timeframe = django_filters.CharFilter(field_name="timeframe", lookup_expr="iexact")
 
     # Date range filters
-    start_date = django_filters.DateTimeFilter(field_name="timestamp", lookup_expr="gte")
+    start_date = django_filters.DateTimeFilter(
+        field_name="timestamp", lookup_expr="gte"
+    )
     end_date = django_filters.DateTimeFilter(field_name="timestamp", lookup_expr="lte")
 
     # Date filters (for specific dates)

@@ -238,23 +238,30 @@ class WebsocketClient:
 
     def update_asset_cache(self, symbols: set[str]):
         """Resolve symbol→asset_id and warn about recent gaps on 1T data."""
-        assets = Asset.objects.filter(symbol__in=symbols).values("symbol", "id", "asset_class")
+        assets = Asset.objects.filter(symbol__in=symbols).values(
+            "symbol", "id", "asset_class"
+        )
         with self.asset_lock:
             new_mappings = {a["symbol"]: a["id"] for a in assets}
             self.asset_cache.update(new_mappings)
             # keep fast access to asset_class by id for RTH filtering
             for a in assets:
                 self.asset_class_cache[a["id"]] = a["asset_class"]
-            logger.debug("Updated asset cache with %d symbols: %s", len(new_mappings), new_mappings)
+            logger.debug(
+                "Updated asset cache with %d symbols: %s",
+                len(new_mappings),
+                new_mappings,
+            )
 
         # Warn if we have gaps on 1-minute timeframe
         for symbol in symbols:
             if symbol in new_mappings:
                 asset_id = new_mappings[symbol]
-                latest_candle = Candle.objects.filter(
-                    asset_id=asset_id,
-                    timeframe="1T"
-                ).order_by("-timestamp").first()
+                latest_candle = (
+                    Candle.objects.filter(asset_id=asset_id, timeframe="1T")
+                    .order_by("-timestamp")
+                    .first()
+                )
 
                 if latest_candle:
                     time_diff = timezone.now() - latest_candle.timestamp
@@ -293,8 +300,13 @@ class WebsocketClient:
             gone = self.subscribed_symbols - current
 
             if new or gone:
-                logger.debug("Subscription update: current=%s, subscribed=%s, new=%s, gone=%s",
-                           current, self.subscribed_symbols, new, gone)
+                logger.debug(
+                    "Subscription update: current=%s, subscribed=%s, new=%s, gone=%s",
+                    current,
+                    self.subscribed_symbols,
+                    new,
+                    gone,
+                )
 
             if new:
                 self.subscribe(list(new))
@@ -416,7 +428,10 @@ class WebsocketClient:
 
             # Filter out after-hours ticks for non-24/7 asset classes (e.g., us_equity, us_option)
             asset_class = self.asset_class_cache.get(aid)
-            if asset_class in {"us_equity", "us_option"} and not self._is_regular_trading_hours(ts):
+            if asset_class in {
+                "us_equity",
+                "us_option",
+            } and not self._is_regular_trading_hours(ts):
                 continue
 
             key = (aid, ts)
@@ -469,13 +484,17 @@ class WebsocketClient:
             self._persist_open_buckets(touched_by_tf, latest_ts)
             self._flush_closed_buckets(latest_ts)
 
-    def _update_higher_timeframes(self, m1_map: dict[tuple[int, datetime], dict[str, Any]]):
+    def _update_higher_timeframes(
+        self, m1_map: dict[tuple[int, datetime], dict[str, Any]]
+    ):
         """Update in-memory accumulators for TFs > 1T from freshly built 1T bars.
 
         Returns a dict mapping timeframe to the set of (asset_id, bucket_ts) keys updated
         during this call, so we can selectively persist them.
         """
-        touched: dict[str, set[tuple[int, datetime]]] = {tf: set() for tf in self._tf_acc}
+        touched: dict[str, set[tuple[int, datetime]]] = {
+            tf: set() for tf in self._tf_acc
+        }
         for (aid, m1_ts), data in m1_map.items():
             # Fan out to each higher timeframe
             for tf, delta in self.TF_CFG.items():
@@ -503,7 +522,9 @@ class WebsocketClient:
                 touched[tf].add(key)
         return touched
 
-    def _persist_open_buckets(self, touched_by_tf: dict[str, set[tuple[int, datetime]]], latest_m1: datetime):
+    def _persist_open_buckets(
+        self, touched_by_tf: dict[str, set[tuple[int, datetime]]], latest_m1: datetime
+    ):
         """Persist in-progress higher timeframe buckets updated in the last batch.
 
         Throttled per timeframe to avoid excessive writes. Only persist buckets whose
@@ -547,7 +568,9 @@ class WebsocketClient:
             if to_persist:
                 self.save_candles(tf, to_persist)
 
-    def save_candles(self, timeframe: str, updates: dict[tuple[int, datetime], dict[str, Any]]):
+    def save_candles(
+        self, timeframe: str, updates: dict[tuple[int, datetime], dict[str, Any]]
+    ):
         """Upsert a batch of candles for a given timeframe.
 
         Strategy: fetch existing rows keyed by (asset_id, timestamp, timeframe),
@@ -573,8 +596,16 @@ class WebsocketClient:
                 # Merge
                 if c.open is None and data.get("open") is not None:
                     c.open = data["open"]
-                c.high = max(c.high, data.get("high")) if c.high is not None else data.get("high")
-                c.low = min(c.low, data.get("low")) if c.low is not None else data.get("low")
+                c.high = (
+                    max(c.high, data.get("high"))
+                    if c.high is not None
+                    else data.get("high")
+                )
+                c.low = (
+                    min(c.low, data.get("low"))
+                    if c.low is not None
+                    else data.get("low")
+                )
                 c.close = data.get("close")
                 c.volume = (c.volume or 0) + (data.get("volume") or 0)
                 # merge minute ids if provided
@@ -608,7 +639,8 @@ class WebsocketClient:
                     logger.info("🆕 %d %s candles", len(to_create), timeframe)
                 if to_update:
                     Candle.objects.bulk_update(
-                        to_update, ["open", "high", "low", "close", "volume", "minute_candle_ids"]
+                        to_update,
+                        ["open", "high", "low", "close", "volume", "minute_candle_ids"],
                     )
                     logger.info("🔄 %d %s candles", len(to_update), timeframe)
         except Exception:  # noqa: BLE001
@@ -653,7 +685,9 @@ class WebsocketClient:
             if ts_local.weekday() > 4:
                 return False
             t = ts_local.timetz()
-            start = ts_local.replace(hour=9, minute=30, second=0, microsecond=0).timetz()
+            start = ts_local.replace(
+                hour=9, minute=30, second=0, microsecond=0
+            ).timetz()
             end = ts_local.replace(hour=16, minute=0, second=0, microsecond=0).timetz()
             return start <= t < end
         except Exception:  # be safe, default to allow

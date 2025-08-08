@@ -63,6 +63,4 @@ class Command(BaseCommand):
 
         except Exception as e:
             logger.error(f"Failed to start WebSocket client: {e}", exc_info=True)
-            self.stdout.write(
-                self.style.ERROR(f"An unexpected error occurred: {e}")
-            )
+            self.stdout.write(self.style.ERROR(f"An unexpected error occurred: {e}"))

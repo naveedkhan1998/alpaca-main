@@ -41,8 +41,21 @@ class AlpacaService:
         symbols: Iterable[str] | None = None,
         status: Literal["active", "inactive"] | None = None,
         asset_class: Literal["us_equity", "us_option", "crypto"] = "us_equity",
-        exchange: Literal["AMEX", "ARCA", "BATS", "NYSE", "NASDAQ", "NYSEARCA", "OTC"] | None = None,
-        attributes: Iterable[Literal["ptp_no_exception", "ptp_with_exception", "ipo", "has_options", "options_late_close"]] | None = None,
+        exchange: (
+            Literal["AMEX", "ARCA", "BATS", "NYSE", "NASDAQ", "NYSEARCA", "OTC"] | None
+        ) = None,
+        attributes: (
+            Iterable[
+                Literal[
+                    "ptp_no_exception",
+                    "ptp_with_exception",
+                    "ipo",
+                    "has_options",
+                    "options_late_close",
+                ]
+            ]
+            | None
+        ) = None,
         *,
         fallback_symbols: Iterable[str] | None = None,
     ) -> list[dict]:

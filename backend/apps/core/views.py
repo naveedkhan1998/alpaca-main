@@ -438,16 +438,17 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
         tf_label = minutes_to_tf.get(tf_minutes)
         if not tf_label:
             return Response(
-                {"msg": "Unsupported timeframe", "supported": list(minutes_to_tf.keys())},
+                {
+                    "msg": "Unsupported timeframe",
+                    "supported": list(minutes_to_tf.keys()),
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         base_qs = Candle.objects.filter(asset_id=asset.id, timeframe=tf_label)
         total = base_qs.count()
 
-        candles_qs = (
-            base_qs.order_by("-timestamp")[offset : offset + limit]
-        )
+        candles_qs = base_qs.order_by("-timestamp")[offset : offset + limit]
         rows = [
             {
                 "bucket": c.timestamp,
@@ -538,7 +539,9 @@ class WatchListViewSet(viewsets.ModelViewSet):
 
         if created:
             serializer = WatchListAssetSerializer(watchlist_asset)
-            logger.info(f"Asset {asset.symbol} added to watchlist {watchlist.name}. Historical data fetch triggered.")
+            logger.info(
+                f"Asset {asset.symbol} added to watchlist {watchlist.name}. Historical data fetch triggered."
+            )
             return Response(
                 {"msg": "Asset added to watchlist", "data": serializer.data},
                 status=status.HTTP_201_CREATED,
