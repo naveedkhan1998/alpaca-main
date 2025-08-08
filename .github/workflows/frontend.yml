@@ -3,8 +3,16 @@ name: "Frontend"
 on:
   pull_request:
     branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend.yml"
   push:
     branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend.yml"
+  # Allow manual runs from the GitHub UI
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
