@@ -171,13 +171,17 @@ const GraphsPage: React.FC = () => {
       const res = await getCandles({ id: obj.id, tf: timeframe, limit: initialLimit, offset: 0 }).unwrap();
       const results: Candle[] = res?.results ?? [];
       if (results.length === 0) return;
+      const sortedLatest = sortDescByDate(results);
       setCandles(prev => {
-        if (prev.length === 0) return sortDescByDate(results);
-        const latestPrevTs = new Date(prev[0].date).getTime();
-        const newOnes = results.filter(c => new Date(c.date).getTime() > latestPrevTs);
-        if (newOnes.length === 0) return prev;
-        const merged = sortDescByDate([...prev, ...newOnes]);
-        // keep offset consistent with total items we have
+        if (prev.length === 0) return sortedLatest;
+
+        // Merge by timestamp (date): replace existing candles with fresh ones when timestamps match,
+        // and include any strictly newer candles.
+        const map = new Map(prev.map(c => [c.date, c] as const));
+        for (const c of sortedLatest) {
+          map.set(c.date, c);
+        }
+        const merged = sortDescByDate(Array.from(map.values()));
         setOffset(merged.length);
         setHasMore(!!res?.next);
         return merged;

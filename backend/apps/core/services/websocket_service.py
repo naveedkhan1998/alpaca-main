@@ -71,20 +71,21 @@ class WebsocketClient:
         self.ws_app = None
 
         # State
-        self.subscribed_symbols: set[str] = set()
+        self.subscribed_symbols = set()
         self.running = False
         self.authenticated = False
         self.auth_timeout = 30
-        self.auth_start_time: float | None = None
+        self.auth_start_time = None
 
         # Concurrency primitives
-        self.asset_cache: Dict[str, int] = {}
+        self.asset_cache = {}
+        self.asset_class_cache = {}
         self.asset_lock = threading.Lock()  # protects asset_cache
         self.sub_lock = threading.Lock()  # protects subscribed_symbols
-        self.tick_buffer: Queue[dict] = Queue()  # producer/consumer buffer
+        self.tick_buffer = Queue()  # producer/consumer buffer
 
         # Timeframe aggregation config
-        self.TF_CFG: dict[str, timedelta] = {
+        self.TF_CFG = {
             "1T": timedelta(minutes=1),
             "5T": timedelta(minutes=5),
             "15T": timedelta(minutes=15),
@@ -94,9 +95,11 @@ class WebsocketClient:
             "1D": timedelta(days=1),
         }
         # Accumulators for higher timeframes; 1T is written directly from trades
-        self._tf_acc: dict[str, dict[tuple[int, datetime], dict[str, Any]]] = {
-            tf: {} for tf in self.TF_CFG if tf != "1T"
-        }
+        self._tf_acc = {tf: {} for tf in self.TF_CFG if tf != "1T"}
+
+        # Control how often we persist open (in-progress) higher-TF buckets
+        self._last_open_flush = {tf: 0.0 for tf in self._tf_acc}
+        self._open_flush_secs = 2.0
 
         self._connect()
 
@@ -235,10 +238,13 @@ class WebsocketClient:
 
     def update_asset_cache(self, symbols: set[str]):
         """Resolve symbol→asset_id and warn about recent gaps on 1T data."""
-        assets = Asset.objects.filter(symbol__in=symbols).values("symbol", "id")
+        assets = Asset.objects.filter(symbol__in=symbols).values("symbol", "id", "asset_class")
         with self.asset_lock:
             new_mappings = {a["symbol"]: a["id"] for a in assets}
             self.asset_cache.update(new_mappings)
+            # keep fast access to asset_class by id for RTH filtering
+            for a in assets:
+                self.asset_class_cache[a["id"]] = a["asset_class"]
             logger.debug("Updated asset cache with %d symbols: %s", len(new_mappings), new_mappings)
             
         # Warn if we have gaps on 1-minute timeframe
@@ -300,7 +306,9 @@ class WebsocketClient:
                 self.subscribed_symbols.difference_update(gone)
                 with self.asset_lock:
                     for sym in gone:
-                        self.asset_cache.pop(sym, None)
+                        aid = self.asset_cache.pop(sym, None)
+                        if aid is not None:
+                            self.asset_class_cache.pop(aid, None)
 
     def subscribe(self, symbols: list[str]):
         """Send a subscribe request (no-op if socket not ready)."""
@@ -339,9 +347,15 @@ class WebsocketClient:
                 time.sleep(1)
                 continue
 
+            # Drain with upper bounds so we update frequently even under heavy load
             ticks: list[dict] = []
-            while not self.tick_buffer.empty():
+            start_ns = time.time_ns()
+            MAX_TICKS = 2000
+            MAX_NS = 250_000_000  # ~250ms budget
+            while not self.tick_buffer.empty() and len(ticks) < MAX_TICKS:
                 ticks.append(self.tick_buffer.get())
+                if time.time_ns() - start_ns > MAX_NS:
+                    break
 
             logger.debug("Processing %d ticks", len(ticks))
             self.process_batch(ticks)
@@ -400,6 +414,11 @@ class WebsocketClient:
 
             ts = self._parse_tick_timestamp(ts_str)
 
+            # Filter out after-hours ticks for non-24/7 asset classes (e.g., us_equity, us_option)
+            asset_class = self.asset_class_cache.get(aid)
+            if asset_class in {"us_equity", "us_option"} and not self._is_regular_trading_hours(ts):
+                continue
+
             key = (aid, ts)
             c = m1_map[key]
             if c["open"] is None:
@@ -429,9 +448,9 @@ class WebsocketClient:
             for aid, ts, cid in existing:
                 minute_ids_by_key[(aid, ts)] = cid
 
-        # Update higher timeframe accumulators and flush completed buckets
+        # Update higher timeframe accumulators and flush/persist buckets
         if latest_ts:
-            self._update_higher_timeframes(m1_map)
+            touched_by_tf = self._update_higher_timeframes(m1_map)
             # Attach minute ids to accumulators if available
             for tf, delta in self.TF_CFG.items():
                 if tf == "1T":
@@ -444,11 +463,19 @@ class WebsocketClient:
                     ids_list = acc[key].setdefault("minute_candle_ids", [])
                     mid = minute_ids_by_key.get((aid, m1_ts))
                     if mid is not None:
-                        ids_list.append(mid)
+                        if mid not in ids_list:
+                            ids_list.append(mid)
+            # Persist open (in-progress) buckets for real-time updates, throttled
+            self._persist_open_buckets(touched_by_tf, latest_ts)
             self._flush_closed_buckets(latest_ts)
 
     def _update_higher_timeframes(self, m1_map: Dict[tuple[int, datetime], Dict[str, Any]]):
-        """Update in-memory accumulators for TFs > 1T from freshly built 1T bars."""
+        """Update in-memory accumulators for TFs > 1T from freshly built 1T bars.
+
+        Returns a dict mapping timeframe to the set of (asset_id, bucket_ts) keys updated
+        during this call, so we can selectively persist them.
+        """
+        touched: Dict[str, Set[tuple[int, datetime]]] = {tf: set() for tf in self._tf_acc}
         for (aid, m1_ts), data in m1_map.items():
             # Fan out to each higher timeframe
             for tf, delta in self.TF_CFG.items():
@@ -467,12 +494,41 @@ class WebsocketClient:
                     }
                 else:
                     c = acc[key]
-                    if c["open"] is None:
+                    if c.get("open") is None:
                         c["open"] = data["open"]
-                    c["high"] = max(c["high"], data["high"])
-                    c["low"] = min(c["low"], data["low"])
+                    c["high"] = max(c.get("high", data["high"]), data["high"])
+                    c["low"] = min(c.get("low", data["low"]), data["low"])
                     c["close"] = data["close"]
-                    c["volume"] += data["volume"]
+                    c["volume"] = (c.get("volume") or 0) + (data.get("volume") or 0)
+                touched[tf].add(key)
+        return touched
+
+    def _persist_open_buckets(self, touched_by_tf: Dict[str, Set[tuple[int, datetime]]], latest_m1: datetime):
+        """Persist in-progress higher timeframe buckets updated in the last batch.
+
+        Throttled per timeframe to avoid excessive writes. Only persist buckets whose
+        end time is after the latest minute (i.e., still open).
+        """
+        now = time.time()
+        for tf, keys in (touched_by_tf or {}).items():
+            if tf == "1T" or not keys:
+                continue
+            last = self._last_open_flush.get(tf, 0.0)
+            if now - last < self._open_flush_secs:
+                continue
+            delta = self.TF_CFG[tf]
+            acc = self._tf_acc.get(tf, {})
+            to_persist: Dict[tuple[int, datetime], Dict[str, Any]] = {}
+            for key in keys:
+                aid, bucket_ts = key
+                end_ts = bucket_ts + delta
+                if end_ts > latest_m1:
+                    data = acc.get(key)
+                    if data:
+                        to_persist[key] = data
+            if to_persist:
+                self.save_candles(tf, to_persist)
+                self._last_open_flush[tf] = now
 
     def _flush_closed_buckets(self, latest_m1: datetime):
         """Persist and evict any higher-TF buckets that have fully closed."""
@@ -552,7 +608,7 @@ class WebsocketClient:
                     logger.info("🆕 %d %s candles", len(to_create), timeframe)
                 if to_update:
                     Candle.objects.bulk_update(
-                        to_update, ["open", "high", "low", "close", "volume"]
+                        to_update, ["open", "high", "low", "close", "volume", "minute_candle_ids"]
                     )
                     logger.info("🔄 %d %s candles", len(to_update), timeframe)
         except Exception:  # noqa: BLE001
@@ -580,3 +636,25 @@ class WebsocketClient:
             time.sleep(5)
 
         logger.debug("auth_timeout_checker stopped")
+
+    # ------------------------------------------------------------------ #
+    # Trading hours                                                      #
+    # ------------------------------------------------------------------ #
+    def _is_regular_trading_hours(self, ts_utc: datetime) -> bool:
+        """Return True if the UTC timestamp falls within U.S. equities RTH.
+
+        RTH: 09:30–16:00 America/New_York, Monday–Friday. Holidays are not
+        explicitly checked here; those ticks (if any) will be filtered by date.
+        """
+        try:
+            ny = pytz.timezone("America/New_York")
+            ts_local = ts_utc.astimezone(ny)
+            # Monday=0 .. Sunday=6
+            if ts_local.weekday() > 4:
+                return False
+            t = ts_local.timetz()
+            start = ts_local.replace(hour=9, minute=30, second=0, microsecond=0).timetz()
+            end = ts_local.replace(hour=16, minute=0, second=0, microsecond=0).timetz()
+            return start <= t < end
+        except Exception:  # be safe, default to allow
+            return True
