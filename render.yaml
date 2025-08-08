@@ -50,7 +50,7 @@ services:
     envVars:
       - key: gcpCredentials.json
         sync: false
-      - fromGroup: alpaca-main-celery
+      - fromGroup: alpaca-main
     region: oregon
     dockerCommand: ./scripts/production/run_celery_beat_prod.sh
     autoDeployTrigger: commit
@@ -64,7 +64,7 @@ services:
     envVars:
       - key: gcpCredentials.json
         sync: false
-      - fromGroup: alpaca-main-celery
+      - fromGroup: alpaca-main
     region: oregon
     dockerCommand: ./scripts/production/run_flower_prod.sh
     autoDeployTrigger: commit
@@ -78,7 +78,7 @@ services:
     envVars:
       - key: gcpCredentials.json
         sync: false
-      - fromGroup: alpaca-main-celery
+      - fromGroup: alpaca-main
     region: oregon
     dockerCommand: ./scripts/production/run_celery_worker_prod.sh
     autoDeployTrigger: commit
@@ -92,7 +92,7 @@ services:
     envVars:
       - key: gcpCredentials.json
         sync: false
-      - fromGroup: alpaca-main-celery
+      - fromGroup: alpaca-main
     region: oregon
     dockerCommand: ./scripts/production/run_celery_worker_prod.sh
     autoDeployTrigger: commit
@@ -106,7 +106,7 @@ services:
     envVars:
       - key: gcpCredentials.json
         sync: false
-      - fromGroup: alpaca-main-celery
+      - fromGroup: alpaca-main
     region: oregon
     dockerCommand: ./scripts/production/run_celery_worker_prod.sh
     autoDeployTrigger: commit
