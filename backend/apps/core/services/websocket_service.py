@@ -477,9 +477,8 @@ class WebsocketClient:
                     acc.setdefault(key, {})
                     ids_list = acc[key].setdefault("minute_candle_ids", [])
                     mid = minute_ids_by_key.get((aid, m1_ts))
-                    if mid is not None:
-                        if mid not in ids_list:
-                            ids_list.append(mid)
+                    if mid is not None and mid not in ids_list:
+                        ids_list.append(mid)
             # Persist open (in-progress) buckets for real-time updates, throttled
             self._persist_open_buckets(touched_by_tf, latest_ts)
             self._flush_closed_buckets(latest_ts)

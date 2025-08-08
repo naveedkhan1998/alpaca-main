@@ -10,11 +10,13 @@ is available on Alpaca's Basic plan:contentReference[oaicite:0]{index=0}.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 import json
 import time
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
 
 from celery.utils.log import get_task_logger
 import requests
@@ -232,7 +234,7 @@ class AlpacaService:
                 ch: list(symbols) for ch, symbols in channels.items()
             }
 
-        def _on_message(ws, message):
+        def _on_message(_ws, message):
             try:
                 parsed = json.loads(message)
                 if on_message:
@@ -242,10 +244,10 @@ class AlpacaService:
             except json.JSONDecodeError as e:
                 logger.error(f"Failed to parse message: {e}")
 
-        def _on_error(ws, error):
+        def _on_error(_ws, error):
             logger.error(f"WebSocket error: {error}")
 
-        def _on_close(ws, close_status_code, close_msg):
+        def _on_close(_ws, close_status_code, close_msg):
             logger.info(
                 f"WebSocket closed with code={close_status_code}, message={close_msg}"
             )

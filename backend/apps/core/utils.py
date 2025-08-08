@@ -20,7 +20,9 @@ def get_timeframe(request):
     try:
         tf = int(request.query_params.get("tf", 1))
     except (ValueError, TypeError):
-        raise ValidationError("Timeframe (tf) must be a number between 1 and 1440.")
+        raise ValidationError(
+            "Timeframe (tf) must be a number between 1 and 1440."
+        ) from None
 
     if not (1 <= tf <= 1440):
         raise ValidationError(
@@ -88,7 +90,7 @@ def get_aggregated_candles(asset_id, minutes, offset, limit):
             f"""
             SELECT bucket, o, h_, l_, c, v_
             FROM (
-                SELECT 
+                SELECT
                     date_bin(INTERVAL '{minutes} minutes', timestamp, TIMESTAMP '1970-01-01 09:30:00-05:00') as bucket,
                     first_value(open) OVER w as o,
                     max(high) OVER w as h_,
@@ -98,7 +100,7 @@ def get_aggregated_candles(asset_id, minutes, offset, limit):
                     row_number() OVER w as rn
                 FROM core_candle
                 WHERE asset_id = %s
-                WINDOW 
+                WINDOW
                     w AS (PARTITION BY date_bin(INTERVAL '{minutes} minutes', timestamp, TIMESTAMP '1970-01-01 09:30:00-05:00') ORDER BY timestamp ASC),
                     w2 AS (PARTITION BY date_bin(INTERVAL '{minutes} minutes', timestamp, TIMESTAMP '1970-01-01 09:30:00-05:00') ORDER BY timestamp DESC)
             ) t
