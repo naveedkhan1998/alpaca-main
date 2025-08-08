@@ -81,7 +81,7 @@ export const WatchListDialog: React.FC<WatchListDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[460px]">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? 'Edit Watchlist' : 'Create New Watchlist'}
@@ -113,7 +113,7 @@ export const WatchListDialog: React.FC<WatchListDialogProps> = ({
                 value={formData.description}
                 onChange={e => handleChange('description', e.target.value)}
                 placeholder="Optional description"
-                className="min-h-[80px]"
+                className="min-h-[88px]"
               />
             </div>
           </div>

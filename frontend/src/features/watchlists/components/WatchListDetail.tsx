@@ -78,14 +78,16 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <div className="space-y-5 sm:space-y-6">
+      <Card className="border-border/40">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl">{watchlist.name}</CardTitle>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <CardTitle className="text-xl sm:text-2xl font-semibold truncate">
+                {watchlist.name}
+              </CardTitle>
               {watchlist.description && (
-                <p className="mt-1 text-muted-foreground">
+                <p className="mt-1 text-sm text-muted-foreground truncate">
                   {watchlist.description}
                 </p>
               )}
@@ -96,13 +98,13 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
               </Badge>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <MoreVertical className="w-4 h-4" />
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
-                    <Edit className="w-4 h-4 mr-2" />
+                    <Edit className="mr-2 h-4 w-4" />
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -110,7 +112,7 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
                     onClick={handleDelete}
                     className="text-destructive focus:text-destructive"
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    <Trash2 className="mr-2 h-4 w-4" />
                     Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -119,26 +121,20 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Assets
-              </p>
-              <p className="text-2xl font-bold">{watchlist.asset_count}</p>
+              <p className="text-xs font-medium text-muted-foreground">Assets</p>
+              <p className="text-xl sm:text-2xl font-bold">{watchlist.asset_count}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Created
-              </p>
-              <p className="text-base">
+              <p className="text-xs font-medium text-muted-foreground">Created</p>
+              <p className="text-sm sm:text-base">
                 {new Date(watchlist.created_at).toLocaleDateString()}
               </p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Last Updated
-              </p>
-              <p className="text-base">
+              <p className="text-xs font-medium text-muted-foreground">Last Updated</p>
+              <p className="text-sm sm:text-base">
                 {new Date(watchlist.updated_at).toLocaleDateString()}
               </p>
             </div>
@@ -146,7 +142,7 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-border/40">
         <CardHeader>
           <CardTitle>Assets ({watchlist.asset_count})</CardTitle>
         </CardHeader>

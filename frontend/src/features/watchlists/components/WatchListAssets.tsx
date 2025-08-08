@@ -62,7 +62,7 @@ export const WatchListAssets: React.FC<WatchListAssetsProps> = ({ watchlistId })
 
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden border rounded-md">
+      <div className="overflow-hidden rounded-md border border-border/40">
         <Table>
           <TableHeader>
             <TableRow>
@@ -79,11 +79,11 @@ export const WatchListAssets: React.FC<WatchListAssetsProps> = ({ watchlistId })
               <TableRow key={watchlistAsset.id}>
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-primary" />
+                    <Building2 className="h-4 w-4 text-primary" />
                     {watchlistAsset.asset.symbol}
                   </div>
                 </TableCell>
-                <TableCell className="max-w-[200px]">
+                <TableCell className="max-w-[240px]">
                   <div className="truncate" title={watchlistAsset.asset.name}>
                     {watchlistAsset.asset.name}
                   </div>
@@ -97,19 +97,19 @@ export const WatchListAssets: React.FC<WatchListAssetsProps> = ({ watchlistId })
                 <TableCell>{new Date(watchlistAsset.added_at).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">
-                    <Button asChild variant="outline" size="icon" className="w-8 h-8">
+                    <Button asChild variant="outline" size="icon" className="h-8 w-8">
                       <Link to={`/graphs/${watchlistAsset.asset.id}`} state={{ obj: watchlistAsset.asset }}>
-                        <ChartBarIcon className="w-4 h-4" />
+                        <ChartBarIcon className="h-4 w-4" />
                       </Link>
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="w-8 h-8 text-destructive hover:text-destructive"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
                       onClick={() => handleRemoveAsset(watchlistAsset.asset.id)}
                       disabled={isRemoving}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>

@@ -28,15 +28,16 @@ export const WatchListsList: React.FC<WatchListsListProps> = ({
 
   if (isLoading) {
     return (
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Card key={i}>
+          <Card key={i} className="border-border/40">
             <CardHeader>
-              <Skeleton className="w-32 h-6" />
-              <Skeleton className="w-full h-4" />
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-3/4" />
             </CardHeader>
-            <CardContent>
-              <Skeleton className="w-16 h-8" />
+            <CardContent className="flex items-center justify-between">
+              <Skeleton className="h-8 w-20" />
+              <Skeleton className="h-4 w-24" />
             </CardContent>
           </Card>
         ))}
@@ -77,46 +78,51 @@ export const WatchListsList: React.FC<WatchListsListProps> = ({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Your Watchlists</h2>
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Create Watchlist
-        </Button>
+    <div className="space-y-5 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-base sm:text-lg font-semibold text-foreground">
+          Your Watchlists
+          <span className="ml-2 text-sm text-muted-foreground">({watchlists.length})</span>
+        </h2>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Watchlist
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
         {watchlists.map(watchlist => (
           <Card
             key={watchlist.id}
-            className="transition-colors cursor-pointer hover:bg-muted/50"
+            className="cursor-pointer transition-colors hover:bg-muted/40 border-border/40"
             onClick={() => onWatchListSelect(watchlist)}
           >
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">{watchlist.name}</CardTitle>
+                <CardTitle className="text-base sm:text-lg font-semibold">
+                  {watchlist.name}
+                </CardTitle>
                 <Badge variant={watchlist.is_active ? 'default' : 'secondary'}>
                   {watchlist.is_active ? 'Active' : 'Inactive'}
                 </Badge>
               </div>
               {watchlist.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2">
+                <p className="line-clamp-2 text-sm text-muted-foreground">
                   {watchlist.description}
                 </p>
               )}
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Building2 className="w-4 h-4" />
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-primary" />
                   <span>{watchlist.asset_count} assets</span>
                 </div>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
-                  <span>
-                    {new Date(watchlist.created_at).toLocaleDateString()}
-                  </span>
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  <span>{new Date(watchlist.created_at).toLocaleDateString()}</span>
                 </div>
               </div>
             </CardContent>
