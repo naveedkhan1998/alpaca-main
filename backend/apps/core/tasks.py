@@ -466,7 +466,7 @@ def fetch_historical_data(watchlist_asset_id: int):
 
             # Upsert aggregated candles
             to_create = []
-            for bucket, o, h, l, c, v, ids in rows:
+            for bucket, o, h, low_, c, v, ids in rows:
                 to_create.append(
                     Candle(
                         asset=asset,
@@ -474,7 +474,7 @@ def fetch_historical_data(watchlist_asset_id: int):
                         timestamp=bucket,
                         open=float(o),
                         high=float(h),
-                        low=float(l),
+                        low=float(low_),
                         close=float(c),
                         volume=int(v or 0),
                         minute_candle_ids=list(ids) if ids else [],

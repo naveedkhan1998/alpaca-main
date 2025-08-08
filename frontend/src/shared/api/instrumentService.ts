@@ -31,9 +31,9 @@ export const instrumentApi = baseApi.injectEndpoints({
       providesTags: ['Instrument'],
     }),
     getCandles: builder.query<Candle[], GetCandlesParams>({
-      query: ({ id, tf }) => {
+      query: ({ asset_id, timeframe }) => {
         return {
-          url: `core/candles/get_candles/?id=${id}&tf=${tf}`,
+          url: `core/candles/get_candles/?id=${asset_id}&tf=${timeframe}`,
           method: 'GET',
           headers: {
             'Content-type': 'application/json',
