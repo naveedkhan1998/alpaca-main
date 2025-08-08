@@ -18,26 +18,26 @@ if not SECRET_KEY:
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    "breeze.mnaveedk.com",
+    "alpaca.mnaveedk.com",
     os.environ.get("ALLOWED_HOST", ""),
 ]
 
-HOST = os.environ.get("HOST", "breeze.mnaveedk.com")
+HOST = os.environ.get("HOST", "alpaca.mnaveedk.com")
 
 # Production URLs
-MAIN_URL = "https://breeze.mnaveedk.com/"
-MAIN_URL_2 = "https://breeze.mnaveedk.com"
+MAIN_URL = "https://alpaca.mnaveedk.com/"
+MAIN_URL_2 = "https://alpaca.mnaveedk.com"
 
 # Security settings for production
 CSRF_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
-    "https://breeze-frontend-seven.vercel.app",
-    "https://breeze.mnaveedk.com",
+    "https://alpaca-frontend-seven.vercel.app",
+    "https://alpaca.mnaveedk.com",
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "https://breeze-frontend-seven.vercel.app",
-    "https://breeze.mnaveedk.com",
+    "https://alpaca-frontend-seven.vercel.app",
+    "https://alpaca.mnaveedk.com",
 ]
 
 # Security headers
