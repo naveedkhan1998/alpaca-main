@@ -113,10 +113,14 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
         'absolute top-2 left-2 p-2 rounded-lg glass-card shadow-md z-[10] text-xs flex items-center gap-3';
       const rsiSpan = document.createElement('span');
       rsiSpan.className = 'text-amber-600 dark:text-amber-300 font-medium';
-      rsiSpan.textContent = hasRSI ? `RSI: ${Number((rsiData.at(-1)?.value ?? 0)).toFixed(2)}` : '';
+      rsiSpan.textContent = hasRSI
+        ? `RSI: ${Number(rsiData.at(-1)?.value ?? 0).toFixed(2)}`
+        : '';
       const atrSpan = document.createElement('span');
       atrSpan.className = 'text-blue-600 dark:text-blue-300 font-medium';
-      atrSpan.textContent = hasATR ? `ATR: ${Number((atrData.at(-1)?.value ?? 0)).toFixed(2)}` : '';
+      atrSpan.textContent = hasATR
+        ? `ATR: ${Number(atrData.at(-1)?.value ?? 0).toFixed(2)}`
+        : '';
       legendContainer.appendChild(rsiSpan);
       legendContainer.appendChild(atrSpan);
       containerEl.appendChild(legendContainer);
@@ -132,15 +136,16 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
           ? (param.seriesData.get(atrSeriesRef.current) as LineData | undefined)
           : undefined;
 
-        const [rsiLabel, atrLabel] = legendContainerRef.current.children as unknown as HTMLSpanElement[];
+        const [rsiLabel, atrLabel] = legendContainerRef.current
+          .children as unknown as HTMLSpanElement[];
         if (rsiLabel) {
           rsiLabel.textContent = hasRSI
-            ? `RSI: ${Number((rsiPoint?.value ?? rsiData.at(-1)?.value ?? 0)).toFixed(2)}`
+            ? `RSI: ${Number(rsiPoint?.value ?? rsiData.at(-1)?.value ?? 0).toFixed(2)}`
             : '';
         }
         if (atrLabel) {
           atrLabel.textContent = hasATR
-            ? `ATR: ${Number((atrPoint?.value ?? atrData.at(-1)?.value ?? 0)).toFixed(2)}`
+            ? `ATR: ${Number(atrPoint?.value ?? atrData.at(-1)?.value ?? 0).toFixed(2)}`
             : '';
         }
       });

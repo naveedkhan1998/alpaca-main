@@ -12,7 +12,7 @@ export function formatDate(originalDate: string) {
     // Use the original date string which includes timezone information
     // This will parse correctly and maintain the original timezone
     const parsedDate = new Date(originalDate);
-    
+
     // Check if the parsed date is valid
     if (isNaN(parsedDate.getTime())) {
       console.warn('Failed to parse date string:', originalDate);
@@ -22,18 +22,19 @@ export function formatDate(originalDate: string) {
     // Extract timezone offset from the original string
     // Example: "2025-07-09T13:30:00-04:00" -> "-04:00"
     const timezoneMatch = originalDate.match(/([+-]\d{2}:\d{2})$/);
-    
+
     if (timezoneMatch) {
       // If timezone is present, we need to adjust to show the original market time
       const timezoneOffset = timezoneMatch[1];
       const offsetMatch = timezoneOffset.match(/([+-])(\d{2}):(\d{2})/);
-      
+
       if (offsetMatch) {
         const [, sign, hours, minutes] = offsetMatch;
-        const offsetMinutes = (parseInt(hours) * 60 + parseInt(minutes)) * (sign === '-' ? -1 : 1);
-        
+        const offsetMinutes =
+          (parseInt(hours) * 60 + parseInt(minutes)) * (sign === '-' ? -1 : 1);
+
         // Adjust the timestamp to show the time as it was in the original timezone
-        const adjustedTime = parsedDate.getTime() + (offsetMinutes * 60 * 1000);
+        const adjustedTime = parsedDate.getTime() + offsetMinutes * 60 * 1000;
         return adjustedTime / 1000;
       }
     }
@@ -94,7 +95,8 @@ export const calculateBollingerBands = (
     const variance = sumSquares / period - mean ** 2;
     const stdDevValue = Math.sqrt(variance);
 
-    const dateField = data[i].timestamp || (data[i] as unknown as { date: string }).date;
+    const dateField =
+      data[i].timestamp || (data[i] as unknown as { date: string }).date;
     bands.push({
       time: formatDate(dateField),
       upper: mean + stdDev * stdDevValue,
@@ -122,7 +124,9 @@ export const calculateRSI = (data: Candle[], period: number = 14) => {
 
   let avgGain = gains / period;
   let avgLoss = losses / period;
-  const dateField = data[period].timestamp || (data[period] as unknown as { date: string }).date;
+  const dateField =
+    data[period].timestamp ||
+    (data[period] as unknown as { date: string }).date;
   rsi.push({
     time: formatDate(dateField),
     value: 100 - 100 / (1 + avgGain / avgLoss),
@@ -137,7 +141,8 @@ export const calculateRSI = (data: Candle[], period: number = 14) => {
       avgGain = (avgGain * (period - 1)) / period;
       avgLoss = (avgLoss * (period - 1) - diff) / period;
     }
-    const dateFieldCurrent = data[i].timestamp || (data[i] as unknown as { date: string }).date;
+    const dateFieldCurrent =
+      data[i].timestamp || (data[i] as unknown as { date: string }).date;
     rsi.push({
       time: formatDate(dateFieldCurrent),
       value: 100 - 100 / (1 + avgGain / avgLoss),
@@ -169,13 +174,19 @@ export const calculateMACD = (
   const macdLine = shortEma.map((value, index) => value - longEma[index]);
   const signalLine = ema(
     //@ts-expect-error no shit 2
-    macdLine.map((value, index) => ({ close: value, timestamp: data[index].timestamp || (data[index] as unknown as { date: string }).date })),
+    macdLine.map((value, index) => ({
+      close: value,
+      timestamp:
+        data[index].timestamp ||
+        (data[index] as unknown as { date: string }).date,
+    })),
     signalPeriod
   );
   const histogram = macdLine.map((value, index) => value - signalLine[index]);
 
   return data.map((candle, index) => {
-    const dateField = candle.timestamp || (candle as unknown as { date: string }).date;
+    const dateField =
+      candle.timestamp || (candle as unknown as { date: string }).date;
     return {
       time: formatDate(dateField),
       macd: macdLine[index],
@@ -208,7 +219,8 @@ export const calculateATR = (data: Candle[], period: number = 14) => {
       } else {
         atr = (atrs[atrs.length - 1].value * (period - 1) + tr) / period;
       }
-      const dateField = data[i].timestamp || (data[i] as unknown as { date: string }).date;
+      const dateField =
+        data[i].timestamp || (data[i] as unknown as { date: string }).date;
       atrs.push({ time: formatDate(dateField), value: atr });
     }
   }

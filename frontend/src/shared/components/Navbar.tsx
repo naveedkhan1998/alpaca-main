@@ -53,7 +53,7 @@ const Navbar: React.FC = () => {
 
   const isActivePath = useMemo(
     () => (path: string) => location.pathname === path,
-    [location.pathname],
+    [location.pathname]
   );
 
   useEffect(() => {
@@ -132,7 +132,12 @@ const Navbar: React.FC = () => {
                   Alpaca Trading
                 </span>
                 <div className="items-center hidden gap-2 sm:flex">
-                  <Badge variant="secondary" className="px-2 py-0.5 text-[10px]">Dashboard</Badge>
+                  <Badge
+                    variant="secondary"
+                    className="px-2 py-0.5 text-[10px]"
+                  >
+                    Dashboard
+                  </Badge>
                 </div>
               </div>
             </Link>
@@ -202,7 +207,11 @@ const Navbar: React.FC = () => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button variant="ghost" size="icon" className="relative h-9 w-9">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative h-9 w-9"
+                >
                   <Bell className="w-5 h-5" />
                   <span className="absolute top-1.5 right-1.5 inline-flex h-2 w-2 rounded-full bg-destructive" />
                 </Button>
@@ -212,7 +221,10 @@ const Navbar: React.FC = () => {
                 {/* User Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative px-2 rounded-full h-9">
+                    <Button
+                      variant="ghost"
+                      className="relative px-2 rounded-full h-9"
+                    >
                       <div className="flex items-center gap-2">
                         <Avatar className="w-8 h-8">
                           <AvatarImage
@@ -252,11 +264,15 @@ const Navbar: React.FC = () => {
                             }
                             alt="Profile"
                           />
-                          <AvatarFallback className="bg-muted">NK</AvatarFallback>
+                          <AvatarFallback className="bg-muted">
+                            NK
+                          </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col space-y-1">
                           <p className="text-sm font-semibold">{user?.name}</p>
-                          <p className="text-xs text-muted-foreground">{user?.email || ''}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {user?.email || ''}
+                          </p>
                           <div className="flex items-center space-x-2">
                             <Badge variant="outline" className="text-xs">
                               {user?.is_admin ? 'Admin' : 'User'}
@@ -273,16 +289,24 @@ const Navbar: React.FC = () => {
                       <Link to="/profile" className="flex items-center">
                         <User className="w-4 h-4 mr-3" />
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium">Account Settings</span>
-                          <span className="text-xs text-muted-foreground">Manage your profile and preferences</span>
+                          <span className="text-sm font-medium">
+                            Account Settings
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            Manage your profile and preferences
+                          </span>
                         </div>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="p-3 cursor-pointer">
                       <Settings className="w-4 h-4 mr-3" />
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium">Trading Settings</span>
-                        <span className="text-xs text-muted-foreground">Configure trading preferences</span>
+                        <span className="text-sm font-medium">
+                          Trading Settings
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          Configure trading preferences
+                        </span>
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -293,7 +317,9 @@ const Navbar: React.FC = () => {
                       <LogOut className="w-4 h-4 mr-3" />
                       <div className="flex flex-col">
                         <span className="text-sm font-medium">Sign Out</span>
-                        <span className="text-xs text-muted-foreground">End your session</span>
+                        <span className="text-xs text-muted-foreground">
+                          End your session
+                        </span>
                       </div>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -312,7 +338,10 @@ const Navbar: React.FC = () => {
               </Button>
               <ModeToggle />
               <HealthStatus />
-              <Drawer open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <Drawer
+                open={isMobileMenuOpen}
+                onOpenChange={setIsMobileMenuOpen}
+              >
                 <DrawerTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-9 w-9">
                     <Menu className="w-5 h-5" />
@@ -343,11 +372,22 @@ const Navbar: React.FC = () => {
                             <div className="absolute w-4 h-4 border-2 rounded-full -right-1 -bottom-1 border-background bg-success" />
                           </div>
                           <div className="flex-1">
-                            <h3 className="text-base font-semibold text-foreground">{user?.name || 'Naveed Khan'}</h3>
-                            <p className="mb-2 text-sm text-muted-foreground">{user?.email || ''}</p>
+                            <h3 className="text-base font-semibold text-foreground">
+                              {user?.name || 'Naveed Khan'}
+                            </h3>
+                            <p className="mb-2 text-sm text-muted-foreground">
+                              {user?.email || ''}
+                            </p>
                             <div className="flex items-center space-x-2">
-                              <Badge variant="default" className="text-xs font-medium">{user?.is_admin ? 'Admin' : 'User'}</Badge>
-                              <Badge variant="secondary" className="text-xs">{user?.auth_provider}</Badge>
+                              <Badge
+                                variant="default"
+                                className="text-xs font-medium"
+                              >
+                                {user?.is_admin ? 'Admin' : 'User'}
+                              </Badge>
+                              <Badge variant="secondary" className="text-xs">
+                                {user?.auth_provider}
+                              </Badge>
                             </div>
                           </div>
                         </div>
@@ -372,7 +412,9 @@ const Navbar: React.FC = () => {
 
                   {/* Nav grid */}
                   <div className="flex-1 p-6 space-y-3 overflow-y-auto">
-                    <h4 className="text-sm font-semibold tracking-wider uppercase text-muted-foreground">Pages</h4>
+                    <h4 className="text-sm font-semibold tracking-wider uppercase text-muted-foreground">
+                      Pages
+                    </h4>
                     <div className="grid grid-cols-2 gap-3 mb-6">
                       {navItems.map(item => {
                         const active = isActivePath(item.path);
@@ -381,18 +423,28 @@ const Navbar: React.FC = () => {
                             key={item.path}
                             to={item.path}
                             className={`group relative overflow-hidden rounded-xl transition-all duration-200 ${
-                              active ? 'ring-1 ring-primary/30 shadow-sm' : 'hover:ring-1 hover:ring-border/50'
+                              active
+                                ? 'ring-1 ring-primary/30 shadow-sm'
+                                : 'hover:ring-1 hover:ring-border/50'
                             }`}
                             onClick={() => setIsMobileMenuOpen(false)}
                           >
-                            <Card className={`h-24 ${active ? 'bg-primary/5' : 'bg-muted/30 hover:bg-muted/40'}`}>
+                            <Card
+                              className={`h-24 ${active ? 'bg-primary/5' : 'bg-muted/30 hover:bg-muted/40'}`}
+                            >
                               <CardContent className="flex flex-col justify-between h-full p-4">
-                                <div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center shadow`}>
+                                <div
+                                  className={`h-10 w-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center shadow`}
+                                >
                                   <item.icon className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
-                                  <h4 className="text-sm font-semibold text-foreground">{item.label}</h4>
-                                  <p className="text-xs text-muted-foreground line-clamp-1">{item.description}</p>
+                                  <h4 className="text-sm font-semibold text-foreground">
+                                    {item.label}
+                                  </h4>
+                                  <p className="text-xs text-muted-foreground line-clamp-1">
+                                    {item.description}
+                                  </p>
                                 </div>
                               </CardContent>
                             </Card>
@@ -403,7 +455,9 @@ const Navbar: React.FC = () => {
 
                     {/* Quick Actions */}
                     <div className="space-y-3">
-                      <h4 className="text-sm font-semibold tracking-wider uppercase text-muted-foreground">Quick Actions</h4>
+                      <h4 className="text-sm font-semibold tracking-wider uppercase text-muted-foreground">
+                        Quick Actions
+                      </h4>
 
                       <Link
                         to="/profile"
@@ -415,8 +469,12 @@ const Navbar: React.FC = () => {
                             <User className="w-5 h-5 text-white" />
                           </div>
                           <div>
-                            <span className="font-medium text-foreground">Account Settings</span>
-                            <p className="text-xs text-muted-foreground">Manage your profile</p>
+                            <span className="font-medium text-foreground">
+                              Account Settings
+                            </span>
+                            <p className="text-xs text-muted-foreground">
+                              Manage your profile
+                            </p>
                           </div>
                         </div>
                         <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -434,8 +492,12 @@ const Navbar: React.FC = () => {
                             <LogOut className="w-5 h-5 text-white" />
                           </div>
                           <div className="text-left">
-                            <span className="font-medium text-destructive">Sign Out</span>
-                            <p className="text-xs text-destructive/70">End your session</p>
+                            <span className="font-medium text-destructive">
+                              Sign Out
+                            </span>
+                            <p className="text-xs text-destructive/70">
+                              End your session
+                            </p>
                           </div>
                         </div>
                         <ChevronRight className="w-5 h-5 text-destructive/70" />
@@ -457,10 +519,20 @@ const Navbar: React.FC = () => {
               <Plus className="w-6 h-6" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" sideOffset={12} className="w-56 p-1">
-            <DropdownMenuItem className="gap-2"><Plus className="w-4 h-4" /> New order</DropdownMenuItem>
-            <DropdownMenuItem className="gap-2"><Plus className="w-4 h-4" /> New watchlist</DropdownMenuItem>
-            <DropdownMenuItem className="gap-2"><Plus className="w-4 h-4" /> New alert</DropdownMenuItem>
+          <DropdownMenuContent
+            align="center"
+            sideOffset={12}
+            className="w-56 p-1"
+          >
+            <DropdownMenuItem className="gap-2">
+              <Plus className="w-4 h-4" /> New order
+            </DropdownMenuItem>
+            <DropdownMenuItem className="gap-2">
+              <Plus className="w-4 h-4" /> New watchlist
+            </DropdownMenuItem>
+            <DropdownMenuItem className="gap-2">
+              <Plus className="w-4 h-4" /> New alert
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -479,12 +551,18 @@ const Navbar: React.FC = () => {
                   key={item.path}
                   to={item.path}
                   className={`relative flex flex-col items-center justify-center gap-1 text-[11px] ${
-                    active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                    active
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <item.icon className={`transition-all ${active ? 'w-6 h-6' : 'w-5 h-5'}`} />
+                  <item.icon
+                    className={`transition-all ${active ? 'w-6 h-6' : 'w-5 h-5'}`}
+                  />
                   <span className="leading-none">{item.label}</span>
-                  {active && <span className="absolute -top-1 h-1.5 w-1.5 rounded-full bg-primary" />}
+                  {active && (
+                    <span className="absolute -top-1 h-1.5 w-1.5 rounded-full bg-primary" />
+                  )}
                 </Link>
               );
             })}

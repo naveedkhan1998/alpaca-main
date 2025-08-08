@@ -31,7 +31,9 @@ export const PageSubHeader: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <div className={`mb-4 sm:mb-6 text-sm sm:text-base text-muted-foreground leading-relaxed ${className}`}>
+  <div
+    className={`mb-4 sm:mb-6 text-sm sm:text-base text-muted-foreground leading-relaxed ${className}`}
+  >
     {children}
   </div>
 );

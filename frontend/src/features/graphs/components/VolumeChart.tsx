@@ -99,7 +99,8 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
     const legend = document.createElement('div');
     legend.className =
       'absolute top-2 left-2 p-2 rounded-lg glass-card shadow-md z-[10] text-xs';
-    legend.innerHTML = '<span class="font-medium text-slate-700 dark:text-slate-300">Volume: —</span>';
+    legend.innerHTML =
+      '<span class="font-medium text-slate-700 dark:text-slate-300">Volume: —</span>';
     containerEl.appendChild(legend);
     legendRef.current = legend;
 
@@ -167,7 +168,10 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
     }
     if (legendRef.current) {
       const latest = volumeData.at(-1);
-      const value = latest && 'value' in latest ? Number(latest.value).toLocaleString() : '—';
+      const value =
+        latest && 'value' in latest
+          ? Number(latest.value).toLocaleString()
+          : '—';
       legendRef.current.innerHTML = `<span class="font-medium text-slate-700 dark:text-slate-300">Volume: ${value}</span>`;
     }
   }, [volumeData]);

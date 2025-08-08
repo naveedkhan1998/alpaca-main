@@ -1,25 +1,49 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Building2, Trash2, AlertCircle, ChartBarIcon } from 'lucide-react';
-import { useGetWatchListByIdQuery, useRemoveAssetFromWatchListMutation } from '@/api/watchlistService';
+import {
+  useGetWatchListByIdQuery,
+  useRemoveAssetFromWatchListMutation,
+} from '@/api/watchlistService';
 
 interface WatchListAssetsProps {
   watchlistId: number;
 }
 
-export const WatchListAssets: React.FC<WatchListAssetsProps> = ({ watchlistId }) => {
-  const { data: watchlist, isLoading, error } = useGetWatchListByIdQuery(watchlistId);
-  const [removeAsset, { isLoading: isRemoving }] = useRemoveAssetFromWatchListMutation();
+export const WatchListAssets: React.FC<WatchListAssetsProps> = ({
+  watchlistId,
+}) => {
+  const {
+    data: watchlist,
+    isLoading,
+    error,
+  } = useGetWatchListByIdQuery(watchlistId);
+  const [removeAsset, { isLoading: isRemoving }] =
+    useRemoveAssetFromWatchListMutation();
 
   const handleRemoveAsset = async (assetId: number) => {
-    if (window.confirm('Are you sure you want to remove this asset from the watchlist?')) {
+    if (
+      window.confirm(
+        'Are you sure you want to remove this asset from the watchlist?'
+      )
+    ) {
       try {
-        await removeAsset({ watchlist_id: watchlistId, asset_id: assetId }).unwrap();
+        await removeAsset({
+          watchlist_id: watchlistId,
+          asset_id: assetId,
+        }).unwrap();
       } catch (error) {
         console.error('Error removing asset:', error);
       }
@@ -45,7 +69,9 @@ export const WatchListAssets: React.FC<WatchListAssetsProps> = ({ watchlistId })
     return (
       <Alert>
         <AlertCircle className="w-4 h-4" />
-        <AlertDescription>Failed to load watchlist assets. Please try again.</AlertDescription>
+        <AlertDescription>
+          Failed to load watchlist assets. Please try again.
+        </AlertDescription>
       </Alert>
     );
   }
@@ -55,7 +81,9 @@ export const WatchListAssets: React.FC<WatchListAssetsProps> = ({ watchlistId })
       <div className="py-8 text-center">
         <Building2 className="w-12 h-12 mx-auto text-muted-foreground" />
         <h3 className="mt-2 text-lg font-semibold">No assets yet</h3>
-        <p className="text-muted-foreground">Add assets to this watchlist from the Assets page.</p>
+        <p className="text-muted-foreground">
+          Add assets to this watchlist from the Assets page.
+        </p>
       </div>
     );
   }
@@ -90,15 +118,27 @@ export const WatchListAssets: React.FC<WatchListAssetsProps> = ({ watchlistId })
                 </TableCell>
                 <TableCell>
                   <Badge variant="secondary">
-                    {watchlistAsset.asset.asset_class.replace('_', ' ').toUpperCase()}
+                    {watchlistAsset.asset.asset_class
+                      .replace('_', ' ')
+                      .toUpperCase()}
                   </Badge>
                 </TableCell>
                 <TableCell>{watchlistAsset.asset.exchange}</TableCell>
-                <TableCell>{new Date(watchlistAsset.added_at).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  {new Date(watchlistAsset.added_at).toLocaleDateString()}
+                </TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">
-                    <Button asChild variant="outline" size="icon" className="h-8 w-8">
-                      <Link to={`/graphs/${watchlistAsset.asset.id}`} state={{ obj: watchlistAsset.asset }}>
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                    >
+                      <Link
+                        to={`/graphs/${watchlistAsset.asset.id}`}
+                        state={{ obj: watchlistAsset.asset }}
+                      >
                         <ChartBarIcon className="h-4 w-4" />
                       </Link>
                     </Button>

@@ -15,9 +15,12 @@ const ErrorScreen = () => {
           </div>
 
           <div className="space-y-1">
-            <h1 className="text-xl font-bold text-destructive">Connection Error</h1>
+            <h1 className="text-xl font-bold text-destructive">
+              Connection Error
+            </h1>
             <p className="text-sm text-muted-foreground">
-              Unable to fetch chart data. Please check your connection and try again.
+              Unable to fetch chart data. Please check your connection and try
+              again.
             </p>
           </div>
 
@@ -43,7 +46,8 @@ const ErrorScreen = () => {
 
           <div className="w-full p-3 mt-4 text-xs border rounded-lg border-destructive/20 bg-destructive/5 text-muted-foreground">
             • Verify your internet connection
-            <br />• If on VPN or corporate network, ensure access to the API is allowed
+            <br />• If on VPN or corporate network, ensure access to the API is
+            allowed
             <br />• Wait a moment and retry in case of temporary outages
           </div>
         </div>

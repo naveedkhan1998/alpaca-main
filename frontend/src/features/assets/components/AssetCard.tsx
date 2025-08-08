@@ -1,5 +1,11 @@
 import React from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye, Heart, Building2 } from 'lucide-react';
@@ -24,9 +30,16 @@ const getAssetClassColor = (assetClass: string) => {
   }
 };
 
-export const AssetCard: React.FC<Props> = ({ asset, onSelect, onWatchlist }) => {
+export const AssetCard: React.FC<Props> = ({
+  asset,
+  onSelect,
+  onWatchlist,
+}) => {
   return (
-    <Card className="h-full transition cursor-pointer hover:shadow-md" onClick={() => onSelect(asset)}>
+    <Card
+      className="h-full transition cursor-pointer hover:shadow-md"
+      onClick={() => onSelect(asset)}
+    >
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -37,7 +50,9 @@ export const AssetCard: React.FC<Props> = ({ asset, onSelect, onWatchlist }) => 
             {asset.asset_class.replace('_', ' ').toUpperCase()}
           </Badge>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground line-clamp-1">{asset.name}</p>
+        <p className="mt-1 text-sm text-muted-foreground line-clamp-1">
+          {asset.name}
+        </p>
       </CardHeader>
       <CardContent className="grid grid-cols-2 gap-2 text-sm">
         <div>
@@ -61,7 +76,14 @@ export const AssetCard: React.FC<Props> = ({ asset, onSelect, onWatchlist }) => 
         <Button variant="ghost" size="sm" onClick={e => onWatchlist(asset, e)}>
           <Heart className="w-4 h-4" />
         </Button>
-        <Button variant="ghost" size="sm" onClick={e => { e.stopPropagation(); onSelect(asset); }}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={e => {
+            e.stopPropagation();
+            onSelect(asset);
+          }}
+        >
           <Eye className="w-4 h-4" />
         </Button>
       </CardFooter>

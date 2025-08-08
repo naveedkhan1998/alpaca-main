@@ -82,7 +82,9 @@ export const WatchListsList: React.FC<WatchListsListProps> = ({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-base sm:text-lg font-semibold text-foreground">
           Your Watchlists
-          <span className="ml-2 text-sm text-muted-foreground">({watchlists.length})</span>
+          <span className="ml-2 text-sm text-muted-foreground">
+            ({watchlists.length})
+          </span>
         </h2>
         <div className="flex items-center gap-2">
           <Button onClick={() => setCreateDialogOpen(true)}>
@@ -122,7 +124,9 @@ export const WatchListsList: React.FC<WatchListsListProps> = ({
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  <span>{new Date(watchlist.created_at).toLocaleDateString()}</span>
+                  <span>
+                    {new Date(watchlist.created_at).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
             </CardContent>

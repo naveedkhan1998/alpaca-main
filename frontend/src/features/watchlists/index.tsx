@@ -12,7 +12,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Plus, Search, Calendar, Building2, AlertCircle } from 'lucide-react';
+import {
+  ArrowLeft,
+  Plus,
+  Search,
+  Calendar,
+  Building2,
+  AlertCircle,
+} from 'lucide-react';
 import { WatchListDetail } from './components/WatchListDetail';
 import { WatchListDialog } from './components/WatchListDialog';
 import { setSelectedWatchlist } from './watchlistSlice';
@@ -88,7 +95,9 @@ export const WatchlistsPage: React.FC = () => {
                   <CardTitle className="text-base font-semibold sm:text-lg">
                     Your Watchlists
                     {!!watchlists.length && (
-                      <span className="ml-2 text-sm text-muted-foreground">({watchlists.length})</span>
+                      <span className="ml-2 text-sm text-muted-foreground">
+                        ({watchlists.length})
+                      </span>
                     )}
                   </CardTitle>
                   <Button size="sm" onClick={() => setCreateOpen(true)}>
@@ -167,7 +176,12 @@ export const WatchlistsPage: React.FC = () => {
                                 <span className="text-sm font-medium truncate">
                                   {w.name}
                                 </span>
-                                <Badge variant={w.is_active ? 'default' : 'secondary'} className="h-5 px-1.5 text-[10px]">
+                                <Badge
+                                  variant={
+                                    w.is_active ? 'default' : 'secondary'
+                                  }
+                                  className="h-5 px-1.5 text-[10px]"
+                                >
                                   {w.is_active ? 'Active' : 'Inactive'}
                                 </Badge>
                               </div>
@@ -184,7 +198,9 @@ export const WatchlistsPage: React.FC = () => {
                               </div>
                               <div className="flex items-center gap-1">
                                 <Calendar className="h-3.5 w-3.5" />
-                                <span>{new Date(w.created_at).toLocaleDateString()}</span>
+                                <span>
+                                  {new Date(w.created_at).toLocaleDateString()}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -196,7 +212,10 @@ export const WatchlistsPage: React.FC = () => {
 
                 {/* Mobile create button (shown at bottom) */}
                 <div className="pt-2 md:hidden">
-                  <Button className="w-full" onClick={() => setCreateOpen(true)}>
+                  <Button
+                    className="w-full"
+                    onClick={() => setCreateOpen(true)}
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Create Watchlist
                   </Button>
@@ -217,11 +236,15 @@ export const WatchlistsPage: React.FC = () => {
             ) : (
               <Card className="border-border/40">
                 <CardHeader>
-                  <CardTitle className="text-base sm:text-lg">Select a watchlist</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">
+                    Select a watchlist
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Choose a watchlist from the left to view its assets and details. Or create a new watchlist to start organizing your instruments.
+                    Choose a watchlist from the left to view its assets and
+                    details. Or create a new watchlist to start organizing your
+                    instruments.
                   </p>
                   <div className="mt-4">
                     <Button onClick={() => setCreateOpen(true)}>

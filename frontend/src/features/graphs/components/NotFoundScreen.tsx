@@ -26,7 +26,9 @@ const NotFoundScreen = () => {
 
         <div className="mt-4 text-xs text-muted-foreground">
           <div className="flex flex-col items-center gap-1">
-            <span className="opacity-90">• Pick a symbol from your watchlist</span>
+            <span className="opacity-90">
+              • Pick a symbol from your watchlist
+            </span>
             <span className="opacity-90">• Try a different timeframe</span>
             <span className="opacity-90">• Refresh the page</span>
           </div>

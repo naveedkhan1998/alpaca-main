@@ -13,7 +13,10 @@ const LoadingScreen = () => {
             <div className="w-16 h-16 border-4 rounded-full border-chart-1/20 border-t-chart-1 animate-spin"></div>
             <div
               className="absolute inset-0 w-16 h-16 border-4 rounded-full border-chart-2/20 border-b-chart-2 animate-spin"
-              style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}
+              style={{
+                animationDirection: 'reverse',
+                animationDuration: '1.5s',
+              }}
             ></div>
             <span className="sr-only">Loading...</span>
           </div>
@@ -44,8 +47,14 @@ const LoadingScreen = () => {
         {/* Dots */}
         <div className="flex items-center justify-center mt-6 space-x-2">
           <div className="w-2 h-2 rounded-full bg-chart-1 animate-pulse"></div>
-          <div className="w-2 h-2 rounded-full bg-chart-2 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-          <div className="w-2 h-2 rounded-full bg-chart-3 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+          <div
+            className="w-2 h-2 rounded-full bg-chart-2 animate-pulse"
+            style={{ animationDelay: '0.2s' }}
+          ></div>
+          <div
+            className="w-2 h-2 rounded-full bg-chart-3 animate-pulse"
+            style={{ animationDelay: '0.4s' }}
+          ></div>
         </div>
       </div>
     </div>

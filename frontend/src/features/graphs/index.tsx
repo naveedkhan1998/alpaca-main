@@ -53,9 +53,7 @@ import { X } from 'lucide-react';
 import IndicatorChart from './components/IndicatorChart';
 import { useIsMobile } from '@/hooks/useMobile';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import {
-  useLazyGetAssetCandlesQuery,
-} from '@/api/assetService';
+import { useLazyGetAssetCandlesQuery } from '@/api/assetService';
 
 interface LocationState {
   obj: Asset;
@@ -90,7 +88,7 @@ const GraphsPage: React.FC = () => {
   const loadMoreLimit = 500;
 
   // API trigger (single entry point)
-  const [getCandles, { isFetching } ] = useLazyGetAssetCandlesQuery();
+  const [getCandles, { isFetching }] = useLazyGetAssetCandlesQuery();
 
   // Refs
   const mainChartRef = useRef<any>(null);
@@ -163,12 +161,26 @@ const GraphsPage: React.FC = () => {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [getCandles, obj?.id, timeframe, loadMoreLimit, offset, hasMore, isLoadingMore, sortDescByDate]);
+  }, [
+    getCandles,
+    obj?.id,
+    timeframe,
+    loadMoreLimit,
+    offset,
+    hasMore,
+    isLoadingMore,
+    sortDescByDate,
+  ]);
 
   const fetchLatest = useCallback(async () => {
     if (!obj?.id) return;
     try {
-      const res = await getCandles({ id: obj.id, tf: timeframe, limit: initialLimit, offset: 0 }).unwrap();
+      const res = await getCandles({
+        id: obj.id,
+        tf: timeframe,
+        limit: initialLimit,
+        offset: 0,
+      }).unwrap();
       const results: Candle[] = res?.results ?? [];
       if (results.length === 0) return;
       const sortedLatest = sortDescByDate(results);
@@ -265,8 +277,12 @@ const GraphsPage: React.FC = () => {
         ) => {
           const previousClose = index > 0 ? array[index - 1].close : close;
           // Softer, theme-aware colors optimized for light mode
-          const green = isDarkMode ? 'rgba(34, 197, 94, 0.8)' : 'rgba(16, 185, 129, 0.8)';
-          const red = isDarkMode ? 'rgba(239, 68, 68, 0.8)' : 'rgba(244, 63, 94, 0.85)';
+          const green = isDarkMode
+            ? 'rgba(34, 197, 94, 0.8)'
+            : 'rgba(16, 185, 129, 0.8)';
+          const red = isDarkMode
+            ? 'rgba(239, 68, 68, 0.8)'
+            : 'rgba(244, 63, 94, 0.85)';
           const color = close >= previousClose ? green : red;
           return { time: formatDate(date) as Time, value: volume, color };
         }
@@ -309,7 +325,8 @@ const GraphsPage: React.FC = () => {
   }, [data, activeIndicators]);
 
   const bollingerBandsData = useMemo(() => {
-    if (!data || !activeIndicators.includes('BollingerBands')) return [] as any[];
+    if (!data || !activeIndicators.includes('BollingerBands'))
+      return [] as any[];
     const bands = calculateBollingerBands(
       data.results.map(d => ({ ...d, time: formatDate(d.date) })).reverse()
     );
@@ -327,8 +344,14 @@ const GraphsPage: React.FC = () => {
 
     const getChartsToSync = () => {
       const charts: any[] = [];
-      if (shouldShowVolume && volumeChartRef.current) charts.push(volumeChartRef.current);
-      if ((activeIndicators.includes('RSI') || activeIndicators.includes('ATR')) && indicatorChartRef.current) charts.push(indicatorChartRef.current);
+      if (shouldShowVolume && volumeChartRef.current)
+        charts.push(volumeChartRef.current);
+      if (
+        (activeIndicators.includes('RSI') ||
+          activeIndicators.includes('ATR')) &&
+        indicatorChartRef.current
+      )
+        charts.push(indicatorChartRef.current);
       return charts;
     };
 
@@ -346,7 +369,9 @@ const GraphsPage: React.FC = () => {
     };
 
     const subscribeToMainChart = () => {
-      mainChartRef.current?.subscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
+      mainChartRef.current?.subscribeVisibleTimeRangeChange(
+        handleVisibleTimeRangeChange
+      );
     };
 
     handleVisibleTimeRangeChange();
@@ -354,7 +379,9 @@ const GraphsPage: React.FC = () => {
 
     return () => {
       clearTimeout(timeoutId);
-      mainChartRef.current?.unsubscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
+      mainChartRef.current?.unsubscribeVisibleTimeRangeChange(
+        handleVisibleTimeRangeChange
+      );
     };
   }, [shouldShowVolume, activeIndicators]);
 
@@ -368,10 +395,12 @@ const GraphsPage: React.FC = () => {
   // CSV download: use canonical candles
   const handleDownload = useCallback(() => {
     const headers = 'Date,Open,High,Low,Close,Volume';
-    const csvData = candles.map(({ date, open, high, low, close, volume = 0 }) => {
-      const dt = new Date(date);
-      return `${dt.toLocaleString()},${open},${high},${low},${close},${volume}`;
-    });
+    const csvData = candles.map(
+      ({ date, open, high, low, close, volume = 0 }) => {
+        const dt = new Date(date);
+        return `${dt.toLocaleString()},${open},${high},${low},${close},${volume}`;
+      }
+    );
     const csvContent = `data:text/csv;charset=utf-8,${headers}\n${csvData.join('\n')}`;
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
@@ -391,7 +420,11 @@ const GraphsPage: React.FC = () => {
           dispatch(setIsFullscreen(true));
           setIsFullscreenView(true);
         })
-        .catch(err => console.error(`Error attempting to enable fullscreen mode: ${err.message}`));
+        .catch(err =>
+          console.error(
+            `Error attempting to enable fullscreen mode: ${err.message}`
+          )
+        );
     } else {
       document.exitFullscreen().then(() => {
         dispatch(setIsFullscreen(false));
@@ -418,7 +451,8 @@ const GraphsPage: React.FC = () => {
       const target = e.target as HTMLElement | null;
       if (!target) return;
       const tag = target.tagName?.toLowerCase();
-      if (tag === 'input' || tag === 'textarea' || target.isContentEditable) return;
+      if (tag === 'input' || tag === 'textarea' || target.isContentEditable)
+        return;
       const key = e.key.toLowerCase();
       if (key === 'f') {
         e.preventDefault();
@@ -463,7 +497,10 @@ const GraphsPage: React.FC = () => {
               open={showControls}
               onOpenChange={open => dispatch(setShowControls(open))}
             >
-              <SheetContent side="left" className="p-0 bg-card text-card-foreground">
+              <SheetContent
+                side="left"
+                className="p-0 bg-card text-card-foreground"
+              >
                 <div className="flex flex-col h-full">
                   <div className="flex items-center justify-between p-4 border-b border-border/30">
                     <div className="flex items-center space-x-3">
@@ -471,7 +508,9 @@ const GraphsPage: React.FC = () => {
                         <HiCog className="w-4 h-4 text-chart-1" />
                       </div>
                       <div>
-                        <span className="font-bold text-card-foreground">Controls</span>
+                        <span className="font-bold text-card-foreground">
+                          Controls
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -510,7 +549,9 @@ const GraphsPage: React.FC = () => {
                     <div className="flex items-center justify-between p-2 border-b border-border/30">
                       <div className="flex items-center space-x-2">
                         <HiChartBar className="w-4 h-4 text-chart-1" />
-                        <span className="font-bold text-card-foreground">Volume</span>
+                        <span className="font-bold text-card-foreground">
+                          Volume
+                        </span>
                       </div>
                       <Button
                         variant="ghost"
@@ -532,14 +573,17 @@ const GraphsPage: React.FC = () => {
               )}
 
               {/* Indicator Chart */}
-              {(activeIndicators.includes('RSI') || activeIndicators.includes('ATR')) && (
+              {(activeIndicators.includes('RSI') ||
+                activeIndicators.includes('ATR')) && (
                 <>
                   <ResizableHandle withHandle />
                   <ResizablePanel defaultSize={25} minSize={15}>
                     <div className="flex items-center justify-between p-2 border-b border-border/30">
                       <div className="flex items-center space-x-2">
                         <HiChartBar className="w-4 h-4 text-chart-1" />
-                        <span className="font-bold text-card-foreground">Indicators</span>
+                        <span className="font-bold text-card-foreground">
+                          Indicators
+                        </span>
                       </div>
                       <Button
                         variant="ghost"
@@ -566,11 +610,19 @@ const GraphsPage: React.FC = () => {
             </ResizablePanelGroup>
           </div>
         ) : (
-          <ResizablePanelGroup direction="horizontal" className="relative flex-1">
+          <ResizablePanelGroup
+            direction="horizontal"
+            className="relative flex-1"
+          >
             {/* Controls Sidebar */}
             {showControls && (
               <>
-                <ResizablePanel defaultSize={24} minSize={20} maxSize={35} className="min-w-0">
+                <ResizablePanel
+                  defaultSize={24}
+                  minSize={20}
+                  maxSize={35}
+                  className="min-w-0"
+                >
                   <div className="h-full p-4 ">
                     <div className="flex flex-col h-full border shadow-sm bg-card text-card-foreground border-border/30 rounded-xl">
                       <div className="flex items-center justify-between p-4 border-b border-border/30 ">
@@ -635,7 +687,9 @@ const GraphsPage: React.FC = () => {
                               <HiChartBar className="w-4 h-4 text-chart-1" />
                             </div>
                             <div>
-                              <span className="font-bold text-card-foreground">Volume</span>
+                              <span className="font-bold text-card-foreground">
+                                Volume
+                              </span>
                             </div>
                           </div>
                           <Button
@@ -658,7 +712,8 @@ const GraphsPage: React.FC = () => {
                   )}
 
                   {/* Indicator Chart */}
-                  {(activeIndicators.includes('RSI') || activeIndicators.includes('ATR')) && (
+                  {(activeIndicators.includes('RSI') ||
+                    activeIndicators.includes('ATR')) && (
                     <>
                       <ResizableHandle withHandle />
                       <ResizablePanel defaultSize={25} minSize={15}>
@@ -668,7 +723,9 @@ const GraphsPage: React.FC = () => {
                               <HiChartBar className="w-4 h-4 text-chart-1" />
                             </div>
                             <div>
-                              <span className="font-bold text-card-foreground">Indicators</span>
+                              <span className="font-bold text-card-foreground">
+                                Indicators
+                              </span>
                             </div>
                           </div>
                           <Button
