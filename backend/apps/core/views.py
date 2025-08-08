@@ -1,14 +1,13 @@
 # views.py
 
-import json
-import logging
 from datetime import datetime, timedelta
-from django.db import connection
-from django.db.models import Count, Q, Case, When, IntegerField
+import logging
+
 from django.core.cache import cache
+from django.db.models import Case, Count, IntegerField, Q, When
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status, viewsets, filters
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -16,27 +15,26 @@ from rest_framework.response import Response
 from apps.core.models import (
     AlpacaAccount,
     Asset,
-    WatchList,
-    WatchListAsset,
     Candle,
     Tick,
+    WatchList,
+    WatchListAsset,
 )
 from apps.core.pagination import CandleBucketPagination, OffsetPagination
 from apps.core.serializers import (
+    AggregatedCandleSerializer,
     AlpacaAccountSerializer,
     AssetSerializer,
-    AssetSearchSerializer,
-    WatchListSerializer,
-    WatchListCreateSerializer,
-    WatchListAssetSerializer,
-    CandleSerializer,
     CandleChartSerializer,
+    CandleSerializer,
     TickSerializer,
-    AggregatedCandleSerializer,
+    WatchListAssetSerializer,
+    WatchListCreateSerializer,
+    WatchListSerializer,
 )
 from apps.core.services.alpaca_service import AlpacaService
-from apps.core.tasks import alpaca_sync_task, start_alpaca_stream, fetch_historical_data
-from apps.core.utils import resample_qs, get_aggregated_candles, get_timeframe
+from apps.core.tasks import alpaca_sync_task, fetch_historical_data, start_alpaca_stream
+from apps.core.utils import get_timeframe
 
 logger = logging.getLogger(__name__)
 
@@ -528,11 +526,11 @@ class WatchListViewSet(viewsets.ModelViewSet):
         watchlist_asset, created = WatchListAsset.objects.get_or_create(
             watchlist=watchlist, asset=asset, defaults={"is_active": True}
         )
-        
+
         # Always trigger historical data fetch when adding to ensure continuity
         # The task itself will determine if any data needs to be fetched
         fetch_historical_data.delay(watchlist_asset.id)
-        
+
         if not created and not watchlist_asset.is_active:
             watchlist_asset.is_active = True
             watchlist_asset.save()

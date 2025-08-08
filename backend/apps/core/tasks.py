@@ -1,24 +1,18 @@
 from datetime import datetime, time, timedelta
-import json
-import time as PythonTime
 
 from celery import Task, shared_task
 from celery.utils.log import get_task_logger
-from django.core.cache import cache
 from django.utils import timezone
 import pytz
 
-from apps.account.models import User
-from .services.alpaca_service import AlpacaService
 from apps.core.models import (
-    Candle,
     AlpacaAccount,
     Asset,
-    WatchList,
+    Candle,
     WatchListAsset,
-    Tick,
 )
-from main import const, utils
+
+from .services.alpaca_service import AlpacaService
 
 logger = get_task_logger(__name__)
 
@@ -413,7 +407,7 @@ def fetch_historical_data(watchlist_asset_id: int):
             from django.db import connection
             with connection.cursor() as cur:
                 cur.execute(
-                    f"""
+                    """
                     WITH m1 AS (
                         SELECT id, timestamp, open, high, low, close, volume
                         FROM core_candle

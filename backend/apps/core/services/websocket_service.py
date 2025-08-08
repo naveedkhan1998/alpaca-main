@@ -23,19 +23,19 @@ Notes
 - Timezones: all timestamps are stored as timezone-aware UTC datetimes
 """
 
-import json
-import logging
-import threading
-import time
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, List, Tuple, Set
+import json
+import logging
 from queue import Queue
+import threading
+import time
+from typing import Any
 
+from django.db import close_old_connections, transaction
+from django.utils import timezone
 import pytz
 import websocket
-from django.db import transaction, close_old_connections
-from django.utils import timezone
 
 from apps.core.models import AlpacaAccount, Asset, Candle, WatchListAsset
 
@@ -98,7 +98,7 @@ class WebsocketClient:
         self._tf_acc = {tf: {} for tf in self.TF_CFG if tf != "1T"}
 
         # Control how often we persist open (in-progress) higher-TF buckets
-        self._last_open_flush = {tf: 0.0 for tf in self._tf_acc}
+        self._last_open_flush = dict.fromkeys(self._tf_acc, 0.0)
         self._open_flush_secs = 2.0
 
         self._connect()
@@ -246,16 +246,16 @@ class WebsocketClient:
             for a in assets:
                 self.asset_class_cache[a["id"]] = a["asset_class"]
             logger.debug("Updated asset cache with %d symbols: %s", len(new_mappings), new_mappings)
-            
+
         # Warn if we have gaps on 1-minute timeframe
         for symbol in symbols:
             if symbol in new_mappings:
                 asset_id = new_mappings[symbol]
                 latest_candle = Candle.objects.filter(
-                    asset_id=asset_id, 
+                    asset_id=asset_id,
                     timeframe="1T"
                 ).order_by("-timestamp").first()
-                
+
                 if latest_candle:
                     time_diff = timezone.now() - latest_candle.timestamp
                     if time_diff.total_seconds() > 120:
@@ -293,7 +293,7 @@ class WebsocketClient:
             gone = self.subscribed_symbols - current
 
             if new or gone:
-                logger.debug("Subscription update: current=%s, subscribed=%s, new=%s, gone=%s", 
+                logger.debug("Subscription update: current=%s, subscribed=%s, new=%s, gone=%s",
                            current, self.subscribed_symbols, new, gone)
 
             if new:
@@ -386,7 +386,7 @@ class WebsocketClient:
     def process_batch(self, ticks: list[dict]):
         """Aggregate trades into 1T bars, persist, then roll up higher timeframes."""
         # First aggregate to 1T (minute) bars from trades
-        m1_map: Dict[tuple[int, datetime], Dict[str, Any]] = defaultdict(
+        m1_map: dict[tuple[int, datetime], dict[str, Any]] = defaultdict(
             lambda: {
                 "open": None,
                 "high": -float("inf"),
@@ -399,7 +399,7 @@ class WebsocketClient:
         with self.asset_lock:
             cache_copy = self.asset_cache.copy()
 
-        latest_ts: Optional[datetime] = None
+        latest_ts: datetime | None = None
         for t in ticks:
             sym = t.get("S")
             aid = cache_copy.get(sym)
@@ -436,7 +436,7 @@ class WebsocketClient:
         # Fetch the PKs we just created/updated for linkage use
         # Note: we read back minimal set for recent minutes only to avoid heavy queries
         recent_minute_keys = list(m1_map.keys())
-        minute_ids_by_key: Dict[tuple[int, datetime], int] = {}
+        minute_ids_by_key: dict[tuple[int, datetime], int] = {}
         if recent_minute_keys:
             asset_ids = list({k[0] for k in recent_minute_keys})
             minutes = [k[1] for k in recent_minute_keys]
@@ -469,13 +469,13 @@ class WebsocketClient:
             self._persist_open_buckets(touched_by_tf, latest_ts)
             self._flush_closed_buckets(latest_ts)
 
-    def _update_higher_timeframes(self, m1_map: Dict[tuple[int, datetime], Dict[str, Any]]):
+    def _update_higher_timeframes(self, m1_map: dict[tuple[int, datetime], dict[str, Any]]):
         """Update in-memory accumulators for TFs > 1T from freshly built 1T bars.
 
         Returns a dict mapping timeframe to the set of (asset_id, bucket_ts) keys updated
         during this call, so we can selectively persist them.
         """
-        touched: Dict[str, Set[tuple[int, datetime]]] = {tf: set() for tf in self._tf_acc}
+        touched: dict[str, set[tuple[int, datetime]]] = {tf: set() for tf in self._tf_acc}
         for (aid, m1_ts), data in m1_map.items():
             # Fan out to each higher timeframe
             for tf, delta in self.TF_CFG.items():
@@ -503,7 +503,7 @@ class WebsocketClient:
                 touched[tf].add(key)
         return touched
 
-    def _persist_open_buckets(self, touched_by_tf: Dict[str, Set[tuple[int, datetime]]], latest_m1: datetime):
+    def _persist_open_buckets(self, touched_by_tf: dict[str, set[tuple[int, datetime]]], latest_m1: datetime):
         """Persist in-progress higher timeframe buckets updated in the last batch.
 
         Throttled per timeframe to avoid excessive writes. Only persist buckets whose
@@ -518,7 +518,7 @@ class WebsocketClient:
                 continue
             delta = self.TF_CFG[tf]
             acc = self._tf_acc.get(tf, {})
-            to_persist: Dict[tuple[int, datetime], Dict[str, Any]] = {}
+            to_persist: dict[tuple[int, datetime], dict[str, Any]] = {}
             for key in keys:
                 aid, bucket_ts = key
                 end_ts = bucket_ts + delta
@@ -538,7 +538,7 @@ class WebsocketClient:
             acc = self._tf_acc[tf]
             if not acc:
                 continue
-            to_persist: Dict[tuple[int, datetime], Dict[str, Any]] = {}
+            to_persist: dict[tuple[int, datetime], dict[str, Any]] = {}
             for (aid, bucket_ts), data in list(acc.items()):
                 end_ts = bucket_ts + delta
                 if end_ts <= latest_m1:
@@ -547,7 +547,7 @@ class WebsocketClient:
             if to_persist:
                 self.save_candles(tf, to_persist)
 
-    def save_candles(self, timeframe: str, updates: Dict[tuple[int, datetime], Dict[str, Any]]):
+    def save_candles(self, timeframe: str, updates: dict[tuple[int, datetime], dict[str, Any]]):
         """Upsert a batch of candles for a given timeframe.
 
         Strategy: fetch existing rows keyed by (asset_id, timestamp, timeframe),

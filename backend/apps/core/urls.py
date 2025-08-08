@@ -6,9 +6,9 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     AlpacaAccountViewSet,
     AssetViewSet,
-    WatchListViewSet,
     CandleViewSet,
     TickViewSet,
+    WatchListViewSet,
 )
 
 router = DefaultRouter()

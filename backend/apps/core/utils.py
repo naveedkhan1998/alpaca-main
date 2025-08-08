@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import connection, models
 from django.db.models import (
     F,
     Func,
@@ -8,13 +8,10 @@ from django.db.models import (
     Value,
     Window,
 )
-
-from django.db import connection
 from django.db.models.functions import Coalesce, FirstValue, RowNumber
-from apps.core.models import Candle
-
-
 from rest_framework.exceptions import ValidationError
+
+from apps.core.models import Candle
 
 
 def get_timeframe(request):

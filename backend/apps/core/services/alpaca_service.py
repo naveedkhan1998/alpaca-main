@@ -10,13 +10,15 @@ is available on Alpaca's Basic plan:contentReference[oaicite:0]{index=0}.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 import json
 import time
-from dataclasses import dataclass
-from typing import Callable, Iterable, List, Optional, Literal
+from typing import Literal
+
+from celery.utils.log import get_task_logger
 import requests
 import websocket
-from celery.utils.log import get_task_logger
 
 logger = get_task_logger(__name__)
 
@@ -36,26 +38,14 @@ class AlpacaService:
 
     def list_assets(
         self,
-        symbols: Optional[Iterable[str]] = None,
-        status: Optional[Literal["active", "inactive"]] = None,
+        symbols: Iterable[str] | None = None,
+        status: Literal["active", "inactive"] | None = None,
         asset_class: Literal["us_equity", "us_option", "crypto"] = "us_equity",
-        exchange: Optional[
-            Literal["AMEX", "ARCA", "BATS", "NYSE", "NASDAQ", "NYSEARCA", "OTC"]
-        ] = None,
-        attributes: Optional[
-            Iterable[
-                Literal[
-                    "ptp_no_exception",
-                    "ptp_with_exception",
-                    "ipo",
-                    "has_options",
-                    "options_late_close",
-                ]
-            ]
-        ] = None,
+        exchange: Literal["AMEX", "ARCA", "BATS", "NYSE", "NASDAQ", "NYSEARCA", "OTC"] | None = None,
+        attributes: Iterable[Literal["ptp_no_exception", "ptp_with_exception", "ipo", "has_options", "options_late_close"]] | None = None,
         *,
-        fallback_symbols: Optional[Iterable[str]] = None,
-    ) -> List[dict]:
+        fallback_symbols: Iterable[str] | None = None,
+    ) -> list[dict]:
         """Retrieve a list of assets from the trading API.
 
         Args:
@@ -106,14 +96,14 @@ class AlpacaService:
         self,
         symbol: str,
         timeframe: str = "1T",
-        start: Optional[str] = None,
-        end: Optional[str] = None,
+        start: str | None = None,
+        end: str | None = None,
         limit: int = 1000,
         adjustment: Literal["raw", "split", "dividend", "all"] = "raw",
-        asof: Optional[str] = None,
+        asof: str | None = None,
         feed: Literal["sip", "iex", "boats", "otc"] = "iex",
         currency: str = "USD",
-        page_token: Optional[str] = None,
+        page_token: str | None = None,
         sort: Literal["asc", "desc"] = "asc",
     ) -> dict:
         """Fetch historical bar data via the market data API.
@@ -172,8 +162,8 @@ class AlpacaService:
     def stream(
         self,
         symbols: Iterable[str],
-        on_message: Optional[Callable[[dict], None]] = None,
-        channels: Optional[dict[str, Iterable[str]]] = None,
+        on_message: Callable[[dict], None] | None = None,
+        channels: dict[str, Iterable[str]] | None = None,
         feed: Literal[
             "sip", "iex", "delayed_sip", "boats", "overnight", "test"
         ] = "iex",

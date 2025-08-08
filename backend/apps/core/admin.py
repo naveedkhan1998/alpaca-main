@@ -1,12 +1,12 @@
 from django.contrib import admin
 
 from apps.core.models import (
-    Candle,
     AlpacaAccount,
     Asset,
+    Candle,
+    Tick,
     WatchList,
     WatchListAsset,
-    Tick,
 )
 
 # Register your models here.
