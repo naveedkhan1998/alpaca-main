@@ -289,8 +289,10 @@ def start_alpaca_stream(account_id: int, symbols: list):
 @shared_task(name="fetch_historical_data")
 def fetch_historical_data(watchlist_asset_id: int):
     """
-    Fetches 2 year of historical data for the asset in the watchlist using 2-day batches.
-    Creates Candle objects for the fetched data.
+    Backfill strategy:
+    1) Fetch only 1-minute bars from Alpaca and persist as 1T.
+    2) For each higher timeframe (5T, 15T, 30T, 1H, 4H, 1D), resample from stored 1T
+       to compute OHLCV and persist, storing the list of minute candle IDs used.
     """
     watchlist_asset = WatchListAsset.objects.filter(id=watchlist_asset_id).first()
     if not watchlist_asset:
@@ -310,203 +312,184 @@ def fetch_historical_data(watchlist_asset_id: int):
         secret_key=account.api_secret,
     )
 
-    # Define date range - 2 year of data, but fetch up to current minute
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=730)
+    asset = watchlist_asset.asset
+    symbol = asset.symbol
 
-    # Check if we already have data and adjust start date
-    existing_candles = Candle.objects.filter(asset=watchlist_asset.asset).order_by(
-        "timestamp"
-    )
+    # Define timeframes
+    TF_LIST = [
+        ("1T", timedelta(minutes=1)),
+        ("5T", timedelta(minutes=5)),
+        ("15T", timedelta(minutes=15)),
+        ("30T", timedelta(minutes=30)),
+        ("1H", timedelta(hours=1)),
+        ("4H", timedelta(hours=4)),
+        ("1D", timedelta(days=1)),
+    ]
 
-    if existing_candles.exists():
-        last_candle_time = existing_candles.last().timestamp
-        # Only update start_date if we need to fill a gap
-        # Add 1 minute to avoid duplicate data
-        start_date = last_candle_time + timedelta(minutes=1)
+    end_date = timezone.now()
 
-        # If the last candle is very recent (within last 5 minutes),
-        # we might not need to fetch anything
-        if start_date >= end_date:
-            logger.info(
-                f"Asset {watchlist_asset.asset.symbol} already has recent data up to {last_candle_time}"
-            )
-            return
-
-        # During market hours, prioritize fetching recent data first
-        eastern = pytz.timezone("US/Eastern")
-        current_eastern = datetime.now(eastern)
-        is_market_open = current_eastern.weekday() < 5 and PythonTime(  # Monday-Friday
-            9, 30
-        ) <= current_eastern.time() < PythonTime(
-            16, 0
-        )  # 9:30 AM - 4:00 PM ET
-
-        if is_market_open:
-            # Limit the date range to last 7 days during market hours for faster processing
-            market_start_date = max(start_date, end_date - timedelta(days=7))
-            if market_start_date > start_date:
-                logger.info(
-                    f"Market is open - prioritizing recent data for {watchlist_asset.asset.symbol} from {market_start_date}"
-                )
-                start_date = market_start_date
-
+    # Step 1: Fetch 1T only
     try:
-        # Fetch data in 10-day chunks similar to load_instrument_candles
-        chunk_size = timedelta(days=10)
-        date_ranges = []
-        current_date = start_date
+        last_1t = (
+            Candle.objects.filter(asset=asset, timeframe="1T")
+            .order_by("-timestamp")
+            .first()
+        )
+        start_date_1t = last_1t.timestamp + timedelta(minutes=1) if last_1t else end_date - timedelta(days=730)
 
-        while current_date < end_date:
-            range_end = min(current_date + chunk_size, end_date)
-            date_ranges.append((current_date, range_end))
-            current_date = range_end
-
-        # Process in reverse order (newest first)
-        date_ranges.reverse()
-
-        total_chunks = len(date_ranges)
-        completed_chunks = 0
-
-        def process_candle_batch(batch_data, asset):
-            """Process a batch of candle data and create Candle objects"""
-            candles_to_create = []
-
-            batch_start = datetime.now()
-            logger.info(
-                f"Processing batch of {len(batch_data)} candles for asset {asset.symbol}"
-            )
-
-            def is_market_hours(dt):
-                """Check if the given datetime is within US market hours (9:30 AM - 4:00 PM ET, Monday-Friday)"""
-                # Convert to US Eastern timezone
-                eastern = pytz.timezone("US/Eastern")
-                if dt.tzinfo is None:
-                    dt = timezone.make_aware(dt, timezone=pytz.UTC)
-
-                eastern_time = dt.astimezone(eastern)
-
-                # Check if it's a weekday (Monday=0, Sunday=6)
-                if eastern_time.weekday() > 4:  # Saturday or Sunday
-                    return False
-
-                # Check if it's within market hours (9:30 AM - 4:00 PM ET)
-                market_open = time(9, 30)  # 9:30 AM
-                market_close = time(16, 0)  # 4:00 PM
-
-                current_time = eastern_time.time()
-                return market_open <= current_time < market_close
-
-            for bar in batch_data:
-                # Parse datetime from Alpaca format
-                timestamp = datetime.fromisoformat(bar["t"].replace("Z", "+00:00"))
-
-                # Skip candles outside market hours
-                if not is_market_hours(timestamp):
+        if start_date_1t < end_date:
+            # chunk by 10 days
+            current, created_total = start_date_1t, 0
+            while current < end_date:
+                r_end = min(current + timedelta(days=10), end_date)
+                start_str = current.strftime("%Y-%m-%dT%H:%M:%SZ")
+                end_str = r_end.strftime("%Y-%m-%dT%H:%M:%SZ")
+                try:
+                    resp = service.get_historic_bars(
+                        symbol=symbol,
+                        timeframe="1Min",
+                        start=start_str,
+                        end=end_str,
+                        limit=10000,
+                        adjustment="raw",
+                        feed="iex",
+                        sort="asc",
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"API error for {symbol} 1T {current}->{r_end}: {e}",
+                        exc_info=True,
+                    )
+                    current = r_end
                     continue
 
-                candle = Candle(
-                    asset=asset,
-                    timestamp=timestamp,
-                    open=float(bar["o"]),
-                    close=float(bar["c"]),
-                    low=float(bar["l"]),
-                    high=float(bar["h"]),
-                    volume=int(bar.get("v", 0)),
-                    trade_count=bar.get("n"),
-                    vwap=bar.get("vw"),
-                    timeframe="1Min",
-                )
-                candles_to_create.append(candle)
-
-            # Bulk create the batch of candles
-            if candles_to_create:
-                db_start = datetime.now()
-                Candle.objects.bulk_create(candles_to_create, ignore_conflicts=True)
-                db_time = datetime.now() - db_start
-                batch_time = datetime.now() - batch_start
-
-                logger.info(
-                    f"Created {len(candles_to_create)} market-hours candles for asset {asset.symbol} "
-                    f"(filtered from {len(batch_data)} total bars). "
-                    f"DB time: {db_time.total_seconds():.2f}s, Total time: {batch_time.total_seconds():.2f}s"
-                )
-            else:
-                logger.info(
-                    f"No market-hours candles to create for asset {asset.symbol} "
-                    f"(filtered from {len(batch_data)} total bars)"
-                )
-
-        logger.info(
-            f"Starting historical data fetch for asset {watchlist_asset.asset.symbol} from {start_date} to {end_date}"
-        )
-
-        for current_start, current_end in date_ranges:
-            fetch_start_time = datetime.now()
-
-            try:
-                # Format dates for Alpaca API (ISO format)
-                start_str = current_start.strftime("%Y-%m-%dT%H:%M:%SZ")
-                end_str = current_end.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-                logger.info(
-                    f"Requesting data for {watchlist_asset.asset.symbol} from {current_start} to {current_end}..."
-                )
-
-                # Fetch historical data from Alpaca
-                response = service.get_historic_bars(
-                    symbol=watchlist_asset.asset.symbol,
-                    timeframe="1Min",
-                    start=start_str,
-                    end=end_str,
-                    limit=10000,  # Maximum allowed
-                    adjustment="raw",
-                    feed="iex",
-                )
-
-                api_time = datetime.now() - fetch_start_time
-                logger.info(
-                    f"API request completed in {api_time.total_seconds():.2f} seconds"
-                )
-
-                bars_data = response.get("bars", [])
-
-                if bars_data:
-                    process_start_time = datetime.now()
-                    process_candle_batch(bars_data, watchlist_asset.asset)
-                    process_time = datetime.now() - process_start_time
-
-                    logger.info(
-                        f"Batch processing completed in {process_time.total_seconds():.2f} seconds"
+                bars = resp.get("bars", [])
+                candles = []
+                for bar in bars:
+                    ts = datetime.fromisoformat(bar["t"].replace("Z", "+00:00"))
+                    # optional filter market hours only
+                    if not _is_market_hours(ts):
+                        continue
+                    candles.append(
+                        Candle(
+                            asset=asset,
+                            timestamp=ts,
+                            open=float(bar["o"]),
+                            high=float(bar["h"]),
+                            low=float(bar["l"]),
+                            close=float(bar["c"]),
+                            volume=int(bar.get("v", 0)),
+                            trade_count=bar.get("n"),
+                            vwap=bar.get("vw"),
+                            timeframe="1T",
+                        )
                     )
-                    logger.info(
-                        f"Fetched {len(bars_data)} data points for asset {watchlist_asset.asset.symbol} from {current_start} to {current_end}."
-                    )
-                else:
-                    logger.info(
-                        f"No data returned for period {current_start} to {current_end}"
-                    )
+                if candles:
+                    Candle.objects.bulk_create(candles, ignore_conflicts=True)
+                    created_total += len(candles)
+                current = r_end
+            logger.info("Backfilled %d 1T candles for %s", created_total, symbol)
+    except Exception as e:
+        logger.error("Error backfilling 1T for %s: %s", symbol, e, exc_info=True)
 
-            except Exception as inner_e:
-                logger.error(
-                    f"Error fetching chunk {current_start} to {current_end}: {inner_e}",
-                    exc_info=True,
-                )
-                # Continue with next chunk despite errors
-
-            completed_chunks += 1
-            progress = (completed_chunks / total_chunks) * 100
-            logger.info(
-                f"Progress: {progress:.1f}% ({completed_chunks}/{total_chunks} chunks)"
+    # Step 2: Resample from 1T to higher TFs and persist with linkage
+    for tf, delta in TF_LIST:
+        if tf == "1T":
+            continue
+        try:
+            last_tf = (
+                Candle.objects.filter(asset=asset, timeframe=tf)
+                .order_by("-timestamp")
+                .first()
+            )
+            # Determine start bucket to (re)build
+            start_ts = (
+                last_tf.timestamp + delta if last_tf else (end_date - timedelta(days=730))
             )
 
-        logger.info(
-            f"Completed fetching historical data for asset {watchlist_asset.asset.symbol}."
-        )
+            # Build buckets using SQL for efficiency; collect minute IDs
+            # anchor for date_bin is market open ET to align intraday buckets
+            anchor = "1970-01-01 09:30:00-05:00"
+            from django.db import connection
+            with connection.cursor() as cur:
+                cur.execute(
+                    f"""
+                    WITH m1 AS (
+                        SELECT id, timestamp, open, high, low, close, volume
+                        FROM core_candle
+                        WHERE asset_id = %s AND timeframe = '1T' AND timestamp >= %s AND timestamp < %s
+                    ),
+                    binned AS (
+                        SELECT
+                            date_bin(INTERVAL %s, timestamp, TIMESTAMP %s) AS bucket,
+                            id,
+                            open, high, low, close, volume,
+                            row_number() OVER (PARTITION BY date_bin(INTERVAL %s, timestamp, TIMESTAMP %s) ORDER BY timestamp ASC) AS rn_open,
+                            row_number() OVER (PARTITION BY date_bin(INTERVAL %s, timestamp, TIMESTAMP %s) ORDER BY timestamp DESC) AS rn_close
+                        FROM m1
+                    ),
+                    agg AS (
+                        SELECT
+                            bucket,
+                            MIN(low) AS l,
+                            MAX(high) AS h,
+                            SUM(volume) AS v,
+                            ARRAY_AGG(id ORDER BY id) AS ids,
+                            MIN(CASE WHEN rn_open=1 THEN open END) AS o,
+                            MIN(CASE WHEN rn_close=1 THEN close END) AS c
+                        FROM binned
+                        GROUP BY bucket
+                        ORDER BY bucket ASC
+                    )
+                    SELECT bucket, o, h, l, c, v, ids
+                    FROM agg
+                    ORDER BY bucket ASC
+                    ;
+                    """,
+                    [
+                        asset.id,
+                        start_ts,
+                        end_date,
+                        delta,
+                        anchor,
+                        delta,
+                        anchor,
+                        delta,
+                        anchor,
+                    ],
+                )
+                rows = cur.fetchall()
 
-    except Exception as e:
-        logger.error(
-            f"Error fetching historical data for WatchListAsset {watchlist_asset_id}: {e}",
-            exc_info=True,
-        )
-        return
+            if not rows:
+                continue
+
+            # Upsert aggregated candles
+            to_create = []
+            for bucket, o, h, l, c, v, ids in rows:
+                to_create.append(
+                    Candle(
+                        asset=asset,
+                        timeframe=tf,
+                        timestamp=bucket,
+                        open=float(o),
+                        high=float(h),
+                        low=float(l),
+                        close=float(c),
+                        volume=int(v or 0),
+                        minute_candle_ids=list(ids) if ids else [],
+                    )
+                )
+            Candle.objects.bulk_create(to_create, ignore_conflicts=True)
+            logger.info("Built %d %s candles for %s from 1T", len(to_create), tf, symbol)
+        except Exception as e:
+            logger.error("Error resampling %s for %s: %s", tf, symbol, e, exc_info=True)
+
+
+def _is_market_hours(dt: datetime) -> bool:
+    eastern = pytz.timezone("US/Eastern")
+    if dt.tzinfo is None:
+        dt = timezone.make_aware(dt, pytz.UTC)
+    et = dt.astimezone(eastern)
+    if et.weekday() > 4:
+        return False
+    return time(9, 30) <= et.time() < time(16, 0)

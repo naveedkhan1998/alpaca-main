@@ -423,24 +423,45 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=["get"], url_path="candles")
     def candles(self, request, pk=None):
         asset = self.get_object()
-        tf = get_timeframe(request)
+        tf_minutes = get_timeframe(request)
         offset = int(request.query_params.get("offset", 0))
         limit = int(request.query_params.get("limit", 1000))
 
-        # FAST COUNT!
-        with connection.cursor() as cursor:
-            cursor.execute(
-                f"""
-                SELECT COUNT(DISTINCT date_bin(INTERVAL '{tf} minutes', timestamp, TIMESTAMP '1970-01-01 09:30:00-05:00'))
-                FROM core_candle
-                WHERE asset_id = %s
-                """,
-                [asset.id],
+        # Map minutes to stored timeframe labels
+        minutes_to_tf = {
+            1: "1T",
+            5: "5T",
+            15: "15T",
+            30: "30T",
+            60: "1H",
+            240: "4H",
+            1440: "1D",
+        }
+        tf_label = minutes_to_tf.get(tf_minutes)
+        if not tf_label:
+            return Response(
+                {"msg": "Unsupported timeframe", "supported": list(minutes_to_tf.keys())},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-            total = cursor.fetchone()[0]
 
-        candles = get_aggregated_candles(asset.id, tf, offset, limit)
-        serializer = AggregatedCandleSerializer(candles, many=True)
+        base_qs = Candle.objects.filter(asset_id=asset.id, timeframe=tf_label)
+        total = base_qs.count()
+
+        candles_qs = (
+            base_qs.order_by("-timestamp")[offset : offset + limit]
+        )
+        rows = [
+            {
+                "bucket": c.timestamp,
+                "o": c.open,
+                "h_": c.high,
+                "l_": c.low,
+                "c": c.close,
+                "v_": c.volume,
+            }
+            for c in candles_qs
+        ]
+        serializer = AggregatedCandleSerializer(rows, many=True)
 
         has_next = total > (offset + limit)
         has_previous = offset > 0

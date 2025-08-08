@@ -143,7 +143,12 @@ class Tick(models.Model):
 
 
 class Candle(models.Model):
-    """Historical OHLCV candle data from Alpaca"""
+    """Historical OHLCV candle data from Alpaca
+
+    For timeframes greater than 1 minute, `minute_candle_ids` contains the list of
+    1-minute candle primary keys that make up this aggregated candle. For 1T rows,
+    this field is typically null.
+    """
 
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
 
@@ -163,6 +168,9 @@ class Candle(models.Model):
     # Timeframe and timestamp
     timeframe = models.CharField(max_length=10, default="1T")  # e.g., '1D', '1H', '5T'
     timestamp = models.DateTimeField()  # 't' field
+
+    # Aggregation linkage (for TF > 1T)
+    minute_candle_ids = models.JSONField(blank=True, null=True)
 
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
