@@ -29,6 +29,7 @@ import {
   HiRefresh,
   HiTrendingUp,
   HiX,
+  HiInformationCircle,
 } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
@@ -47,8 +48,6 @@ import { ModeToggle } from '@/components/ModeToggle';
 import { useIsMobile } from '@/hooks/useMobile';
 
 interface GraphHeaderProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: any;
   obj: Asset;
   handleDownload: () => void;
   refetch: () => void;
@@ -56,7 +55,6 @@ interface GraphHeaderProps {
 }
 
 const GraphHeader: React.FC<GraphHeaderProps> = ({
-  data,
   obj,
   handleDownload,
   refetch,
@@ -112,8 +110,6 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                 <span>{obj?.symbol || 'N/A'}</span>
                 <Separator orientation="vertical" className="h-3" />
                 <span>{timeframe}m</span>
-                <Separator orientation="vertical" className="h-3" />
-                <span>{data?.count || 0} data points</span>
                 {autoRefresh && (
                   <>
                     <Separator orientation="vertical" className="h-3" />
@@ -208,6 +204,36 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
 
           {!isMobile && (
             <Separator orientation="vertical" className="h-6 mx-1" />
+          )}
+
+          {/* Keyboard shortcuts info */}
+          {!isMobile && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <HiInformationCircle className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <div className="text-xs space-y-1">
+                    <div className="font-medium text-foreground">Shortcuts</div>
+                    <div className="text-muted-foreground">
+                      <kbd className="px-1 py-0.5 rounded bg-muted mr-1">F</kbd>
+                      Fullscreen
+                    </div>
+                    <div className="text-muted-foreground">
+                      <kbd className="px-1 py-0.5 rounded bg-muted mr-1">V</kbd>
+                      Toggle Volume
+                    </div>
+                    <div className="text-muted-foreground">
+                      <kbd className="px-1 py-0.5 rounded bg-muted mr-1">C</kbd>
+                      Toggle Controls
+                    </div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
 
           <ModeToggle />
