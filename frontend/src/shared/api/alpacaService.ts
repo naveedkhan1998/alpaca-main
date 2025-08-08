@@ -65,6 +65,16 @@ export const alpacaApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Alpaca'],
     }),
+    syncAssets: builder.mutation<ApiResponse<{ started: boolean }>, void>({
+      query: () => ({
+        url: 'core/alpaca/sync_assets/',
+        method: 'POST',
+        headers: {
+          'Content-type': 'application/json',
+        },
+      }),
+      invalidatesTags: ['Alpaca'],
+    }),
   }),
 });
 
@@ -74,4 +84,5 @@ export const {
   useUpdateAlpacaMutation,
   useCreateAlpacaMutation,
   useStartWebsocketMutation,
+  useSyncAssetsMutation,
 } = alpacaApi;
