@@ -14,6 +14,7 @@ from apps.core.models import (
 )
 
 from .services.alpaca_service import AlpacaService
+from django.conf import settings
 
 logger = get_task_logger(__name__)
 
@@ -370,7 +371,7 @@ def fetch_historical_data(watchlist_asset_id: int):
             start_date_1t = (
                 last_1t.timestamp + timedelta(minutes=1)
                 if last_1t
-                else end_date - timedelta(days=1825)
+                else end_date - timedelta(days=settings.HISTORIC_DATA_LOADING_LIMIT)
             )
 
             if start_date_1t < end_date:
