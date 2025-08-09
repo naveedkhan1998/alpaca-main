@@ -186,7 +186,7 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
             Clear filters
           </Button>
 
-          <div className="ml-auto flex items-center gap-2 text-xs">
+          <div className="flex items-center gap-2 ml-auto text-xs">
             {typeof stats?.total_count === 'number' && (
               <Badge variant="secondary">Total: {stats.total_count}</Badge>
             )}

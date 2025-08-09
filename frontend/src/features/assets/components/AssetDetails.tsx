@@ -90,7 +90,7 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {detailsData.map((item, index) => (
               <div key={index} className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <p className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
                   {item.label}
                 </p>
                 <p className="text-base leading-snug">{item.value}</p>
