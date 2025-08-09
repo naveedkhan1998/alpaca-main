@@ -1,7 +1,9 @@
 import threading
+
 import pytest
-from apps.core.services.websocket.subscription import SubscriptionManager
+
 from apps.core.services.websocket.repository import MarketRepository
+from apps.core.services.websocket.subscription import SubscriptionManager
 
 
 class FakeRepo(MarketRepository):

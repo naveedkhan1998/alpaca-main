@@ -6,7 +6,6 @@ import logging
 from django.core.cache import cache
 from django.db import connection
 from django.db.models import Case, Count, IntegerField, Q, When
-from django.db.models.functions import Lower
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
@@ -296,9 +295,7 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
                                     "name_sim": "similarity(coalesce(name,''), %s)",
                                 },
                                 select_params=[search_term, search_term],
-                            ).order_by(
-                                "search_rank", "-sym_sim", "-name_sim", "symbol"
-                            )
+                            ).order_by("search_rank", "-sym_sim", "-name_sim", "symbol")
                 except Exception:
                     pass
 
@@ -309,7 +306,9 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
         List all assets with pagination and caching.
         """
         cache_key = f"assets_list_{hash(str(sorted(request.query_params.items())))}"
-        if not any(param in request.query_params for param in ["limit", "offset", "ordering"]):
+        if not any(
+            param in request.query_params for param in ["limit", "offset", "ordering"]
+        ):
             cached_result = cache.get(cache_key)
             if cached_result:
                 return Response(cached_result)

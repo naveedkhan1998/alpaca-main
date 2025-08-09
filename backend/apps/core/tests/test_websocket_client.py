@@ -1,6 +1,7 @@
 import json
+
 import pytest
-from queue import Queue
+
 from apps.core.services.websocket.client import WebsocketClient
 
 

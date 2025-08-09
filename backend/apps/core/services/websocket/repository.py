@@ -1,6 +1,8 @@
 from __future__ import annotations
-from typing import Iterable, Optional
+
+from collections.abc import Iterable
 from datetime import datetime
+
 from apps.core.models import Asset, Candle, WatchListAsset
 
 
@@ -21,7 +23,7 @@ class MarketRepository:
             )
         )
 
-    def get_latest_candle(self, asset_id: int, timeframe: str) -> Optional[Candle]:
+    def get_latest_candle(self, asset_id: int, timeframe: str) -> Candle | None:
         return (
             Candle.objects.filter(asset_id=asset_id, timeframe=timeframe)
             .order_by("-timestamp")

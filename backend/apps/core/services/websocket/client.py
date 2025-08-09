@@ -1,21 +1,21 @@
 from __future__ import annotations
-import threading
-import time
+
+from datetime import datetime, timedelta
 import json
 import logging
-from datetime import timedelta, datetime
 from queue import Queue
-from typing import Optional
+import threading
+import time
 
-import websocket
-from django.utils import timezone
 import pytz
+import websocket
 
 from apps.core.models import AlpacaAccount
-from .repository import MarketRepository
-from .subscription import SubscriptionManager
+
 from .aggregator import CandleAggregator
 from .connection import AlpacaWSConnection
+from .repository import MarketRepository
+from .subscription import SubscriptionManager
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class WebsocketClient:
         self.sandbox = sandbox
         self.running = False
         self.authenticated = False
-        self.auth_start_time: Optional[float] = None
+        self.auth_start_time: float | None = None
         self.auth_timeout = 30.0
 
         # Shared state
@@ -184,8 +184,8 @@ class WebsocketClient:
     def _on_close(
         self,
         _ws: websocket.WebSocketApp,
-        close_status_code: Optional[int],
-        close_msg: Optional[str],
+        close_status_code: int | None,
+        close_msg: str | None,
     ) -> None:
         self.authenticated = False
         logger.warning("Socket closed: %s %s", close_status_code, close_msg)

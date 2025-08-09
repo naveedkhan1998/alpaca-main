@@ -1,6 +1,7 @@
+from datetime import UTC, datetime
+
 import pytest
-from datetime import datetime, timezone as dt_timezone
-from queue import Queue
+
 from apps.core.services.websocket.client import WebsocketClient
 from apps.core.services.websocket.repository import MarketRepository
 
@@ -55,7 +56,7 @@ def test_batch_loop_end_to_end(client):
     ws_client, repo = client
 
     # Prepare a fake tick for 1T candle
-    ts = datetime(2025, 8, 8, 14, 30, tzinfo=dt_timezone.utc)
+    ts = datetime(2025, 8, 8, 14, 30, tzinfo=UTC)
     tick = {"S": "AAPL", "p": 150.0, "s": 10, "t": ts.isoformat()}
     ws_client.asset_cache["AAPL"] = 1
     ws_client.asset_class_cache[1] = "us_equity"

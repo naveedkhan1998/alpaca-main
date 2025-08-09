@@ -1,8 +1,10 @@
 from __future__ import annotations
+
+from collections.abc import Callable
 import logging
 import time
+
 import websocket
-from typing import Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +21,7 @@ class AlpacaWSConnection:
         on_message: Callable[[websocket.WebSocketApp, str], None],
         on_error: Callable[[websocket.WebSocketApp, Exception], None],
         on_close: Callable[
-            [websocket.WebSocketApp, Optional[int], Optional[str]], None
+            [websocket.WebSocketApp, int | None, str | None], None
         ],
         reconnect_delay: int = 10,
     ) -> None:
@@ -31,7 +33,7 @@ class AlpacaWSConnection:
         self.on_error = on_error
         self.on_close = on_close
         self.reconnect_delay = reconnect_delay
-        self.ws_app: Optional[websocket.WebSocketApp] = None
+        self.ws_app: websocket.WebSocketApp | None = None
 
     def connect(self) -> None:
         """Build WebSocketApp."""

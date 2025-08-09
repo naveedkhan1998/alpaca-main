@@ -76,12 +76,20 @@ class Asset(models.Model):
         indexes = [
             # Common filters/sorts
             models.Index(fields=["symbol", "asset_class"], name="idx_asset_sym_cls"),
-            models.Index(fields=["status", "tradable"], name="idx_asset_status_tradable"),
+            models.Index(
+                fields=["status", "tradable"], name="idx_asset_status_tradable"
+            ),
             # Case-insensitive prefix lookups on symbol
             models.Index(Lower("symbol"), name="idx_asset_symbol_lower"),
             # Trigram GIN indexes greatly speed up icontains/partial searches (requires pg_trgm)
-            GinIndex(fields=["symbol"], name="gin_asset_symbol_trgm", opclasses=["gin_trgm_ops"]),
-            GinIndex(fields=["name"], name="gin_asset_name_trgm", opclasses=["gin_trgm_ops"]),
+            GinIndex(
+                fields=["symbol"],
+                name="gin_asset_symbol_trgm",
+                opclasses=["gin_trgm_ops"],
+            ),
+            GinIndex(
+                fields=["name"], name="gin_asset_name_trgm", opclasses=["gin_trgm_ops"]
+            ),
         ]
 
     def __str__(self):

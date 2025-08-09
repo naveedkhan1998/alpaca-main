@@ -1,5 +1,6 @@
+from datetime import UTC, datetime, timedelta
+
 import pytest
-from datetime import datetime, timedelta, timezone as dt_timezone
 
 from apps.core.services.websocket.aggregator import CandleAggregator
 from apps.core.services.websocket.repository import MarketRepository
@@ -43,7 +44,7 @@ def test_aggregate_to_1T_basic(agg):
     aggregator, repo = agg
     asset_cache = {"AAPL": 1}
     asset_class_cache = {1: "us_equity"}
-    ts = datetime(2025, 8, 8, 14, 30, tzinfo=dt_timezone.utc)
+    ts = datetime(2025, 8, 8, 14, 30, tzinfo=UTC)
     ticks = [
         {"S": "AAPL", "p": 150.0, "s": 10, "t": ts.isoformat()},
         {"S": "AAPL", "p": 151.0, "s": 5, "t": ts.isoformat()},
@@ -65,7 +66,7 @@ def test_aggregate_to_1T_basic(agg):
 
 def test_persist_1T_creates_new(agg):
     aggregator, repo = agg
-    ts = datetime(2025, 8, 8, 14, 30, tzinfo=dt_timezone.utc)
+    ts = datetime(2025, 8, 8, 14, 30, tzinfo=UTC)
     m1_map = {
         (1, ts): {"open": 150, "high": 151, "low": 149, "close": 150.5, "volume": 100}
     }
@@ -77,7 +78,7 @@ def test_persist_1T_creates_new(agg):
 
 def test_rollup_and_persist_open_closed(agg):
     aggregator, repo = agg
-    base_ts = datetime(2025, 8, 8, 14, 30, tzinfo=dt_timezone.utc)
+    base_ts = datetime(2025, 8, 8, 14, 30, tzinfo=UTC)
     m1_map = {
         (1, base_ts): {"open": 150, "high": 150, "low": 150, "close": 150, "volume": 10}
     }

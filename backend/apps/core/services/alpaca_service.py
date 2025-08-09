@@ -1,13 +1,13 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import json
 import time
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
 
+from celery.utils.log import get_task_logger
 import requests
 import websocket
-from celery.utils.log import get_task_logger
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable

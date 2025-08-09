@@ -1,12 +1,17 @@
 from __future__ import annotations
+
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import Any, Callable, Optional
-import pytz
-from django.utils import timezone
-from apps.core.models import Candle
-from .repository import MarketRepository
 import time
+from typing import Any
+
+from django.utils import timezone
+import pytz
+
+from apps.core.models import Candle
+
+from .repository import MarketRepository
 
 
 class CandleAggregator:
@@ -52,7 +57,7 @@ class CandleAggregator:
         asset_cache: dict[str, int],
         asset_class_cache: dict[int, str],
         is_rth_fn: Callable[[datetime], bool],
-    ) -> tuple[dict[tuple[int, datetime], dict[str, Any]], Optional[datetime]]:
+    ) -> tuple[dict[tuple[int, datetime], dict[str, Any]], datetime | None]:
         """Build 1T candles from ticks."""
         m1_map: dict[tuple[int, datetime], dict[str, Any]] = defaultdict(
             lambda: {
@@ -63,7 +68,7 @@ class CandleAggregator:
                 "volume": 0,
             }
         )
-        latest_ts: Optional[datetime] = None
+        latest_ts: datetime | None = None
 
         for t in ticks:
             sym = t.get("S")

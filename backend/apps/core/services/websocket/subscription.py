@@ -1,8 +1,10 @@
 from __future__ import annotations
+
 import logging
 import threading
-from typing import Set
+
 from django.utils import timezone
+
 from .repository import MarketRepository
 
 logger = logging.getLogger(__name__)
@@ -24,14 +26,14 @@ class SubscriptionManager:
         self.asset_lock = asset_lock
 
     def diff_subscriptions(
-        self, current_subscribed: Set[str]
-    ) -> tuple[Set[str], Set[str]]:
+        self, current_subscribed: set[str]
+    ) -> tuple[set[str], set[str]]:
         current = self.repo.get_active_symbols()
         new = current - current_subscribed
         gone = current_subscribed - current
         return new, gone
 
-    def update_asset_cache(self, symbols: Set[str]) -> None:
+    def update_asset_cache(self, symbols: set[str]) -> None:
         assets = self.repo.get_assets(symbols)
         with self.asset_lock:
             for a in assets:
