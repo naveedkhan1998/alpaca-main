@@ -14,7 +14,7 @@ interface GraphState {
 }
 
 const initialState: GraphState = {
-  timeframe: 15,
+  timeframe: 1,
   chartType: 'Candlestick',
   seriesType: 'ohlc',
   showVolume: true,

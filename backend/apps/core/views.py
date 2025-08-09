@@ -35,6 +35,7 @@ from apps.core.serializers import (
 )
 from apps.core.services.alpaca_service import AlpacaService
 from apps.core.tasks import alpaca_sync_task, fetch_historical_data, start_alpaca_stream
+from apps.core.services.backfill_coordinator import request_backfill
 from apps.core.utils import get_timeframe
 
 logger = logging.getLogger(__name__)
@@ -584,9 +585,8 @@ class WatchListViewSet(viewsets.ModelViewSet):
             watchlist=watchlist, asset=asset, defaults={"is_active": True}
         )
 
-        # Always trigger historical data fetch when adding to ensure continuity
-        # The task itself will determine if any data needs to be fetched
-        fetch_historical_data.delay(watchlist_asset.id)
+        # Idempotent backfill schedule via coordinator (deduped per-asset across processes)
+        request_backfill(watchlist_asset.id, source="watchlist.add_asset")
 
         if not created and not watchlist_asset.is_active:
             watchlist_asset.is_active = True
