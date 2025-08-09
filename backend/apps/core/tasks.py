@@ -336,12 +336,12 @@ def fetch_historical_data(watchlist_asset_id: int):
         )
 
         if start_date_1t < end_date:
-            # chunk by 10 days
-            current, created_total = start_date_1t, 0
-            while current < end_date:
-                r_end = min(current + timedelta(days=10), end_date)
-                start_str = current.strftime("%Y-%m-%dT%H:%M:%SZ")
-                end_str = r_end.strftime("%Y-%m-%dT%H:%M:%SZ")
+            # chunk by 10 days, but create newest first by walking backwards
+            current_end, created_total = end_date, 0
+            while current_end > start_date_1t:
+                r_start = max(start_date_1t, current_end - timedelta(days=10))
+                start_str = r_start.strftime("%Y-%m-%dT%H:%M:%SZ")
+                end_str = current_end.strftime("%Y-%m-%dT%H:%M:%SZ")
                 try:
                     resp = service.get_historic_bars(
                         symbol=symbol,
@@ -351,17 +351,18 @@ def fetch_historical_data(watchlist_asset_id: int):
                         limit=10000,
                         adjustment="raw",
                         feed="iex",
-                        sort="asc",
+                        sort="desc",  # fetch latest first
                     )
                 except Exception as e:
                     logger.error(
-                        f"API error for {symbol} 1T {current}->{r_end}: {e}",
+                        f"API error for {symbol} 1T {r_start}->{current_end}: {e}",
                         exc_info=True,
                     )
-                    current = r_end
+                    current_end = r_start
                     continue
 
-                bars = resp.get("bars", [])
+                # Treat missing or null bars as no data (already up-to-date)
+                bars = (resp or {}).get("bars") or []
                 candles = []
                 for bar in bars:
                     ts = datetime.fromisoformat(bar["t"].replace("Z", "+00:00"))
@@ -383,10 +384,13 @@ def fetch_historical_data(watchlist_asset_id: int):
                         )
                     )
                 if candles:
+                    # Order of insertion follows API order (latest-first), which is desired
                     Candle.objects.bulk_create(candles, ignore_conflicts=True)
                     created_total += len(candles)
-                current = r_end
-            logger.info("Backfilled %d 1T candles for %s", created_total, symbol)
+                current_end = r_start
+            logger.info(
+                "Backfilled %d 1T candles for %s (newest first)", created_total, symbol
+            )
     except Exception as e:
         logger.error("Error backfilling 1T for %s: %s", symbol, e, exc_info=True)
 
@@ -440,11 +444,10 @@ def fetch_historical_data(watchlist_asset_id: int):
                             MIN(CASE WHEN rn_close=1 THEN close END) AS c
                         FROM binned
                         GROUP BY bucket
-                        ORDER BY bucket ASC
                     )
                     SELECT bucket, o, h, l, c, v, ids
-                    FROM agg
-                    ORDER BY bucket ASC
+            FROM agg
+            ORDER BY bucket DESC
                     ;
                     """,
                     [
@@ -464,25 +467,62 @@ def fetch_historical_data(watchlist_asset_id: int):
             if not rows:
                 continue
 
-            # Upsert aggregated candles
-            to_create = []
-            for bucket, o, h, low_, c, v, ids in rows:
-                to_create.append(
-                    Candle(
-                        asset=asset,
-                        timeframe=tf,
-                        timestamp=bucket,
-                        open=float(o),
-                        high=float(h),
-                        low=float(low_),
-                        close=float(c),
-                        volume=int(v or 0),
-                        minute_candle_ids=list(ids) if ids else [],
-                    )
+            # Upsert aggregated candles (create new + update existing)
+            buckets = [row[0] for row in rows]
+            existing = {
+                c.timestamp: c
+                for c in Candle.objects.filter(
+                    asset=asset, timeframe=tf, timestamp__in=buckets
                 )
-            Candle.objects.bulk_create(to_create, ignore_conflicts=True)
+            }
+
+            to_create = []
+            to_update = []
+            for bucket, o, h, low_, c, v, ids in rows:
+                if bucket in existing:
+                    cobj = existing[bucket]
+                    cobj.open = float(o)
+                    cobj.high = float(h)
+                    cobj.low = float(low_)
+                    cobj.close = float(c)
+                    cobj.volume = int(v or 0)
+                    cobj.minute_candle_ids = list(ids) if ids else []
+                    to_update.append(cobj)
+                else:
+                    to_create.append(
+                        Candle(
+                            asset=asset,
+                            timeframe=tf,
+                            timestamp=bucket,
+                            open=float(o),
+                            high=float(h),
+                            low=float(low_),
+                            close=float(c),
+                            volume=int(v or 0),
+                            minute_candle_ids=list(ids) if ids else [],
+                        )
+                    )
+
+            if to_create:
+                Candle.objects.bulk_create(to_create, ignore_conflicts=True)
+            if to_update:
+                Candle.objects.bulk_update(
+                    to_update,
+                    [
+                        "open",
+                        "high",
+                        "low",
+                        "close",
+                        "volume",
+                        "minute_candle_ids",
+                    ],
+                )
             logger.info(
-                "Built %d %s candles for %s from 1T", len(to_create), tf, symbol
+                "Built %d %s candles for %s from 1T (newest first); updated %d",
+                len(to_create),
+                tf,
+                symbol,
+                len(to_update),
             )
         except Exception as e:
             logger.error("Error resampling %s for %s: %s", tf, symbol, e, exc_info=True)
