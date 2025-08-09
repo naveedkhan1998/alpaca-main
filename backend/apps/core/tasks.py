@@ -2,6 +2,7 @@ from datetime import datetime, time, timedelta
 
 from celery import Task, shared_task
 from celery.utils.log import get_task_logger
+from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
 import pytz
@@ -14,7 +15,6 @@ from apps.core.models import (
 )
 
 from .services.alpaca_service import AlpacaService
-from django.conf import settings
 
 logger = get_task_logger(__name__)
 
