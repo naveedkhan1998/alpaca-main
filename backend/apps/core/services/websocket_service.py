@@ -38,6 +38,7 @@ import pytz
 import websocket
 
 from apps.core.models import AlpacaAccount, Asset, Candle, WatchListAsset
+from apps.core.tasks import fetch_historical_data as task_fetch_historical_data
 
 # --------------------------------------------------------------------------- #
 # Logging                                                                     #
@@ -100,6 +101,11 @@ class WebsocketClient:
         # Control how often we persist open (in-progress) higher-TF buckets
         self._last_open_flush = dict.fromkeys(self._tf_acc, 0.0)
         self._open_flush_secs = 2.0
+
+        # Backfill scheduling controls (for gap recovery)
+        self._last_backfill_request = {}
+        self._backfill_cooldown_secs = 900  # 15 minutes per asset
+        self._backfill_gap_threshold_secs = 300  # consider stale if older than 5 min
 
         self._connect()
 
@@ -253,7 +259,7 @@ class WebsocketClient:
                 new_mappings,
             )
 
-        # Warn if we have gaps on 1-minute timeframe
+        # Warn if we have gaps on 1-minute timeframe and auto-schedule backfill (with cooldown)
         for symbol in symbols:
             if symbol in new_mappings:
                 asset_id = new_mappings[symbol]
@@ -264,13 +270,42 @@ class WebsocketClient:
                 )
 
                 if latest_candle:
-                    time_diff = timezone.now() - latest_candle.timestamp
-                    if time_diff.total_seconds() > 120:
+                    now_dt = timezone.now()
+                    time_diff = now_dt - latest_candle.timestamp
+                    age_s = time_diff.total_seconds()
+                    if age_s > self._backfill_gap_threshold_secs:
                         logger.warning(
-                            "Asset %s latest 1T candle is %s old. Historical fetch may be needed.",
+                            "Asset %s latest 1T candle is %s old — scheduling backfill if not recently requested",
                             symbol,
                             time_diff,
                         )
+                        # Rate-limit backfill scheduling per asset
+                        now_s = time.time()
+                        last_req = self._last_backfill_request.get(asset_id, 0)
+                        if now_s - last_req >= self._backfill_cooldown_secs:
+                            try:
+                                wla_ids = list(
+                                    WatchListAsset.objects.filter(
+                                        watchlist__is_active=True,
+                                        is_active=True,
+                                        asset_id=asset_id,
+                                    ).values_list("id", flat=True)
+                                )
+                                for wla_id in wla_ids:
+                                    task_fetch_historical_data.delay(wla_id)
+                                if wla_ids:
+                                    self._last_backfill_request[asset_id] = now_s
+                                    logger.info(
+                                        "Backfill scheduled for asset_id=%s across %d watchlist assets",
+                                        asset_id,
+                                        len(wla_ids),
+                                    )
+                            except Exception as exc:  # noqa: BLE001
+                                logger.exception(
+                                    "Failed to schedule backfill for %s: %s",
+                                    symbol,
+                                    exc,
+                                )
 
     def subscription_manager(self):
         """Background task: periodically reconcile desired vs actual subscriptions."""
@@ -551,21 +586,23 @@ class WebsocketClient:
                 self._last_open_flush[tf] = now
 
     def _flush_closed_buckets(self, latest_m1: datetime):
-        """Persist and evict any higher-TF buckets that have fully closed."""
+        """Evict any higher-TF buckets that have fully closed.
+
+        Ownership model: WS only writes OPEN buckets for higher TFs so charts update
+        in real time. CLOSED buckets are left to the historical resampler to create
+        or finalize, avoiding conflicts and ensuring consistency.
+        """
         for tf, delta in self.TF_CFG.items():
             if tf == "1T":
                 continue
             acc = self._tf_acc[tf]
             if not acc:
                 continue
-            to_persist: dict[tuple[int, datetime], dict[str, Any]] = {}
-            for (aid, bucket_ts), data in list(acc.items()):
+            for (aid, bucket_ts), _data in list(acc.items()):
                 end_ts = bucket_ts + delta
                 if end_ts <= latest_m1:
-                    to_persist[(aid, bucket_ts)] = data
                     acc.pop((aid, bucket_ts), None)
-            if to_persist:
-                self.save_candles(tf, to_persist)
+            # Do not persist closed buckets here; resampler owns them
 
     def save_candles(
         self, timeframe: str, updates: dict[tuple[int, datetime], dict[str, Any]]

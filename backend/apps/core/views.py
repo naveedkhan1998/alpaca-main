@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import logging
 
 from django.core.cache import cache
+from django.db import connection
 from django.db.models import Case, Count, IntegerField, Q, When
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -202,12 +203,12 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
     A ViewSet for viewing Asset instances with optimized filtering and search.
     """
 
-    queryset = Asset.objects.filter(status="active").select_related().prefetch_related()
+    # Keep base queryset lean; avoid unnecessary select_related/prefetch on Asset
+    queryset = Asset.objects.filter(status="active")
     serializer_class = AssetSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [
         DjangoFilterBackend,
-        filters.SearchFilter,
         filters.OrderingFilter,
     ]
     pagination_class = OffsetPagination
@@ -224,9 +225,6 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-
-        # Optimize with select_related for foreign keys if any
-        queryset = queryset.select_related()
 
         # Filter by asset class (support multiple values)
         asset_classes = self.request.query_params.getlist("asset_class")
@@ -258,16 +256,56 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
         if fractionable is not None:
             queryset = queryset.filter(fractionable=fractionable.lower() == "true")
 
+        # Optimized search handling replacing DRF SearchFilter
+        search_term = self.request.query_params.get("search", "").strip()
+        if search_term:
+            base_qs = queryset
+            # Prefer symbol prefix for very short queries
+            if len(search_term) == 1:
+                queryset = base_qs.filter(symbol__istartswith=search_term)
+            else:
+                queryset = (
+                    base_qs.filter(
+                        Q(symbol__istartswith=search_term)
+                        | Q(symbol__iexact=search_term)
+                        | Q(name__icontains=search_term)
+                    )
+                    .annotate(
+                        search_rank=Case(
+                            When(symbol__iexact=search_term, then=0),
+                            When(symbol__istartswith=search_term, then=1),
+                            When(name__istartswith=search_term, then=2),
+                            default=3,
+                            output_field=IntegerField(),
+                        )
+                    )
+                    .order_by("search_rank", "symbol")
+                )
+
+                # Refine ordering with trigram similarity if extension available
+                try:
+                    with connection.cursor() as cur:
+                        cur.execute(
+                            "SELECT extname FROM pg_extension WHERE extname='pg_trgm'"
+                        )
+                        if cur.fetchone():
+                            queryset = queryset.extra(
+                                select={
+                                    "sym_sim": "similarity(symbol, %s)",
+                                    "name_sim": "similarity(coalesce(name,''), %s)",
+                                },
+                                select_params=[search_term, search_term],
+                            ).order_by("search_rank", "-sym_sim", "-name_sim", "symbol")
+                except Exception:
+                    pass
+
         return queryset
 
     def list(self, request, *args, **kwargs):
         """
         List all assets with pagination and caching.
         """
-        # Create cache key based on query parameters
         cache_key = f"assets_list_{hash(str(sorted(request.query_params.items())))}"
-
-        # Try to get cached result for non-paginated, non-sorted requests
         if not any(
             param in request.query_params for param in ["limit", "offset", "ordering"]
         ):
@@ -277,15 +315,11 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
 
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
-
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             response_data = self.get_paginated_response(serializer.data).data
-
-            # Cache small result sets
             if len(serializer.data) <= 100:
-                cache.set(cache_key, response_data, 300)  # 5 minutes
-
+                cache.set(cache_key, response_data, 300)
             return Response(response_data)
 
         serializer = self.get_serializer(queryset, many=True)
@@ -294,8 +328,6 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
             "data": serializer.data,
             "count": len(serializer.data),
         }
-
-        # Cache non-paginated results
         cache.set(cache_key, response_data, 300)
         return Response(response_data, status=status.HTTP_200_OK)
 
@@ -323,22 +355,46 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
         if cached_result:
             return Response(cached_result)
 
-        # Optimized search with ranking
+        base_qs = self.get_queryset()
+
+        # Prefer fast prefix search on lower(symbol) if the user is typing a ticker
+        # Use icontains as fallback on name; both backed by trigram GIN if available
+        # Rank results to show best matches first
         queryset = (
-            self.get_queryset()
-            .filter(Q(symbol__icontains=search_term) | Q(name__icontains=search_term))
+            base_qs.filter(
+                Q(symbol__istartswith=search_term)
+                | Q(symbol__iexact=search_term)
+                | Q(name__icontains=search_term)
+            )
             .annotate(
-                # Rank exact matches higher
                 search_rank=Case(
-                    When(symbol__iexact=search_term, then=1),
-                    When(symbol__istartswith=search_term, then=2),
-                    When(name__istartswith=search_term, then=3),
-                    default=4,
+                    When(symbol__iexact=search_term, then=0),
+                    When(symbol__istartswith=search_term, then=1),
+                    When(name__istartswith=search_term, then=2),
+                    default=3,
                     output_field=IntegerField(),
                 )
             )
             .order_by("search_rank", "symbol")
         )
+
+        # If pg_trgm is available, optionally boost by similarity for short queries
+        try:
+            with connection.cursor() as cur:
+                cur.execute("SELECT extname FROM pg_extension WHERE extname='pg_trgm'")
+                if cur.fetchone():
+                    # Use similarity via raw extra ordering to refine ordering
+                    # Note: we don't filter by similarity threshold to keep results inclusive
+                    queryset = queryset.extra(
+                        select={
+                            "sym_sim": "similarity(symbol, %s)",
+                            "name_sim": "similarity(coalesce(name,''), %s)",
+                        },
+                        select_params=[search_term, search_term],
+                    ).order_by("search_rank", "-sym_sim", "-name_sim", "symbol")
+        except Exception:
+            # If extension check fails, continue with default queryset
+            pass
 
         # Apply pagination to search results
         page = self.paginate_queryset(queryset)
