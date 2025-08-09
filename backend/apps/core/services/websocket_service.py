@@ -598,7 +598,7 @@ class WebsocketClient:
             acc = self._tf_acc[tf]
             if not acc:
                 continue
-            for (aid, bucket_ts), data in list(acc.items()):
+            for (aid, bucket_ts), _data in list(acc.items()):
                 end_ts = bucket_ts + delta
                 if end_ts <= latest_m1:
                     acc.pop((aid, bucket_ts), None)

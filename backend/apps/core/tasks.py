@@ -408,7 +408,7 @@ def fetch_historical_data(watchlist_asset_id: int):
             start_ts = (
                 last_tf.timestamp + delta
                 if last_tf
-                else (end_date - timedelta(days=730))
+                else (end_date - timedelta(days=1825))  # NOTE: 5 years
             )
 
             # Build buckets using SQL for efficiency; collect minute IDs

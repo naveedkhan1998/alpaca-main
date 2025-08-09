@@ -93,7 +93,8 @@ const AssetsPage: React.FC = () => {
   useEffect(() => {
     const next = new URLSearchParams();
     // Persist core filters
-    if (assetState.quickFilterText) next.set('search', assetState.quickFilterText);
+    if (assetState.quickFilterText)
+      next.set('search', assetState.quickFilterText);
     if (assetState.assetClassFilter)
       next.set('asset_class', assetState.assetClassFilter);
     if (assetState.tradableFilter)

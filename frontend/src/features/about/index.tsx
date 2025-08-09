@@ -49,22 +49,37 @@ const AboutPage = () => {
                     Full-stack Software Developer
                   </p>
                   <div className="flex flex-wrap justify-center gap-2 mt-4 sm:justify-start">
-                    <Badge variant="secondary" className="flex items-center gap-1">
+                    <Badge
+                      variant="secondary"
+                      className="flex items-center gap-1"
+                    >
                       <HiMap className="w-4 h-4" /> City, Country
                     </Badge>
-                    <Badge variant="secondary" className="flex items-center gap-1">
+                    <Badge
+                      variant="secondary"
+                      className="flex items-center gap-1"
+                    >
                       <HiPhone className="w-4 h-4" /> Available on request
                     </Badge>
-                    <Badge variant="secondary" className="flex items-center gap-1">
+                    <Badge
+                      variant="secondary"
+                      className="flex items-center gap-1"
+                    >
                       <HiMail className="w-4 h-4" /> email@example.com
                     </Badge>
-                    <Badge variant="secondary" className="flex items-center gap-1">
+                    <Badge
+                      variant="secondary"
+                      className="flex items-center gap-1"
+                    >
                       <FaLinkedin className="w-4 h-4" />
                       <a href="#" target="_blank" rel="noopener noreferrer">
                         LinkedIn
                       </a>
                     </Badge>
-                    <Badge variant="secondary" className="flex items-center gap-1">
+                    <Badge
+                      variant="secondary"
+                      className="flex items-center gap-1"
+                    >
                       <FaGithub className="w-4 h-4" />
                       <a href="#" target="_blank" rel="noopener noreferrer">
                         Portfolio
@@ -261,6 +276,5 @@ const AboutPage = () => {
     </PageLayout>
   );
 };
-
 
 export default AboutPage;
