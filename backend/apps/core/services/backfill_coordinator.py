@@ -7,7 +7,6 @@ from django.core.cache import cache
 from apps.core.models import WatchListAsset
 from apps.core.tasks import fetch_historical_data
 
-
 logger = logging.getLogger(__name__)
 
 

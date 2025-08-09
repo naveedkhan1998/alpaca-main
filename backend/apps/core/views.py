@@ -34,8 +34,8 @@ from apps.core.serializers import (
     WatchListSerializer,
 )
 from apps.core.services.alpaca_service import AlpacaService
-from apps.core.tasks import alpaca_sync_task, fetch_historical_data, start_alpaca_stream
 from apps.core.services.backfill_coordinator import request_backfill
+from apps.core.tasks import alpaca_sync_task, start_alpaca_stream
 from apps.core.utils import get_timeframe
 
 logger = logging.getLogger(__name__)

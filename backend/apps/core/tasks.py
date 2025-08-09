@@ -2,9 +2,9 @@ from datetime import datetime, time, timedelta
 
 from celery import Task, shared_task
 from celery.utils.log import get_task_logger
+from django.core.cache import cache
 from django.utils import timezone
 import pytz
-from django.core.cache import cache
 
 from apps.core.models import (
     AlpacaAccount,
@@ -37,14 +37,16 @@ class SingleInstanceTask(Task):
             try:
                 if self.name == "fetch_historical_data":
                     # arg0 is watchlist_asset_id → resolve to asset_id to serialize per-asset
-                    wla = WatchListAsset.objects.filter(id=arg0).values("asset_id").first()
+                    wla = (
+                        WatchListAsset.objects.filter(id=arg0)
+                        .values("asset_id")
+                        .first()
+                    )
                     if wla:
                         key_suffix = f"asset-{wla['asset_id']}"
                     else:
                         key_suffix = f"watchlist-asset-{arg0}"
-                elif self.name == "alpaca_sync":
-                    key_suffix = f"account-{arg0}"
-                elif self.name == "start_alpaca_stream":
+                elif self.name == "alpaca_sync" or self.name == "start_alpaca_stream":
                     key_suffix = f"account-{arg0}"
                 else:
                     key_suffix = f"arg0-{arg0}"
@@ -308,7 +310,11 @@ def fetch_historical_data(watchlist_asset_id: int):
     2) For each higher timeframe (5T, 15T, 30T, 1H, 4H, 1D), resample from stored 1T
        to compute OHLCV and persist, storing the list of minute candle IDs used.
     """
-    watchlist_asset = WatchListAsset.objects.filter(id=watchlist_asset_id).select_related("asset", "watchlist__user").first()
+    watchlist_asset = (
+        WatchListAsset.objects.filter(id=watchlist_asset_id)
+        .select_related("asset", "watchlist__user")
+        .first()
+    )
     if not watchlist_asset:
         logger.error(f"WatchListAsset with ID {watchlist_asset_id} does not exist.")
         return
@@ -421,7 +427,9 @@ def fetch_historical_data(watchlist_asset_id: int):
                         created_total += len(candles)
                     current_end = r_start
                 logger.info(
-                    "Backfilled %d 1T candles for %s (newest first)", created_total, symbol
+                    "Backfilled %d 1T candles for %s (newest first)",
+                    created_total,
+                    symbol,
                 )
         except Exception as e:
             logger.error("Error backfilling 1T for %s: %s", symbol, e, exc_info=True)
@@ -557,7 +565,9 @@ def fetch_historical_data(watchlist_asset_id: int):
                     len(to_update),
                 )
             except Exception as e:
-                logger.error("Error resampling %s for %s: %s", tf, symbol, e, exc_info=True)
+                logger.error(
+                    "Error resampling %s for %s: %s", tf, symbol, e, exc_info=True
+                )
     finally:
         # Always release the lock and clear any queued marker for this asset
         cache.delete(running_key)
