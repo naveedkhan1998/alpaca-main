@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "breeze-main.fullname" . }}-flower
+  name: {{ include "alpaca-main.fullname" . }}-flower
   labels:
-    {{- include "breeze-main.labels" . | nindent 4 }}
+    {{- include "alpaca-main.labels" . | nindent 4 }}
     app.kubernetes.io/component: flower
 spec:
   type: {{ .Values.flower.service.type }}
@@ -14,6 +14,6 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "breeze-main.selectorLabels" . | nindent 4 }}
+    {{- include "alpaca-main.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: flower
 {{- end -}}

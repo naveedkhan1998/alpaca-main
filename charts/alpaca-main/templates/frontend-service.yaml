@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "breeze-main.fullname" . }}-frontend
+  name: {{ include "alpaca-main.fullname" . }}-frontend
   labels:
-    {{- include "breeze-main.labels" . | nindent 4 }}
+    {{- include "alpaca-main.labels" . | nindent 4 }}
     app.kubernetes.io/component: frontend
 spec:
   type: {{ .Values.frontend.service.type }}
@@ -13,5 +13,5 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "breeze-main.selectorLabels" . | nindent 4 }}
+    {{- include "alpaca-main.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: frontend

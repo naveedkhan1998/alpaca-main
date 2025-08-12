@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "breeze-main.fullname" . }}-nginx
+  name: {{ include "alpaca-main.fullname" . }}-frontend
   labels:
-    {{- include "breeze-main.labels" . | nindent 4 }}
-    app.kubernetes.io/component: nginx
+    {{- include "alpaca-main.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "breeze-main.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: nginx
+      {{- include "alpaca-main.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: frontend
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,36 +18,28 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "breeze-main.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: nginx
+        {{- include "alpaca-main.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: frontend
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "breeze-main.serviceAccountName" . }}
+      serviceAccountName: {{ include "alpaca-main.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: nginx
+        - name: frontend
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.nginx.image.repository }}:{{ .Values.nginx.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.nginx.image.pullPolicy }}
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.nginx.service.port }}
+              containerPort: {{ .Values.frontend.service.port }}
               protocol: TCP
-          volumeMounts:
-            - name: nginx-config
-              mountPath: /etc/nginx/conf.d/default.conf
-              subPath: default.conf
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-      volumes:
-        - name: nginx-config
-          configMap:
-            name: {{ include "breeze-main.fullname" . }}-nginx-config
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

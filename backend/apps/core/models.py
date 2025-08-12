@@ -99,18 +99,19 @@ class Asset(models.Model):
 class WatchList(models.Model):
     """Model for organizing assets into watchlists"""
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    is_default = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ["user", "name"]
 
     def __str__(self):
-        return f"{self.user.email} - {self.name}"
+        return f"{self.name}"
 
 
 class WatchListAsset(models.Model):

@@ -8,13 +8,12 @@ from django.utils import timezone
 import pytz
 
 from apps.core.models import (
-    AlpacaAccount,
     Asset,
     Candle,
     WatchListAsset,
 )
 
-from .services.alpaca_service import AlpacaService
+from .services.alpaca_service import alpaca_service
 
 logger = get_task_logger(__name__)
 
@@ -74,9 +73,7 @@ class SingleInstanceTask(Task):
 
 
 @shared_task(name="alpaca_sync", base=SingleInstanceTask)
-def alpaca_sync_task(
-    alpaca_account_id: int, asset_classes: list = None, batch_size: int = 1000
-):
+def alpaca_sync_task(asset_classes: list = None, batch_size: int = 1000):
     """
     Optimized sync task that efficiently syncs assets from Alpaca API.
 
@@ -89,15 +86,8 @@ def alpaca_sync_task(
         asset_classes = ["us_equity", "us_option", "crypto"]
 
     try:
-        account = AlpacaAccount.objects.filter(id=alpaca_account_id).first()
-        if not account:
-            logger.error(f"AlpacaAccount with ID {alpaca_account_id} not found")
-            return {"error": f"Account {alpaca_account_id} not found"}
 
-        service = AlpacaService(
-            api_key=account.api_key,
-            secret_key=account.api_secret,
-        )
+        service = alpaca_service
 
         total_created = 0
         total_updated = 0
@@ -276,33 +266,6 @@ def alpaca_sync_task(
         return {"success": False, "error": error_msg}
 
 
-@shared_task(name="start_alpaca_stream", base=SingleInstanceTask)
-def start_alpaca_stream(account_id: int, symbols: list):
-    """
-    Starts the Alpaca streaming for the given user and symbols.
-
-    Args:
-        account_id (int): The ID of the user initiating the request.
-        symbols (list): The list of asset symbols to stream.
-    """
-    try:
-        # Initialize the Alpaca WebSocket client
-        account = AlpacaAccount.objects.get(id=account_id)
-        client = AlpacaService(
-            api_key=account.api_key,
-            secret_key=account.api_secret,
-        )
-        logger.info(
-            f"Started Alpaca streaming for user {account.id} with symbols: {symbols}"
-        )
-        client.stream(symbols)
-
-    except Exception as e:
-        logger.error(
-            f"Error starting Alpaca stream for user {account.id}: {e}", exc_info=True
-        )
-
-
 @shared_task(name="fetch_historical_data", base=SingleInstanceTask)
 def fetch_historical_data(watchlist_asset_id: int):
     """
@@ -324,7 +287,7 @@ def fetch_historical_data(watchlist_asset_id: int):
     symbol = asset.symbol
 
     # Acquire per-asset distributed lock to avoid duplicate backfills
-    RUNNING_TTL = 60 * 90  # 90 minutes; adjust as needed
+    RUNNING_TTL = 60 * 10  # 10 minutes; adjust as needed
     running_key = f"backfill:running:{asset.id}"
     if not cache.add(running_key, 1, timeout=RUNNING_TTL):
         logger.info(
@@ -335,18 +298,8 @@ def fetch_historical_data(watchlist_asset_id: int):
         return
 
     try:
-        user_id = watchlist_asset.watchlist.user.id
-        account = AlpacaAccount.objects.filter(user_id=user_id).first()
-        if not account:
-            logger.error(
-                f"No Alpaca account found for user {user_id}. Cannot fetch historical data."
-            )
-            return
 
-        service = AlpacaService(
-            api_key=account.api_key,
-            secret_key=account.api_secret,
-        )
+        service = alpaca_service
 
         # Define timeframes
         TF_LIST = [
@@ -384,12 +337,8 @@ def fetch_historical_data(watchlist_asset_id: int):
                     try:
                         resp = service.get_historic_bars(
                             symbol=symbol,
-                            timeframe="1Min",
                             start=start_str,
                             end=end_str,
-                            limit=10000,
-                            adjustment="raw",
-                            feed="iex",
                             sort="desc",  # fetch latest first
                         )
                     except Exception as e:
@@ -440,16 +389,27 @@ def fetch_historical_data(watchlist_asset_id: int):
             if tf == "1T":
                 continue
             try:
-                last_tf = (
+                last_tf = None
+
+                candle_count = (
                     Candle.objects.filter(asset=asset, timeframe=tf)
                     .order_by("-timestamp")
-                    .first()
+                    .count()
                 )
+
+                if candle_count > 2:
+                    last_tf = (
+                        Candle.objects.filter(asset=asset, timeframe=tf)
+                        .order_by("-timestamp")
+                        .first()
+                    )
                 # Determine start bucket to (re)build
                 start_ts = (
                     last_tf.timestamp + delta
                     if last_tf
-                    else (end_date - timedelta(days=1825))  # NOTE: 5 years
+                    else (
+                        end_date - timedelta(days=settings.HISTORIC_DATA_LOADING_LIMIT)
+                    )
                 )
 
                 # Build buckets using SQL for efficiency; collect minute IDs

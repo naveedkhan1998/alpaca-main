@@ -8,15 +8,12 @@ import {
   User,
   Home,
   BarChart3,
-  Info,
   Mail,
   Menu,
   Settings,
   LogOut,
   Search,
   ChevronRight,
-  Bell,
-  Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -90,13 +87,6 @@ const Navbar: React.FC = () => {
       icon: TrendingUp,
       description: 'Account management',
       color: 'from-purple-500 to-pink-500',
-    },
-    {
-      path: '/about',
-      label: 'About',
-      icon: Info,
-      description: 'Developer information',
-      color: 'from-orange-500 to-red-500',
     },
     {
       path: '/contact',
@@ -189,32 +179,6 @@ const Navbar: React.FC = () => {
 
               {/* Quick actions */}
               <div className="flex items-center gap-1">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-9 w-9">
-                      <Plus className="w-5 h-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="p-1 w-52">
-                    <DropdownMenuItem className="gap-2">
-                      <Plus className="w-4 h-4" /> New order
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2">
-                      <Plus className="w-4 h-4" /> New watchlist
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2">
-                      <Plus className="w-4 h-4" /> New alert
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative h-9 w-9"
-                >
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute top-1.5 right-1.5 inline-flex h-2 w-2 rounded-full bg-destructive" />
-                </Button>
                 <ModeToggle />
                 <HealthStatus />
 
@@ -331,10 +295,6 @@ const Navbar: React.FC = () => {
             <div className="flex items-center gap-1 lg:hidden">
               <Button variant="ghost" size="icon" className="h-9 w-9">
                 <Search className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="relative h-9 w-9">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 inline-flex h-2 w-2 rounded-full bg-destructive" />
               </Button>
               <ModeToggle />
               <HealthStatus />
@@ -511,39 +471,13 @@ const Navbar: React.FC = () => {
         </div>
       </nav>
 
-      {/* Mobile floating action button */}
-      <div className="fixed z-50 -translate-x-1/2 lg:hidden bottom-16 left-1/2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="icon" className="w-12 h-12 rounded-full shadow-lg">
-              <Plus className="w-6 h-6" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="center"
-            sideOffset={12}
-            className="w-56 p-1"
-          >
-            <DropdownMenuItem className="gap-2">
-              <Plus className="w-4 h-4" /> New order
-            </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2">
-              <Plus className="w-4 h-4" /> New watchlist
-            </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2">
-              <Plus className="w-4 h-4" /> New alert
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
       {/* Mobile bottom tab bar */}
       <div
         className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="mx-auto max-w-[700px] px-4">
-          <div className="grid h-16 grid-cols-5">
+          <div className="grid h-16 grid-cols-4">
             {navItems.map(item => {
               const active = isActivePath(item.path);
               return (

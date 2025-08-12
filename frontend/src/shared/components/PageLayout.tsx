@@ -21,7 +21,7 @@ export const PageHeader: React.FC<{
   className?: string;
 }> = ({ children, className = '' }) => (
   <div className={`mb-3 sm:mb-5 ${className}`}>
-    <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight text-foreground">
+    <h1 className="text-xl font-semibold tracking-tight sm:text-2xl lg:text-3xl text-foreground">
       {children}
     </h1>
   </div>
@@ -161,7 +161,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         </div>
 
         {/* Footer */}
-        <footer className="bg-background/80 backdrop-blur border-t">
+        <footer className="border-t bg-background/80 backdrop-blur">
           <div className="mx-auto w-full max-w-[1400px] px-3 py-5 sm:px-6 lg:px-8">
             <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
               <div className="flex items-center space-x-2">

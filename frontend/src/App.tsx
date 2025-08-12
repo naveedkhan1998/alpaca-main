@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense, lazy } from 'react';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { useAppDispatch, useAppSelector } from './app/hooks';
@@ -15,16 +15,16 @@ import {
 import { useHealthCheckQuery } from '@/api/baseApi';
 import LoadingScreen from './shared/components/LoadingScreen';
 
-import AboutPage from './features/about';
-import GraphsPage from './features/graphs';
-import AccountsPage from './features/accounts';
-import ContactPage from './features/contact';
-import LoginRegPage from './features/auth';
-import NotFoundPage from './features/notFound';
-import AnnouncementBanner from './shared/components/AnnouncementBanner';
-import ProfilePage from './features/profile';
-import DashBoardPage from './features/dashboard';
-import AssetsPage from './features/assets';
+// Lazy load pages
+const GraphsPage = lazy(() => import('./features/graphs'));
+const AccountsPage = lazy(() => import('./features/accounts'));
+const ContactPage = lazy(() => import('./features/contact'));
+const LoginRegPage = lazy(() => import('./features/auth'));
+const NotFoundPage = lazy(() => import('./features/notFound'));
+const ProfilePage = lazy(() => import('./features/profile'));
+const DashBoardPage = lazy(() => import('./features/dashboard'));
+const AssetsPage = lazy(() => import('./features/assets'));
+const WatchlistsPage = lazy(() => import('./features/watchlists'));
 
 import { checkEnvironment, GOOGLE_CLIENT_ID } from './shared/lib/environment';
 import { ThemeProvider } from './shared/components/ThemeProvider';
@@ -32,7 +32,13 @@ import { Toaster } from 'sonner';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useGetLoggedUserQuery } from '@/api/userAuthService';
 import { useAlpacaAccount } from './features/auth/hooks';
-import WatchlistsPage from './features/watchlists';
+
+// Subtle page transition loading component
+const PageLoadingFallback = () => (
+  <div className="fixed top-0 left-0 z-50 w-full h-1">
+    <div className="h-full bg-primary/20 animate-pulse" />
+  </div>
+);
 
 const HEALTH_CHECK_INTERVAL = 120000; // 2 minutes
 const clientId = GOOGLE_CLIENT_ID || '';
@@ -157,7 +163,6 @@ export default function App() {
 
   const routes = [
     { path: '/', element: <WatchlistsPage />, private: true },
-    { path: '/about', element: <AboutPage />, private: true },
     { path: '/profile', element: <ProfilePage />, private: true },
     { path: '/dashboard', element: <DashBoardPage />, private: true },
     { path: '/instruments', element: <AssetsPage />, private: true },
@@ -173,19 +178,19 @@ export default function App() {
       <Analytics />
       <GoogleOAuthProvider clientId={clientId}>
         <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-          <AnnouncementBanner />
-          <Routes>
-            {routes.map(({ path, element, private: isPrivate }) => (
-              <Route
-                key={path}
-                path={path}
-                element={
-                  isPrivate ? <PrivateRoute element={element} /> : element
-                }
-              />
-            ))}
-          </Routes>
-
+          <Suspense fallback={<PageLoadingFallback />}>
+            <Routes>
+              {routes.map(({ path, element, private: isPrivate }) => (
+                <Route
+                  key={path}
+                  path={path}
+                  element={
+                    isPrivate ? <PrivateRoute element={element} /> : element
+                  }
+                />
+              ))}
+            </Routes>
+          </Suspense>
           <Toaster />
         </ThemeProvider>
       </GoogleOAuthProvider>

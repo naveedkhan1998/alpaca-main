@@ -14,7 +14,7 @@ def request_backfill(
     watchlist_asset_id: int,
     *,
     source: str = "unknown",
-    queued_ttl_seconds: int = 60 * 60,  # 1 hour
+    queued_ttl_seconds: int = 60 * 10,  # 10 minutes
 ) -> bool:
     """Idempotently enqueue a historical backfill for the asset of this watchlist asset.
 
@@ -27,7 +27,7 @@ def request_backfill(
     """
     wla = (
         WatchListAsset.objects.filter(id=watchlist_asset_id)
-        .select_related("asset", "watchlist__user")
+        .select_related("asset")
         .first()
     )
     if not wla:

@@ -21,7 +21,6 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from apps.core.models import AlpacaAccount
 from apps.core.services.websocket_service import WebsocketClient
 
 # from apps.core.services.websocket.client import WebsocketClient
@@ -44,23 +43,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """Handles the command execution."""
         try:
-            # Get the active Alpaca account
-            account = AlpacaAccount.objects.filter(is_active=True).first()
-            if not account:
-                self.stdout.write(
-                    self.style.ERROR("No active Alpaca account found in the database.")
-                )
-                return
-
-            sandbox_mode = options["sandbox"]
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"Starting WebSocket client for account: {account.name} in {'Sandbox' if sandbox_mode else 'Live'} mode"
-                )
-            )
-
             # Initialize and run the WebSocket client
-            client = WebsocketClient(account_id=account.id, sandbox=sandbox_mode)
+            client = WebsocketClient()
             client.run()
 
         except Exception as e:

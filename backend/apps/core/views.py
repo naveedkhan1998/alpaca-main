@@ -33,9 +33,9 @@ from apps.core.serializers import (
     WatchListCreateSerializer,
     WatchListSerializer,
 )
-from apps.core.services.alpaca_service import AlpacaService
+from apps.core.services.alpaca_service import alpaca_service
 from apps.core.services.backfill_coordinator import request_backfill
-from apps.core.tasks import alpaca_sync_task, start_alpaca_stream
+from apps.core.tasks import alpaca_sync_task
 from apps.core.utils import get_timeframe
 
 logger = logging.getLogger(__name__)
@@ -88,20 +88,8 @@ class AlpacaAccountViewSet(viewsets.ModelViewSet):
         Test Alpaca API connection and return status.
         """
         try:
-            account = self.get_queryset().filter(is_active=True).first()
-            if not account:
-                return Response(
-                    {
-                        "msg": "No active Alpaca account found",
-                        "data": {"connection_status": False},
-                    },
-                    status=status.HTTP_404_NOT_FOUND,
-                )
 
-            service = AlpacaService(
-                api_key=account.api_key,
-                secret_key=account.api_secret,
-            )
+            service = alpaca_service
 
             # Test connection by fetching a small number of assets
             try:
@@ -135,13 +123,7 @@ class AlpacaAccountViewSet(viewsets.ModelViewSet):
         Sync assets from Alpaca API to local database.
         """
         try:
-            account = self.get_queryset().filter(is_active=True).first()
-            if not account:
-                return Response(
-                    {"msg": "No active Alpaca account found"},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-            alpaca_sync_task.delay(account.id)
+            alpaca_sync_task.delay()
             return Response(
                 {
                     "msg": "Assets synced started successfully",
@@ -149,52 +131,10 @@ class AlpacaAccountViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_200_OK,
             )
-
         except Exception as e:
             logger.error(f"Error syncing assets: {e}", exc_info=True)
             return Response(
                 {"msg": "Error syncing assets", "error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-    @action(detail=False, methods=["post"], url_path="start_stream")
-    def start_stream(self, request):
-        """
-        Start Alpaca streaming for user's watchlists.
-        """
-        try:
-            account = self.get_queryset().filter(is_active=True).first()
-            if not account:
-                return Response(
-                    {"msg": "No active Alpaca account found"},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-
-            # Get symbols from user's watchlists
-            symbols = list(
-                WatchListAsset.objects.filter(
-                    watchlist__user=request.user, is_active=True
-                ).values_list("asset__symbol", flat=True)
-            )
-
-            if not symbols:
-                return Response(
-                    {"msg": "No assets in watchlists to stream"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            # Start streaming task
-            start_alpaca_stream.delay(account.id, symbols)
-
-            return Response(
-                {"msg": "Streaming started successfully", "data": {"symbols": symbols}},
-                status=status.HTTP_200_OK,
-            )
-
-        except Exception as e:
-            logger.error(f"Error starting stream: {e}", exc_info=True)
-            return Response(
-                {"msg": "Error starting stream", "error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -542,7 +482,11 @@ class WatchListViewSet(viewsets.ModelViewSet):
     pagination_class = OffsetPagination
 
     def get_queryset(self):
-        return WatchList.objects.filter(user=self.request.user, is_active=True)
+        # Include both default watchlists and user-specific watchlists
+        return WatchList.objects.filter(
+            Q(user=self.request.user) | Q(user=None),
+            is_active=True,
+        )
 
     def get_serializer_class(self):
         if self.action == "create":

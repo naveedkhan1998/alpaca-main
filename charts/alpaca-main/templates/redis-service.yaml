@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "breeze-main.fullname" . }}-redis
+  name: {{ include "alpaca-main.fullname" . }}-redis
   labels:
-    {{- include "breeze-main.labels" . | nindent 4 }}
+    {{- include "alpaca-main.labels" . | nindent 4 }}
     app.kubernetes.io/component: redis
 spec:
   type: {{ .Values.redis.service.type }}
@@ -14,6 +14,6 @@ spec:
       protocol: TCP
       name: redis
   selector:
-    {{- include "breeze-main.selectorLabels" . | nindent 4 }}
+    {{- include "alpaca-main.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: redis
 {{- end -}}

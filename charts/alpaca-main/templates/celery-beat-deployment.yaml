@@ -2,15 +2,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "breeze-main.fullname" . }}-celery-beat
+  name: {{ include "alpaca-main.fullname" . }}-celery-beat
   labels:
-    {{- include "breeze-main.labels" . | nindent 4 }}
+    {{- include "alpaca-main.labels" . | nindent 4 }}
     app.kubernetes.io/component: celery-beat
 spec:
   replicas: {{ .Values.celeryBeat.replicaCount }}
   selector:
     matchLabels:
-      {{- include "breeze-main.selectorLabels" . | nindent 6 }}
+      {{- include "alpaca-main.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: celery-beat
   template:
     metadata:
@@ -19,14 +19,14 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "breeze-main.selectorLabels" . | nindent 8 }}
+        {{- include "alpaca-main.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: celery-beat
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "breeze-main.serviceAccountName" . }}
+      serviceAccountName: {{ include "alpaca-main.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:

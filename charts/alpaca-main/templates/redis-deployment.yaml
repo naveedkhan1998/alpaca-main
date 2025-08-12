@@ -1,16 +1,17 @@
+{{- if .Values.redis.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "breeze-main.fullname" . }}-frontend
+  name: {{ include "alpaca-main.fullname" . }}-redis
   labels:
-    {{- include "breeze-main.labels" . | nindent 4 }}
-    app.kubernetes.io/component: frontend
+    {{- include "alpaca-main.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: 1
   selector:
     matchLabels:
-      {{- include "breeze-main.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: frontend
+      {{- include "alpaca-main.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: redis
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,25 +19,25 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "breeze-main.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: frontend
+        {{- include "alpaca-main.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: redis
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "breeze-main.serviceAccountName" . }}
+      serviceAccountName: {{ include "alpaca-main.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: frontend
+        - name: redis
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+          imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
           ports:
-            - name: http
-              containerPort: {{ .Values.frontend.service.port }}
+            - name: redis
+              containerPort: {{ .Values.redis.service.port }}
               protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
@@ -52,3 +53,4 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+{{- end -}}

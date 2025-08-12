@@ -1,8 +1,8 @@
-{{- define "breeze-main.name" -}}
+{{- define "alpaca-main.name" -}}
 {{- default .Chart.Name .Values.nameOverride -}}
 {{- end -}}
 
-{{- define "breeze-main.fullname" -}}
+{{- define "alpaca-main.fullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride -}}
 {{- else -}}
@@ -15,26 +15,26 @@
 {{- end -}}
 {{- end -}}
 
-{{- define "breeze-main.chart" -}}
+{{- define "alpaca-main.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "breeze-main.labels" -}}
-helm.sh/chart: {{ include "breeze-main.chart" . }}
+{{- define "alpaca-main.labels" -}}
+helm.sh/chart: {{ include "alpaca-main.chart" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
-{{- define "breeze-main.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "breeze-main.name" . }}
+{{- define "alpaca-main.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "alpaca-main.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
-{{- define "breeze-main.serviceAccountName" -}}
+{{- define "alpaca-main.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create -}}
-    {{- default (include "breeze-main.fullname" .) .Values.serviceAccount.name -}}
+    {{- default (include "alpaca-main.fullname" .) .Values.serviceAccount.name -}}
 {{- else -}}
     {{- default "default" .Values.serviceAccount.name -}}
 {{- end -}}

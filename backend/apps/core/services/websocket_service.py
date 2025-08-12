@@ -37,8 +37,9 @@ from django.utils import timezone
 import pytz
 import websocket
 
-from apps.core.models import AlpacaAccount, Asset, Candle, WatchListAsset
+from apps.core.models import Asset, Candle, WatchListAsset
 from apps.core.tasks import fetch_historical_data as task_fetch_historical_data
+from main.settings.base import APCA_API_KEY, APCA_API_SECRET_KEY
 
 # --------------------------------------------------------------------------- #
 # Logging                                                                     #
@@ -60,14 +61,13 @@ class WebsocketClient:
     # --------------------------------------------------------------------- #
     # Construction / connection                                             #
     # --------------------------------------------------------------------- #
-    def __init__(self, account_id: int, sandbox: bool = False):
+    def __init__(self, sandbox: bool = False):
         """Initialize the client with an Alpaca account and mode.
 
         Args:
             account_id: Primary key of the AlpacaAccount with API credentials
             sandbox: When True, connects to Alpaca sandbox stream
         """
-        self.account_id = account_id
         self.sandbox = sandbox
         self.ws_app = None
 
@@ -119,13 +119,7 @@ class WebsocketClient:
         return f"wss://{domain}/v2/iex"
 
     def _get_api_credentials(self) -> tuple[str, str]:
-        """Load API key/secret from the DB for the configured account."""
-        try:
-            acct = AlpacaAccount.objects.get(id=self.account_id)
-            return acct.api_key, acct.api_secret
-        except AlpacaAccount.DoesNotExist:
-            logger.error("AlpacaAccount id=%s not found", self.account_id)
-            raise
+        return (APCA_API_KEY, APCA_API_SECRET_KEY)
 
     def _connect(self):
         """Build the WebSocketApp and bind handlers."""
@@ -582,7 +576,8 @@ class WebsocketClient:
                     if data:
                         to_persist[key] = data
             if to_persist:
-                self.save_candles(tf, to_persist)
+                # Persist accumulator snapshots for open higher-TF buckets (replace semantics)
+                self.save_candles(tf, to_persist, write_mode="snapshot")
                 self._last_open_flush[tf] = now
 
     def _flush_closed_buckets(self, latest_m1: datetime):
@@ -605,12 +600,20 @@ class WebsocketClient:
             # Do not persist closed buckets here; resampler owns them
 
     def save_candles(
-        self, timeframe: str, updates: dict[tuple[int, datetime], dict[str, Any]]
+        self,
+        timeframe: str,
+        updates: dict[tuple[int, datetime], dict[str, Any]],
+        *,
+        write_mode: str = "delta",  # "delta" for 1T incremental, "snapshot" for higher-TF open buckets
     ):
         """Upsert a batch of candles for a given timeframe.
 
         Strategy: fetch existing rows keyed by (asset_id, timestamp, timeframe),
         then use bulk_create(ignore_conflicts=True) + bulk_update to merge.
+
+        write_mode:
+          - "delta": volumes are added to existing (used for 1T from live trades)
+          - "snapshot": volumes replace existing (used for higher TF open-bucket snapshots)
         """
         if not updates:
             return
@@ -625,6 +628,7 @@ class WebsocketClient:
             )
         }
 
+        snapshot = write_mode == "snapshot"
         to_create, to_update = [], []
         for (aid, ts), data in updates.items():
             if (aid, ts) in existing:
@@ -634,16 +638,21 @@ class WebsocketClient:
                     c.open = data["open"]
                 c.high = (
                     max(c.high, data.get("high"))
-                    if c.high is not None
-                    else data.get("high")
+                    if c.high is not None and data.get("high") is not None
+                    else (c.high if c.high is not None else data.get("high"))
                 )
                 c.low = (
                     min(c.low, data.get("low"))
-                    if c.low is not None
-                    else data.get("low")
+                    if c.low is not None and data.get("low") is not None
+                    else (c.low if c.low is not None else data.get("low"))
                 )
-                c.close = data.get("close")
-                c.volume = (c.volume or 0) + (data.get("volume") or 0)
+                c.close = data.get("close", c.close)
+                # Volume handling: replace for snapshots, add for deltas
+                incoming_vol = data.get("volume") or 0
+                if snapshot:
+                    c.volume = incoming_vol
+                else:
+                    c.volume = (c.volume or 0) + incoming_vol
                 # merge minute ids if provided
                 mids = data.get("minute_candle_ids")
                 if mids:
@@ -663,7 +672,7 @@ class WebsocketClient:
                         high=data.get("high"),
                         low=data.get("low"),
                         close=data.get("close"),
-                        volume=data.get("volume"),
+                        volume=data.get("volume") or 0,
                         minute_candle_ids=data.get("minute_candle_ids"),
                     )
                 )

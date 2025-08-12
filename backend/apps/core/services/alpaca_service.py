@@ -1,24 +1,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import json
-import time
 from typing import TYPE_CHECKING, Literal
 
 from celery.utils.log import get_task_logger
 import requests
-import websocket
+
+from main.settings.base import APCA_API_KEY, APCA_API_SECRET_KEY
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable
+    from collections.abc import Iterable
 
 logger = get_task_logger(__name__)
 
 
 @dataclass
 class AlpacaService:
-    api_key: str
-    secret_key: str
+    api_key: str = APCA_API_KEY
+    secret_key: str = APCA_API_SECRET_KEY
     base_url: str = "https://paper-api.alpaca.markets"
     data_base_url: str = "https://data.alpaca.markets"
 
@@ -109,7 +108,7 @@ class AlpacaService:
         timeframe: str = "1T",
         start: str | None = None,
         end: str | None = None,
-        limit: int = 1000,
+        limit: int = 10000,
         adjustment: Literal["raw", "split", "dividend", "all"] = "raw",
         asof: str | None = None,
         feed: Literal["sip", "iex", "boats", "otc"] = "iex",
@@ -141,93 +140,5 @@ class AlpacaService:
         url = f"{self.data_base_url}/v2/stocks/{symbol}/bars"
         return self._make_request("GET", url, params=params)
 
-    # ---------- WebSocket Streaming ----------
 
-    def _on_message(self, _ws, message, callback: Callable[[dict], None] | None):
-        try:
-            parsed = json.loads(message)
-            callback(parsed) if callback else logger.info(f"WS Message: {parsed}")
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse WS message: {e}")
-
-    def _on_error(self, _ws, error):
-        logger.error(f"WebSocket error: {error}")
-
-    def _on_close(self, _ws, code, msg):
-        logger.info(f"WebSocket closed (code={code}, message={msg})")
-
-    def _on_open(self, ws, channels, auth_via_headers):
-        if not auth_via_headers:
-            ws.send(
-                json.dumps(
-                    {"action": "auth", "key": self.api_key, "secret": self.secret_key}
-                )
-            )
-            time.sleep(0.5)
-        if channels:
-            sub_msg = {"action": "subscribe"}
-            sub_msg.update(channels)
-            ws.send(json.dumps(sub_msg))
-
-    def stream(
-        self,
-        symbols: Iterable[str],
-        on_message: Callable[[dict], None] | None = None,
-        channels: dict[str, Iterable[str]] | None = None,
-        feed: Literal[
-            "sip", "iex", "delayed_sip", "boats", "overnight", "test"
-        ] = "iex",
-        auth_via_headers: bool = False,
-        sandbox: bool = False,
-    ) -> None:
-        """Stream real-time market data via WebSocket."""
-        if not symbols and not channels:
-            raise ValueError("No symbols or channels provided for streaming")
-
-        base_domain = (
-            "stream.data.sandbox.alpaca.markets"
-            if sandbox
-            else "stream.data.alpaca.markets"
-        )
-        ws_url = (
-            f"wss://{base_domain}/v1beta1/{feed}"
-            if feed in ["boats", "overnight"]
-            else f"wss://{base_domain}/v2/{feed}"
-        )
-
-        subscription_channels = channels or {"trades": list(symbols)}
-
-        headers = None
-        if auth_via_headers:
-            headers = [
-                f"APCA-API-KEY-ID: {self.api_key}",
-                f"APCA-API-SECRET-KEY: {self.secret_key}",
-            ]
-
-        ws_app = websocket.WebSocketApp(
-            ws_url,
-            header=headers,
-            on_open=lambda ws: self._on_open(
-                ws, subscription_channels, auth_via_headers
-            ),
-            on_message=lambda ws, msg: self._on_message(ws, msg, on_message),
-            on_error=self._on_error,
-            on_close=self._on_close,
-        )
-
-        try:
-            logger.info(f"Connecting to {ws_url}")
-            ws_app.run_forever()
-        except KeyboardInterrupt:
-            logger.info("Streaming stopped by user")
-        finally:
-            ws_app.close()
-
-    def unsubscribe(
-        self, ws_app: websocket.WebSocketApp, channels: dict[str, Iterable[str]]
-    ):
-        """Unsubscribe from channels during an active WebSocket session."""
-        if ws_app and channels:
-            unsub_msg = {"action": "unsubscribe"}
-            unsub_msg.update({ch: list(symbols) for ch, symbols in channels.items()})
-            ws_app.send(json.dumps(unsub_msg))
+alpaca_service = AlpacaService()

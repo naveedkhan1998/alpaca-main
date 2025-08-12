@@ -1,17 +1,17 @@
-{{- if .Values.celeryWorker.enabled -}}
+{{- if .Values.flower.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "breeze-main.fullname" . }}-celery-worker
+  name: {{ include "alpaca-main.fullname" . }}-flower
   labels:
-    {{- include "breeze-main.labels" . | nindent 4 }}
-    app.kubernetes.io/component: celery-worker
+    {{- include "alpaca-main.labels" . | nindent 4 }}
+    app.kubernetes.io/component: flower
 spec:
-  replicas: {{ .Values.celeryWorker.replicaCount }}
+  replicas: {{ .Values.flower.replicaCount }}
   selector:
     matchLabels:
-      {{- include "breeze-main.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: celery-worker
+      {{- include "alpaca-main.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: flower
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -19,28 +19,32 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "breeze-main.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: celery-worker
+        {{- include "alpaca-main.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: flower
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "breeze-main.serviceAccountName" . }}
+      serviceAccountName: {{ include "alpaca-main.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: celery-worker
+        - name: flower
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.celeryWorker.image.repository }}:{{ .Values.celeryWorker.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.celeryWorker.image.pullPolicy }}
-          command: ["celery", "-A", "main", "worker", "-l", "info"]
+          image: "{{ .Values.flower.image.repository }}:{{ .Values.flower.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.flower.image.pullPolicy }}
+          command: ["celery", "-A", "main", "flower", "--address=0.0.0.0", "--port={{ .Values.flower.service.port }}"]
           env:
-            {{- range $key, $value := .Values.celeryWorker.env }}
+            {{- range $key, $value := .Values.flower.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.flower.service.port }}
+              protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
