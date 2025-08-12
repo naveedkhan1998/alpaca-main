@@ -529,6 +529,13 @@ def fetch_historical_data(watchlist_asset_id: int):
                 logger.error(
                     "Error resampling %s for %s: %s", tf, symbol, e, exc_info=True
                 )
+
+        # Mark backfill as complete by setting a cache flag
+        # This allows WebSocket to know it's safe to create higher TF candles
+        completion_key = f"backfill:complete:{asset.id}"
+        cache.set(completion_key, 1, timeout=86400 * 1)  # Keep for 1 day
+        logger.info(f"Marked backfill complete for asset_id={asset.id} symbol={symbol}")
+
     finally:
         # Always release the lock and clear any queued marker for this asset
         cache.delete(running_key)

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
 import {
   setTimeframe,
@@ -14,14 +13,7 @@ import {
   selectActiveIndicators,
 } from '../graphSlice';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 
@@ -31,7 +23,6 @@ import {
   HiClock,
   HiChartBar,
   HiTrendingUp,
-  HiCog,
   HiLightningBolt,
   HiViewGrid,
   HiChartSquareBar,
@@ -53,17 +44,6 @@ export default function ChartControls() {
   const showVolume = useAppSelector(selectShowVolume);
   const autoRefresh = useAppSelector(selectAutoRefresh);
   const activeIndicators = useAppSelector(selectActiveIndicators);
-  const [isCustomTfDialogOpen, setIsCustomTfDialogOpen] = useState(false);
-  const [customTimeframeInput, setCustomTimeframeInput] = useState('');
-
-  const handleCustomTimeframeSubmit = () => {
-    const parsedTimeframe = parseInt(customTimeframeInput, 10);
-    if (!isNaN(parsedTimeframe) && parsedTimeframe > 0) {
-      dispatch(setTimeframe(parsedTimeframe));
-      setIsCustomTfDialogOpen(false);
-      setCustomTimeframeInput('');
-    }
-  };
 
   const timeframeOptions = [
     { value: 1, label: '1m' },
@@ -251,14 +231,6 @@ export default function ChartControls() {
               </Button>
             ))}
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="w-full text-xs font-medium transition-all duration-300 border-2 border-dashed border-border hover:border-primary/50 hover:text-primary"
-            onClick={() => setIsCustomTfDialogOpen(true)}
-          >
-            <HiCog className="w-4 h-4 mr-2" /> Custom timeframe
-          </Button>
         </CardContent>
       </Card>
 
@@ -406,69 +378,6 @@ export default function ChartControls() {
           )}
         </CardContent>
       </Card>
-
-      {/* Custom Timeframe Dialog */}
-      <Dialog
-        open={isCustomTfDialogOpen}
-        onOpenChange={setIsCustomTfDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[425px] bg-popover/95 backdrop-blur-md border border-border">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
-              <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                <HiClock className="w-4 h-4" />
-              </div>
-              Custom Timeframe
-            </DialogTitle>
-          </DialogHeader>
-          <form
-            onSubmit={e => {
-              e.preventDefault();
-              handleCustomTimeframeSubmit();
-            }}
-            className="space-y-6"
-          >
-            <div className="space-y-3">
-              <Label
-                htmlFor="custom-timeframe"
-                className="text-sm font-semibold text-popover-foreground"
-              >
-                Enter timeframe in minutes:
-              </Label>
-              <Input
-                type="number"
-                id="custom-timeframe"
-                value={customTimeframeInput}
-                onChange={e => setCustomTimeframeInput(e.target.value)}
-                placeholder="e.g., 45"
-                required
-                min={1}
-                className="text-lg font-semibold text-center transition-all duration-200 border-2 h-11 focus:border-primary"
-              />
-              <div className="p-3 border rounded-lg bg-background/50 border-border">
-                <p className="text-xs font-medium text-muted-foreground">
-                  Examples: 3, 7, 45, 120, 360, etc.
-                </p>
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsCustomTfDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="shadow-lg bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                Apply
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
