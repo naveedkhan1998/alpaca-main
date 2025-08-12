@@ -14,11 +14,11 @@ app = Celery("main", include=[])
 CANDLE_MAKER_SCHEDULE = int(os.getenv("CANDLE_MAKER_SCHEDULE", 1))
 
 app.conf.beat_schedule = {
-    "candle_making_job": {
-        "task": "candle_maker",
-        "schedule": CANDLE_MAKER_SCHEDULE,
-        "relative": True,
-    },
+    # "candle_making_job": {
+    #     "task": "candle_maker",
+    #     "schedule": CANDLE_MAKER_SCHEDULE,
+    #     "relative": True,
+    # },
     # "websocket_connect": {
     #     "task": "websocket_start",
     #     "schedule": 6000,

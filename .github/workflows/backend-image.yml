@@ -1,12 +1,22 @@
 name: Build & Push Backend Image
 
 on:
-  # Fires whenever code lands on main (merges or direct pushes)
+  # Run on PRs targeting main
   pull_request:
     branches: [main]
     paths:
       - "backend/**"
       - ".github/workflows/backend-image.yml"
+
+  # Run automatically when code is pushed/merged to main
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-image.yml"
+
+  # Allow manual runs from the GitHub UI
+  workflow_dispatch:
 
 jobs:
   build-and-push:
@@ -34,6 +44,7 @@ jobs:
 
       # ───────── Login to Docker Hub ─────────
       - name: 🔐 Login to Docker Hub
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -45,10 +56,11 @@ jobs:
         with:
           context: ./backend # directory to send as build context
           file: ./backend/Dockerfile.dev # adjust if you rename
-          push: true # actually push, not just build
+          # push images on push/workflow_dispatch, but not on PRs
+          push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            naveedkhan1998/breeze-backend:latest
-            naveedkhan1998/breeze-backend:sha-${{ github.sha }}
+            naveedkhan1998/alpaca-backend:latest
+            naveedkhan1998/alpaca-backend:sha-${{ github.sha }}
           # optional BuildKit cache (makes rebuilds much faster)
           cache-from: type=gha
           cache-to: type=gha,mode=max

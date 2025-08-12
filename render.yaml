@@ -1,238 +1,112 @@
 services:
   - type: web
-    name: breeze-main-backend-data-loader
+    name: alpaca-main-backend-data-loader
     runtime: image
     image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
+      url: docker.io/naveedkhan1998/alpaca-backend:latest
     plan: free
     envVars:
       - key: gcpCredentials.json
         sync: false
-      - fromGroup: breeze-main-backend
+      - fromGroup: alpaca-main
     region: oregon
     dockerCommand: ./scripts/production/run_process_data.sh
     autoDeployTrigger: commit
 
   - type: web
-    name: breeze-main-backend-migrations-worker
+    name: alpaca-main-backend-migrations-worker
     runtime: image
     image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
+      url: docker.io/naveedkhan1998/alpaca-backend:latest
     plan: free
     envVars:
       - key: gcpCredentials.json
         sync: false
-      - fromGroup: breeze-main-backend
+      - fromGroup: alpaca-main
     region: oregon
     dockerCommand: ./scripts/production/run_backend_migrations.sh
     autoDeployTrigger: commit
 
   - type: web
-    name: breeze-main-backend
+    name: alpaca-main-backend
     runtime: image
     image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
+      url: docker.io/naveedkhan1998/alpaca-backend:latest
     plan: free
     envVars:
       - key: gcpCredentials.json
         sync: false
-      - fromGroup: breeze-main-backend
+      - fromGroup: alpaca-main
     region: oregon
     dockerCommand: ./scripts/production/run_backend_prod.sh
     autoDeployTrigger: commit
 
   - type: web
-    name: breeze-main-celery-beat
+    name: alpaca-main-celery-beat
     runtime: image
     image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
+      url: docker.io/naveedkhan1998/alpaca-backend:latest
     plan: free
     envVars:
       - key: gcpCredentials.json
         sync: false
-      - fromGroup: breeze-main-celery
+      - fromGroup: alpaca-main
     region: oregon
     dockerCommand: ./scripts/production/run_celery_beat_prod.sh
     autoDeployTrigger: commit
 
   - type: web
-    name: breeze-main-flower
+    name: alpaca-main-flower
     runtime: image
     image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
+      url: docker.io/naveedkhan1998/alpaca-backend:latest
     plan: free
     envVars:
       - key: gcpCredentials.json
         sync: false
-      - fromGroup: breeze-main-celery
+      - fromGroup: alpaca-main
     region: oregon
     dockerCommand: ./scripts/production/run_flower_prod.sh
     autoDeployTrigger: commit
 
   - type: web
-    name: breeze-main-celery-worker-1
+    name: alpaca-main-celery-worker-1
     runtime: image
     image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
+      url: docker.io/naveedkhan1998/alpaca-backend:latest
     plan: free
     envVars:
       - key: gcpCredentials.json
         sync: false
-      - fromGroup: breeze-main-celery
+      - fromGroup: alpaca-main
     region: oregon
     dockerCommand: ./scripts/production/run_celery_worker_prod.sh
     autoDeployTrigger: commit
 
   - type: web
-    name: breeze-main-celery-worker-2
+    name: alpaca-main-celery-worker-2
     runtime: image
     image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
+      url: docker.io/naveedkhan1998/alpaca-backend:latest
     plan: free
     envVars:
       - key: gcpCredentials.json
         sync: false
-      - fromGroup: breeze-main-celery
+      - fromGroup: alpaca-main
     region: oregon
     dockerCommand: ./scripts/production/run_celery_worker_prod.sh
     autoDeployTrigger: commit
 
   - type: web
-    name: breeze-main-celery-worker-3
+    name: alpaca-main-celery-worker-3
     runtime: image
     image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
+      url: docker.io/naveedkhan1998/alpaca-backend:latest
     plan: free
     envVars:
       - key: gcpCredentials.json
         sync: false
-      - fromGroup: breeze-main-celery
-    region: oregon
-    dockerCommand: ./scripts/production/run_celery_worker_prod.sh
-    autoDeployTrigger: commit
-
-  - type: web
-    name: breeze-main-celery-worker-4
-    runtime: image
-    image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
-    plan: free
-    envVars:
-      - key: gcpCredentials.json
-        sync: false
-      - fromGroup: breeze-main-celery
-    region: oregon
-    dockerCommand: ./scripts/production/run_celery_worker_prod.sh
-    autoDeployTrigger: commit
-
-  - type: web
-    name: breeze-main-celery-worker-5
-    runtime: image
-    image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
-    plan: free
-    envVars:
-      - key: gcpCredentials.json
-        sync: false
-      - fromGroup: breeze-main-celery
-    region: oregon
-    dockerCommand: ./scripts/production/run_celery_worker_prod.sh
-    autoDeployTrigger: commit
-
-  - type: web
-    name: breeze-main-celery-worker-6
-    runtime: image
-    image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
-    plan: free
-    envVars:
-      - key: gcpCredentials.json
-        sync: false
-      - fromGroup: breeze-main-celery
-    region: oregon
-    dockerCommand: ./scripts/production/run_celery_worker_prod.sh
-    autoDeployTrigger: commit
-
-  - type: web
-    name: breeze-main-celery-worker-7
-    runtime: image
-    image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
-    plan: free
-    envVars:
-      - key: gcpCredentials.json
-        sync: false
-      - fromGroup: breeze-main-celery
-    region: oregon
-    dockerCommand: ./scripts/production/run_celery_worker_prod.sh
-    autoDeployTrigger: commit
-
-  - type: web
-    name: breeze-main-celery-worker-8
-    runtime: image
-    image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
-    plan: free
-    envVars:
-      - key: gcpCredentials.json
-        sync: false
-      - fromGroup: breeze-main-celery
-    region: oregon
-    dockerCommand: ./scripts/production/run_celery_worker_prod.sh
-    autoDeployTrigger: commit
-
-  - type: web
-    name: breeze-main-celery-worker-9
-    runtime: image
-    image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
-    plan: free
-    envVars:
-      - key: gcpCredentials.json
-        sync: false
-      - fromGroup: breeze-main-celery
-    region: oregon
-    dockerCommand: ./scripts/production/run_celery_worker_prod.sh
-    autoDeployTrigger: commit
-
-  - type: web
-    name: breeze-main-celery-worker-10
-    runtime: image
-    image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
-    plan: free
-    envVars:
-      - key: gcpCredentials.json
-        sync: false
-      - fromGroup: breeze-main-celery
-    region: oregon
-    dockerCommand: ./scripts/production/run_celery_worker_prod.sh
-    autoDeployTrigger: commit
-
-  - type: web
-    name: breeze-main-celery-worker-11
-    runtime: image
-    image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
-    plan: free
-    envVars:
-      - key: gcpCredentials.json
-        sync: false
-      - fromGroup: breeze-main-celery
-    region: oregon
-    dockerCommand: ./scripts/production/run_celery_worker_prod.sh
-    autoDeployTrigger: commit
-
-  - type: web
-    name: breeze-main-celery-worker-12
-    runtime: image
-    image:
-      url: docker.io/naveedkhan1998/breeze-backend:latest
-    plan: free
-    envVars:
-      - key: gcpCredentials.json
-        sync: false
-      - fromGroup: breeze-main-celery
+      - fromGroup: alpaca-main
     region: oregon
     dockerCommand: ./scripts/production/run_celery_worker_prod.sh
     autoDeployTrigger: commit

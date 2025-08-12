@@ -65,6 +65,15 @@ TEMPLATES = [
 ASGI_APPLICATION = "main.asgi.application"
 
 # Database
+# use default sqlite
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
+
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -111,7 +120,7 @@ REST_FRAMEWORK = {
 
 # Internationalization
 LANGUAGE_CODE = "en-us"
-TIME_ZONE = "Asia/Kolkata"
+TIME_ZONE = "America/New_York"
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
@@ -173,3 +182,45 @@ GOOGLE_OAUTH_CALLBACK_URL = os.getenv("GOOGLE_OAUTH_CALLBACK_URL")
 # GCS-specific settings
 GS_DEFAULT_ACL = None
 GS_FILE_OVERWRITE = False
+
+
+# HISTORIC DATA LOADING LIMIT
+HISTORIC_DATA_LOADING_LIMIT = int(os.getenv("HISTORIC_DATA_LOADING_LIMIT", 730))
+
+# Logging configuration
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "apps": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+    },
+}
+
+APCA_API_KEY = os.getenv("APCA_API_KEY")
+APCA_API_SECRET_KEY = os.getenv("APCA_API_SECRET_KEY")

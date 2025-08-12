@@ -1,16 +1,17 @@
-# Breeze API Wrapper
 
-**Breeze API Wrapper** is a Django‑based boilerplate that sits on top of the free **ICICI Breeze API**. Plug in your Breeze credentials to get secure session generation, instrument master downloads, OHLC visualisations and real‑time tick streaming—all wrapped in a Docker‑first developer experience.
+# Alpaca API Wrapper
 
-Use it as a starting point for **back‑testing engines, live‑trading bots, research notebooks or data pipelines**.
+**Alpaca API Wrapper** is a Django-based starter project for building your own stock market analysis tools, backtesting engines, or trading bots. It leverages the Alpaca API for real-time market data and provides a full-stack, Dockerized environment.
 
-🌐 **Try the live demo:** [https://breeze.mnaveedk.com/](https://breeze.mnaveedk.com/)
+Use it as a foundation for **backtesting, live-trading bots, research notebooks, or data pipelines**—with built-in support for watchlists, historical and real-time data, and a dedicated WebSocket service for streaming market data.
+
+🌐 **Try the live demo:** [https://alpaca.mnaveedk.com/](https://alpaca.mnaveedk.com/)
 
 ---
 
 ## Table of Contents
 
-- [Breeze API Wrapper](#breeze-api-wrapper)
+- [Alpaca API Wrapper](#alpaca-api-wrapper)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
   - [Tech Stack](#tech-stack)
@@ -35,19 +36,24 @@ Use it as a starting point for **back‑testing engines, live‑trading bots, re
     - [Development Tools](#development-tools)
     - [Special Thanks](#special-thanks)
   - [Contact](#contact)
+  - [to run with observibility](#to-run-with-observibility)
 
 ---
 
+
 ## Features
 
-| Category               | What you get                                                 |
-| ---------------------- | ------------------------------------------------------------ |
-| **Session management** | Create / refresh sessions with your API key & secret         |
-| **Instrument master**  | Download & cache symbol metadata                             |
-| **Charts**             | Interactive OHLC candles with TA overlays                    |
-| **Live ticks**         | Subscribe to any instrument and stream ticks over WebSockets |
-| **Task orchestration** | Celery + Redis for async jobs & scheduling                   |
-| **Dockerised stack**   | `docker compose up` and you're done                          |
+| Category               | What you get                                                                 |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| **Watchlists**         | Create watchlists, add assets, and manage your market focus                  |
+| **Historical Data**    | Assets in watchlists fetch and cache historical OHLCV data automatically     |
+| **Real-Time Data**     | Assets in watchlists are subscribed to real-time Alpaca market feeds         |
+| **WebSocket Service**  | Dedicated Django management command runs in its own container, handling      |
+|                        | real-time tick processing and candle aggregation (1m and higher timeframes)  |
+| **Interactive Analysis**| Access and experiment with real-time and historical data for your watchlists |
+| **Session management** | Secure session generation with your API key & secret                         |
+| **Task orchestration** | Celery + Redis for async jobs & scheduling                                   |
+| **Dockerised stack**   | `docker compose up` and you're done                                          |
 
 ---
 
@@ -65,29 +71,32 @@ Use it as a starting point for **back‑testing engines, live‑trading bots, re
 
 ---
 
+
 ## Architecture
 
 ```
-                         ┌───────────────────┐
-                         │   Users / Clients │
-                         └─────────┬─────────┘
-                                   │  HTTP / WebSocket
-                ┌──────────────────┴──────────────────┐
-                │                                     │
-          ┌─────▼─────┐                         ┌─────▼─────┐
-          │   Nginx   │                         │   Flower  │
-          │ (8000)    │                         │  (5555)   │
-          │ Reverse   │                         │ Dashboard │
-          │  Proxy    │                         └───────────┘
-          └─────┬─────┘
-                │
-      ┌─────────┴─────────┐
-      │                   │
-┌─────▼─────┐       ┌─────▼─────┐
-│ Frontend  │       │  Django   │
-│ React +   │       │  API      │
-│  Vite     │       │ (ASGI)    │
-└───────────┘       └─────┬─────┘
+        ┌──────────────────────┐
+        │   Users / Clients    │
+        └─────────┬────────────┘
+                  │ HTTP / WebSocket
+            ┌─────┴─────────────┐
+            │                   │                        
+      ┌─────▼─────┐       ┌─────▼─────┐       
+      │   Nginx   │       │   Flower  │        
+      │ (8000)    │       │  (5555)   │        
+      │ Reverse   │       │ Dashboard │       
+      │  Proxy    │       └───────────┘        
+      └─────┬─────┘
+            │
+      ┌─────┴─────────────┬────────────────────────┐
+      │                   │                        │
+┌─────▼─────┐       ┌─────▼────────────┐ ┌─────────▼────────────┐ 
+│ Frontend  │       │  Django Backend  │ │ WebSocket Service    │
+│ React +   │       │  API (ASGI)      │ │ (Django mgmt cmd,    │
+│  Vite     │       └─────┬────────────┘ │  separate container) │
+└───────────┘             │              └──────────────────────┘
+                          │
+                          │
                           │
           ┌───────────────┼───────────────┐
           │               │               │
@@ -96,10 +105,9 @@ Use it as a starting point for **back‑testing engines, live‑trading bots, re
    │   DB         │ │   Broker    │ │ Workers +   │
    │              │ │ / Cache     │ │   Beat      │
    └──────────────┘ └─────────────┘ └─────────────┘
-          ▲                               │
-          │                               │
-          └──────────── Task Queue ───────┘
-
+      ▲                               │
+      │                               │
+      └──────────── Task Queue ───────┘
 ```
 
 ### Service Breakdown
@@ -122,15 +130,15 @@ Use it as a starting point for **back‑testing engines, live‑trading bots, re
 ## Prerequisites
 
 - **Docker** & **Docker Compose** installed
-- An **ICICI Breeze API** key & secret
+- An **ICICI Alpaca API** key & secret
 
 ---
 
 ## Installation
 
 ```bash
-git clone https://github.com/naveedkhan1998/breeze-main.git
-cd breeze-main
+git clone https://github.com/naveedkhan1998/alpaca-main.git
+cd alpaca-main
 
 # Build and start all services
 docker compose up
@@ -216,7 +224,7 @@ We welcome contributions! Here's how to get started:
 
 ### Issues
 
-Found a bug or have a feature request? Please [open an issue](https://github.com/naveedkhan1998/breeze-main/issues) with:
+Found a bug or have a feature request? Please [open an issue](https://github.com/naveedkhan1998/alpaca-main/issues) with:
 
 - Clear description of the problem or feature
 - Steps to reproduce (for bugs)
@@ -245,7 +253,7 @@ This project wouldn't be possible without these amazing technologies and resourc
 
 ### Core Technologies
 
-- [ICICI Direct – Breeze API](https://www.icicidirect.com/) - The financial data API that powers this wrapper
+- [ICICI Direct – Alpaca API](https://www.icicidirect.com/) - The financial data API that powers this wrapper
 - [Django](https://www.djangoproject.com/) & [Django REST Framework](https://www.django-rest-framework.org/) - Web framework and API toolkit
 - [Django Channels](https://channels.readthedocs.io/) - WebSocket support for Django
 - [Celery](https://docs.celeryproject.org/) - Distributed task queue
@@ -284,7 +292,8 @@ This project wouldn't be possible without these amazing technologies and resourc
 
 ---
 
-_Happy hacking & good trades! 🚀_
-
+## to run with observibility
 
 docker compose -f docker-compose.yaml -f docker-compose.local.yaml up -d
+
+_Happy hacking & good trades! 🚀_

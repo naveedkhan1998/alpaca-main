@@ -7,6 +7,7 @@ import {
   Time,
   LineData,
   LineSeries,
+  MouseEventParams,
 } from 'lightweight-charts';
 
 interface IndicatorChartProps {
@@ -27,13 +28,15 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
   const rsiSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const atrSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const legendContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Create or destroy chart based on active indicators
   useEffect(() => {
     const hasRSI = rsiData && rsiData.length > 0;
     const hasATR = atrData && atrData.length > 0;
 
-    if (!indicatorChartContainerRef.current) return;
+    const containerEl = indicatorChartContainerRef.current;
+    if (!containerEl) return;
 
     if (!hasRSI && !hasATR) {
       // No active indicators, remove chart if it exists
@@ -42,20 +45,22 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
         indicatorChartRef.current = null;
         rsiSeriesRef.current = null;
         atrSeriesRef.current = null;
-        if (resizeObserverRef.current && indicatorChartContainerRef.current) {
-          resizeObserverRef.current.unobserve(
-            indicatorChartContainerRef.current
-          );
-          resizeObserverRef.current.disconnect();
-          resizeObserverRef.current = null;
-        }
+      }
+      if (resizeObserverRef.current && containerEl) {
+        resizeObserverRef.current.unobserve(containerEl);
+        resizeObserverRef.current.disconnect();
+        resizeObserverRef.current = null;
+      }
+      if (legendContainerRef.current && containerEl) {
+        containerEl.removeChild(legendContainerRef.current);
+        legendContainerRef.current = null;
       }
       return;
     }
 
     if (!indicatorChartRef.current) {
       // Create chart
-      const chart = createChart(indicatorChartContainerRef.current, {
+      const chart = createChart(containerEl, {
         layout: {
           textColor: mode ? '#E2E8F0' : '#475569',
           background: { color: 'transparent' },
@@ -95,35 +100,85 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
             style: 1,
           },
         },
+        handleScroll: true,
+        handleScale: true,
       });
 
       indicatorChartRef.current = chart;
       setTimeScale(chart.timeScale());
 
+      // Legend overlay
+      const legendContainer = document.createElement('div');
+      legendContainer.className =
+        'absolute top-2 left-2 p-2 rounded-lg glass-card shadow-md z-[10] text-xs flex items-center gap-3';
+      const rsiSpan = document.createElement('span');
+      rsiSpan.className = 'text-amber-600 dark:text-amber-300 font-medium';
+      rsiSpan.textContent = hasRSI
+        ? `RSI: ${Number(rsiData.at(-1)?.value ?? 0).toFixed(2)}`
+        : '';
+      const atrSpan = document.createElement('span');
+      atrSpan.className = 'text-blue-600 dark:text-blue-300 font-medium';
+      atrSpan.textContent = hasATR
+        ? `ATR: ${Number(atrData.at(-1)?.value ?? 0).toFixed(2)}`
+        : '';
+      legendContainer.appendChild(rsiSpan);
+      legendContainer.appendChild(atrSpan);
+      containerEl.appendChild(legendContainer);
+      legendContainerRef.current = legendContainer;
+
+      // Crosshair updates legend
+      chart.subscribeCrosshairMove((param: MouseEventParams<Time>) => {
+        if (!legendContainerRef.current) return;
+        const rsiPoint = rsiSeriesRef.current
+          ? (param.seriesData.get(rsiSeriesRef.current) as LineData | undefined)
+          : undefined;
+        const atrPoint = atrSeriesRef.current
+          ? (param.seriesData.get(atrSeriesRef.current) as LineData | undefined)
+          : undefined;
+
+        const [rsiLabel, atrLabel] = legendContainerRef.current
+          .children as unknown as HTMLSpanElement[];
+        if (rsiLabel) {
+          rsiLabel.textContent = hasRSI
+            ? `RSI: ${Number(rsiPoint?.value ?? rsiData.at(-1)?.value ?? 0).toFixed(2)}`
+            : '';
+        }
+        if (atrLabel) {
+          atrLabel.textContent = hasATR
+            ? `ATR: ${Number(atrPoint?.value ?? atrData.at(-1)?.value ?? 0).toFixed(2)}`
+            : '';
+        }
+      });
+
       // Handle Resize
       const resizeObserver = new ResizeObserver(entries => {
-        if (indicatorChartContainerRef.current && indicatorChartRef.current) {
+        if (containerEl && indicatorChartRef.current) {
           const { width, height } = entries[0].contentRect;
           indicatorChartRef.current.applyOptions({ width, height });
         }
       });
 
-      resizeObserver.observe(indicatorChartContainerRef.current);
+      resizeObserver.observe(containerEl);
       resizeObserverRef.current = resizeObserver;
     }
 
     // Cleanup function to remove chart on unmount
     return () => {
+      const cleanupContainer = containerEl;
       if (indicatorChartRef.current) {
         indicatorChartRef.current.remove();
         indicatorChartRef.current = null;
         rsiSeriesRef.current = null;
         atrSeriesRef.current = null;
       }
-      if (resizeObserverRef.current && indicatorChartContainerRef.current) {
-        resizeObserverRef.current.unobserve(indicatorChartContainerRef.current);
+      if (resizeObserverRef.current && cleanupContainer) {
+        resizeObserverRef.current.unobserve(cleanupContainer);
         resizeObserverRef.current.disconnect();
         resizeObserverRef.current = null;
+      }
+      if (legendContainerRef.current && cleanupContainer) {
+        cleanupContainer.removeChild(legendContainerRef.current);
+        legendContainerRef.current = null;
       }
     };
   }, [rsiData, atrData, mode, setTimeScale]);

@@ -19,7 +19,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         self.end_headers()
 
 
-def run(server_class=HTTPServer, handler_class=MyHandler, port=5000):
+def run(server_class=HTTPServer, handler_class=MyHandler, port=8000):
     server_address = ("", port)
     httpd = server_class(server_address, handler_class)
     print(f"Starting httpd server on port {port}")

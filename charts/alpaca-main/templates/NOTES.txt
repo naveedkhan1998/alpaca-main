@@ -1,0 +1,27 @@
+Thank you for installing {{ include "alpaca-main.fullname" . }}.
+
+Your application has been deployed to your Kubernetes cluster.
+
+To access the frontend, use the following command to find the Nginx service IP:
+
+  kubectl get svc --namespace {{ .Release.Namespace }} {{ include "alpaca-main.fullname" . }}-nginx
+
+To access the backend API, you can port-forward the backend service:
+
+  kubectl port-forward svc/{{ include "alpaca-main.fullname" . }}-backend 8000:8000 --namespace {{ .Release.Namespace }}
+
+Then, you can access the API at http://localhost:8000/api/
+
+To access the PostgreSQL database, you can port-forward the PostgreSQL service:
+
+  kubectl port-forward svc/{{ include "alpaca-main.fullname" . }}-postgres 5432:5432 --namespace {{ .Release.Namespace }}
+
+To access the Redis instance, you can port-forward the Redis service:
+
+  kubectl port-forward svc/{{ include "alpaca-main.fullname" . }}-redis 6379:6379 --namespace {{ .Release.Namespace }}
+
+To access the Flower UI, you can port-forward the Flower service:
+
+  kubectl port-forward svc/{{ include "alpaca-main.fullname" . }}-flower 5555:5555 --namespace {{ .Release.Namespace }}
+
+Then, you can access the Flower UI at http://localhost:5555

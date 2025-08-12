@@ -23,12 +23,15 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
   const volumeChartContainerRef = useRef<HTMLDivElement | null>(null);
   const volumeChartRef = useRef<IChartApi | null>(null);
   const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
+  const legendRef = useRef<HTMLDivElement | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
   // Create chart on mount
   useEffect(() => {
-    if (!volumeChartContainerRef.current || volumeChartRef.current) return;
+    const containerEl = volumeChartContainerRef.current;
+    if (!containerEl || volumeChartRef.current) return;
 
-    const chart = createChart(volumeChartContainerRef.current, {
+    const chart = createChart(containerEl, {
       layout: {
         textColor: mode ? '#E2E8F0' : '#475569',
         background: { color: 'transparent' },
@@ -76,6 +79,10 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
       handleScale: true,
     });
 
+    // Set initial size from container
+    const rect = containerEl.getBoundingClientRect();
+    chart.applyOptions({ width: rect.width, height: rect.height });
+
     const volumeSeries = chart.addSeries(HistogramSeries, {
       priceFormat: {
         type: 'volume',
@@ -88,21 +95,37 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
     volumeChartRef.current = chart;
     setTimeScale(chart.timeScale());
 
+    // Legend overlay
+    const legend = document.createElement('div');
+    legend.className =
+      'absolute top-2 left-2 p-2 rounded-lg glass-card shadow-md z-[10] text-xs';
+    legend.innerHTML =
+      '<span class="font-medium text-slate-700 dark:text-slate-300">Volume: —</span>';
+    containerEl.appendChild(legend);
+    legendRef.current = legend;
+
     // Handle Resize
     const resizeObserver = new ResizeObserver(entries => {
-      if (volumeChartContainerRef.current && volumeChartRef.current) {
-        const { width, height } = entries[0].contentRect;
-        volumeChartRef.current.applyOptions({ width, height });
-      }
+      if (!volumeChartRef.current) return;
+      const { width, height } = entries[0].contentRect;
+      volumeChartRef.current.applyOptions({ width, height });
     });
-
-    resizeObserver.observe(volumeChartContainerRef.current);
+    resizeObserver.observe(containerEl);
+    resizeObserverRef.current = resizeObserver;
 
     // Clean up on unmount
     return () => {
-      resizeObserver.disconnect();
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.unobserve(containerEl);
+        resizeObserverRef.current.disconnect();
+        resizeObserverRef.current = null;
+      }
       chart.remove();
       volumeChartRef.current = null;
+      if (legendRef.current && containerEl) {
+        containerEl.removeChild(legendRef.current);
+        legendRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -143,6 +166,14 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
     if (volumeSeriesRef.current) {
       volumeSeriesRef.current.setData(volumeData);
     }
+    if (legendRef.current) {
+      const latest = volumeData.at(-1);
+      const value =
+        latest && 'value' in latest
+          ? Number(latest.value).toLocaleString()
+          : '—';
+      legendRef.current.innerHTML = `<span class="font-medium text-slate-700 dark:text-slate-300">Volume: ${value}</span>`;
+    }
   }, [volumeData]);
 
   return (
@@ -150,7 +181,7 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
       <div
         ref={volumeChartContainerRef}
         className="relative w-full h-full"
-        style={{ height: 'calc(100% - 64px)' }}
+        style={{ height: '100%' }}
       />
     </div>
   );

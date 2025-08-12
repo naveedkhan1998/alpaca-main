@@ -7,4 +7,4 @@ set -e
 echo "Starting Flower - Celery Monitoring Tool..."
 
 # Start Flower with proper configuration
-celery -A main flower --port=5000
+celery -A main flower --port=8000
