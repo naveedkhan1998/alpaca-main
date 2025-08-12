@@ -5,7 +5,8 @@ Alpaca WebSocket Service
 A resilient, threaded client that subscribes to Alpaca market data trades and
 persists OHLCV candles in multiple timeframes:
 - 1 minute (1T) computed live from trades
-- 5T, 15T, 30T, 1H, 4H, 1D incrementally aggregated from 1T and flushed when buckets close
+- 5 minutes (5T), 15 minutes (15T), 30 minutes (30T), 1 hour (1H), 4 hours (4H), 1 day (1D)
+incrementally aggregated from 1T and flushed when complete
 
 Architecture
 - WebSocket thread: handles I/O, authentication, subscription messages
@@ -289,8 +290,16 @@ class WebsocketClient:
                                     task_fetch_historical_data.delay(wla_id)
                                 if wla_ids:
                                     self._last_backfill_request[asset_id] = now_s
+                                    # Clear any higher TF accumulators to avoid conflicts with backfill
+                                    for tf in self._tf_acc:
+                                        acc = self._tf_acc[tf]
+                                        keys_to_remove = [
+                                            k for k in acc.keys() if k[0] == asset_id
+                                        ]
+                                        for key in keys_to_remove:
+                                            acc.pop(key, None)
                                     logger.info(
-                                        "Backfill scheduled for asset_id=%s across %d watchlist assets",
+                                        "Backfill scheduled for asset_id=%s across %d watchlist assets, cleared WS higher TF accumulators",
                                         asset_id,
                                         len(wla_ids),
                                     )
@@ -310,10 +319,10 @@ class WebsocketClient:
             if self.authenticated:
                 self.update_subscriptions()
 
-            for _ in range(12):  # 60 s total
-                if not self.running:
-                    break
-                time.sleep(5)
+            # Check for subscription updates every 5 seconds
+            if not self.running:
+                break
+            time.sleep(5)
 
         logger.debug("subscription_manager stopped")
 
@@ -350,6 +359,12 @@ class WebsocketClient:
                         aid = self.asset_cache.pop(sym, None)
                         if aid is not None:
                             self.asset_class_cache.pop(aid, None)
+                            # Clear higher TF accumulators for removed assets
+                            for tf in self._tf_acc:
+                                acc = self._tf_acc[tf]
+                                keys_to_remove = [k for k in acc.keys() if k[0] == aid]
+                                for key in keys_to_remove:
+                                    acc.pop(key, None)
 
     def subscribe(self, symbols: list[str]):
         """Send a subscribe request (no-op if socket not ready)."""
@@ -374,6 +389,61 @@ class WebsocketClient:
     def _sock_ready(self) -> bool:
         """True if underlying websocket is connected."""
         return self.ws_app and self.ws_app.sock and self.ws_app.sock.connected
+
+    def _is_historical_backfill_complete(
+        self, asset_id: int, timeframe: str, bucket_ts: datetime
+    ) -> bool:
+        """Check if historical backfill is complete for this asset and timeframe.
+
+        This prevents WebSocket from creating partial higher timeframe candles
+        that would interfere with proper historical backfill.
+        """
+        from django.core.cache import cache
+
+        # Check if backfill is currently running
+        running_key = f"backfill:running:{asset_id}"
+        if cache.get(running_key):
+            return False
+
+        # Check if backfill has been explicitly marked as complete
+        completion_key = f"backfill:complete:{asset_id}"
+        if cache.get(completion_key):
+            return True
+
+        # For assets without explicit completion flag, use heuristics
+        # Check if we have sufficient historical 1T data coverage
+        latest_1t = (
+            Candle.objects.filter(asset_id=asset_id, timeframe="1T")
+            .order_by("-timestamp")
+            .first()
+        )
+
+        if not latest_1t:
+            return False
+
+        # Check if we have reasonable historical coverage (at least 2 days of 1T data)
+        now_dt = timezone.now()
+        coverage_threshold = now_dt - timedelta(days=4)
+
+        earliest_1t = (
+            Candle.objects.filter(asset_id=asset_id, timeframe="1T")
+            .order_by("timestamp")
+            .first()
+        )
+
+        if not earliest_1t or earliest_1t.timestamp > coverage_threshold:
+            # Not enough historical coverage, let backfill handle higher TFs
+            return False
+
+        # Check if higher TF already has historical data (not just today's data)
+        historical_threshold = now_dt.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ) - timedelta(days=1)
+        existing_historical_higher_tf = Candle.objects.filter(
+            asset_id=asset_id, timeframe=timeframe, timestamp__lt=historical_threshold
+        ).exists()
+
+        return existing_historical_higher_tf
 
     # --------------------------------------------------------------------- #
     # Tick batching + candle writes                                         #
@@ -557,6 +627,8 @@ class WebsocketClient:
 
         Throttled per timeframe to avoid excessive writes. Only persist buckets whose
         end time is after the latest minute (i.e., still open).
+
+        Only persist if historical backfill is complete to avoid sync issues.
         """
         now = time.time()
         for tf, keys in (touched_by_tf or {}).items():
@@ -572,9 +644,15 @@ class WebsocketClient:
                 aid, bucket_ts = key
                 end_ts = bucket_ts + delta
                 if end_ts > latest_m1:
-                    data = acc.get(key)
-                    if data:
-                        to_persist[key] = data
+                    # Only persist open buckets if backfill is complete
+                    if self._is_historical_backfill_complete(aid, tf, bucket_ts):
+                        data = acc.get(key)
+                        if data:
+                            to_persist[key] = data
+                    else:
+                        logger.debug(
+                            f"Skipping open {tf} bucket for asset_id={aid} - backfill not complete"
+                        )
             if to_persist:
                 # Persist accumulator snapshots for open higher-TF buckets (replace semantics)
                 self.save_candles(tf, to_persist, write_mode="snapshot")
@@ -586,6 +664,8 @@ class WebsocketClient:
         Ownership model: WS only writes OPEN buckets for higher TFs so charts update
         in real time. CLOSED buckets are left to the historical resampler to create
         or finalize, avoiding conflicts and ensuring consistency.
+
+        Additionally, check if historical backfill is complete before creating higher TF candles.
         """
         for tf, delta in self.TF_CFG.items():
             if tf == "1T":
@@ -596,8 +676,25 @@ class WebsocketClient:
             for (aid, bucket_ts), _data in list(acc.items()):
                 end_ts = bucket_ts + delta
                 if end_ts <= latest_m1:
-                    acc.pop((aid, bucket_ts), None)
-            # Do not persist closed buckets here; resampler owns them
+                    # Check if this asset has completed historical backfill before allowing closed bucket creation
+                    if self._is_historical_backfill_complete(aid, tf, bucket_ts):
+                        # Only persist closed buckets if backfill is complete to avoid gaps
+                        closed_data = acc.pop((aid, bucket_ts), None)
+                        if closed_data:
+                            self.save_candles(
+                                tf,
+                                {(aid, bucket_ts): closed_data},
+                                write_mode="snapshot",
+                            )
+                            logger.info(
+                                f"Persisted closed {tf} bucket for asset_id={aid} at {bucket_ts}"
+                            )
+                    else:
+                        # Remove from accumulator but don't persist - let backfill handle it
+                        acc.pop((aid, bucket_ts), None)
+                        logger.debug(
+                            f"Skipping closed {tf} bucket for asset_id={aid} - backfill not complete"
+                        )
 
     def save_candles(
         self,

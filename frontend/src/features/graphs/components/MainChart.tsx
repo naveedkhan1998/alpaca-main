@@ -20,7 +20,11 @@ import {
 
 import type { Asset } from '@/types/common-types';
 import { useAppSelector } from 'src/app/hooks';
-import { selectChartType, selectTimeframe } from '../graphSlice';
+import {
+  selectAutoRefresh,
+  selectChartType,
+  selectTimeframe,
+} from '../graphSlice';
 
 interface MainChartProps {
   seriesData: (BarData | LineData | HistogramData)[];
@@ -52,6 +56,7 @@ const MainChart: React.FC<MainChartProps> = ({
 }) => {
   const chartType = useAppSelector(selectChartType);
   const timeframe = useAppSelector(selectTimeframe);
+  const autoRefresh = useAppSelector(selectAutoRefresh);
   const mainChartContainerRef = useRef<HTMLDivElement | null>(null);
   const mainChartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<SeriesType> | null>(null);
@@ -524,12 +529,12 @@ const MainChart: React.FC<MainChartProps> = ({
 
   // Show/hide loading indicator
   useEffect(() => {
-    if (loadingIndicatorRef.current) {
+    if (loadingIndicatorRef.current && !autoRefresh) {
       loadingIndicatorRef.current.style.display = isLoadingMore
         ? 'block'
         : 'none';
     }
-  }, [isLoadingMore]);
+  }, [isLoadingMore, autoRefresh]);
 
   // Cleanup effect for component unmount
   useEffect(() => {

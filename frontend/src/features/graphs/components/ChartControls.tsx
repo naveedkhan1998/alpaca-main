@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
 import {
   setTimeframe,
@@ -14,14 +13,7 @@ import {
   selectActiveIndicators,
 } from '../graphSlice';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 
@@ -31,7 +23,6 @@ import {
   HiClock,
   HiChartBar,
   HiTrendingUp,
-  HiCog,
   HiLightningBolt,
   HiViewGrid,
   HiChartSquareBar,
@@ -53,17 +44,6 @@ export default function ChartControls() {
   const showVolume = useAppSelector(selectShowVolume);
   const autoRefresh = useAppSelector(selectAutoRefresh);
   const activeIndicators = useAppSelector(selectActiveIndicators);
-  const [isCustomTfDialogOpen, setIsCustomTfDialogOpen] = useState(false);
-  const [customTimeframeInput, setCustomTimeframeInput] = useState('');
-
-  const handleCustomTimeframeSubmit = () => {
-    const parsedTimeframe = parseInt(customTimeframeInput, 10);
-    if (!isNaN(parsedTimeframe) && parsedTimeframe > 0) {
-      dispatch(setTimeframe(parsedTimeframe));
-      setIsCustomTfDialogOpen(false);
-      setCustomTimeframeInput('');
-    }
-  };
 
   const timeframeOptions = [
     { value: 1, label: '1m' },
@@ -156,79 +136,132 @@ export default function ChartControls() {
   };
 
   return (
-    <div className="space-y-4 scrollbar-hidden">
-      {/* Tips */}
+    <div className="space-y-3 scrollbar-hidden">
+      {/* Live Status Banner - Mobile First */}
+      {autoRefresh && (
+        <Card className="shadow-sm border-green-500/30 bg-gradient-to-r from-green-500/10 via-green-400/10 to-green-500/10 backdrop-blur-sm">
+          <CardContent className="px-3 py-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center flex-1 min-w-0 gap-2">
+                <div className="relative">
+                  <div className="absolute w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                </div>
+                <span className="text-xs font-medium text-green-400 truncate">
+                  Live data active
+                </span>
+              </div>
+              <Badge
+                variant="secondary"
+                className="text-xs text-green-400 bg-green-500/20 border-green-500/30 shrink-0"
+              >
+                LIVE
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tips - Responsive */}
       <Card className="shadow-sm border-border/50 bg-card/80 backdrop-blur-sm">
-        <CardContent className="py-3">
+        <CardContent className="px-3 py-2">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <HiInformationCircle className="w-4 h-4" />
-            <span>
-              Shortcuts:{' '}
-              <kbd className="px-1 py-0.5 rounded bg-muted mx-1">F</kbd>{' '}
-              Fullscreen
-              <Separator orientation="vertical" className="h-3 mx-2" />
-              <kbd className="px-1 py-0.5 rounded bg-muted mx-1">V</kbd> Volume
-              <Separator orientation="vertical" className="h-3 mx-2" />
-              <kbd className="px-1 py-0.5 rounded bg-muted mx-1">C</kbd>{' '}
-              Controls
-            </span>
+            <HiInformationCircle className="w-3 h-3 shrink-0" />
+            <div className="overflow-hidden">
+              <div className="hidden sm:block">
+                <span>
+                  Shortcuts:{' '}
+                  <kbd className="px-1 py-0.5 rounded bg-muted mx-1 text-[10px]">
+                    F
+                  </kbd>{' '}
+                  Fullscreen
+                  <Separator
+                    orientation="vertical"
+                    className="inline-block h-3 mx-2"
+                  />
+                  <kbd className="px-1 py-0.5 rounded bg-muted mx-1 text-[10px]">
+                    V
+                  </kbd>{' '}
+                  Volume
+                  <Separator
+                    orientation="vertical"
+                    className="inline-block h-3 mx-2"
+                  />
+                  <kbd className="px-1 py-0.5 rounded bg-muted mx-1 text-[10px]">
+                    C
+                  </kbd>{' '}
+                  Controls
+                </span>
+              </div>
+              <div className="block sm:hidden text-[10px]">
+                <span>Tap and hold chart for options</span>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Presets */}
+      {/* Presets - Mobile Optimized */}
       <Card className="shadow-lg border-border/50 bg-card/80 backdrop-blur-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-3 text-base">
-            <div className="p-2 border rounded-lg bg-primary/10 text-primary border-primary/20">
-              <HiAdjustments className="w-4 h-4" />
+        <CardHeader className="px-3 pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <div className="p-1.5 border rounded-lg bg-primary/10 text-primary border-primary/20 shrink-0">
+              <HiAdjustments className="w-3 h-3" />
             </div>
             <span className="font-semibold text-card-foreground">Presets</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-3 gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            className="justify-start gap-2"
-            onClick={() => applyPreset('classic')}
-          >
-            <HiChartBar className="w-4 h-4" /> Classic
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="justify-start gap-2"
-            onClick={() => applyPreset('clean')}
-          >
-            <HiTrendingUp className="w-4 h-4" /> Clean
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="justify-start gap-2"
-            onClick={() => applyPreset('baseline')}
-          >
-            <HiBeaker className="w-4 h-4" /> Baseline
-          </Button>
+        <CardContent className="px-3 pb-3">
+          <div className="grid grid-cols-3 gap-1.5">
+            <Button
+              size="sm"
+              variant="outline"
+              className="justify-center h-8 gap-1 px-2 text-xs"
+              onClick={() => applyPreset('classic')}
+            >
+              <HiChartBar className="w-3 h-3 shrink-0" />
+              <span className="hidden sm:inline">Classic</span>
+              <span className="sm:hidden">C</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="justify-center h-8 gap-1 px-2 text-xs"
+              onClick={() => applyPreset('clean')}
+            >
+              <HiTrendingUp className="w-3 h-3 shrink-0" />
+              <span className="hidden sm:inline">Clean</span>
+              <span className="sm:hidden">Cl</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="justify-center h-8 gap-1 px-2 text-xs"
+              onClick={() => applyPreset('baseline')}
+            >
+              <HiBeaker className="w-3 h-3 shrink-0" />
+              <span className="hidden sm:inline">Base</span>
+              <span className="sm:hidden">B</span>
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Timeframe Section */}
+      {/* Timeframe Section - Mobile Optimized */}
       <Card className="shadow-lg border-border/50 bg-card/80 backdrop-blur-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-3 text-base">
-            <div className="p-2 border rounded-lg bg-primary/10 text-primary border-primary/20">
-              <HiClock className="w-4 h-4" />
+        <CardHeader className="px-3 pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <div className="p-1.5 border rounded-lg bg-primary/10 text-primary border-primary/20 shrink-0">
+              <HiClock className="w-3 h-3" />
             </div>
-            <div className="flex items-center flex-1 gap-2">
+            <div className="flex items-center flex-1 min-w-0 gap-2">
               <span className="font-semibold text-card-foreground">
                 Timeframe
               </span>
               {timeframe && (
                 <Badge
                   variant="secondary"
-                  className="ml-auto text-xs border bg-primary/10 text-primary border-primary/20"
+                  className="ml-auto text-xs border bg-primary/10 text-primary border-primary/20 shrink-0"
                 >
                   {timeframeOptions.find(t => t.value === timeframe)?.label ||
                     `${timeframe}m`}
@@ -237,106 +270,104 @@ export default function ChartControls() {
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          <div className="grid grid-cols-3 gap-2">
+        <CardContent className="px-3 pb-3">
+          <div className="grid grid-cols-3 gap-1.5">
             {timeframeOptions.map(tf => (
               <Button
                 key={tf.value}
                 size="sm"
                 variant={timeframe === tf.value ? 'default' : 'outline'}
-                className="transition-all duration-200"
+                className="h-8 text-xs font-medium transition-all duration-200"
                 onClick={() => dispatch(setTimeframe(tf.value))}
               >
                 {tf.label}
               </Button>
             ))}
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="w-full text-xs font-medium transition-all duration-300 border-2 border-dashed border-border hover:border-primary/50 hover:text-primary"
-            onClick={() => setIsCustomTfDialogOpen(true)}
-          >
-            <HiCog className="w-4 h-4 mr-2" /> Custom timeframe
-          </Button>
         </CardContent>
       </Card>
 
-      {/* Chart Type Section */}
+      {/* Chart Type Section - Mobile Grid */}
       <Card className="shadow-lg border-border/50 bg-card/80 backdrop-blur-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-3 text-base">
-            <div className="p-2 border rounded-lg bg-primary/10 text-primary border-primary/20">
-              <HiViewGrid className="w-4 h-4" />
+        <CardHeader className="px-3 pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <div className="p-1.5 border rounded-lg bg-primary/10 text-primary border-primary/20 shrink-0">
+              <HiViewGrid className="w-3 h-3" />
             </div>
             <span className="font-semibold text-card-foreground">
               Chart Style
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-2">
-          {chartTypes.map(type => (
-            <div
-              key={type.value}
-              className={`p-3 rounded-lg border-2 transition-all duration-200 cursor-pointer ${
-                chartType === type.value
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border hover:border-primary/50 hover:bg-accent/50'
-              }`}
-              onClick={() => dispatch(setChartType(type.value))}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`p-2 rounded-lg ${
-                    chartType === type.value
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground'
-                  }`}
-                >
-                  {type.icon}
-                </div>
-                <div className="flex-1">
+        <CardContent className="px-3 pb-3">
+          <div className="grid grid-cols-2 gap-1.5">
+            {chartTypes.map(type => (
+              <div
+                key={type.value}
+                className={`p-2 rounded-lg border-2 transition-all duration-200 cursor-pointer ${
+                  chartType === type.value
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50 hover:bg-accent/50'
+                }`}
+                onClick={() => dispatch(setChartType(type.value))}
+              >
+                <div className="flex items-center gap-2">
                   <div
-                    className={`font-semibold text-sm ${chartType === type.value ? 'text-primary' : 'text-card-foreground'}`}
+                    className={`p-1.5 rounded-lg shrink-0 ${
+                      chartType === type.value
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
                   >
-                    {type.label}
+                    {type.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div
+                      className={`font-semibold text-xs truncate ${
+                        chartType === type.value
+                          ? 'text-primary'
+                          : 'text-card-foreground'
+                      }`}
+                    >
+                      {type.label}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Indicators Section */}
+      {/* Indicators Section - Compact Mobile */}
       <Card className="shadow-lg border-border/50 bg-card/80 backdrop-blur-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-3 text-base">
-            <div className="p-2 border rounded-lg bg-primary/10 text-primary border-primary/20">
-              <HiOutlineTrendingUp className="w-4 h-4" />
+        <CardHeader className="px-3 pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <div className="p-1.5 border rounded-lg bg-primary/10 text-primary border-primary/20 shrink-0">
+              <HiOutlineTrendingUp className="w-3 h-3" />
             </div>
             <span className="font-semibold text-card-foreground">
               Indicators
             </span>
             {activeIndicators.length > 0 && (
-              <Badge className="ml-auto" variant="secondary">
-                {activeIndicators.length} active
+              <Badge className="ml-auto shrink-0" variant="secondary">
+                {activeIndicators.length}
               </Badge>
             )}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="px-3 pb-3 space-y-1.5">
           {indicators.map(indicator => (
             <div
               key={indicator.name}
-              className="flex items-center justify-between p-2 rounded-lg bg-background/50"
+              className="flex items-center justify-between p-2 rounded-lg bg-background/50 min-h-[36px]"
             >
               <Label
                 htmlFor={`indicator-${indicator.name}`}
-                className="flex items-center gap-2 text-sm font-medium cursor-pointer text-card-foreground"
+                className="flex items-center flex-1 min-w-0 gap-2 text-xs font-medium cursor-pointer text-card-foreground"
               >
-                {indicator.icon}
-                {indicator.label}
+                <span className="shrink-0">{indicator.icon}</span>
+                <span className="truncate">{indicator.label}</span>
               </Label>
               <Switch
                 id={`indicator-${indicator.name}`}
@@ -344,51 +375,73 @@ export default function ChartControls() {
                 onCheckedChange={checked =>
                   handleIndicatorToggle(indicator.name, checked)
                 }
+                className="shrink-0"
               />
             </div>
           ))}
           {activeIndicators.length > 0 && (
             <div className="pt-1">
-              <Button size="sm" variant="ghost" onClick={clearIndicators}>
-                Clear indicators
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={clearIndicators}
+                className="text-xs h-7"
+              >
+                Clear all
               </Button>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Settings Section */}
+      {/* Settings Section - Enhanced Live Feedback */}
       <Card className="shadow-lg border-border/50 bg-card/80 backdrop-blur-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-3 text-base">
-            <div className="p-2 border rounded-lg bg-primary/10 text-primary border-primary/20">
-              <HiAdjustments className="w-4 h-4" />
+        <CardHeader className="px-3 pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <div className="p-1.5 border rounded-lg bg-primary/10 text-primary border-primary/20 shrink-0">
+              <HiAdjustments className="w-3 h-3" />
             </div>
             <span className="font-semibold text-card-foreground">Settings</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between p-2 rounded-lg bg-background/50">
+        <CardContent className="px-3 pb-3 space-y-2">
+          <div className="flex items-center justify-between p-2 rounded-lg bg-background/50 min-h-[36px]">
             <Label
               htmlFor="show-volume"
-              className="flex items-center gap-2 text-sm font-medium cursor-pointer text-card-foreground"
+              className="flex items-center flex-1 min-w-0 gap-2 text-xs font-medium cursor-pointer text-card-foreground"
             >
-              <HiChartSquareBar className="w-4 h-4 text-muted-foreground" />{' '}
-              Show Volume
+              <HiChartSquareBar className="w-3 h-3 text-muted-foreground shrink-0" />
+              <span>Show Volume</span>
             </Label>
             <Switch
               id="show-volume"
               checked={showVolume}
               onCheckedChange={(show: boolean) => dispatch(setShowVolume(show))}
+              className="shrink-0"
             />
           </div>
-          <div className="flex items-center justify-between p-2 rounded-lg bg-background/50">
+
+          <div className="flex items-center justify-between p-2 rounded-lg bg-background/50 min-h-[36px]">
             <Label
               htmlFor="auto-refresh"
-              className="flex items-center gap-2 text-sm font-medium cursor-pointer text-card-foreground"
+              className="flex items-center flex-1 min-w-0 gap-2 text-xs font-medium cursor-pointer text-card-foreground"
             >
-              <HiLightningBolt className="w-4 h-4 text-muted-foreground" /> Live
-              Data
+              <HiLightningBolt
+                className={`w-3 h-3 shrink-0 ${
+                  autoRefresh
+                    ? 'text-green-400 animate-pulse'
+                    : 'text-muted-foreground'
+                }`}
+              />
+              <span>Live Data</span>
+              {autoRefresh && (
+                <Badge
+                  variant="secondary"
+                  className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px] px-1.5 py-0.5 ml-1"
+                >
+                  ON
+                </Badge>
+              )}
             </Label>
             <Switch
               id="auto-refresh"
@@ -396,79 +449,31 @@ export default function ChartControls() {
               onCheckedChange={(auto: boolean) =>
                 dispatch(setAutoRefresh(auto))
               }
+              className="shrink-0"
             />
           </div>
-          {autoRefresh && (
-            <div className="flex items-center gap-2 p-2 text-xs text-green-400 border rounded-lg bg-green-500/10 border-green-500/20">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
-              <span>Live updates enabled</span>
+
+          {/* Enhanced Live Status Indicator */}
+          <div
+            className={`transition-all duration-300 ${autoRefresh ? 'opacity-100 max-h-20' : 'opacity-0 max-h-0 overflow-hidden'}`}
+          >
+            <div className="flex items-center gap-2 p-2 text-xs border rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/20">
+              <div className="relative shrink-0">
+                <div className="absolute w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-green-400">
+                  Real-time updates active
+                </div>
+                <div className="text-green-400/80 text-[10px] mt-0.5">
+                  Chart refreshes automatically with new market data
+                </div>
+              </div>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
-
-      {/* Custom Timeframe Dialog */}
-      <Dialog
-        open={isCustomTfDialogOpen}
-        onOpenChange={setIsCustomTfDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[425px] bg-popover/95 backdrop-blur-md border border-border">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
-              <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                <HiClock className="w-4 h-4" />
-              </div>
-              Custom Timeframe
-            </DialogTitle>
-          </DialogHeader>
-          <form
-            onSubmit={e => {
-              e.preventDefault();
-              handleCustomTimeframeSubmit();
-            }}
-            className="space-y-6"
-          >
-            <div className="space-y-3">
-              <Label
-                htmlFor="custom-timeframe"
-                className="text-sm font-semibold text-popover-foreground"
-              >
-                Enter timeframe in minutes:
-              </Label>
-              <Input
-                type="number"
-                id="custom-timeframe"
-                value={customTimeframeInput}
-                onChange={e => setCustomTimeframeInput(e.target.value)}
-                placeholder="e.g., 45"
-                required
-                min={1}
-                className="text-lg font-semibold text-center transition-all duration-200 border-2 h-11 focus:border-primary"
-              />
-              <div className="p-3 border rounded-lg bg-background/50 border-border">
-                <p className="text-xs font-medium text-muted-foreground">
-                  Examples: 3, 7, 45, 120, 360, etc.
-                </p>
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsCustomTfDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="shadow-lg bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                Apply
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
