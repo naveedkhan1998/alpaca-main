@@ -618,13 +618,13 @@ const GraphsPage: React.FC = () => {
             {showControls && (
               <>
                 <ResizablePanel
-                  defaultSize={24}
+                  defaultSize={25}
                   minSize={20}
                   maxSize={35}
                   className="min-w-0"
                 >
-                  <div className="h-full p-4 ">
-                    <div className="flex flex-col h-full border shadow-sm bg-card text-card-foreground border-border/30 rounded-xl">
+                  <div className="h-full">
+                    <div className="flex flex-col h-full shadow-sm">
                       <div className="flex items-center justify-between p-4 border-b border-border/30 ">
                         <div className="flex items-center space-x-3">
                           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-chart-1/20 to-chart-1/10">
@@ -653,7 +653,7 @@ const GraphsPage: React.FC = () => {
             )}
 
             {/* Charts Area */}
-            <ResizablePanel defaultSize={showControls ? 76 : 100}>
+            <ResizablePanel defaultSize={showControls ? 75 : 100}>
               <div className="h-full p-4">
                 <ResizablePanelGroup direction="vertical">
                   {/* Main Chart */}

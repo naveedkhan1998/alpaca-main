@@ -18,7 +18,7 @@ const initialState: GraphState = {
   chartType: 'Candlestick',
   seriesType: 'ohlc',
   showVolume: true,
-  autoRefresh: false,
+  autoRefresh: true,
   showControls: true,
   isFullscreen: false,
   activeIndicators: [],
