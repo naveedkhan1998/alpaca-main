@@ -294,7 +294,7 @@ class WebsocketClient:
                                     for tf in self._tf_acc:
                                         acc = self._tf_acc[tf]
                                         keys_to_remove = [
-                                            k for k in acc.keys() if k[0] == asset_id
+                                            k for k in acc if k[0] == asset_id
                                         ]
                                         for key in keys_to_remove:
                                             acc.pop(key, None)
@@ -362,7 +362,7 @@ class WebsocketClient:
                             # Clear higher TF accumulators for removed assets
                             for tf in self._tf_acc:
                                 acc = self._tf_acc[tf]
-                                keys_to_remove = [k for k in acc.keys() if k[0] == aid]
+                                keys_to_remove = [k for k in acc if k[0] == aid]
                                 for key in keys_to_remove:
                                     acc.pop(key, None)
 
