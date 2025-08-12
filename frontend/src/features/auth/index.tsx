@@ -77,7 +77,9 @@ const LoginRegPage: React.FC = () => {
             <div className="relative hidden col-span-2 p-8 text-white md:block bg-gradient-to-br from-indigo-600 to-purple-700">
               <div className="sticky space-y-8 top-8">
                 <div className="space-y-4">
-                  <h1 className="text-4xl font-bold">ICICI Breeze</h1>
+                  <h1 className="text-4xl font-bold">
+                    Alpaca API for North American Market Data
+                  </h1>
                   <p className="text-lg text-indigo-100">
                     Your gateway to intelligent trading
                   </p>

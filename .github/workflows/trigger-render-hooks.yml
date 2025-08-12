@@ -1,0 +1,100 @@
+name: Manual Render Deploy Hooks
+
+on:
+  workflow_dispatch:
+    inputs:
+      backend:
+        description: Trigger BACKEND_HOOK
+        type: boolean
+        default: true
+        required: false
+      websocket:
+        description: Trigger WEBSOCKET_HOOK
+        type: boolean
+        default: true
+        required: false
+      migrations:
+        description: Trigger MIGRATIONS_HOOK
+        type: boolean
+        default: true
+        required: false
+      beat:
+        description: Trigger BEAT_HOOK
+        type: boolean
+        default: true
+        required: false
+      worker_1:
+        description: Trigger WORKER_1_HOOK
+        type: boolean
+        default: true
+        required: false
+      worker_2:
+        description: Trigger WORKER_2_HOOK
+        type: boolean
+        default: true
+        required: false
+      worker_3:
+        description: Trigger WORKER_3_HOOK
+        type: boolean
+        default: true
+        required: false
+      flower:
+        description: Trigger FLOWER_HOOK
+        type: boolean
+        default: true
+        required: false
+
+concurrency:
+  group: trigger-render-hooks
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    name: Trigger selected hooks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      BACKEND_HOOK: ${{ secrets.BACKEND_HOOK }}
+      WEBSOCKET_HOOK: ${{ secrets.WEBSOCKET_HOOK }}
+      MIGRATIONS_HOOK: ${{ secrets.MIGRATIONS_HOOK }}
+      BEAT_HOOK: ${{ secrets.BEAT_HOOK }}
+      WORKER_1_HOOK: ${{ secrets.WORKER_1_HOOK }}
+      WORKER_2_HOOK: ${{ secrets.WORKER_2_HOOK }}
+      WORKER_3_HOOK: ${{ secrets.WORKER_3_HOOK }}
+      FLOWER_HOOK: ${{ secrets.FLOWER_HOOK }}
+    steps:
+      - name: Trigger deploy hooks (POST)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          trigger() {
+            local name="$1"; shift
+            local url="$1"; shift
+
+            if [ -z "$url" ]; then
+              echo "::warning::Secret for ${name} is not set; skipping."
+              return 0
+            fi
+
+            echo "Triggering ${name}…"
+            # Do not echo the URL to avoid leaking secrets.
+            http_code=$(curl -sS -X POST -o /dev/null -w "%{http_code}" "$url")
+            if [[ "$http_code" =~ ^2[0-9][0-9]$ ]]; then
+              echo "${name} -> HTTP ${http_code}"
+            else
+              echo "::error::${name} failed with HTTP ${http_code}"
+              exit 1
+            fi
+          }
+
+          [ "${{ inputs.backend }}" = 'true' ] && trigger backend    "${BACKEND_HOOK}"
+          [ "${{ inputs.websocket }}" = 'true' ] && trigger websocket  "${WEBSOCKET_HOOK}"
+          [ "${{ inputs.migrations }}" = 'true' ] && trigger migrations "${MIGRATIONS_HOOK}"
+          [ "${{ inputs.beat }}" = 'true' ] && trigger beat        "${BEAT_HOOK}"
+          [ "${{ inputs.worker_1 }}" = 'true' ] && trigger worker_1   "${WORKER_1_HOOK}"
+          [ "${{ inputs.worker_2 }}" = 'true' ] && trigger worker_2   "${WORKER_2_HOOK}"
+          [ "${{ inputs.worker_3 }}" = 'true' ] && trigger worker_3   "${WORKER_3_HOOK}"
+          [ "${{ inputs.flower }}" = 'true' ] && trigger flower      "${FLOWER_HOOK}"

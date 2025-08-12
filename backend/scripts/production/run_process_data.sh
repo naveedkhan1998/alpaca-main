@@ -7,4 +7,4 @@ echo "Waiting for database to be ready..."
 python3 manage.py wait_for_db
 
 echo "Processing initial data..."
-python3 manage.py process_data
+python3 manage.py run_websocket

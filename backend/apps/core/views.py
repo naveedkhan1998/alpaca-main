@@ -1,58 +1,56 @@
 # views.py
 
-import json
+from datetime import datetime, timedelta
 import logging
 
 from django.core.cache import cache
-from django.db.models import Count
+from django.db import connection
+from django.db.models import Case, Count, IntegerField, Q, When
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status, viewsets
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from apps.core.breeze import breeze_session_manager
-from apps.core.filters import InstrumentFilter
 from apps.core.models import (
-    BreezeAccount,
+    AlpacaAccount,
+    Asset,
     Candle,
-    Exchanges,
-    Instrument,
-    PercentageInstrument,
-    SubscribedInstruments,
+    Tick,
+    WatchList,
+    WatchListAsset,
 )
 from apps.core.pagination import CandleBucketPagination, OffsetPagination
 from apps.core.serializers import (
     AggregatedCandleSerializer,
-    AllInstrumentSerializer,
-    BreezeAccountSerializer,
+    AlpacaAccountSerializer,
+    AssetSerializer,
+    CandleChartSerializer,
     CandleSerializer,
-    InstrumentSerializer,
-    SubscribedSerializer,
+    TickSerializer,
+    WatchListAssetSerializer,
+    WatchListCreateSerializer,
+    WatchListSerializer,
 )
-from apps.core.tasks import (
-    load_instrument_candles,
-    manual_start_websocket,
-    resample_candles,
-    websocket_start,
-)
-from apps.core.utils import resample_qs
-from main import const, utils
+from apps.core.services.alpaca_service import alpaca_service
+from apps.core.services.backfill_coordinator import request_backfill
+from apps.core.tasks import alpaca_sync_task
+from apps.core.utils import get_timeframe
 
 logger = logging.getLogger(__name__)
 
 
-class BreezeAccountViewSet(viewsets.ModelViewSet):
+class AlpacaAccountViewSet(viewsets.ModelViewSet):
     """
-    A ViewSet for viewing and editing BreezeAccount instances.
+    A ViewSet for viewing and editing AlpacaAccount instances.
     """
 
-    serializer_class = BreezeAccountSerializer
+    serializer_class = AlpacaAccountSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return BreezeAccount.objects.filter(user=self.request.user)
+        return AlpacaAccount.objects.filter(user=self.request.user)
 
     def list(self, request):
         queryset = self.get_queryset()
@@ -77,339 +75,621 @@ class BreezeAccountViewSet(viewsets.ModelViewSet):
         instance = get_object_or_404(self.get_queryset(), pk=pk)
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         if serializer.is_valid():
-            # Check if session-related fields are being updated
-            session_fields = ["api_key", "api_secret", "session_token"]
-            credentials_updated = any(field in request.data for field in session_fields)
-
             serializer.save()
-
-            # Clear cached session if credentials were updated
-            if credentials_updated:
-                breeze_session_manager.clear_session(request.user.id)
-                logger.info(
-                    f"Cleared cached session for user {request.user.id} due to credential update."
-                )
-                # Start a new WebSocket session if credentials were updated
-                manual_start_websocket.apply_async(args=[request.user.id])
-
             return Response(
                 {"msg": "Account updated successfully", "data": serializer.data},
                 status=status.HTTP_200_OK,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=["get"], url_path="breeze_status")
-    def get_breeze_status(self, request):
+    @action(detail=False, methods=["get"], url_path="alpaca_status")
+    def get_alpaca_status(self, request):
         """
-        Retrieves the status of the Breeze session and the WebSocket connection for the authenticated user.
-
-        Returns:
-            Response: JSON containing session and WebSocket statuses.
+        Test Alpaca API connection and return status.
         """
         try:
-            user_id = self.request.user.id
 
-            # Initialize BreezeSession (retrieves cached instance or creates a new one)
-            session = breeze_session_manager.initialize_session(user_id)
+            service = alpaca_service
 
-            # Check session status by fetching funds
-            check_breeze_session = session.get_funds()
-            # Check if ticks have been received in the last 10 seconds
-            websocket_status = bool(cache.get(const.WEBSOCKET_HEARTBEAT_KEY, False))
+            # Test connection by fetching a small number of assets
+            try:
+                assets = service.list_assets(status="active", fallback_symbols=["AAPL"])
+                connection_status = len(assets) > 0
+            except Exception as e:
+                logger.error(f"Alpaca API test failed: {e}")
+                connection_status = False
 
-            # Determine session status message
-            if check_breeze_session.get("Status") == 200:
-                session_status = True
-                status_code = status.HTTP_200_OK
-            else:
-                session_status = False
-                status_code = status.HTTP_200_OK
-                logger.error(
-                    f"Breeze session check failed for user {user_id}: {check_breeze_session}"
-                )
-
-            # Construct response data
-            response_data = {
-                "session_status": session_status,
-                "websocket_status": websocket_status,
-            }
-
-            # Log the successful status check
-            logger.info(f"Breeze status checked for user {user_id}: {response_data}")
-
-            return Response({"msg": "done", "data": response_data}, status=status_code)
-
-        except BreezeAccount.DoesNotExist:
-            # Handle case where BreezeAccount does not exist for the user
-            logger.warning(
-                f"No BreezeAccount found for user ID {self.request.user.id}."
-            )
             return Response(
                 {
-                    "msg": "error",
-                    "data": {"session_status": False, "websocket_status": False},
+                    "msg": "Status checked",
+                    "data": {"connection_status": connection_status},
                 },
                 status=status.HTTP_200_OK,
             )
 
         except Exception as e:
-            # Log the exception with stack trace
-            logger.error(
-                f"Error in get_breeze_status for user ID {self.request.user.id}: {e}",
-                exc_info=True,
-            )
-
-            # Return a response indicating failure
+            logger.error(f"Error checking Alpaca status: {e}", exc_info=True)
             return Response(
                 {
-                    "msg": "error",
-                    "data": {"session_status": False, "websocket_status": False},
+                    "msg": "Error checking status",
+                    "data": {"connection_status": False},
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    @action(detail=False, methods=["post"], url_path="sync_assets")
+    def sync_assets(self, request):
+        """
+        Sync assets from Alpaca API to local database.
+        """
+        try:
+            alpaca_sync_task.delay()
+            return Response(
+                {
+                    "msg": "Assets synced started successfully",
+                    "data": "Syncing in progress. You can check the status later.",
                 },
                 status=status.HTTP_200_OK,
             )
-
-    @action(detail=False, methods=["post"], url_path="websocket_start")
-    def start_websocket(self, request):
-        try:
-            user = self.request.user
-            websocket_start.apply_async(args=[user.id])
-            return Response(
-                {"msg": "WebSocket Started successfully", "data": "WebSocket Started"},
-                status=status.HTTP_201_CREATED,
-            )
         except Exception as e:
-            logger.error(f"Error starting WebSocket: {e}", exc_info=True)
+            logger.error(f"Error syncing assets: {e}", exc_info=True)
             return Response(
-                {
-                    "msg": "Error starting WebSocket",
-                    "data": "WebSocket could not start",
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-    @action(detail=False, methods=["post"], url_path="refresh_session")
-    def refresh_session(self, request):
-        """
-        Manually refresh the Breeze session for the authenticated user.
-
-        Returns:
-            Response: JSON containing the refresh status.
-        """
-        try:
-            user_id = request.user.id
-
-            # Refresh the session (clears old and creates new)
-            session = breeze_session_manager.refresh_session(user_id)
-
-            # Test the new session
-            check_session = session.get_funds()
-
-            if check_session.get("Status") == 200:
-                logger.info(f"Session refreshed successfully for user {user_id}")
-                return Response(
-                    {
-                        "msg": "Session refreshed successfully",
-                        "data": {"session_status": True},
-                    },
-                    status=status.HTTP_200_OK,
-                )
-            else:
-                logger.warning(
-                    f"Session refresh failed for user {user_id}: {check_session}"
-                )
-                return Response(
-                    {
-                        "msg": "Session refresh failed",
-                        "data": {"session_status": False},
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-        except BreezeAccount.DoesNotExist:
-            logger.warning(f"No BreezeAccount found for user ID {request.user.id}.")
-            return Response(
-                {"msg": "No account found", "data": {"session_status": False}},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        except Exception as e:
-            logger.error(
-                f"Error refreshing session for user {request.user.id}: {e}",
-                exc_info=True,
-            )
-            return Response(
-                {"msg": "Error refreshing session", "data": {"session_status": False}},
+                {"msg": "Error syncing assets", "error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
-class InstrumentViewSet(viewsets.ReadOnlyModelViewSet):
+class AssetViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    A ViewSet for viewing Instrument instances.
+    A ViewSet for viewing Asset instances with optimized filtering and search.
     """
 
-    queryset = Instrument.objects.all()
-    serializer_class = AllInstrumentSerializer
+    # Keep base queryset lean; avoid unnecessary select_related/prefetch on Asset
+    queryset = Asset.objects.filter(status="active")
+    serializer_class = AssetSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = InstrumentFilter
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+    ]
+    pagination_class = OffsetPagination
+    search_fields = ["symbol", "name"]
+    ordering_fields = [
+        "symbol",
+        "name",
+        "created_at",
+        "asset_class",
+        "exchange",
+        "tradable",
+    ]
+    ordering = ["symbol"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # Filter by asset class (support multiple values)
+        asset_classes = self.request.query_params.getlist("asset_class")
+        if asset_classes:
+            queryset = queryset.filter(asset_class__in=asset_classes)
+
+        # Filter by exchange (support multiple values)
+        exchanges = self.request.query_params.getlist("exchange")
+        if exchanges:
+            queryset = queryset.filter(exchange__in=exchanges)
+
+        # Filter by tradable status
+        tradable = self.request.query_params.get("tradable")
+        if tradable is not None:
+            queryset = queryset.filter(tradable=tradable.lower() == "true")
+
+        # Filter by marginable status
+        marginable = self.request.query_params.get("marginable")
+        if marginable is not None:
+            queryset = queryset.filter(marginable=marginable.lower() == "true")
+
+        # Filter by shortable status
+        shortable = self.request.query_params.get("shortable")
+        if shortable is not None:
+            queryset = queryset.filter(shortable=shortable.lower() == "true")
+
+        # Filter by fractionable status
+        fractionable = self.request.query_params.get("fractionable")
+        if fractionable is not None:
+            queryset = queryset.filter(fractionable=fractionable.lower() == "true")
+
+        # Optimized search handling replacing DRF SearchFilter
+        search_term = self.request.query_params.get("search", "").strip()
+        if search_term:
+            base_qs = queryset
+            # Prefer symbol prefix for very short queries
+            if len(search_term) == 1:
+                queryset = base_qs.filter(symbol__istartswith=search_term)
+            else:
+                queryset = (
+                    base_qs.filter(
+                        Q(symbol__istartswith=search_term)
+                        | Q(symbol__iexact=search_term)
+                        | Q(name__icontains=search_term)
+                    )
+                    .annotate(
+                        search_rank=Case(
+                            When(symbol__iexact=search_term, then=0),
+                            When(symbol__istartswith=search_term, then=1),
+                            When(name__istartswith=search_term, then=2),
+                            default=3,
+                            output_field=IntegerField(),
+                        )
+                    )
+                    .order_by("search_rank", "symbol")
+                )
+
+                # Refine ordering with trigram similarity if extension available
+                try:
+                    with connection.cursor() as cur:
+                        cur.execute(
+                            "SELECT extname FROM pg_extension WHERE extname='pg_trgm'"
+                        )
+                        if cur.fetchone():
+                            queryset = queryset.extra(
+                                select={
+                                    "sym_sim": "similarity(symbol, %s)",
+                                    "name_sim": "similarity(coalesce(name,''), %s)",
+                                },
+                                select_params=[search_term, search_term],
+                            ).order_by("search_rank", "-sym_sim", "-name_sim", "symbol")
+                except Exception:
+                    pass
+
+        return queryset
 
     def list(self, request, *args, **kwargs):
-        # Validate required parameters
-        exchange_param = request.query_params.get("exchange")
-        search_param = request.query_params.get("search")
+        """
+        List all assets with pagination and caching.
+        """
+        cache_key = f"assets_list_{hash(str(sorted(request.query_params.items())))}"
+        if not any(
+            param in request.query_params for param in ["limit", "offset", "ordering"]
+        ):
+            cached_result = cache.get(cache_key)
+            if cached_result:
+                return Response(cached_result)
 
-        # Check if exchange is provided
-        if not exchange_param:
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            response_data = self.get_paginated_response(serializer.data).data
+            if len(serializer.data) <= 100:
+                cache.set(cache_key, response_data, 300)
+            return Response(response_data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = {
+            "msg": "Assets retrieved successfully",
+            "data": serializer.data,
+            "count": len(serializer.data),
+        }
+        cache.set(cache_key, response_data, 300)
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["get"], url_path="search")
+    def search_assets(self, request):
+        """
+        Optimized search assets by symbol or name with pagination and caching.
+        """
+        search_term = request.query_params.get("q", "").strip()
+
+        if not search_term:
             return Response(
-                {"msg": "Exchange is required"}, status=status.HTTP_400_BAD_REQUEST
+                {"msg": "Search term is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Check if search term is at least 2 characters
-        if search_param and len(search_param) < 2:
+        if len(search_term) < 2:
             return Response(
                 {"msg": "Search term must be at least 2 characters long"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Validate exchange exists
-        if not Exchanges.objects.filter(title=exchange_param).last():
-            return Response(
-                {"msg": "Invalid Exchange"}, status=status.HTTP_400_BAD_REQUEST
+        # Cache search results
+        cache_key = f"asset_search_{search_term.lower()}_{request.query_params.get('limit', 50)}_{request.query_params.get('offset', 0)}"
+        cached_result = cache.get(cache_key)
+        if cached_result:
+            return Response(cached_result)
+
+        base_qs = self.get_queryset()
+
+        # Prefer fast prefix search on lower(symbol) if the user is typing a ticker
+        # Use icontains as fallback on name; both backed by trigram GIN if available
+        # Rank results to show best matches first
+        queryset = (
+            base_qs.filter(
+                Q(symbol__istartswith=search_term)
+                | Q(symbol__iexact=search_term)
+                | Q(name__icontains=search_term)
             )
+            .annotate(
+                search_rank=Case(
+                    When(symbol__iexact=search_term, then=0),
+                    When(symbol__istartswith=search_term, then=1),
+                    When(name__istartswith=search_term, then=2),
+                    default=3,
+                    output_field=IntegerField(),
+                )
+            )
+            .order_by("search_rank", "symbol")
+        )
 
-        queryset = self.filter_queryset(self.get_queryset())
+        # If pg_trgm is available, optionally boost by similarity for short queries
+        try:
+            with connection.cursor() as cur:
+                cur.execute("SELECT extname FROM pg_extension WHERE extname='pg_trgm'")
+                if cur.fetchone():
+                    # Use similarity via raw extra ordering to refine ordering
+                    # Note: we don't filter by similarity threshold to keep results inclusive
+                    queryset = queryset.extra(
+                        select={
+                            "sym_sim": "similarity(symbol, %s)",
+                            "name_sim": "similarity(coalesce(name,''), %s)",
+                        },
+                        select_params=[search_term, search_term],
+                    ).order_by("search_rank", "-sym_sim", "-name_sim", "symbol")
+        except Exception:
+            # If extension check fails, continue with default queryset
+            pass
 
-        # Apply the 50-item limit for "FON" exchange if it's part of the filtered queryset
-        if exchange_param and exchange_param.upper() == "FON":
-            queryset = queryset[:50]
+        # Apply pagination to search results
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            response_data = self.get_paginated_response(serializer.data).data
+            cache.set(cache_key, response_data, 180)  # 3 minutes
+            return Response(response_data)
 
         if queryset.exists():
             serializer = self.get_serializer(queryset, many=True)
-            return Response(
-                {"msg": "Ok", "data": serializer.data}, status=status.HTTP_200_OK
-            )
+            response_data = {
+                "msg": "Assets found",
+                "data": serializer.data,
+                "count": len(serializer.data),
+            }
+            cache.set(cache_key, response_data, 180)
+            return Response(response_data, status=status.HTTP_200_OK)
 
         return Response(
-            {"msg": "No instruments found"}, status=status.HTTP_404_NOT_FOUND
+            {"msg": "No assets found", "data": [], "count": 0},
+            status=status.HTTP_200_OK,
         )
 
+    @action(detail=False, methods=["get"], url_path="stats")
+    def get_stats(self, request):
+        """
+        Get asset statistics for filter options.
+        """
+        cache_key = "asset_stats"
+        cached_stats = cache.get(cache_key)
+        if cached_stats:
+            return Response(cached_stats)
 
-class SubscribedInstrumentsViewSet(viewsets.ModelViewSet):
-    """
-    A ViewSet for viewing and editing SubscribedInstruments instances.
-    """
-
-    queryset = SubscribedInstruments.objects.all()
-    serializer_class = SubscribedSerializer
-    permission_classes = [IsAuthenticated]
-    pagination_class = OffsetPagination
-
-    def list(self, request):
         queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(
-            {"msg": "success", "data": serializer.data}, status=status.HTTP_200_OK
+
+        # Get asset class counts
+        asset_class_stats = (
+            queryset.values("asset_class")
+            .annotate(count=Count("id"))
+            .order_by("asset_class")
         )
 
-    def destroy(self, request, pk=None):
-        instrument = get_object_or_404(SubscribedInstruments, pk=pk)
-        redis_client = utils.get_redis_client("default")
-        unsubscription_queue = const.websocket_unsubscription_queue(request.user.id)
-        unsubscribed_instrument = {"stock_token": instrument.stock_token}
-        redis_client.rpush(unsubscription_queue, json.dumps(unsubscribed_instrument))
-        logger.info(
-            f"Enqueued unsubscription for instrument ID {pk} with stock token {instrument.stock_token}."
+        # Get exchange counts
+        exchange_stats = (
+            queryset.values("exchange").annotate(count=Count("id")).order_by("exchange")
         )
 
-        instrument.delete()
-        return Response({"msg": "success"}, status=status.HTTP_200_OK)
+        asset_class_choices = dict(Asset.ASSET_CLASS_CHOICES)
+        exchange_choices = dict(Asset.EXCHANGE_CHOICES)
 
-    @action(detail=True, methods=["post"], url_path="subscribe")
-    def subscribe(self, request, pk=None):
-        instrument = get_object_or_404(Instrument, pk=pk)
-        data = InstrumentSerializer(instrument).data
-        data.pop("id", None)
+        stats = {
+            "asset_classes": [
+                {
+                    "value": stat["asset_class"],
+                    "label": asset_class_choices.get(
+                        stat["asset_class"], stat["asset_class"]
+                    ),
+                    "count": stat["count"],
+                }
+                for stat in asset_class_stats
+            ],
+            "exchanges": [
+                {
+                    "value": stat["exchange"],
+                    "label": exchange_choices.get(stat["exchange"], stat["exchange"]),
+                    "count": stat["count"],
+                }
+                for stat in exchange_stats
+                if stat["exchange"]  # Filter out null exchanges
+            ],
+            "total_count": queryset.count(),
+        }
 
-        duration = request.data.get("duration")
-        exchange_id = data.pop("exchange")
-
-        if SubscribedInstruments.objects.filter(**data).exists():
-            return Response(
-                {"error": "already subscribed"}, status=status.HTTP_400_BAD_REQUEST
-            )
-
-        sub_ins = SubscribedInstruments.objects.create(exchange_id=exchange_id, **data)
-        PercentageInstrument.objects.create(instrument=sub_ins)
-        load_instrument_candles.delay(sub_ins.id, request.user.id, duration=duration)
-
-        serializer = self.get_serializer(sub_ins)
-        return Response(
-            {"msg": "success", "data": serializer.data}, status=status.HTTP_201_CREATED
-        )
+        # Cache for 30 minutes
+        cache.set(cache_key, stats, 1800)
+        return Response(stats)
 
     @action(detail=True, methods=["get"], url_path="candles")
     def candles(self, request, pk=None):
-        """
-        Retrives paginated candles for a subscribed instrument.
-        The candles are ordered by date in descending order.
-        """
-        instrument = self.get_object()
-        tf = int(request.query_params.get("tf", 1))
+        asset = self.get_object()
+        tf_minutes = get_timeframe(request)
+        offset = int(request.query_params.get("offset", 0))
+        limit = int(request.query_params.get("limit", 1000))
 
-        qs = resample_qs(instrument.id, tf)  # as before
-        total = qs.aggregate(cnt=Count("bucket", distinct=True))["cnt"]
-
-        paginator = CandleBucketPagination()
-        page = paginator.paginate_queryset(qs, request)
-        paginator.count = total
-        serializer = AggregatedCandleSerializer(page, many=True)
-        return paginator.get_paginated_response(serializer.data)
-
-
-class CandleViewSet(viewsets.ViewSet):
-    """
-    A ViewSet for handling Candle related operations.
-    """
-
-    permission_classes = [IsAuthenticated]
-
-    def get_cached_candles(self, instrument_id):
-        cache_key = f"candles_{instrument_id}"
-        cached_data = cache.get(cache_key)
-        if cached_data:
-            return cached_data
-
-        instrument = get_object_or_404(SubscribedInstruments, id=instrument_id)
-        qs = Candle.objects.filter(instrument=instrument).order_by("date")
-        data = CandleSerializer(qs, many=True).data
-
-        # Cache for 5 minutes
-        cache.set(cache_key, data, 300)
-        return data
-
-    @action(detail=False, methods=["get"], url_path="get_candles")
-    def get_candles(self, request):
-        instrument_id = request.query_params.get("id")
-        tf = request.query_params.get("tf")
-        if not instrument_id:
+        # Map minutes to stored timeframe labels
+        minutes_to_tf = {
+            1: "1T",
+            5: "5T",
+            15: "15T",
+            30: "30T",
+            60: "1H",
+            240: "4H",
+            1440: "1D",
+        }
+        tf_label = minutes_to_tf.get(tf_minutes)
+        if not tf_label:
             return Response(
-                {"msg": "Missing instrument ID"}, status=status.HTTP_400_BAD_REQUEST
+                {
+                    "msg": "Unsupported timeframe",
+                    "supported": list(minutes_to_tf.keys()),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        instrument = get_object_or_404(SubscribedInstruments, id=instrument_id)
-        qs = Candle.objects.filter(instrument=instrument).order_by("date")
+        base_qs = Candle.objects.filter(asset_id=asset.id, timeframe=tf_label)
+        total = base_qs.count()
 
-        candles = CandleSerializer(qs, many=True).data
+        candles_qs = base_qs.order_by("-timestamp")[offset : offset + limit]
+        rows = [
+            {
+                "bucket": c.timestamp,
+                "o": c.open,
+                "h_": c.high,
+                "l_": c.low,
+                "c": c.close,
+                "v_": c.volume,
+            }
+            for c in candles_qs
+        ]
+        serializer = AggregatedCandleSerializer(rows, many=True)
 
-        if tf:
-            try:
-                timeframe = int(tf)
-                new_candles = resample_candles(candles, timeframe)
-            except ValueError:
-                return Response(
-                    {"msg": "Invalid timeframe"}, status=status.HTTP_400_BAD_REQUEST
-                )
+        has_next = total > (offset + limit)
+        has_previous = offset > 0
+        return Response(
+            {
+                "results": serializer.data,
+                "count": total,
+                "next": has_next,
+                "previous": has_previous,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class WatchListViewSet(viewsets.ModelViewSet):
+    """
+    A ViewSet for viewing and editing WatchList instances.
+    """
+
+    serializer_class = WatchListSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = OffsetPagination
+
+    def get_queryset(self):
+        # Include both default watchlists and user-specific watchlists
+        return WatchList.objects.filter(
+            Q(user=self.request.user) | Q(user=None),
+            is_active=True,
+        )
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return WatchListCreateSerializer
+        return WatchListSerializer
+
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(
+                {"msg": "Watchlist created successfully", "data": serializer.data},
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=["post"], url_path="add_asset")
+    def add_asset(self, request, pk=None):
+        """
+        Add an asset to a watchlist.
+        """
+        watchlist = self.get_object()
+        asset_id = request.data.get("asset_id")
+
+        if not asset_id:
+            return Response(
+                {"msg": "Asset ID is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            asset = Asset.objects.get(pk=asset_id)
+        except Asset.DoesNotExist:
+            return Response(
+                {"msg": "Asset not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        watchlist_asset, created = WatchListAsset.objects.get_or_create(
+            watchlist=watchlist, asset=asset, defaults={"is_active": True}
+        )
+
+        # Idempotent backfill schedule via coordinator (deduped per-asset across processes)
+        request_backfill(watchlist_asset.id, source="watchlist.add_asset")
+
+        if not created and not watchlist_asset.is_active:
+            watchlist_asset.is_active = True
+            watchlist_asset.save()
+            created = True
+
+        if created:
+            serializer = WatchListAssetSerializer(watchlist_asset)
+            logger.info(
+                f"Asset {asset.symbol} added to watchlist {watchlist.name}. Historical data fetch triggered."
+            )
+            return Response(
+                {"msg": "Asset added to watchlist", "data": serializer.data},
+                status=status.HTTP_201_CREATED,
+            )
         else:
-            new_candles = candles
+            return Response(
+                {"msg": "Asset already in watchlist"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        return Response({"msg": "done", "data": new_candles}, status=status.HTTP_200_OK)
+    @action(
+        detail=True, methods=["delete"], url_path="remove_asset/(?P<asset_id>[^/.]+)"
+    )
+    def remove_asset(self, request, pk=None, asset_id=None):
+        """
+        Remove an asset from a watchlist.
+        """
+        watchlist = self.get_object()
+
+        try:
+            watchlist_asset = WatchListAsset.objects.get(
+                watchlist=watchlist, asset_id=asset_id, is_active=True
+            )
+            watchlist_asset.is_active = False
+            watchlist_asset.save()
+
+            return Response(
+                {"msg": "Asset removed from watchlist"},
+                status=status.HTTP_200_OK,
+            )
+        except WatchListAsset.DoesNotExist:
+            return Response(
+                {"msg": "Asset not found in watchlist"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
+class CandleViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    A ViewSet for viewing Candle instances.
+    """
+
+    queryset = Candle.objects.filter(is_active=True)
+    serializer_class = CandleSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = CandleBucketPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # Filter by asset
+        asset_id = self.request.query_params.get("asset_id")
+        if asset_id:
+            queryset = queryset.filter(asset_id=asset_id)
+
+        # Filter by symbol
+        symbol = self.request.query_params.get("symbol")
+        if symbol:
+            queryset = queryset.filter(asset__symbol=symbol)
+
+        # Filter by timeframe
+        timeframe = self.request.query_params.get("timeframe")
+        if timeframe:
+            queryset = queryset.filter(timeframe=timeframe)
+
+        # Filter by date range
+        start_date = self.request.query_params.get("start_date")
+        end_date = self.request.query_params.get("end_date")
+
+        if start_date:
+            try:
+                start = datetime.fromisoformat(start_date)
+                queryset = queryset.filter(timestamp__gte=start)
+            except ValueError:
+                pass
+
+        if end_date:
+            try:
+                end = datetime.fromisoformat(end_date)
+                queryset = queryset.filter(timestamp__lte=end)
+            except ValueError:
+                pass
+
+        return queryset.order_by("-timestamp")
+
+    @action(detail=False, methods=["get"], url_path="chart")
+    def get_chart_data(self, request):
+        """
+        Get chart data for a specific asset.
+        """
+        symbol = request.query_params.get("symbol")
+        timeframe = request.query_params.get("timeframe", "1D")
+        days = int(request.query_params.get("days", 30))
+
+        if not symbol:
+            return Response(
+                {"msg": "Symbol is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            asset = Asset.objects.get(symbol=symbol)
+        except Asset.DoesNotExist:
+            return Response(
+                {"msg": "Asset not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Get candles for the specified period
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days)
+
+        queryset = Candle.objects.filter(
+            asset=asset,
+            timeframe=timeframe,
+            timestamp__gte=start_date,
+            timestamp__lte=end_date,
+            is_active=True,
+        ).order_by("timestamp")
+
+        serializer = CandleChartSerializer(queryset, many=True)
+        return Response(
+            {"msg": "Chart data retrieved", "data": serializer.data},
+            status=status.HTTP_200_OK,
+        )
+
+
+class TickViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    A ViewSet for viewing Tick instances.
+    """
+
+    queryset = Tick.objects.all()
+    serializer_class = TickSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = OffsetPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # Filter by asset
+        asset_id = self.request.query_params.get("asset_id")
+        if asset_id:
+            queryset = queryset.filter(asset_id=asset_id)
+
+        # Filter by symbol
+        symbol = self.request.query_params.get("symbol")
+        if symbol:
+            queryset = queryset.filter(asset__symbol=symbol)
+
+        return queryset.order_by("-timestamp")

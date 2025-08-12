@@ -18,14 +18,14 @@ import {
   LineSeries,
 } from 'lightweight-charts';
 
-import type { Instrument } from '@/types/common-types';
+import type { Asset } from '@/types/common-types';
 import { useAppSelector } from 'src/app/hooks';
 import { selectChartType, selectTimeframe } from '../graphSlice';
 
 interface MainChartProps {
   seriesData: (BarData | LineData | HistogramData)[];
   mode: boolean;
-  obj: Instrument;
+  obj: Asset;
   setTimeScale: (timeScale: ITimeScaleApi<Time>) => void;
   emaData: LineData[];
   bollingerBandsData: {
@@ -217,12 +217,12 @@ const MainChart: React.FC<MainChartProps> = ({
     const companyName = document.createElement('span');
     companyName.className =
       'text-sm font-bold text-slate-900 dark:text-slate-100';
-    companyName.textContent = obj?.company_name || '';
+    companyName.textContent = obj?.name || '';
 
     const exchangeBadge = document.createElement('span');
     exchangeBadge.className =
       'text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded';
-    exchangeBadge.textContent = obj?.exchange_code || '';
+    exchangeBadge.textContent = obj?.symbol || '';
 
     const timeframeBadge = document.createElement('span');
     timeframeBadge.className =
@@ -346,8 +346,8 @@ const MainChart: React.FC<MainChartProps> = ({
       }
     });
   }, [
-    obj?.company_name,
-    obj?.exchange_code,
+    obj?.name,
+    obj?.symbol,
     timeframe,
     setTimeScale,
     chartType,

@@ -33,9 +33,10 @@ import { Spinner } from '@/components/ui/spinner';
 import DurationSelector from './DurationSelector';
 import { useAppSelector } from 'src/app/hooks';
 import {
-  getHasBreezeAccount,
-  getIsBreezeAccountLoading,
+  getHasAlpacaAccount,
+  getIsAlpacaAccountLoading,
 } from 'src/features/auth/authSlice';
+
 import { useIsMobile } from '@/hooks/useMobile';
 
 interface InstrumentItemProps {
@@ -54,8 +55,8 @@ const fadeInUp = {
 
 const InstrumentItem: React.FC<InstrumentItemProps> = memo(
   ({ instrument, onSubscribe, isSubscribing }) => {
-    const hasBreezeAccount = useAppSelector(getHasBreezeAccount);
-    const isBreezeAccountLoading = useAppSelector(getIsBreezeAccountLoading);
+    const hasAlpacaAccount = useAppSelector(getHasAlpacaAccount);
+    const isAlpacaAccountLoading = useAppSelector(getIsAlpacaAccountLoading);
     const [duration, setDuration] = useState<number>(4);
     const [showAccountDialog, setShowAccountDialog] = useState(false);
     const isMobile = useIsMobile();
@@ -91,7 +92,7 @@ const InstrumentItem: React.FC<InstrumentItemProps> = memo(
     }, []);
 
     const handleSubscribeClick = useCallback(() => {
-      if (!hasBreezeAccount && !isBreezeAccountLoading) {
+      if (!hasAlpacaAccount && !isAlpacaAccountLoading) {
         setShowAccountDialog(true);
         return;
       }
@@ -100,8 +101,8 @@ const InstrumentItem: React.FC<InstrumentItemProps> = memo(
       onSubscribe,
       instrument.id,
       duration,
-      hasBreezeAccount,
-      isBreezeAccountLoading,
+      hasAlpacaAccount,
+      isAlpacaAccountLoading,
     ]);
 
     const formatDate = useCallback((dateString?: string) => {
@@ -210,7 +211,7 @@ const InstrumentItem: React.FC<InstrumentItemProps> = memo(
                 variant="default"
                 size="sm"
                 onClick={handleSubscribeClick}
-                disabled={isSubscribing || isBreezeAccountLoading}
+                disabled={isSubscribing || isAlpacaAccountLoading}
                 className="w-full transition-all duration-200 shadow-md bg-primary hover:bg-primary/90 text-primary-foreground hover:shadow-lg "
               >
                 {isSubscribing ? (

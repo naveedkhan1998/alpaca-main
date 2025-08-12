@@ -51,6 +51,12 @@ export const getCeleryWorkerUrls = () => {
     url: import.meta.env.VITE_CELERY_BEAT_URL || 'http://localhost:8888/',
   });
 
+  // Add Websocket service
+  workers.push({
+    name: 'Websocket',
+    url: import.meta.env.VITE_CELERY_WEBSOCKET_URL || 'http://localhost:8889/',
+  });
+
   return workers;
 };
 

@@ -1,0 +1,62 @@
+{{- if .Values.flower.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "alpaca-main.fullname" . }}-flower
+  labels:
+    {{- include "alpaca-main.labels" . | nindent 4 }}
+    app.kubernetes.io/component: flower
+spec:
+  replicas: {{ .Values.flower.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "alpaca-main.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: flower
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "alpaca-main.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: flower
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "alpaca-main.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: flower
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.flower.image.repository }}:{{ .Values.flower.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.flower.image.pullPolicy }}
+          command: ["celery", "-A", "main", "flower", "--address=0.0.0.0", "--port={{ .Values.flower.service.port }}"]
+          env:
+            {{- range $key, $value := .Values.flower.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.flower.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end -}}

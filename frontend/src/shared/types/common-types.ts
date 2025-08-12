@@ -21,6 +21,7 @@ export interface RefreshTokenResult {
 export interface ApiResponse<T> {
   data: T;
   msg: string;
+  count?: number;
 }
 
 export interface ApiError {
@@ -32,14 +33,67 @@ export interface ApiError {
   [key: string]: unknown;
 }
 
-// Breeze related types
-export interface BreezeStatus {
-  session_status: boolean;
-  websocket_status: boolean;
+// Alpaca related types
+export interface AlpacaStatus {
+  connection_status: boolean;
 }
 
-export interface BreezeStatusResponse {
-  data: BreezeStatus;
+export interface AlpacaStatusResponse {
+  data: AlpacaStatus;
+}
+
+export interface Asset {
+  id: number;
+  alpaca_id: string;
+  symbol: string;
+  name: string;
+  asset_class: 'us_equity' | 'us_option' | 'crypto';
+  exchange: string;
+  status: 'active' | 'inactive';
+  tradable: boolean;
+  marginable: boolean;
+  shortable: boolean;
+  easy_to_borrow: boolean;
+  fractionable: boolean;
+  maintenance_margin_requirement?: number;
+  margin_requirement_long?: string;
+  margin_requirement_short?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WatchListAsset {
+  id: number;
+  asset: Asset;
+  asset_id: number;
+  added_at: string;
+  is_active: boolean;
+}
+
+export interface WatchList {
+  id: number;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  assets: WatchListAsset[];
+  asset_count: number;
+}
+
+export interface Tick {
+  id: number;
+  asset: Asset;
+  asset_symbol: string;
+  alpaca_trade_id?: number;
+  exchange_code?: string;
+  price: number;
+  size?: number;
+  conditions?: unknown;
+  tape?: string;
+  timestamp: string;
+  received_at: string;
+  used: boolean;
 }
 
 export interface PercentageInstrument {
@@ -47,6 +101,7 @@ export interface PercentageInstrument {
   is_loading: boolean;
 }
 
+// Keep legacy Instrument interface for backward compatibility during migration
 export interface Instrument {
   id: number;
   percentage: PercentageInstrument;
@@ -66,15 +121,39 @@ export interface Instrument {
 export type SubscribedInstrument = Instrument;
 
 export type Candle = {
+  id?: number;
+  asset?: Asset;
+  asset_symbol?: string;
   open: number;
   high: number;
   low: number;
   close: number;
-  date: string;
-  volume?: number;
-  time?: string | number;
+  volume: number;
+  trade_count?: number;
+  vwap?: number;
+  timeframe?: string;
+  timestamp: string;
+  date: string; // For legacy support
+  created_at?: string;
+  is_active?: boolean;
 };
 
+export interface AlpacaAccount {
+  id: number;
+  name: string;
+  api_key: string;
+  api_secret: string;
+  last_updated: string;
+  is_active: boolean;
+  user?: number;
+}
+
+export type CreateAlpacaAccount = Omit<
+  AlpacaAccount,
+  'user' | 'id' | 'last_updated'
+>;
+
+// Keep legacy BreezeAccount for backward compatibility during migration
 export interface BreezeAccount {
   id: number;
   name: string;
@@ -114,12 +193,44 @@ export interface UserRegistration
   password2: string;
 }
 
-// Query parameter types
-export interface GetCandlesParams {
-  id: number;
-  tf: string;
+// Query parameter types for Alpaca APIs
+export interface GetAssetsParams {
+  asset_class?: string;
+  exchange?: string;
+  tradable?: boolean;
+  search?: string;
+  ordering?: string;
+  limit?: number;
+  offset?: number;
 }
 
+export interface SearchAssetsParams {
+  q: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface GetWatchListsParams {
+  limit?: number;
+  offset?: number;
+}
+
+export interface GetCandlesParams {
+  asset_id?: number;
+  symbol?: string;
+  timeframe?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface GetTicksParams {
+  asset_id?: number;
+  symbol?: string;
+  limit?: number;
+  offset?: number;
+}
+
+// Legacy params for backward compatibility
 export interface GetInstrumentsParams {
   exchange?: string;
   search?: string;
@@ -137,7 +248,28 @@ export interface GetPaginatedCandlesParams {
   offset?: number;
 }
 
-// Mutation parameter types
+// Mutation parameter types for Alpaca APIs
+export interface CreateWatchListParams {
+  name: string;
+  description?: string;
+  is_active?: boolean;
+}
+
+export interface AddAssetToWatchListParams {
+  watchlist_id: number;
+  asset_id: number;
+}
+
+export interface RemoveAssetFromWatchListParams {
+  watchlist_id: number;
+  asset_id: number;
+}
+
+export interface UpdateAlpacaParams {
+  data: AlpacaAccount;
+}
+
+// Legacy mutation params for backward compatibility
 export interface SubscribeInstrumentParams {
   id: number;
   duration: number;
@@ -159,13 +291,26 @@ export interface GoogleLoginParams {
   token: string;
 }
 
-// Response types
-export interface PaginatedCandles {
-  count: number;
+// Response types for Alpaca APIs - Updated to match Django pagination format
+export interface PaginatedResponse<T> {
   next: string | null;
   previous: string | null;
-  results: Candle[];
+  count: number;
+  results: T[];
 }
+
+export interface PaginatedApiResponse<T> {
+  next: string | null;
+  previous: string | null;
+  count: number;
+  results: T[];
+  msg?: string;
+}
+
+export type PaginatedAssets = PaginatedResponse<Asset>;
+export type PaginatedWatchLists = PaginatedResponse<WatchList>;
+export type PaginatedCandles = PaginatedResponse<Candle>;
+export type PaginatedTicks = PaginatedResponse<Tick>;
 
 export interface EmailVerificationResponse {
   message: string;

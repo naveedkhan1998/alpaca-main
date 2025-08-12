@@ -1,21 +1,19 @@
 from datetime import datetime, time, timedelta
-import json
-import time as PythonTime
 
 from celery import Task, shared_task
 from celery.utils.log import get_task_logger
+from django.conf import settings
 from django.core.cache import cache
-from pytz import timezone
+from django.utils import timezone
+import pytz
 
-from apps.account.models import User
-from apps.core.breeze import breeze_session_manager
 from apps.core.models import (
+    Asset,
     Candle,
-    SubscribedInstruments,
-    Tick,
+    WatchListAsset,
 )
-from apps.core.utils import fetch_historical_data
-from main import const, utils
+
+from .services.alpaca_service import alpaca_service
 
 logger = get_task_logger(__name__)
 
@@ -31,10 +29,31 @@ class SingleInstanceTask(Task):
     """Custom task class that prevents multiple instances of the same task"""
 
     def apply_async(self, args=None, kwargs=None, task_id=None, **options):
-        # Generate a unique task_id based on the task name and user_id
+        # Generate a unique task_id based on task + logical entity to prevent duplicates
+        # Note: we scope keys differently per task type
+        key_suffix = None
         if args and len(args) > 0:
-            user_id = args[0]
-            task_id = f"{self.name}-user-{user_id}"
+            arg0 = args[0]
+            try:
+                if self.name == "fetch_historical_data":
+                    # arg0 is watchlist_asset_id → resolve to asset_id to serialize per-asset
+                    wla = (
+                        WatchListAsset.objects.filter(id=arg0)
+                        .values("asset_id")
+                        .first()
+                    )
+                    if wla:
+                        key_suffix = f"asset-{wla['asset_id']}"
+                    else:
+                        key_suffix = f"watchlist-asset-{arg0}"
+                elif self.name == "alpaca_sync" or self.name == "start_alpaca_stream":
+                    key_suffix = f"account-{arg0}"
+                else:
+                    key_suffix = f"arg0-{arg0}"
+            except Exception:
+                key_suffix = f"arg0-{arg0}"
+        if key_suffix:
+            task_id = f"{self.name}-{key_suffix}"
 
         # Check if task is already running
         from celery import current_app
@@ -53,524 +72,474 @@ class SingleInstanceTask(Task):
         return super().apply_async(args, kwargs, task_id=task_id, **options)
 
 
-@shared_task(name="manual_start_websocket")
-def manual_start_websocket(user_id: int) -> None:
+@shared_task(name="alpaca_sync", base=SingleInstanceTask)
+def alpaca_sync_task(asset_classes: list = None, batch_size: int = 1000):
     """
-    Starts a websocket session for the given user ID.
-    This task is intended to be called manually, for example, from a Django view.
-    It will create a Celery task that manages the websocket session.
-    """
+    Optimized sync task that efficiently syncs assets from Alpaca API.
 
-    # Check if the user has a valid Breeze session
-    session = breeze_session_manager.initialize_session(user_id)
-    check_breeze_session = session.get_funds()
-    if check_breeze_session.get("Status") == 200:
-        logger.info("Starting websocket session for user %s", user_id)
-        # Trigger the websocket task with deduplication
-        result = websocket_start.apply_async(args=[user_id])
-        if result is None:
-            logger.info(
-                f"WebSocket task for user {user_id} is already running. Skipping."
-            )
-
-
-@shared_task(bind=True, base=SingleInstanceTask, name="websocket_start")
-def websocket_start(_self, user_id: int):
+    Args:
+        alpaca_account_id: ID of the Alpaca account to use for API calls
+        asset_classes: List of asset classes to sync (defaults to all: ["us_equity", "us_option", "crypto"])
+        batch_size: Number of assets to process in each batch
     """
-    Initializes the WebSocket connection for the user and subscribes to feeds
-    for instruments. Listens for new subscription requests and subscribes dynamically.
-    Only one instance per user is allowed to run at a time.
-    """
+    if asset_classes is None:
+        asset_classes = ["us_equity", "us_option", "crypto"]
 
     try:
-        # Retrieve the user
-        try:
-            user = User.objects.get(pk=user_id)
-        except User.DoesNotExist:
-            logger.warning(f"No user found with id {user_id}.")
-            return
 
-        # Initialize WebSocket session
-        sess = breeze_session_manager.initialize_session(user_id)
-        sess.ws_connect()
+        service = alpaca_service
 
-        # Subscribe to initial instruments
-        # sub_ins = SubscribedInstruments.objects.all()
-        load_candles.delay(user.pk)  # Asynchronously load candle data
+        total_created = 0
+        total_updated = 0
+        total_errors = 0
 
-        def on_ticks(ticks):
-            tick_handler.delay(ticks)
+        # Process each asset class
+        for asset_class in asset_classes:
+            logger.info(f"Starting sync for asset class: {asset_class}")
 
-        # if sub_ins.exists():
-        #     for ins in sub_ins:
-        #         if ins.percentage.is_loading:
-        #             ins.percentage.percentage = 0
-        #             ins.percentage.is_loading = False
-        #             ins.percentage.save()
-        #             sess.subscribe_feeds(stock_token=ins.stock_token)
-
-        sess.on_ticks = on_ticks
-        logger.info("WebSocket connection established and initial subscriptions set.")
-
-        # Access Redis via Django's cache
-        redis_client = utils.get_redis_client("default")
-        subscription_queue = const.websocket_subscription_queue(user_id)
-        unsubscription_queue = const.websocket_unsubscription_queue(user_id)
-
-        count = 0
-        while True:
             try:
-                if count >= 10:
-                    cache.set(
-                        const.WEBSOCKET_HEARTBEAT_KEY,
-                        True,
-                        timeout=const.WEBSOCKET_HEARTBEAT_TTL,
-                    )
-                    count = 0
-                count += 1
-                # Attempt to pop a new subscription from the queue with a timeout
-                subscription = redis_client.blpop(subscription_queue, timeout=5)
-                if subscription:
-                    _, data = subscription
-                    subscription_data = json.loads(data)
-                    stock_token = subscription_data.get("stock_token")
+                # Fetch assets from Alpaca with fallback for data-only keys
+                fallback_symbols = (
+                    ["AAPL", "GOOGL", "MSFT", "TSLA", "NVDA"]
+                    if asset_class == "us_equity"
+                    else None
+                )
 
-                    if stock_token:
-                        # Subscribe to the new instrument
-                        sess.subscribe_feeds(stock_token=stock_token)
-                        logger.info(f"Subscribed to new instrument: {stock_token}")
-                unsubscribetion = redis_client.blpop(unsubscription_queue, timeout=5)
-                if unsubscribetion:
-                    _, data = unsubscribetion
-                    unsubscription_data = json.loads(data)
-                    stock_token = unsubscription_data.get("stock_token")
-                    if stock_token:
-                        # Unsubscribe from the instrument
-                        sess.unsubscribe_feeds(stock_token=stock_token)
-                        logger.info(f"Unsubscribed from instrument: {stock_token}")
+                assets_data = service.list_assets(
+                    status="active",
+                    asset_class=asset_class,
+                    fallback_symbols=fallback_symbols,
+                )
+
+                if not assets_data:
+                    logger.warning(f"No assets returned for asset class: {asset_class}")
+                    continue
+
+                logger.info(f"Fetched {len(assets_data)} assets for {asset_class}")
+
+                # Get existing assets in batches to avoid memory issues
+                existing_alpaca_ids = set(
+                    Asset.objects.filter(asset_class=asset_class).values_list(
+                        "alpaca_id", flat=True
+                    )
+                )
+
+                assets_to_create = []
+                assets_to_update = []
+
+                # Separate assets into create vs update batches
+                for asset_data in assets_data:
+                    alpaca_id = asset_data.get("id", asset_data["symbol"])
+
+                    asset_dict = {
+                        "alpaca_id": alpaca_id,
+                        "symbol": asset_data["symbol"],
+                        "name": asset_data.get("name", ""),
+                        "asset_class": asset_data.get("class", asset_class),
+                        "exchange": asset_data.get("exchange"),
+                        "status": asset_data.get("status", "active"),
+                        "tradable": asset_data.get("tradable", False),
+                        "marginable": asset_data.get("marginable", False),
+                        "shortable": asset_data.get("shortable", False),
+                        "easy_to_borrow": asset_data.get("easy_to_borrow", False),
+                        "fractionable": asset_data.get("fractionable", False),
+                        "maintenance_margin_requirement": asset_data.get(
+                            "maintenance_margin_requirement"
+                        ),
+                        "margin_requirement_long": asset_data.get(
+                            "margin_requirement_long"
+                        ),
+                        "margin_requirement_short": asset_data.get(
+                            "margin_requirement_short"
+                        ),
+                    }
+
+                    if alpaca_id in existing_alpaca_ids:
+                        assets_to_update.append(asset_dict)
+                    else:
+                        assets_to_create.append(Asset(**asset_dict))
+
+                # Bulk create new assets
+                if assets_to_create:
+                    try:
+                        created_assets = Asset.objects.bulk_create(
+                            assets_to_create,
+                            batch_size=batch_size,
+                            ignore_conflicts=True,
+                        )
+                        created_count = len(created_assets)
+                        total_created += created_count
+                        logger.info(
+                            f"Bulk created {created_count} new assets for {asset_class}"
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"Error bulk creating assets for {asset_class}: {e}"
+                        )
+                        total_errors += len(assets_to_create)
+
+                # Bulk update existing assets
+                if assets_to_update:
+                    try:
+                        # For updates, we need to fetch existing objects and update them
+                        alpaca_ids_to_update = [
+                            asset["alpaca_id"] for asset in assets_to_update
+                        ]
+                        existing_assets = {
+                            asset.alpaca_id: asset
+                            for asset in Asset.objects.filter(
+                                alpaca_id__in=alpaca_ids_to_update,
+                                asset_class=asset_class,
+                            )
+                        }
+
+                        assets_to_bulk_update = []
+                        for asset_data in assets_to_update:
+                            alpaca_id = asset_data["alpaca_id"]
+                            if alpaca_id in existing_assets:
+                                existing_asset = existing_assets[alpaca_id]
+
+                                # Update fields
+                                for field, value in asset_data.items():
+                                    if field != "alpaca_id":  # Don't update the ID
+                                        setattr(existing_asset, field, value)
+
+                                assets_to_bulk_update.append(existing_asset)
+
+                        if assets_to_bulk_update:
+                            Asset.objects.bulk_update(
+                                assets_to_bulk_update,
+                                [
+                                    "symbol",
+                                    "name",
+                                    "asset_class",
+                                    "exchange",
+                                    "status",
+                                    "tradable",
+                                    "marginable",
+                                    "shortable",
+                                    "easy_to_borrow",
+                                    "fractionable",
+                                    "maintenance_margin_requirement",
+                                    "margin_requirement_long",
+                                    "margin_requirement_short",
+                                ],
+                                batch_size=batch_size,
+                            )
+                            updated_count = len(assets_to_bulk_update)
+                            total_updated += updated_count
+                            logger.info(
+                                f"Bulk updated {updated_count} existing assets for {asset_class}"
+                            )
+
+                    except Exception as e:
+                        logger.error(
+                            f"Error bulk updating assets for {asset_class}: {e}"
+                        )
+                        total_errors += len(assets_to_update)
+
+                logger.info(
+                    f"Completed sync for {asset_class}: {len(assets_to_create)} created, {len(assets_to_update)} updated"
+                )
 
             except Exception as e:
-                logger.error(f"Error while processing subscription: {e}", exc_info=True)
-
-            # Implement a short sleep to prevent tight looping
-            PythonTime.sleep(1)
-
-    except Exception as e:
-        logger.error(f"Error in websocket_start: {e}", exc_info=True)
-    finally:
-        # Clean up: Disconnect WebSocket and release the lock
-        try:
-            sess.ws_disconnect()
-            logger.info("WebSocket connection closed.")
-        except Exception as e:
-            logger.error(f"Error while disconnecting WebSocket: {e}", exc_info=True)
-
-
-@shared_task(name="tick_handler")
-def tick_handler(ticks):
-    """
-    Processes incoming tick data by storing it in the database if within market hours.
-
-    Args:
-        ticks (dict): A dictionary containing tick data with keys 'ltt', 'symbol', and 'last'.
-    """
-    try:
-        # Set the time zone to India
-        india_tz = timezone("Asia/Kolkata")
-
-        # Get the current time in India
-        current_time_in_india = datetime.now(india_tz).time()
-
-        # Define market hours
-        market_start = time(9, 15)
-        market_end = time(15, 30)
-
-        # Check if it's within the market hours in India
-        if market_start <= current_time_in_india <= market_end:
-            date = datetime.strptime(ticks["ltt"], "%a %b %d %H:%M:%S %Y")
-            sub_ins = SubscribedInstruments.objects.filter(
-                stock_token=ticks["symbol"]
-            ).first()
-            if sub_ins:
-                volume = 0
-                if ticks["ltq"]:
-                    volume = ticks["ltq"]
-                Tick.objects.create(
-                    instrument=sub_ins, ltp=ticks["last"], ltq=volume, date=date
+                logger.error(
+                    f"Error syncing asset class {asset_class}: {e}", exc_info=True
                 )
-                logger.info(
-                    f"Tick saved for instrument {sub_ins.stock_token} at {date}."
-                )
-            else:
-                logger.warning(
-                    f"No subscribed instrument found for symbol: {ticks['symbol']}"
-                )
-        else:
-            logger.info("Tick received outside of market hours. Ignored.")
-    except Exception as e:
-        logger.error(f"Error in tick_handler: {e}", exc_info=True)
-
-
-@shared_task(name="candle_maker")
-def candle_maker():
-    """
-    Initiates the candle-making process for all subscribed instruments by delegating
-    to the 'sub_candle_maker' task for each instrument.
-    """
-    try:
-        sub_ins = SubscribedInstruments.objects.all()
-        if sub_ins.exists():
-            for ins in sub_ins:
-                if ins.percentage.is_loading:
-                    sub_candle_maker.delay(ins.id)
-            logger.info(f"Initiated candle making for {sub_ins.count()} instruments.")
-        else:
-            logger.info("No subscribed instruments found for candle making.")
-    except Exception as e:
-        logger.error(f"Error in candle_maker: {e}", exc_info=True)
-
-
-@shared_task(name="sub_candle_maker")
-def sub_candle_maker(ins_id: int):
-    """
-    Processes ticks for a specific instrument to create or update the most recent candle.
-
-    Args:
-        ins_id (int): The ID of the subscribed instrument.
-    """
-    try:
-        ticks = Tick.objects.filter(instrument_id=ins_id, used=False).order_by("date")
-        if not ticks.exists():
-            logger.info(f"No new ticks to process for instrument ID {ins_id}.")
-            return
-
-        for tick in ticks:
-            # buy_volume = tick.get("totalBuyQt", 0)
-            # sell_volume = tick.get("totalSellQ", 0)
-            candle_time = tick.date.replace(second=0, microsecond=0)
-            try:
-                # Try to get a single candle
-                candle, created = Candle.objects.get_or_create(
-                    instrument_id=ins_id,
-                    date=candle_time,
-                    defaults={
-                        "open": tick.ltp,
-                        "high": tick.ltp,
-                        "low": tick.ltp,
-                        "close": tick.ltp,
-                        "volume": tick.ltq,
-                    },
-                )
-            except Candle.MultipleObjectsReturned:
-                # If multiple candles exist for the same time, merge them
-                candles = list(
-                    Candle.objects.filter(instrument_id=ins_id, date=candle_time)
-                )
-                logger.warning(
-                    f"Multiple candles found for instrument ID {ins_id} at {candle_time}. Merging."
-                )
-
-                # Create a new merged candle with the first candle's open and earliest date
-                merged_candle = candles[0]
-
-                # Find the lowest low, highest high, and sum volumes
-                for c in candles[1:]:
-                    merged_candle.low = min(merged_candle.low, c.low)
-                    merged_candle.high = max(merged_candle.high, c.high)
-                    merged_candle.volume += c.volume
-                    # Keep the latest close
-                    merged_candle.close = c.close
-
-                # Save the merged candle and delete others
-                merged_candle.save()
-                Candle.objects.filter(instrument_id=ins_id, date=candle_time).exclude(
-                    id=merged_candle.id
-                ).delete()
-
-                # Use the merged candle for further processing
-                candle = merged_candle
-                created = False
-
-            if not created:
-                updated = False
-                if candle.low > tick.ltp:
-                    candle.low = tick.ltp
-                    updated = True
-                if candle.high < tick.ltp:
-                    candle.high = tick.ltp
-                    updated = True
-                if candle.low <= tick.ltp <= candle.high:
-                    candle.close = tick.ltp
-                    updated = True
-                if updated:
-                    candle.volume += tick.ltq
-                    candle.save()
-                    logger.info(
-                        f"Candle updated for instrument ID {ins_id} at {candle_time}."
-                    )
-                else:
-                    logger.debug(
-                        f"No update required for candle at {candle_time} for instrument ID {ins_id}."
-                    )
-
-        # Delete ticks after use
-        count = ticks.count()
-        ticks.delete()
-        logger.info(
-            f"Processed and marked {count} ticks as used for instrument ID {ins_id}."
-        )
-    except Exception as e:
-        logger.error(
-            f"Error in sub_candle_maker for instrument ID {ins_id}: {e}", exc_info=True
-        )
-
-
-@shared_task(name="load_instrument_candles")
-def load_instrument_candles(ins_id: int, user_id: int, duration: int = 4):
-    """
-    Loads historical candle data for a specific instrument within a given duration.
-
-    Args:
-        ins_id (int): The ID of the subscribed instrument.
-        user_id (int): The ID of the user initiating the request.
-        duration (int, optional): Number of weeks of historical data to fetch. Defaults to 4.
-    """
-    try:
-        sess = breeze_session_manager.initialize_session(user_id)
-        sub_ins = (
-            SubscribedInstruments.objects.filter(id=ins_id)
-            .select_related("percentage")
-            .first()
-        )
-
-        if not sub_ins:
-            logger.warning(f"Subscribed instrument with ID {ins_id} does not exist.")
-            return
-
-        qs = Candle.objects.filter(instrument=sub_ins).order_by("date")
-        india_tz = timezone("Asia/Kolkata")
-
-        # Define the end and start dates
-        end = datetime.now(india_tz)
-        start = end - timedelta(weeks=duration)
-
-        if qs.exists():
-            start = qs.last().date
-
-        expiry = None
-        if sub_ins.expiry:
-            expiry = sub_ins.expiry
-
-        # Define a callback function to process data batches as they arrive
-        def process_candle_batch(batch_data):
-            candles_to_create = []
-
-            # Log batch processing start time
-            batch_start = datetime.now()
-            logger.info(
-                f"Processing batch of {len(batch_data)} candles for instrument ID {ins_id}"
-            )
-
-            for item in batch_data:
-                date = datetime.strptime(item["datetime"], "%Y-%m-%d %H:%M:%S")
-                market_open_time = date.replace(
-                    hour=9, minute=15, second=0, microsecond=0
-                )
-                market_close_time = date.replace(
-                    hour=15, minute=30, second=0, microsecond=0
-                )
-
-                if (
-                    date.time() < market_open_time.time()
-                    or date.time() > market_close_time.time()
-                ):
-                    continue
-                # now convert date to India timezone
-                date = india_tz.localize(date)
-                candle = Candle(
-                    instrument=sub_ins,
-                    date=date,
-                    open=item["open"],
-                    close=item["close"],
-                    low=item["low"],
-                    high=item["high"],
-                    volume=item.get("volume", 0),
-                )
-                candles_to_create.append(candle)
-
-            # Bulk create the batch of candles immediately
-            if candles_to_create:
-                db_start = datetime.now()
-                Candle.objects.bulk_create(candles_to_create, ignore_conflicts=True)
-                db_time = datetime.now() - db_start
-                batch_time = datetime.now() - batch_start
-
-                logger.info(
-                    f"Created {len(candles_to_create)} candles for instrument ID {ins_id}. "
-                    f"DB time: {db_time.total_seconds():.2f}s, Total time: {batch_time.total_seconds():.2f}s"
-                )
-
-        # Fetch and process historical data using the callback with reverse order
-        logger.info(
-            f"Starting historical data fetch for instrument ID {ins_id} from {start} to {end}"
-        )
-        fetch_historical_data(
-            sess,
-            start,
-            end,
-            sub_ins.short_name,
-            expiry,
-            sub_ins.stock_token,
-            sub_ins,
-            batch_callback=process_candle_batch,
-            reverse_order=True,
-        )
-
-        # Update percentage loading status
-        percentage = sub_ins.percentage
-        percentage.percentage = 100
-        percentage.is_loading = True
-        percentage.save()
-
-        # Enqueue the subscription request in Redis cache
-        #
-        redis_client = utils.get_redis_client("default")
-        subscription = {"stock_token": sub_ins.stock_token}
-        subscription_queue = const.websocket_subscription_queue(user_id)
-        redis_client.rpush(subscription_queue, json.dumps(subscription))
-        logger.info(
-            f"Enqueued subscription for instrument ID {ins_id} with stock token {sub_ins.stock_token}."
-        )
-        logger.info(f"Completed loading candles for instrument ID {ins_id}.")
-
-    except Exception as e:
-        logger.error(
-            f"Error in load_instrument_candles for instrument ID {ins_id}: {e}",
-            exc_info=True,
-        )
-
-
-@shared_task(name="load_candles")
-def load_candles(user_id: int):
-    """
-    Loads historical candle data for all subscribed instruments for a given user.
-
-    Args:
-        user_id (int): The ID of the user initiating the request.
-    """
-    try:
-        sub_ins_queryset = SubscribedInstruments.objects.all()
-
-        if not sub_ins_queryset.exists():
-            logger.info("No subscribed instruments found to load candles.")
-            return
-
-        for ins in sub_ins_queryset:
-            load_instrument_candles.delay(ins.id, user_id, duration=4)
-
-        logger.info(
-            f"Initiated loading candles for {sub_ins_queryset.count()} instruments."
-        )
-    except Exception as e:
-        logger.error(f"Error in load_candles: {e}", exc_info=True)
-
-
-@shared_task(name="resample_candles")
-def resample_candles(candles: list, timeframe: int) -> list:
-    """
-    Resamples a list of candle data to a specified timeframe.
-
-    Args:
-        candles (list): A list of candle dictionaries containing 'date', 'open', 'high', 'low', 'close', and 'volume'.
-        timeframe (int): The timeframe in minutes to resample the candles.
-
-    Returns:
-        list: A list of resampled candle dictionaries.
-    """
-    if not candles:
-        logger.warning("No candles provided for resampling.")
-        return []
-
-    try:
-        resampled_candles = []
-        current_time = datetime.fromisoformat(candles[0]["date"])
-        next_time = current_time + timedelta(minutes=timeframe)
-        current_open = candles[0]["open"]
-        current_high = float("-inf")
-        current_low = float("inf")
-        current_close = None
-        current_volume = 0
-        current_day = current_time.date()
-
-        for candle in candles:
-            candle_date = datetime.fromisoformat(candle["date"])
-            candle_day = candle_date.date()
-
-            # Check if the day has changed
-            if candle_day != current_day:
-                # Include the last incomplete candle of the previous day
-                resampled_candles.append(
-                    {
-                        "open": current_open,
-                        "high": current_high,
-                        "low": current_low,
-                        "close": current_close,
-                        "volume": current_volume,
-                        "date": current_time.isoformat(),
-                    }
-                )
-                # Reset for the new day
-                current_time = candle_date
-                next_time = current_time + timedelta(minutes=timeframe)
-                current_open = candle["open"]
-                current_high = candle["high"]
-                current_low = candle["low"]
-                current_volume = candle["volume"]
-                current_close = candle["close"]
-                current_day = candle_day
+                total_errors += 1
                 continue
 
-            if candle_date >= next_time:
-                resampled_candles.append(
-                    {
-                        "open": current_open,
-                        "high": current_high,
-                        "low": current_low,
-                        "close": current_close,
-                        "volume": current_volume,
-                        "date": current_time.isoformat(),
-                    }
-                )
-                current_time = next_time
-                next_time = current_time + timedelta(minutes=timeframe)
-                current_open = candle["open"]
-                current_high = candle["high"]
-                current_low = candle["low"]
-                current_volume = candle["volume"]
-            else:
-                current_high = max(current_high, candle["high"])
-                current_low = min(current_low, candle["low"])
-                current_volume += candle["volume"]
+        result = {
+            "success": True,
+            "total_created": total_created,
+            "total_updated": total_updated,
+            "total_errors": total_errors,
+            "asset_classes_processed": asset_classes,
+        }
 
-            current_close = candle["close"]
-
-        # Include the last incomplete candle
-        resampled_candles.append(
-            {
-                "open": current_open,
-                "high": current_high,
-                "low": current_low,
-                "close": current_close,
-                "volume": current_volume,
-                "date": current_time.isoformat(),
-            }
-        )
-
-        logger.info(
-            f"Resampled {len(resampled_candles)} candles to a {timeframe}-minute timeframe."
-        )
-        return resampled_candles
+        logger.info(f"Asset sync completed: {result}")
+        return result
 
     except Exception as e:
-        logger.error(f"Error in resample_candles: {e}", exc_info=True)
-        return []
+        error_msg = f"Critical error in alpaca_sync_task: {e}"
+        logger.error(error_msg, exc_info=True)
+        return {"success": False, "error": error_msg}
+
+
+@shared_task(name="fetch_historical_data", base=SingleInstanceTask)
+def fetch_historical_data(watchlist_asset_id: int):
+    """
+    Backfill strategy:
+    1) Fetch only 1-minute bars from Alpaca and persist as 1T.
+    2) For each higher timeframe (5T, 15T, 30T, 1H, 4H, 1D), resample from stored 1T
+       to compute OHLCV and persist, storing the list of minute candle IDs used.
+    """
+    watchlist_asset = (
+        WatchListAsset.objects.filter(id=watchlist_asset_id)
+        .select_related("asset", "watchlist__user")
+        .first()
+    )
+    if not watchlist_asset:
+        logger.error(f"WatchListAsset with ID {watchlist_asset_id} does not exist.")
+        return
+
+    asset = watchlist_asset.asset
+    symbol = asset.symbol
+
+    # Acquire per-asset distributed lock to avoid duplicate backfills
+    RUNNING_TTL = 60 * 10  # 10 minutes; adjust as needed
+    running_key = f"backfill:running:{asset.id}"
+    if not cache.add(running_key, 1, timeout=RUNNING_TTL):
+        logger.info(
+            "Backfill already running for asset_id=%s symbol=%s — skipping.",
+            asset.id,
+            symbol,
+        )
+        return
+
+    try:
+
+        service = alpaca_service
+
+        # Define timeframes
+        TF_LIST = [
+            ("1T", timedelta(minutes=1)),
+            ("5T", timedelta(minutes=5)),
+            ("15T", timedelta(minutes=15)),
+            ("30T", timedelta(minutes=30)),
+            ("1H", timedelta(hours=1)),
+            ("4H", timedelta(hours=4)),
+            ("1D", timedelta(days=1)),
+        ]
+
+        end_date = timezone.now()
+
+        # Step 1: Fetch 1T only
+        try:
+            last_1t = (
+                Candle.objects.filter(asset=asset, timeframe="1T")
+                .order_by("-timestamp")
+                .first()
+            )
+            start_date_1t = (
+                last_1t.timestamp + timedelta(minutes=1)
+                if last_1t
+                else end_date - timedelta(days=settings.HISTORIC_DATA_LOADING_LIMIT)
+            )
+
+            if start_date_1t < end_date:
+                # chunk by 10 days, but create newest first by walking backwards
+                current_end, created_total = end_date, 0
+                while current_end > start_date_1t:
+                    r_start = max(start_date_1t, current_end - timedelta(days=10))
+                    start_str = r_start.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    end_str = current_end.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    try:
+                        resp = service.get_historic_bars(
+                            symbol=symbol,
+                            start=start_str,
+                            end=end_str,
+                            sort="desc",  # fetch latest first
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"API error for {symbol} 1T {r_start}->{current_end}: {e}",
+                            exc_info=True,
+                        )
+                        current_end = r_start
+                        continue
+
+                    # Treat missing or null bars as no data (already up-to-date)
+                    bars = (resp or {}).get("bars") or []
+                    candles = []
+                    for bar in bars:
+                        ts = datetime.fromisoformat(bar["t"].replace("Z", "+00:00"))
+                        # optional filter market hours only
+                        if not _is_market_hours(ts):
+                            continue
+                        candles.append(
+                            Candle(
+                                asset=asset,
+                                timestamp=ts,
+                                open=float(bar["o"]),
+                                high=float(bar["h"]),
+                                low=float(bar["l"]),
+                                close=float(bar["c"]),
+                                volume=int(bar.get("v", 0)),
+                                trade_count=bar.get("n"),
+                                vwap=bar.get("vw"),
+                                timeframe="1T",
+                            )
+                        )
+                    if candles:
+                        # Order of insertion follows API order (latest-first), which is desired
+                        Candle.objects.bulk_create(candles, ignore_conflicts=True)
+                        created_total += len(candles)
+                    current_end = r_start
+                logger.info(
+                    "Backfilled %d 1T candles for %s (newest first)",
+                    created_total,
+                    symbol,
+                )
+        except Exception as e:
+            logger.error("Error backfilling 1T for %s: %s", symbol, e, exc_info=True)
+
+        # Step 2: Resample from 1T to higher TFs and persist with linkage
+        for tf, delta in TF_LIST:
+            if tf == "1T":
+                continue
+            try:
+                last_tf = None
+
+                candle_count = (
+                    Candle.objects.filter(asset=asset, timeframe=tf)
+                    .order_by("-timestamp")
+                    .count()
+                )
+
+                if candle_count > 2:
+                    last_tf = (
+                        Candle.objects.filter(asset=asset, timeframe=tf)
+                        .order_by("-timestamp")
+                        .first()
+                    )
+                # Determine start bucket to (re)build
+                start_ts = (
+                    last_tf.timestamp + delta
+                    if last_tf
+                    else (
+                        end_date - timedelta(days=settings.HISTORIC_DATA_LOADING_LIMIT)
+                    )
+                )
+
+                # Build buckets using SQL for efficiency; collect minute IDs
+                # anchor for date_bin is market open ET to align intraday buckets
+                anchor = "1970-01-01 09:30:00-05:00"
+                from django.db import connection
+
+                with connection.cursor() as cur:
+                    cur.execute(
+                        """
+                        WITH m1 AS (
+                            SELECT id, timestamp, open, high, low, close, volume
+                            FROM core_candle
+                            WHERE asset_id = %s AND timeframe = '1T' AND timestamp >= %s AND timestamp < %s
+                        ),
+                        binned AS (
+                            SELECT
+                                date_bin(INTERVAL %s, timestamp, TIMESTAMP %s) AS bucket,
+                                id,
+                                open, high, low, close, volume,
+                                row_number() OVER (PARTITION BY date_bin(INTERVAL %s, timestamp, TIMESTAMP %s) ORDER BY timestamp ASC) AS rn_open,
+                                row_number() OVER (PARTITION BY date_bin(INTERVAL %s, timestamp, TIMESTAMP %s) ORDER BY timestamp DESC) AS rn_close
+                            FROM m1
+                        ),
+                        agg AS (
+                            SELECT
+                                bucket,
+                                MIN(low) AS l,
+                                MAX(high) AS h,
+                                SUM(volume) AS v,
+                                ARRAY_AGG(id ORDER BY id) AS ids,
+                                MIN(CASE WHEN rn_open=1 THEN open END) AS o,
+                                MIN(CASE WHEN rn_close=1 THEN close END) AS c
+                            FROM binned
+                            GROUP BY bucket
+                        )
+                        SELECT bucket, o, h, l, c, v, ids
+                FROM agg
+                ORDER BY bucket DESC
+                        ;
+                        """,
+                        [
+                            asset.id,
+                            start_ts,
+                            end_date,
+                            delta,
+                            anchor,
+                            delta,
+                            anchor,
+                            delta,
+                            anchor,
+                        ],
+                    )
+                    rows = cur.fetchall()
+
+                if not rows:
+                    continue
+
+                # Upsert aggregated candles (create new + update existing)
+                buckets = [row[0] for row in rows]
+                existing = {
+                    c.timestamp: c
+                    for c in Candle.objects.filter(
+                        asset=asset, timeframe=tf, timestamp__in=buckets
+                    )
+                }
+
+                to_create = []
+                to_update = []
+                for bucket, o, h, low_, c, v, ids in rows:
+                    if bucket in existing:
+                        cobj = existing[bucket]
+                        cobj.open = float(o)
+                        cobj.high = float(h)
+                        cobj.low = float(low_)
+                        cobj.close = float(c)
+                        cobj.volume = int(v or 0)
+                        cobj.minute_candle_ids = list(ids) if ids else []
+                        to_update.append(cobj)
+                    else:
+                        to_create.append(
+                            Candle(
+                                asset=asset,
+                                timeframe=tf,
+                                timestamp=bucket,
+                                open=float(o),
+                                high=float(h),
+                                low=float(low_),
+                                close=float(c),
+                                volume=int(v or 0),
+                                minute_candle_ids=list(ids) if ids else [],
+                            )
+                        )
+
+                if to_create:
+                    Candle.objects.bulk_create(to_create, ignore_conflicts=True)
+                if to_update:
+                    Candle.objects.bulk_update(
+                        to_update,
+                        [
+                            "open",
+                            "high",
+                            "low",
+                            "close",
+                            "volume",
+                            "minute_candle_ids",
+                        ],
+                    )
+                logger.info(
+                    "Built %d %s candles for %s from 1T (newest first); updated %d",
+                    len(to_create),
+                    tf,
+                    symbol,
+                    len(to_update),
+                )
+            except Exception as e:
+                logger.error(
+                    "Error resampling %s for %s: %s", tf, symbol, e, exc_info=True
+                )
+    finally:
+        # Always release the lock and clear any queued marker for this asset
+        cache.delete(running_key)
+        cache.delete(f"backfill:queued:{asset.id}")
+
+
+def _is_market_hours(dt: datetime) -> bool:
+    eastern = pytz.timezone("US/Eastern")
+    if dt.tzinfo is None:
+        dt = timezone.make_aware(dt, pytz.UTC)
+    et = dt.astimezone(eastern)
+    if et.weekday() > 4:
+        return False
+    return time(9, 30) <= et.time() < time(16, 0)

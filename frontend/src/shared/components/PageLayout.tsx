@@ -20,8 +20,8 @@ export const PageHeader: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <div className={`mb-4 sm:mb-6 ${className}`}>
-    <h1 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl text-foreground bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+  <div className={`mb-3 sm:mb-5 ${className}`}>
+    <h1 className="text-xl font-semibold tracking-tight sm:text-2xl lg:text-3xl text-foreground">
       {children}
     </h1>
   </div>
@@ -32,7 +32,7 @@ export const PageSubHeader: React.FC<{
   className?: string;
 }> = ({ children, className = '' }) => (
   <div
-    className={`mb-4 sm:mb-6 lg:mb-8 text-base sm:text-lg text-muted-foreground leading-relaxed ${className}`}
+    className={`mb-4 sm:mb-6 text-sm sm:text-base text-muted-foreground leading-relaxed ${className}`}
   >
     {children}
   </div>
@@ -68,7 +68,7 @@ const extractTextContent = (element: React.ReactNode): string => {
     }
     return extractTextContent(element.props.children);
   }
-  return 'ICICI Breeze';
+  return 'Alpaca Trading';
 };
 
 export const PageLayout: React.FC<PageLayoutProps> = ({
@@ -80,7 +80,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   contentClassName = '',
   variant = 'default',
 }) => {
-  const pageTitle = header ? extractTextContent(header) : 'ICICI Breeze';
+  const pageTitle = header ? extractTextContent(header) : 'Alpaca Trading';
   const isMobile = useIsMobile();
 
   // Use clean variant on mobile by default
@@ -90,11 +90,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   const getContainerClasses = () => {
     switch (effectiveVariant) {
       case 'clean':
-        return 'px-4 py-8 mx-auto sm:px-6 lg:px-8';
+        return 'mx-auto w-full max-w-[1400px] px-3 py-6 sm:px-6 lg:px-8';
       case 'full-width':
-        return 'px-4 py-8 sm:px-6 lg:px-8';
+        return 'w-full px-3 py-6 sm:px-6 lg:px-8';
       default:
-        return 'container mx-auto px-4 py-8 sm:px-6 lg:px-8';
+        return 'mx-auto w-full max-w-[1400px] px-3 py-6 sm:px-6 lg:px-8';
     }
   };
 
@@ -105,17 +105,17 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       case 'full-width':
         return `${contentClassName}`;
       default:
-        return `bg-card text-card-foreground border border-border/50 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 ${contentClassName}`;
+        return `bg-card text-card-foreground border border-border/40 rounded-lg shadow-sm ${contentClassName}`;
     }
   };
 
   return (
     <>
       <Helmet>
-        <title>{pageTitle} - ICICI Breeze</title>
+        <title>{pageTitle} - Alpaca Trading</title>
       </Helmet>
       <div
-        className={`flex flex-col min-h-[100dvh] bg-gradient-to-br from-background via-background to-background/95 ${className}`}
+        className={`flex min-h-[100dvh] flex-col bg-background ${className}`}
       >
         <Navbar />
 
@@ -123,22 +123,22 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           <div className={getContainerClasses()}>
             {/* Header Section */}
             {(header || subheader || actions) && (
-              <div className="mb-8">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+              <div className="mb-6 sm:mb-8">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="flex-1 space-y-2">
                     {header}
                     {subheader}
                   </div>
                   {actions && (
                     <div className="flex-shrink-0">
-                      <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
                         {actions}
                       </div>
                     </div>
                   )}
                 </div>
                 {(header || subheader || actions) && (
-                  <Separator className="mt-8" />
+                  <Separator className="mt-6" />
                 )}
               </div>
             )}
@@ -146,12 +146,12 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             {/* Content Section */}
             {effectiveVariant === 'default' ? (
               <Card className={getContentClasses()}>
-                <CardContent className="p-8">{children}</CardContent>
+                <CardContent className="p-5 sm:p-6">{children}</CardContent>
               </Card>
             ) : (
               <div className={getContentClasses()}>
                 {effectiveVariant === 'clean' ? (
-                  <div className="space-y-6">{children}</div>
+                  <div className="space-y-4 sm:space-y-6">{children}</div>
                 ) : (
                   children
                 )}
@@ -161,8 +161,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         </div>
 
         {/* Footer */}
-        <footer className="border-t bg-background/50 backdrop-blur-sm">
-          <div className="container px-4 py-6 mx-auto sm:px-6 lg:px-8">
+        <footer className="border-t bg-background/80 backdrop-blur">
+          <div className="mx-auto w-full max-w-[1400px] px-3 py-5 sm:px-6 lg:px-8">
             <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
               <div className="flex items-center space-x-2">
                 <img
@@ -171,7 +171,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
                   className="w-6 h-6 rounded"
                 />
                 <span className="text-sm text-muted-foreground">
-                  © 2024 ICICI Breeze. All rights reserved.
+                  © {new Date().getFullYear()} MNK All rights reserved.
                 </span>
               </div>
               <div className="flex items-center space-x-4 text-sm text-muted-foreground">

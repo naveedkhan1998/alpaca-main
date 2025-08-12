@@ -2,7 +2,7 @@ services:
   # ─── log collector ─────────────────────────────────────────
   vector:
     image: timberio/vector:0.40.0-alpine
-    container_name: breeze-vector
+    container_name: alpaca-vector
     user: "0:0" # Run as root to access docker socket
     command: ["--config", "/etc/vector/vector.toml"]
     environment:
@@ -19,7 +19,7 @@ services:
   # ─── log store / index ─────────────────────────────────────
   loki:
     image: grafana/loki:3.0.1
-    container_name: breeze-loki
+    container_name: alpaca-loki
     command: ["-config.file=/etc/loki/local-config.yaml"]
     volumes:
       - loki-data:/loki
@@ -35,7 +35,7 @@ services:
   # ─── dashboards / search UI ────────────────────────────────
   grafana:
     image: grafana/grafana:11.0.0
-    container_name: breeze-grafana
+    container_name: alpaca-grafana
     ports:
       - "3000:3000"
     depends_on:
