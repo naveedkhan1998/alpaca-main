@@ -109,36 +109,61 @@ const Login: React.FC = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6"
+      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="space-y-8"
     >
-      <div className="space-y-2 text-center">
-        <h2 className="text-2xl font-bold">Welcome back</h2>
-        <p className="text-gray-600 dark:text-gray-400">
+      <motion.div 
+        className="space-y-3 text-center"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+          Welcome back
+        </h2>
+        <p className="text-muted-foreground text-lg">
           Sign in to your account to continue
         </p>
-      </div>
+      </motion.div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <motion.form 
+        onSubmit={handleSubmit} 
+        className="space-y-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+      >
         {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="w-4 h-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Alert variant="destructive" className="glass-card border-destructive/30">
+              <AlertCircle className="w-4 h-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </motion.div>
         )}
 
         {successMessage && (
-          <Alert className="text-green-800 border-green-200 bg-green-50">
-            <AlertDescription>{successMessage}</AlertDescription>
-          </Alert>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Alert className="glass-card border-success/30 text-success-foreground bg-success/10">
+              <AlertDescription>{successMessage}</AlertDescription>
+            </Alert>
+          </motion.div>
         )}
 
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <div className="relative">
-            <Mail className="absolute w-4 h-4 left-3 top-3 text-muted-foreground" />
+        <div className="space-y-3">
+          <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+          <div className="relative group">
+            <Mail className="absolute w-5 h-5 left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors duration-200" />
             <Input
               id="email"
               type="email"
@@ -146,16 +171,16 @@ const Login: React.FC = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="pl-10"
+              className="pl-11 h-12 glass-input focus-ring transition-all duration-300 hover:shadow-glow"
               disabled={isLoginLoading}
             />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <div className="relative">
-            <Lock className="absolute w-4 h-4 left-3 top-3 text-muted-foreground" />
+        <div className="space-y-3">
+          <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+          <div className="relative group">
+            <Lock className="absolute w-5 h-5 left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors duration-200" />
             <Input
               id="password"
               type="password"
@@ -163,57 +188,74 @@ const Login: React.FC = () => {
               value={formData.password}
               onChange={handleChange}
               required
-              className="pl-10"
+              className="pl-11 h-12 glass-input focus-ring transition-all duration-300 hover:shadow-glow"
               disabled={isLoginLoading}
             />
           </div>
         </div>
 
-        <Button
-          type="submit"
-          className="w-full bg-indigo-600 hover:bg-indigo-700"
-          disabled={isLoginLoading}
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          {isLoginLoading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Signing In...
-            </>
-          ) : (
-            'Sign In'
-          )}
-        </Button>
-      </form>
+          <Button
+            type="submit"
+            className="w-full h-12 glass-button shadow-glow font-semibold text-base transition-all duration-300"
+            disabled={isLoginLoading}
+          >
+            {isLoginLoading ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Signing In...
+              </>
+            ) : (
+              'Sign In'
+            )}
+          </Button>
+        </motion.div>
+      </motion.form>
 
-      <div className="relative">
+      <motion.div 
+        className="relative"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
+      >
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
+          <span className="w-full border-t border-border/50" />
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="px-2 bg-background text-muted-foreground">
+        <div className="relative flex justify-center text-sm uppercase">
+          <span className="px-4 bg-card/90 backdrop-blur-sm text-muted-foreground font-medium">
             Or continue with
           </span>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="w-full">
+      <motion.div 
+        className="w-full"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8, duration: 0.5 }}
+      >
         {isGoogleLoginLoading ? (
-          <div className="flex items-center justify-center p-4">
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            <span>Loading...</span>
+          <div className="flex items-center justify-center p-6 glass-card">
+            <Loader2 className="w-5 h-5 mr-2 animate-spin text-primary" />
+            <span className="text-muted-foreground">Loading...</span>
           </div>
         ) : (
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleFailure}
-            useOneTap
-            type="standard"
-            theme="filled_black"
-            size="large"
-            shape="rectangular"
-          />
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleFailure}
+              useOneTap
+              type="standard"
+              theme="filled_black"
+              size="large"
+              shape="rectangular"
+            />
+          </div>
         )}
-      </div>
+      </motion.div>
     </motion.div>
   );
 };

@@ -46,96 +46,123 @@ const LoginRegPage: React.FC = () => {
   ];
 
   return (
-    <div className="h-[100dvh] p-4 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 dark:from-gray-900 dark:via-purple-900 dark:to-violet-900">
-      {/* Animated background elements */}
+    <div className="h-[100dvh] p-4 gradient-aurora bg-gradient-to-br from-primary/30 via-accent/20 to-success/15 dark:from-background dark:via-card/50 dark:to-background relative overflow-hidden">
+      {/* Enhanced animated background elements */}
+      <div className="fixed inset-0 gradient-mesh"></div>
       <div className="fixed inset-0">
-        {[...Array(20)].map((_, i) => (
-          <div
+        {[...Array(15)].map((_, i) => (
+          <motion.div
             key={i}
-            className="absolute rounded-full bg-white/5 animate-pulse"
+            className="absolute rounded-full bg-white/10 dark:bg-white/5 backdrop-blur-sm"
             style={{
-              width: Math.random() * 300 + 50 + 'px',
-              height: Math.random() * 300 + 50 + 'px',
+              width: Math.random() * 200 + 80 + 'px',
+              height: Math.random() * 200 + 80 + 'px',
               top: Math.random() * 100 + '%',
               left: Math.random() * 100 + '%',
-              animationDuration: Math.random() * 3 + 2 + 's',
-              animationDelay: Math.random() * 2 + 's',
+            }}
+            animate={{
+              y: [0, -30, 0],
+              x: [0, 15, 0],
+              scale: [1, 1.1, 1],
+              opacity: [0.3, 0.6, 0.3],
+            }}
+            transition={{
+              duration: Math.random() * 4 + 4,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+              ease: "easeInOut"
             }}
           />
         ))}
       </div>
 
-      <div className="relative flex items-center justify-center h-full py-8 mx-auto ">
+      <div className="relative flex items-center justify-center h-full py-8 mx-auto">
         <motion.div
           className="w-full max-w-5xl"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <Card className="grid grid-cols-1 overflow-hidden bg-white shadow-2xl lg:grid-cols-5 dark:bg-gray-800/95 backdrop-blur-lg">
+          <Card className="grid grid-cols-1 overflow-hidden glass-card shadow-glass dark:shadow-glass-dark lg:grid-cols-5 border border-white/20 dark:border-white/10">
             {/* Left Panel - Features */}
-            <div className="relative hidden col-span-2 p-8 text-white md:block bg-gradient-to-br from-indigo-600 to-purple-700">
-              <div className="sticky space-y-8 top-8">
-                <div className="space-y-4">
-                  <h1 className="text-4xl font-bold">
+            <div className="relative hidden col-span-2 p-8 text-white md:block bg-gradient-to-br from-primary/90 via-accent/80 to-primary/70 backdrop-blur-xl">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm"></div>
+              <div className="relative space-y-8">
+                <motion.div 
+                  className="space-y-4"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                >
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent">
                     Alpaca API for North American Market Data
                   </h1>
-                  <p className="text-lg text-indigo-100">
+                  <p className="text-lg text-white/80">
                     Your gateway to intelligent trading
                   </p>
-                </div>
+                </motion.div>
 
-                <div className="space-y-6">
+                <motion.div 
+                  className="space-y-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.5 }}
+                >
                   {features.map((feature, index) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
-                      className="flex items-start space-x-3 group"
+                      transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
+                      className="flex items-start space-x-4 group cursor-pointer"
+                      whileHover={{ x: 5, transition: { duration: 0.2 } }}
                     >
-                      <div className="p-2 rounded-lg bg-white/10 backdrop-blur-lg">
+                      <div className="p-3 rounded-xl bg-white/20 backdrop-blur-lg border border-white/30 group-hover:bg-white/30 group-hover:scale-110 transition-all duration-300">
                         {feature.icon}
                       </div>
                       <div className="space-y-1">
-                        <h3 className="font-medium">{feature.title}</h3>
-                        <p className="text-sm text-indigo-100">
+                        <h3 className="font-semibold text-white">{feature.title}</h3>
+                        <p className="text-sm text-white/70">
                           {feature.description}
                         </p>
                       </div>
                     </motion.div>
                   ))}
-                </div>
+                </motion.div>
 
-                <div className="pt-4">
-                  <div className="p-4 rounded-lg bg-white/10 backdrop-blur-lg">
-                    <p className="text-sm text-indigo-100">
-                      "Experience the future of trading with our advanced
-                      platform"
+                <motion.div 
+                  className="pt-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.2, duration: 0.5 }}
+                >
+                  <div className="p-4 rounded-xl bg-white/15 backdrop-blur-lg border border-white/20">
+                    <p className="text-sm text-white/90 italic">
+                      "Experience the future of trading with our advanced platform"
                     </p>
                   </div>
-                </div>
+                </motion.div>
               </div>
             </div>
 
             {/* Right Panel - Auth Forms */}
-            <div className="col-span-full p-8 max-h-[90vh] overflow-y-auto md:col-span-3">
+            <div className="col-span-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto md:col-span-3 bg-card/50 backdrop-blur-xl">
               <Tabs
                 value={activeTab}
                 onValueChange={setActiveTab}
                 className="space-y-6"
               >
-                <TabsList className="sticky top-0 z-10 grid w-full grid-cols-2 bg-white dark:bg-gray-800">
+                <TabsList className="sticky top-0 z-10 grid w-full grid-cols-2 glass-card border border-border/30">
                   <TabsTrigger
                     value="login"
-                    className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+                    className="data-[state=active]:glass-button data-[state=active]:text-primary-foreground transition-all duration-300"
                   >
                     <LockIcon className="w-4 h-4 mr-2" />
                     Login
                   </TabsTrigger>
                   <TabsTrigger
                     value="registration"
-                    className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+                    className="data-[state=active]:glass-button data-[state=active]:text-primary-foreground transition-all duration-300"
                   >
                     <UserPlusIcon className="w-4 h-4 mr-2" />
                     Register
@@ -145,11 +172,11 @@ const LoginRegPage: React.FC = () => {
                 <motion.div className="relative">
                   <TabsContent value="login">
                     <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      transition={{ duration: 0.3 }}
-                      className="mt-4"
+                      initial={{ opacity: 0, x: -20, scale: 0.95 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: 20, scale: 0.95 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      className="mt-6"
                     >
                       <Login />
                     </motion.div>
@@ -157,11 +184,11 @@ const LoginRegPage: React.FC = () => {
 
                   <TabsContent value="registration">
                     <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      transition={{ duration: 0.3 }}
-                      className="mt-4"
+                      initial={{ opacity: 0, x: -20, scale: 0.95 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: 20, scale: 0.95 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      className="mt-6"
                     >
                       <Registration />
                     </motion.div>
@@ -170,23 +197,23 @@ const LoginRegPage: React.FC = () => {
               </Tabs>
 
               <motion.div
-                className="mt-6 text-center text-gray-500 dark:text-gray-400"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
+                className="mt-8 text-center text-muted-foreground"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8, duration: 0.4 }}
               >
                 <p className="text-sm">
                   By using this service, you agree to our{' '}
                   <a
                     href="#"
-                    className="text-indigo-600 hover:underline dark:text-indigo-400"
+                    className="text-primary hover:text-primary/80 hover:underline transition-colors duration-200"
                   >
                     Terms of Service
                   </a>{' '}
                   and{' '}
                   <a
                     href="#"
-                    className="text-indigo-600 hover:underline dark:text-indigo-400"
+                    className="text-primary hover:text-primary/80 hover:underline transition-colors duration-200"
                   >
                     Privacy Policy
                   </a>
