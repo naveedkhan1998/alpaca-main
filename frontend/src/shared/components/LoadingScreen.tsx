@@ -160,32 +160,32 @@ const LoadingScreen = () => {
   }, []);
 
   return (
-    <div className="relative min-h-[100dvh] overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Enhanced Grid Background */}
+    <div className="relative min-h-[100dvh] overflow-hidden gradient-aurora bg-gradient-to-br from-background via-primary/20 to-accent/10">
+      {/* Enhanced Grid Background with Glass Effect */}
       <div
-        className="absolute inset-0 opacity-30"
+        className="absolute inset-0 opacity-20 gradient-mesh"
         style={{
           backgroundImage: `
-            linear-gradient(rgba(139,92,246,0.3) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(139,92,246,0.3) 1px, transparent 1px)
+            linear-gradient(rgba(139,92,246,0.2) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(139,92,246,0.2) 1px, transparent 1px)
           `,
           backgroundSize: '60px 60px',
         }}
       />
 
-      {/* Floating Particles */}
+      {/* Enhanced Floating Particles */}
       {particles.map(particle => (
         <motion.div
           key={particle.id}
-          className="absolute w-1 h-1 bg-purple-400 rounded-full opacity-60"
+          className="absolute w-1.5 h-1.5 bg-primary/60 rounded-full backdrop-blur-sm"
           initial={{ x: particle.x, y: particle.y, scale: 0 }}
           animate={{
-            y: particle.y - 100,
+            y: particle.y - 120,
             scale: [0, 1, 0],
-            opacity: [0, 0.6, 0],
+            opacity: [0, 0.8, 0],
           }}
           transition={{
-            duration: 3,
+            duration: 4,
             delay: particle.delay,
             repeat: Number.POSITIVE_INFINITY,
             ease: 'easeInOut',
@@ -193,9 +193,9 @@ const LoadingScreen = () => {
         />
       ))}
 
-      {/* Brand Section */}
+      {/* Enhanced Brand Section */}
       <motion.div
-        className="absolute z-50 text-white top-8 left-8"
+        className="absolute z-50 top-8 left-8"
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8 }}
@@ -298,7 +298,7 @@ const LoadingScreen = () => {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
         >
-          <Card className="w-[400px] mx-4 border shadow-2xl border-purple-500/30 bg-slate-900/95 backdrop-blur-xl shadow-purple-500/20">
+          <Card className="w-[400px] mx-4 glass-modal border-border/30 shadow-glass-dark">
             <div className="p-8 space-y-6 h-80">
               {' '}
               {/* Fixed height container */}
@@ -307,7 +307,7 @@ const LoadingScreen = () => {
                 <AnimatePresence mode="wait">
                   <motion.h2
                     key={currentPhase}
-                    className="flex items-center justify-center h-8 text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400"
+                    className="flex items-center justify-center h-8 text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
