@@ -37,48 +37,56 @@ export const AssetCard: React.FC<Props> = ({
 }) => {
   return (
     <Card
-      className="h-full transition cursor-pointer hover:shadow-md"
+      className="h-full transition-all duration-300 cursor-pointer hover:shadow-glow/50 hover:scale-[1.02] group glass-card"
       onClick={() => onSelect(asset)}
     >
-      <CardHeader>
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-primary" />
-            <CardTitle className="text-base">{asset.symbol}</CardTitle>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl glass-card group-hover:glass-button transition-all duration-300">
+              <Building2 className="w-4 h-4 text-primary" />
+            </div>
+            <CardTitle className="text-base font-semibold">{asset.symbol}</CardTitle>
           </div>
-          <Badge className={getAssetClassColor(asset.asset_class)}>
+          <Badge className={`${getAssetClassColor(asset.asset_class)} font-medium`}>
             {asset.asset_class.replace('_', ' ').toUpperCase()}
           </Badge>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground line-clamp-1">
+        <p className="mt-2 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
           {asset.name}
         </p>
       </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-2 text-sm">
-        <div>
-          <p className="text-muted-foreground">Exchange</p>
-          <p className="truncate">{asset.exchange}</p>
+      <CardContent className="grid grid-cols-2 gap-3 text-sm pt-0">
+        <div className="space-y-1">
+          <p className="text-muted-foreground font-medium">Exchange</p>
+          <p className="truncate font-semibold">{asset.exchange}</p>
         </div>
-        <div>
-          <p className="text-muted-foreground">Tradable</p>
-          <p>{asset.tradable ? 'Yes' : 'No'}</p>
+        <div className="space-y-1">
+          <p className="text-muted-foreground font-medium">Tradable</p>
+          <p className="font-semibold text-success">{asset.tradable ? 'Yes' : 'No'}</p>
         </div>
-        <div>
-          <p className="text-muted-foreground">Marginable</p>
-          <p>{asset.marginable ? 'Yes' : 'No'}</p>
+        <div className="space-y-1">
+          <p className="text-muted-foreground font-medium">Marginable</p>
+          <p className="font-semibold">{asset.marginable ? 'Yes' : 'No'}</p>
         </div>
-        <div>
-          <p className="text-muted-foreground">Shortable</p>
-          <p>{asset.shortable ? 'Yes' : 'No'}</p>
+        <div className="space-y-1">
+          <p className="text-muted-foreground font-medium">Shortable</p>
+          <p className="font-semibold">{asset.shortable ? 'Yes' : 'No'}</p>
         </div>
       </CardContent>
-      <CardFooter className="flex items-center justify-end gap-2">
-        <Button variant="ghost" size="sm" onClick={e => onWatchlist(asset, e)}>
+      <CardFooter className="flex items-center justify-end gap-2 pt-4">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="glass-card hover:glass-button transition-all duration-300 touch-target"
+          onClick={e => onWatchlist(asset, e)}
+        >
           <Heart className="w-4 h-4" />
         </Button>
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
+          className="glass-button hover:shadow-glow transition-all duration-300 touch-target"
           onClick={e => {
             e.stopPropagation();
             onSelect(asset);

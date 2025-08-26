@@ -105,7 +105,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       case 'full-width':
         return `${contentClassName}`;
       default:
-        return `bg-card text-card-foreground border border-border/40 rounded-lg shadow-sm ${contentClassName}`;
+        return `border border-border/40 rounded-xl ${contentClassName}`;
     }
   };
 
@@ -115,43 +115,54 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         <title>{pageTitle} - Alpaca Trading</title>
       </Helmet>
       <div
-        className={`flex min-h-[100dvh] flex-col bg-background ${className}`}
+        className={`flex min-h-[100dvh] flex-col bg-gradient-to-br from-background via-background/95 to-muted/20 ${className}`}
       >
         <Navbar />
 
-        <div className="flex-1 w-full">
+        <div className="flex-1 w-full relative">
+          {/* Background decoration */}
+          <div className="absolute inset-0 gradient-mesh opacity-30 pointer-events-none"></div>
+          
           <div className={getContainerClasses()}>
             {/* Header Section */}
             {(header || subheader || actions) && (
               <div className="mb-6 sm:mb-8">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                  <div className="flex-1 space-y-2">
-                    {header}
-                    {subheader}
+                  <div className="flex-1 space-y-3">
+                    {header && (
+                      <div className="mobile-header font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                        {header}
+                      </div>
+                    )}
+                    {subheader && (
+                      <div className="text-muted-foreground leading-relaxed">
+                        {subheader}
+                      </div>
+                    )}
                   </div>
                   {actions && (
                     <div className="flex-shrink-0">
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-3">
                         {actions}
                       </div>
                     </div>
                   )}
                 </div>
                 {(header || subheader || actions) && (
-                  <Separator className="mt-6" />
+                  <Separator className="mt-6 bg-gradient-to-r from-border via-border/60 to-transparent" />
                 )}
               </div>
             )}
 
             {/* Content Section */}
             {effectiveVariant === 'default' ? (
-              <Card className={getContentClasses()}>
-                <CardContent className="p-5 sm:p-6">{children}</CardContent>
+              <Card className={`${getContentClasses()} glass-card shadow-glass transition-all duration-300 hover:shadow-glow/50`}>
+                <CardContent className="mobile-padding">{children}</CardContent>
               </Card>
             ) : (
               <div className={getContentClasses()}>
                 {effectiveVariant === 'clean' ? (
-                  <div className="space-y-4 sm:space-y-6">{children}</div>
+                  <div className="space-y-6">{children}</div>
                 ) : (
                   children
                 )}
@@ -160,36 +171,39 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="border-t bg-background/80 backdrop-blur">
-          <div className="mx-auto w-full max-w-[1400px] px-3 py-5 sm:px-6 lg:px-8">
+        {/* Enhanced Footer */}
+        <footer className="border-t glass-navbar border-border/50">
+          <div className="mx-auto w-full max-w-[1400px] mobile-padding">
             <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-              <div className="flex items-center space-x-2">
-                <img
-                  src="/android-chrome-192x192.png"
-                  alt="Logo"
-                  className="w-6 h-6 rounded"
-                />
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  <img
+                    src="/android-chrome-192x192.png"
+                    alt="Logo"
+                    className="w-6 h-6 rounded-lg"
+                  />
+                  <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/20 to-accent/10 opacity-50"></div>
+                </div>
                 <span className="text-sm text-muted-foreground">
                   © {new Date().getFullYear()} MNK All rights reserved.
                 </span>
               </div>
-              <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+              <div className="flex items-center space-x-6 text-sm text-muted-foreground">
                 <Link
                   to="/privacy"
-                  className="transition-colors hover:text-foreground"
+                  className="transition-all duration-200 hover:text-primary hover:scale-105"
                 >
                   Privacy
                 </Link>
                 <Link
                   to="/terms"
-                  className="transition-colors hover:text-foreground"
+                  className="transition-all duration-200 hover:text-primary hover:scale-105"
                 >
                   Terms
                 </Link>
                 <Link
                   to="/support"
-                  className="transition-colors hover:text-foreground"
+                  className="transition-all duration-200 hover:text-primary hover:scale-105"
                 >
                   Support
                 </Link>
