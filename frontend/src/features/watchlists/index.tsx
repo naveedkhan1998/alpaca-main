@@ -64,12 +64,19 @@ export const WatchlistsPage: React.FC = () => {
     <PageLayout
       header={
         <PageHeader>
-          <div className="flex items-center gap-3">Watchlists</div>
+          <div className="flex items-center gap-3">
+            Watchlists
+            {!!watchlists.length && (
+              <Badge variant="secondary" className="ml-1">
+                {watchlists.length}
+              </Badge>
+            )}
+          </div>
         </PageHeader>
       }
       subheader={
         <PageSubHeader>
-          Organize and monitor your favorite assets with custom watchlists.
+          Organize and monitor assets with custom lists. Filter, search, and jump to charts quickly.
         </PageSubHeader>
       }
       actions={
@@ -77,9 +84,12 @@ export const WatchlistsPage: React.FC = () => {
           {selectedWatchlist && (
             <Button variant="outline" onClick={handleBack}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Watchlists
+              Back
             </Button>
           )}
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" /> New Watchlist
+          </Button>
         </PageActions>
       }
     >
@@ -92,57 +102,27 @@ export const WatchlistsPage: React.FC = () => {
             <Card className="border-border/40">
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base font-semibold sm:text-lg">
-                    Your Watchlists
-                    {!!watchlists.length && (
-                      <span className="ml-2 text-sm text-muted-foreground">
-                        ({watchlists.length})
-                      </span>
-                    )}
-                  </CardTitle>
-                  <Button size="sm" onClick={() => setCreateOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    New
+                  <CardTitle className="text-base font-semibold sm:text-lg">Your Watchlists</CardTitle>
+                  <Button size="sm" variant="outline" onClick={() => setCreateOpen(true)}>
+                    <Plus className="w-4 h-4 mr-2" /> New
                   </Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 sm:space-y-4">
                 <div className="relative">
                   <Search className="absolute w-4 h-4 -translate-y-1/2 pointer-events-none left-3 top-1/2 text-muted-foreground" />
-                  <Input
-                    value={query}
-                    onChange={e => setQuery(e.target.value)}
-                    placeholder="Search watchlists…"
-                    className="h-9 pl-9"
-                  />
+                  <Input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search watchlists…" className="h-9 pl-9" />
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant={showActiveOnly ? 'outline' : 'default'}
-                    size="sm"
-                    onClick={() => setShowActiveOnly(false)}
-                  >
-                    All
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={showActiveOnly ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setShowActiveOnly(true)}
-                  >
-                    Active
-                  </Button>
+                <div className="inline-flex rounded-md border border-border/50 p-0.5 bg-card/60">
+                  <Button type="button" variant={showActiveOnly ? 'ghost' : 'secondary'} size="sm" className="h-8" onClick={() => setShowActiveOnly(false)}>All</Button>
+                  <Button type="button" variant={showActiveOnly ? 'secondary' : 'ghost'} size="sm" className="h-8" onClick={() => setShowActiveOnly(true)}>Active</Button>
                 </div>
 
                 {/* List body */}
                 {isLoading ? (
                   <div className="space-y-3">
                     {Array.from({ length: 6 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-full h-16 rounded-md animate-pulse bg-muted/40"
-                      />
+                      <div key={i} className="w-full h-16 rounded-md animate-pulse bg-muted/40" />
                     ))}
                   </div>
                 ) : error ? (
@@ -153,8 +133,13 @@ export const WatchlistsPage: React.FC = () => {
                     </AlertDescription>
                   </Alert>
                 ) : filtered.length === 0 ? (
-                  <div className="py-10 text-sm text-center text-muted-foreground">
-                    No watchlists found.
+                  <div className="py-10 text-center">
+                    <div className="text-sm text-muted-foreground">No watchlists found.</div>
+                    <div className="mt-3">
+                      <Button onClick={() => setCreateOpen(true)} size="sm">
+                        <Plus className="w-4 h-4 mr-2" /> Create your first list
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -164,7 +149,7 @@ export const WatchlistsPage: React.FC = () => {
                         <button
                           key={w.id}
                           onClick={() => handleWatchListSelect(w)}
-                          className={`w-full rounded-md border px-3 py-3 text-left transition-colors ${
+                          className={`w-full rounded-md border px-3 py-3 text-left transition-colors hover:shadow-sm ${
                             isActive
                               ? 'border-primary/30 bg-primary/5'
                               : 'border-border/40 hover:bg-muted/30'
@@ -225,9 +210,7 @@ export const WatchlistsPage: React.FC = () => {
           </div>
 
           {/* Detail Pane */}
-          <div
-            className={`md:col-span-7 lg:col-span-8 ${selectedWatchlist ? 'block' : 'hidden md:block'}`}
-          >
+          <div className={`md:col-span-7 lg:col-span-8 ${selectedWatchlist ? 'block' : 'hidden md:block'}`}>
             {selectedWatchlist ? (
               <WatchListDetail
                 watchlistId={selectedWatchlist.id}

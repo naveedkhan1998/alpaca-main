@@ -121,30 +121,18 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">
-                Assets
-              </p>
-              <p className="text-xl sm:text-2xl font-bold">
-                {watchlist.asset_count}
-              </p>
+          <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-3">
+            <div className="rounded-lg border border-border/40 p-3 bg-card/50">
+              <p className="text-xs font-medium text-muted-foreground">Assets</p>
+              <p className="text-xl sm:text-2xl font-bold">{watchlist.asset_count}</p>
             </div>
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">
-                Created
-              </p>
-              <p className="text-sm sm:text-base">
-                {new Date(watchlist.created_at).toLocaleDateString()}
-              </p>
+            <div className="rounded-lg border border-border/40 p-3 bg-card/50">
+              <p className="text-xs font-medium text-muted-foreground">Created</p>
+              <p className="text-sm sm:text-base">{new Date(watchlist.created_at).toLocaleDateString()}</p>
             </div>
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">
-                Last Updated
-              </p>
-              <p className="text-sm sm:text-base">
-                {new Date(watchlist.updated_at).toLocaleDateString()}
-              </p>
+            <div className="rounded-lg border border-border/40 p-3 bg-card/50">
+              <p className="text-xs font-medium text-muted-foreground">Last Updated</p>
+              <p className="text-sm sm:text-base">{new Date(watchlist.updated_at).toLocaleDateString()}</p>
             </div>
           </div>
         </CardContent>

@@ -30,6 +30,9 @@ const ContactPage = () => {
   const [submitStatus, setSubmitStatus] = useState<null | 'success' | 'error'>(
     null
   );
+  // Honeypot + timing
+  const [hp, setHp] = useState('');
+  const [formRenderedAt] = useState(() => Date.now());
 
   interface FormData {
     name: string;
@@ -58,6 +61,15 @@ const ContactPage = () => {
     setSubmitStatus(null);
 
     try {
+      // Honeypot check: if hidden field filled or submitted too fast, reject
+      const elapsed = Date.now() - formRenderedAt;
+      if (hp.trim() !== '' || elapsed < 2000) {
+        await new Promise(resolve => setTimeout(resolve, 600));
+        setSubmitStatus('success'); // Pretend success to avoid tipping off bots
+        setIsSubmitting(false);
+        setFormData({ name: '', email: '', message: '' });
+        return;
+      }
       await new Promise(resolve => setTimeout(resolve, 2000));
       setSubmitStatus('success');
       setFormData({ name: '', email: '', message: '' });
@@ -96,43 +108,46 @@ const ContactPage = () => {
       header={<PageHeader>Get in Touch</PageHeader>}
       subheader={
         <PageSubHeader>
-          Whether you’re looking to collaborate, hire, or just connect—drop a
-          message and I’ll respond shortly.
+          Whether you’re looking to collaborate, hire, or just connect—drop a message and I’ll respond shortly.
         </PageSubHeader>
       }
     >
       <PageContent>
         <div className="space-y-8">
           <div className="grid gap-8 md:grid-cols-2">
-            <Card>
+            <Card className="border-border/40">
               <CardHeader>
                 <CardTitle>Contact Information</CardTitle>
-                <CardDescription>
-                  You can also reach me through these channels:
-                </CardDescription>
+                <CardDescription>You can also reach me through these channels:</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ContactItem icon={Mail} text="Email available on request" />
-                <ContactItem
-                  icon={Phone}
-                  text="Phone number available upon request"
-                />
-                <ContactItem
-                  icon={MapPin}
-                  text="Open to remote or hybrid roles in Canada & worldwide"
-                />
+                <ContactItem icon={Phone} text="Phone number available upon request" />
+                <ContactItem icon={MapPin} text="Open to remote or hybrid roles in Canada & worldwide" />
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-border/40">
               <CardHeader>
                 <CardTitle>Send a Message</CardTitle>
-                <CardDescription>
-                  Fill out this form to contact me directly.
-                </CardDescription>
+                <CardDescription>Fill out this form to contact me directly.</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Honeypot field: leave blank */}
+                  <div aria-hidden="true" className="hidden">
+                    <label htmlFor="company">Company (leave blank)</label>
+                    <input
+                      id="company"
+                      name="company"
+                      type="text"
+                      autoComplete="off"
+                      tabIndex={-1}
+                      value={hp}
+                      onChange={e => setHp(e.target.value)}
+                      className="hidden"
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="name">Name</Label>
                     <Input
@@ -168,11 +183,7 @@ const ContactPage = () => {
                       className="min-h-[120px]"
                     />
                   </div>
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={isSubmitting}
-                  >
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -193,10 +204,7 @@ const ContactPage = () => {
           {submitStatus && (
             <Alert
               variant={submitStatus === 'success' ? 'default' : 'destructive'}
-              className={cn(
-                'animate-in fade-in-0 slide-in-from-bottom-5',
-                submitStatus === 'success' ? 'bg-green-500/15' : undefined
-              )}
+              className={cn('animate-in fade-in-0 slide-in-from-bottom-5', submitStatus === 'success' ? 'bg-success/10 border-success/30 text-success-foreground' : undefined)}
             >
               <AlertDescription>
                 {submitStatus === 'success'
