@@ -9,9 +9,16 @@ interface PanelHeaderProps {
   dense?: boolean;
 }
 
-const PanelHeader: React.FC<PanelHeaderProps> = ({ title, icon, onClose, dense }) => {
+const PanelHeader: React.FC<PanelHeaderProps> = ({
+  title,
+  icon,
+  onClose,
+  dense,
+}) => {
   return (
-    <div className={`flex items-center justify-between ${dense ? 'p-2' : 'p-4'} border-b border-border/30`}>
+    <div
+      className={`flex items-center justify-between ${dense ? 'p-2' : 'p-4'} border-b border-border/30`}
+    >
       <div className="flex items-center space-x-3">
         {icon ? (
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-chart-1/20 to-chart-1/10">
@@ -36,4 +43,3 @@ const PanelHeader: React.FC<PanelHeaderProps> = ({ title, icon, onClose, dense }
 };
 
 export default PanelHeader;
-

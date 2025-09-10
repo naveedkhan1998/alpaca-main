@@ -22,7 +22,10 @@ export function useDerivedSeries({
   isDarkMode,
   activeIndicators,
 }: UseDerivedSeriesParams) {
-  const data = useMemo(() => ({ results: candles, count: candles.length }), [candles]);
+  const data = useMemo(
+    () => ({ results: candles, count: candles.length }),
+    [candles]
+  );
 
   const seriesData = useMemo(() => {
     if (!data) return [] as any[];
@@ -39,7 +42,10 @@ export function useDerivedSeries({
     }
     if (seriesType === 'price') {
       return data.results
-        .map(({ date, close }) => ({ time: formatDate(date) as Time, value: close }))
+        .map(({ date, close }) => ({
+          time: formatDate(date) as Time,
+          value: close,
+        }))
         .reverse();
     }
     return [] as any[];
@@ -50,8 +56,12 @@ export function useDerivedSeries({
     return data.results
       .map(({ date, close, volume = 0 }, index, array) => {
         const previousClose = index > 0 ? array[index - 1].close : close;
-        const green = isDarkMode ? 'rgba(34, 197, 94, 0.8)' : 'rgba(16, 185, 129, 0.8)';
-        const red = isDarkMode ? 'rgba(239, 68, 68, 0.8)' : 'rgba(244, 63, 94, 0.85)';
+        const green = isDarkMode
+          ? 'rgba(34, 197, 94, 0.8)'
+          : 'rgba(16, 185, 129, 0.8)';
+        const red = isDarkMode
+          ? 'rgba(239, 68, 68, 0.8)'
+          : 'rgba(244, 63, 94, 0.85)';
         const color = close >= previousClose ? green : red;
         return { time: formatDate(date) as Time, value: volume, color };
       })
@@ -65,7 +75,9 @@ export function useDerivedSeries({
 
   const rsiData = useMemo(() => {
     if (!data || !activeIndicators.includes('RSI')) return [] as any[];
-    return calculateRSI(data.results.map(d => ({ ...d, time: formatDate(d.date) })))
+    return calculateRSI(
+      data.results.map(d => ({ ...d, time: formatDate(d.date) }))
+    )
       .filter(item => item.time !== undefined)
       .map(item => ({ ...item, time: item.time as Time }))
       .reverse();
@@ -73,7 +85,9 @@ export function useDerivedSeries({
 
   const atrData = useMemo(() => {
     if (!data || !activeIndicators.includes('ATR')) return [] as any[];
-    return calculateATR(data.results.map(d => ({ ...d, time: formatDate(d.date) })))
+    return calculateATR(
+      data.results.map(d => ({ ...d, time: formatDate(d.date) }))
+    )
       .map(item => ({ ...item, time: item.time as Time }))
       .reverse();
   }, [data, activeIndicators]);
@@ -87,7 +101,8 @@ export function useDerivedSeries({
   }, [data, activeIndicators]);
 
   const bollingerBandsData = useMemo(() => {
-    if (!data || !activeIndicators.includes('BollingerBands')) return [] as any[];
+    if (!data || !activeIndicators.includes('BollingerBands'))
+      return [] as any[];
     const bands = calculateBollingerBands(
       data.results.map(d => ({ ...d, time: formatDate(d.date) })).reverse()
     );
@@ -110,4 +125,3 @@ export function useDerivedSeries({
     bollingerBandsData,
   } as const;
 }
-

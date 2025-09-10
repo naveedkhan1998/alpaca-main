@@ -15,7 +15,8 @@ export function useGraphShortcuts(options: {
       const target = e.target as HTMLElement | null;
       if (!target) return;
       const tag = target.tagName?.toLowerCase();
-      if (tag === 'input' || tag === 'textarea' || target.isContentEditable) return;
+      if (tag === 'input' || tag === 'textarea' || target.isContentEditable)
+        return;
       const key = e.key.toLowerCase();
       if (key === 'f') {
         e.preventDefault();
@@ -32,4 +33,3 @@ export function useGraphShortcuts(options: {
     return () => window.removeEventListener('keydown', handler);
   }, [dispatch, showControls, showVolume, toggleFullscreen]);
 }
-

@@ -30,9 +30,9 @@ export function useFullscreen(sectionRef: React.RefObject<HTMLElement>) {
       setIsFullscreenView(active);
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    return () =>
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, [dispatch]);
 
   return { isFullscreenView, toggleFullscreen } as const;
 }
-

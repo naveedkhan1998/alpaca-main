@@ -7,15 +7,26 @@ export function useChartSync(options: {
   shouldShowVolume: boolean;
   activeIndicators: string[];
 }) {
-  const { mainChartRef, volumeChartRef, indicatorChartRef, shouldShowVolume, activeIndicators } = options;
+  const {
+    mainChartRef,
+    volumeChartRef,
+    indicatorChartRef,
+    shouldShowVolume,
+    activeIndicators,
+  } = options;
 
   const syncCharts = useCallback(() => {
     if (!mainChartRef.current) return;
 
     const getChartsToSync = () => {
       const charts: any[] = [];
-      if (shouldShowVolume && volumeChartRef.current) charts.push(volumeChartRef.current);
-      if ((activeIndicators.includes('RSI') || activeIndicators.includes('ATR')) && indicatorChartRef.current)
+      if (shouldShowVolume && volumeChartRef.current)
+        charts.push(volumeChartRef.current);
+      if (
+        (activeIndicators.includes('RSI') ||
+          activeIndicators.includes('ATR')) &&
+        indicatorChartRef.current
+      )
         charts.push(indicatorChartRef.current);
       return charts;
     };
@@ -34,7 +45,9 @@ export function useChartSync(options: {
     };
 
     const subscribeToMainChart = () => {
-      mainChartRef.current?.subscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
+      mainChartRef.current?.subscribeVisibleTimeRangeChange(
+        handleVisibleTimeRangeChange
+      );
     };
 
     handleVisibleTimeRangeChange();
@@ -42,10 +55,17 @@ export function useChartSync(options: {
 
     return () => {
       clearTimeout(timeoutId);
-      mainChartRef.current?.unsubscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
+      mainChartRef.current?.unsubscribeVisibleTimeRangeChange(
+        handleVisibleTimeRangeChange
+      );
     };
-  }, [mainChartRef, volumeChartRef, indicatorChartRef, shouldShowVolume, activeIndicators]);
+  }, [
+    mainChartRef,
+    volumeChartRef,
+    indicatorChartRef,
+    shouldShowVolume,
+    activeIndicators,
+  ]);
 
   return { syncCharts } as const;
 }
-

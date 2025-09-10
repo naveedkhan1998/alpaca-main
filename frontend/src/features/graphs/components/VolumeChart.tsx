@@ -89,7 +89,10 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
   // Keep chart sized to container
   useResizeObserver(volumeChartContainerRef, rect => {
     if (volumeChartRef.current) {
-      volumeChartRef.current.applyOptions({ width: rect.width, height: rect.height });
+      volumeChartRef.current.applyOptions({
+        width: rect.width,
+        height: rect.height,
+      });
     }
   });
 

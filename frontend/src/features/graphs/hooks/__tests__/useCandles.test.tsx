@@ -7,13 +7,29 @@ vi.mock('@/api/assetService', () => {
   const trigger = vi.fn().mockImplementation(() => ({
     unwrap: async () => ({
       results: [
-        { date: new Date('2024-01-01T00:00:00Z').toISOString(), open: 1, high: 2, low: 0.5, close: 1.5, volume: 100 },
-        { date: new Date('2024-01-01T00:01:00Z').toISOString(), open: 1.5, high: 2.5, low: 1, close: 2, volume: 120 },
+        {
+          date: new Date('2024-01-01T00:00:00Z').toISOString(),
+          open: 1,
+          high: 2,
+          low: 0.5,
+          close: 1.5,
+          volume: 100,
+        },
+        {
+          date: new Date('2024-01-01T00:01:00Z').toISOString(),
+          open: 1.5,
+          high: 2.5,
+          low: 1,
+          close: 2,
+          volume: 120,
+        },
       ],
       next: null,
     }),
   }));
-  return { useLazyGetAssetCandlesQuery: () => [trigger, { isFetching: false }] };
+  return {
+    useLazyGetAssetCandlesQuery: () => [trigger, { isFetching: false }],
+  };
 });
 
 function Harness(props: any) {
@@ -34,4 +50,3 @@ describe('useCandles', () => {
     });
   });
 });
-

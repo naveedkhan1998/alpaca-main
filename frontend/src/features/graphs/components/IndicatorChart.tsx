@@ -1,5 +1,14 @@
 import React, { useEffect, useRef } from 'react';
-import { createChart, IChartApi, ISeriesApi, ITimeScaleApi, Time, LineData, LineSeries, MouseEventParams } from 'lightweight-charts';
+import {
+  createChart,
+  IChartApi,
+  ISeriesApi,
+  ITimeScaleApi,
+  Time,
+  LineData,
+  LineSeries,
+  MouseEventParams,
+} from 'lightweight-charts';
 import { getBaseChartOptions } from '../lib/chartOptions';
 import { useResizeObserver } from '../hooks/useResizeObserver';
 
@@ -100,7 +109,6 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
             : '';
         }
       });
-
     }
 
     // Cleanup function to remove chart on unmount
@@ -122,13 +130,17 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
   // Keep chart sized to container
   useResizeObserver(indicatorChartContainerRef, rect => {
     if (indicatorChartRef.current) {
-      indicatorChartRef.current.applyOptions({ width: rect.width, height: rect.height });
+      indicatorChartRef.current.applyOptions({
+        width: rect.width,
+        height: rect.height,
+      });
     }
   });
 
   // Update chart options when mode changes
   useEffect(() => {
-    if (indicatorChartRef.current) indicatorChartRef.current.applyOptions(getBaseChartOptions(mode));
+    if (indicatorChartRef.current)
+      indicatorChartRef.current.applyOptions(getBaseChartOptions(mode));
   }, [mode]);
 
   // Update RSI series data

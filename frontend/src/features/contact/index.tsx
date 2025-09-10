@@ -108,7 +108,8 @@ const ContactPage = () => {
       header={<PageHeader>Get in Touch</PageHeader>}
       subheader={
         <PageSubHeader>
-          Whether you’re looking to collaborate, hire, or just connect—drop a message and I’ll respond shortly.
+          Whether you’re looking to collaborate, hire, or just connect—drop a
+          message and I’ll respond shortly.
         </PageSubHeader>
       }
     >
@@ -118,19 +119,29 @@ const ContactPage = () => {
             <Card className="border-border/40">
               <CardHeader>
                 <CardTitle>Contact Information</CardTitle>
-                <CardDescription>You can also reach me through these channels:</CardDescription>
+                <CardDescription>
+                  You can also reach me through these channels:
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ContactItem icon={Mail} text="Email available on request" />
-                <ContactItem icon={Phone} text="Phone number available upon request" />
-                <ContactItem icon={MapPin} text="Open to remote or hybrid roles in Canada & worldwide" />
+                <ContactItem
+                  icon={Phone}
+                  text="Phone number available upon request"
+                />
+                <ContactItem
+                  icon={MapPin}
+                  text="Open to remote or hybrid roles in Canada & worldwide"
+                />
               </CardContent>
             </Card>
 
             <Card className="border-border/40">
               <CardHeader>
                 <CardTitle>Send a Message</CardTitle>
-                <CardDescription>Fill out this form to contact me directly.</CardDescription>
+                <CardDescription>
+                  Fill out this form to contact me directly.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -183,7 +194,11 @@ const ContactPage = () => {
                       className="min-h-[120px]"
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isSubmitting}
+                  >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -204,7 +219,12 @@ const ContactPage = () => {
           {submitStatus && (
             <Alert
               variant={submitStatus === 'success' ? 'default' : 'destructive'}
-              className={cn('animate-in fade-in-0 slide-in-from-bottom-5', submitStatus === 'success' ? 'bg-success/10 border-success/30 text-success-foreground' : undefined)}
+              className={cn(
+                'animate-in fade-in-0 slide-in-from-bottom-5',
+                submitStatus === 'success'
+                  ? 'bg-success/10 border-success/30 text-success-foreground'
+                  : undefined
+              )}
             >
               <AlertDescription>
                 {submitStatus === 'success'

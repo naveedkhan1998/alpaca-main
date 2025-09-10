@@ -177,7 +177,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Analytics />
-      <AnnouncementBanner/>
+      <AnnouncementBanner />
       <GoogleOAuthProvider clientId={clientId}>
         <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
           <Suspense fallback={<PageLoadingFallback />}>

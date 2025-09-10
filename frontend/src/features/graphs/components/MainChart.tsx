@@ -268,7 +268,10 @@ const MainChart: React.FC<MainChartProps> = ({
   // Keep chart sized to container
   useResizeObserver(mainChartContainerRef, rect => {
     if (mainChartRef.current) {
-      mainChartRef.current.applyOptions({ width: rect.width, height: rect.height });
+      mainChartRef.current.applyOptions({
+        width: rect.width,
+        height: rect.height,
+      });
     }
   });
 

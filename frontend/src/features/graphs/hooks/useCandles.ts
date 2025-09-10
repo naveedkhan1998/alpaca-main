@@ -56,7 +56,8 @@ export function useCandles({
   }, [assetId, timeframe, initialLimit, getCandles, sortDescByDate]);
 
   const loadMoreHistoricalData = useCallback(async () => {
-    if (!assetId || isLoadingMoreRef.current || !hasMore || offset === 0) return;
+    if (!assetId || isLoadingMoreRef.current || !hasMore || offset === 0)
+      return;
     setIsLoadingMore(true);
     isLoadingMoreRef.current = true;
     try {
@@ -88,7 +89,15 @@ export function useCandles({
       setIsLoadingMore(false);
       isLoadingMoreRef.current = false;
     }
-  }, [assetId, timeframe, loadMoreLimit, offset, hasMore, getCandles, sortDescByDate]);
+  }, [
+    assetId,
+    timeframe,
+    loadMoreLimit,
+    offset,
+    hasMore,
+    getCandles,
+    sortDescByDate,
+  ]);
 
   const fetchLatest = useCallback(async () => {
     if (!assetId) return;
@@ -133,7 +142,10 @@ export function useCandles({
     return () => window.clearInterval(id);
   }, [autoRefresh, fetchLatest]);
 
-  const data = useMemo(() => ({ results: candles, count: candles.length }), [candles]);
+  const data = useMemo(
+    () => ({ results: candles, count: candles.length }),
+    [candles]
+  );
 
   return {
     data,

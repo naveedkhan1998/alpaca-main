@@ -6,7 +6,13 @@ import type {
   LineData,
   Time,
 } from 'lightweight-charts';
-import { CandlestickSeries, BarSeries, AreaSeries, BaselineSeries, LineSeries } from 'lightweight-charts';
+import {
+  CandlestickSeries,
+  BarSeries,
+  AreaSeries,
+  BaselineSeries,
+  LineSeries,
+} from 'lightweight-charts';
 
 export function createSeriesForType(
   chart: IChartApi,
@@ -43,8 +49,8 @@ export function createSeriesForType(
             sample && sample.length > 0 && 'close' in sample[0]
               ? (sample[0] as BarData<Time>).close
               : sample && sample.length > 0 && 'value' in sample[0]
-              ? (sample[0] as LineData<Time>).value
-              : 0,
+                ? (sample[0] as LineData<Time>).value
+                : 0,
         },
         topLineColor: mode ? '#10B981' : '#059669',
         bottomLineColor: mode ? '#EF4444' : '#DC2626',
@@ -64,4 +70,3 @@ export function createSeriesForType(
       });
   }
 }
-
