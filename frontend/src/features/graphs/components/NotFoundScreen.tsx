@@ -9,7 +9,7 @@ const NotFoundScreen = () => {
       <div
         role="region"
         aria-labelledby="nf-title"
-        className="w-full max-w-md p-8 text-center rounded-2xl bg-card/80 backdrop-blur-md border border-border/50 shadow-xl"
+        className="w-full max-w-md p-8 text-center rounded-2xl bg-card/75 supports-[backdrop-filter]:bg-card/60 backdrop-blur border border-border/50 shadow-xl"
       >
         <div className="flex items-center justify-center w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-chart-1/10 to-chart-1/20">
           <HiChartBar className="w-10 h-10 text-chart-1" />

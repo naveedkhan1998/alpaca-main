@@ -7,7 +7,7 @@ const ErrorScreen = () => {
       <div
         role="alert"
         aria-live="assertive"
-        className="w-full max-w-md p-6 border shadow-xl rounded-2xl border-destructive/20 bg-card/80 backdrop-blur-md"
+        className="w-full max-w-md p-6 border shadow-xl rounded-2xl border-destructive/20 bg-card/75 supports-[backdrop-filter]:bg-card/60 backdrop-blur"
       >
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="flex items-center justify-center w-20 h-20 border rounded-full bg-gradient-to-br from-destructive/10 to-destructive/20 border-destructive/20">

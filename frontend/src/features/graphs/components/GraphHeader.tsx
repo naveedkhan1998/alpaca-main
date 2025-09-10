@@ -1,19 +1,7 @@
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
-
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { Helmet } from 'react-helmet';
 import {
@@ -70,26 +58,17 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
   const isMobile = useIsMobile();
 
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <Helmet>
         <title>{obj?.name} - Alpaca</title>
       </Helmet>
-      <div
-        className={`flex items-center justify-between ${
-          isMobile ? 'h-16 px-2' : 'h-20 px-4'
-        } mx-auto sm:px-6 lg:px-8`}
-      >
+      <div className={`flex items-center justify-between ${isMobile ? 'h-14 px-2' : 'h-18 px-4'} mx-auto sm:px-6 lg:px-8`}>
         {/* Left Section - Navigation & Title */}
         <div className="flex items-center gap-2">
           <TooltipProvider>
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigate(-1)}
-                  className="rounded-full"
-                >
+                <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full">
                   <HiArrowLeft className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
@@ -131,32 +110,15 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
               <>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant={autoRefresh ? 'secondary' : 'ghost'}
-                      size="icon"
-                      onClick={() => dispatch(setAutoRefresh(!autoRefresh))}
-                      className="rounded-full"
-                    >
-                      {autoRefresh ? (
-                        <HiPause className="w-5 h-5" />
-                      ) : (
-                        <HiPlay className="w-5 h-5" />
-                      )}
+                    <Button variant={autoRefresh ? 'secondary' : 'ghost'} size="icon" onClick={() => dispatch(setAutoRefresh(!autoRefresh))} className="rounded-full">
+                      {autoRefresh ? <HiPause className="w-5 h-5" /> : <HiPlay className="w-5 h-5" />}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    {autoRefresh ? 'Pause Live Updates' : 'Enable Live Updates'}
-                  </TooltipContent>
+                  <TooltipContent>{autoRefresh ? 'Pause Live' : 'Enable Live'}</TooltipContent>
                 </Tooltip>
-
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={refetch}
-                      className="rounded-full"
-                    >
+                    <Button variant="ghost" size="icon" onClick={refetch} className="rounded-full">
                       <HiRefresh className="w-5 h-5" />
                     </Button>
                   </TooltipTrigger>
@@ -164,49 +126,28 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                 </Tooltip>
               </>
             )}
-
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant={showControls ? 'secondary' : 'ghost'}
-                  size="icon"
-                  onClick={() => dispatch(setShowControls(!showControls))}
-                  className="rounded-full"
-                >
+                <Button variant={showControls ? 'secondary' : 'ghost'} size="icon" onClick={() => dispatch(setShowControls(!showControls))} className="rounded-full">
                   <HiCog className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Toggle Controls</TooltipContent>
             </Tooltip>
-
             {!isMobile && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={toggleFullscreen}
-                    className="rounded-full"
-                  >
-                    {isFullscreen ? (
-                      <HiX className="w-5 h-5" />
-                    ) : (
-                      <HiArrowsExpand className="w-5 h-5" />
-                    )}
+                  <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="rounded-full">
+                    {isFullscreen ? <HiX className="w-5 h-5" /> : <HiArrowsExpand className="w-5 h-5" />}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  {isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
-                </TooltipContent>
+                <TooltipContent>{isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}</TooltipContent>
               </Tooltip>
             )}
           </TooltipProvider>
 
-          {!isMobile && (
-            <Separator orientation="vertical" className="h-6 mx-1" />
-          )}
+          {!isMobile && <Separator orientation="vertical" className="h-6 mx-1" />}
 
-          {/* Keyboard shortcuts info */}
           {!isMobile && (
             <TooltipProvider>
               <Tooltip>
@@ -218,18 +159,9 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                 <TooltipContent side="bottom">
                   <div className="text-xs space-y-1">
                     <div className="font-medium text-foreground">Shortcuts</div>
-                    <div className="text-muted-foreground">
-                      <kbd className="px-1 py-0.5 rounded bg-muted mr-1">F</kbd>
-                      Fullscreen
-                    </div>
-                    <div className="text-muted-foreground">
-                      <kbd className="px-1 py-0.5 rounded bg-muted mr-1">V</kbd>
-                      Toggle Volume
-                    </div>
-                    <div className="text-muted-foreground">
-                      <kbd className="px-1 py-0.5 rounded bg-muted mr-1">C</kbd>
-                      Toggle Controls
-                    </div>
+                    <div className="text-muted-foreground"><kbd className="px-1 py-0.5 rounded bg-muted mr-1">F</kbd> Fullscreen</div>
+                    <div className="text-muted-foreground"><kbd className="px-1 py-0.5 rounded bg-muted mr-1">V</kbd> Toggle Volume</div>
+                    <div className="text-muted-foreground"><kbd className="px-1 py-0.5 rounded bg-muted mr-1">C</kbd> Toggle Controls</div>
                   </div>
                 </TooltipContent>
               </Tooltip>

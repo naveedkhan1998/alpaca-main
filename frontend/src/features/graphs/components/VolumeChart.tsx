@@ -8,6 +8,8 @@ import {
   ITimeScaleApi,
   HistogramSeries,
 } from 'lightweight-charts';
+import { getBaseChartOptions } from '../lib/chartOptions';
+import { useResizeObserver } from '../hooks/useResizeObserver';
 
 interface VolumeChartProps {
   volumeData: HistogramData<Time>[];
@@ -24,59 +26,27 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
   const volumeChartRef = useRef<IChartApi | null>(null);
   const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
   const legendRef = useRef<HTMLDivElement | null>(null);
-  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  // Resize handled by shared hook
 
   // Create chart on mount
   useEffect(() => {
     const containerEl = volumeChartContainerRef.current;
     if (!containerEl || volumeChartRef.current) return;
 
+    const base = getBaseChartOptions(mode);
     const chart = createChart(containerEl, {
-      layout: {
-        textColor: mode ? '#E2E8F0' : '#475569',
-        background: { color: 'transparent' },
-        fontSize: 11,
-        fontFamily: 'Inter, -apple-system, sans-serif',
-      },
-      timeScale: {
-        visible: true,
-        timeVisible: true,
-        secondsVisible: false,
-        borderColor: mode ? '#334155' : '#CBD5E1',
-      },
+      ...base,
+      layout: { ...base.layout, fontSize: 11 },
+      timeScale: { ...base.timeScale, visible: true },
       rightPriceScale: {
-        borderColor: mode ? '#334155' : '#CBD5E1',
-        scaleMargins: {
-          top: 0.1,
-          bottom: 0.1,
-        },
+        ...base.rightPriceScale,
+        scaleMargins: { top: 0.1, bottom: 0.1 },
       },
       grid: {
-        vertLines: {
-          visible: false,
-        },
-        horzLines: {
-          color: mode ? '#1E293B' : '#F1F5F9',
-          style: 1,
-        },
+        ...(base.grid as any),
+        vertLines: { visible: false },
+        horzLines: (base.grid as any).horzLines,
       },
-      crosshair: {
-        mode: 1,
-        vertLine: {
-          width: 1,
-          color: mode ? '#64748B' : '#94A3B8',
-          style: 2,
-        },
-        horzLine: {
-          visible: true,
-          labelVisible: true,
-          color: mode ? '#64748B' : '#94A3B8',
-          width: 1,
-          style: 2,
-        },
-      },
-      handleScroll: true,
-      handleScale: true,
     });
 
     // Set initial size from container
@@ -104,22 +74,8 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
     containerEl.appendChild(legend);
     legendRef.current = legend;
 
-    // Handle Resize
-    const resizeObserver = new ResizeObserver(entries => {
-      if (!volumeChartRef.current) return;
-      const { width, height } = entries[0].contentRect;
-      volumeChartRef.current.applyOptions({ width, height });
-    });
-    resizeObserver.observe(containerEl);
-    resizeObserverRef.current = resizeObserver;
-
     // Clean up on unmount
     return () => {
-      if (resizeObserverRef.current) {
-        resizeObserverRef.current.unobserve(containerEl);
-        resizeObserverRef.current.disconnect();
-        resizeObserverRef.current = null;
-      }
       chart.remove();
       volumeChartRef.current = null;
       if (legendRef.current && containerEl) {
@@ -130,35 +86,17 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Keep chart sized to container
+  useResizeObserver(volumeChartContainerRef, rect => {
+    if (volumeChartRef.current) {
+      volumeChartRef.current.applyOptions({ width: rect.width, height: rect.height });
+    }
+  });
+
   // Update chart options when mode changes
   useEffect(() => {
-    if (volumeChartRef.current) {
-      volumeChartRef.current.applyOptions({
-        layout: {
-          textColor: mode ? '#E2E8F0' : '#475569',
-          background: { color: 'transparent' },
-        },
-        timeScale: {
-          borderColor: mode ? '#334155' : '#CBD5E1',
-        },
-        rightPriceScale: {
-          borderColor: mode ? '#334155' : '#CBD5E1',
-        },
-        grid: {
-          horzLines: {
-            color: mode ? '#1E293B' : '#F1F5F9',
-          },
-        },
-        crosshair: {
-          vertLine: {
-            color: mode ? '#64748B' : '#94A3B8',
-          },
-          horzLine: {
-            color: mode ? '#64748B' : '#94A3B8',
-          },
-        },
-      });
-    }
+    if (volumeChartRef.current)
+      volumeChartRef.current.applyOptions(getBaseChartOptions(mode));
   }, [mode]);
 
   // Update data when volumeData changes

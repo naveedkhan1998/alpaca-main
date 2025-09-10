@@ -1,12 +1,7 @@
 const LoadingScreen = () => {
   return (
-    <div
-      role="status"
-      aria-busy="true"
-      aria-live="polite"
-      className="flex items-center justify-center h-[100dvh] bg-gradient-to-br from-background via-background to-muted/20"
-    >
-      <div className="w-full max-w-md p-8 rounded-2xl bg-card/80 backdrop-blur-md border border-border/50 shadow-xl">
+    <div role="status" aria-busy="true" aria-live="polite" className="flex items-center justify-center h-[100dvh] bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="w-full max-w-md p-8 rounded-2xl bg-card/75 supports-[backdrop-filter]:bg-card/60 backdrop-blur border border-border/50 shadow-xl">
         {/* Spinner */}
         <div className="flex items-center justify-center">
           <div className="relative">

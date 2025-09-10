@@ -1,14 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import {
-  createChart,
-  IChartApi,
-  ISeriesApi,
-  ITimeScaleApi,
-  Time,
-  LineData,
-  LineSeries,
-  MouseEventParams,
-} from 'lightweight-charts';
+import { createChart, IChartApi, ISeriesApi, ITimeScaleApi, Time, LineData, LineSeries, MouseEventParams } from 'lightweight-charts';
+import { getBaseChartOptions } from '../lib/chartOptions';
+import { useResizeObserver } from '../hooks/useResizeObserver';
 
 interface IndicatorChartProps {
   rsiData: LineData[];
@@ -27,7 +20,7 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
   const indicatorChartRef = useRef<IChartApi | null>(null);
   const rsiSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const atrSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
-  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  // Resize handled by shared hook
   const legendContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Create or destroy chart based on active indicators
@@ -60,49 +53,7 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
 
     if (!indicatorChartRef.current) {
       // Create chart
-      const chart = createChart(containerEl, {
-        layout: {
-          textColor: mode ? '#E2E8F0' : '#475569',
-          background: { color: 'transparent' },
-          fontSize: 12,
-          fontFamily: 'Inter, -apple-system, sans-serif',
-        },
-        timeScale: {
-          timeVisible: true,
-          secondsVisible: false,
-          borderColor: mode ? '#334155' : '#CBD5E1',
-        },
-        rightPriceScale: {
-          borderColor: mode ? '#334155' : '#CBD5E1',
-        },
-        crosshair: {
-          mode: 1,
-          vertLine: {
-            width: 1,
-            color: mode ? '#64748B' : '#94A3B8',
-            style: 2,
-          },
-          horzLine: {
-            visible: true,
-            labelVisible: true,
-            color: mode ? '#64748B' : '#94A3B8',
-            width: 1,
-            style: 2,
-          },
-        },
-        grid: {
-          vertLines: {
-            color: mode ? '#1E293B' : '#F1F5F9',
-            style: 1,
-          },
-          horzLines: {
-            color: mode ? '#1E293B' : '#F1F5F9',
-            style: 1,
-          },
-        },
-        handleScroll: true,
-        handleScale: true,
-      });
+      const chart = createChart(containerEl, getBaseChartOptions(mode));
 
       indicatorChartRef.current = chart;
       setTimeScale(chart.timeScale());
@@ -150,16 +101,6 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
         }
       });
 
-      // Handle Resize
-      const resizeObserver = new ResizeObserver(entries => {
-        if (containerEl && indicatorChartRef.current) {
-          const { width, height } = entries[0].contentRect;
-          indicatorChartRef.current.applyOptions({ width, height });
-        }
-      });
-
-      resizeObserver.observe(containerEl);
-      resizeObserverRef.current = resizeObserver;
     }
 
     // Cleanup function to remove chart on unmount
@@ -171,11 +112,6 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
         rsiSeriesRef.current = null;
         atrSeriesRef.current = null;
       }
-      if (resizeObserverRef.current && cleanupContainer) {
-        resizeObserverRef.current.unobserve(cleanupContainer);
-        resizeObserverRef.current.disconnect();
-        resizeObserverRef.current = null;
-      }
       if (legendContainerRef.current && cleanupContainer) {
         cleanupContainer.removeChild(legendContainerRef.current);
         legendContainerRef.current = null;
@@ -183,38 +119,16 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
     };
   }, [rsiData, atrData, mode, setTimeScale]);
 
+  // Keep chart sized to container
+  useResizeObserver(indicatorChartContainerRef, rect => {
+    if (indicatorChartRef.current) {
+      indicatorChartRef.current.applyOptions({ width: rect.width, height: rect.height });
+    }
+  });
+
   // Update chart options when mode changes
   useEffect(() => {
-    if (indicatorChartRef.current) {
-      indicatorChartRef.current.applyOptions({
-        layout: {
-          textColor: mode ? '#E2E8F0' : '#475569',
-          background: { color: 'transparent' },
-        },
-        timeScale: {
-          borderColor: mode ? '#334155' : '#CBD5E1',
-        },
-        rightPriceScale: {
-          borderColor: mode ? '#334155' : '#CBD5E1',
-        },
-        crosshair: {
-          vertLine: {
-            color: mode ? '#64748B' : '#94A3B8',
-          },
-          horzLine: {
-            color: mode ? '#64748B' : '#94A3B8',
-          },
-        },
-        grid: {
-          vertLines: {
-            color: mode ? '#1E293B' : '#F1F5F9',
-          },
-          horzLines: {
-            color: mode ? '#1E293B' : '#F1F5F9',
-          },
-        },
-      });
-    }
+    if (indicatorChartRef.current) indicatorChartRef.current.applyOptions(getBaseChartOptions(mode));
   }, [mode]);
 
   // Update RSI series data
