@@ -6,6 +6,7 @@ import {
   calculateATR,
   formatDate,
 } from '../functions';
+import type { CandlestickData, Time } from 'lightweight-charts';
 import type { Candle } from '@/types/common-types';
 
 const mkCandle = (close: number, extra?: Partial<Candle>): Candle => ({
@@ -28,8 +29,8 @@ describe('functions indicators', () => {
   });
 
   it('calculateMA computes moving average for period 3', () => {
-    const data = [1, 2, 3, 6].map((v, i) => ({
-      time: i as unknown as number,
+    const data: CandlestickData<Time>[] = [1, 2, 3, 6].map((v, i) => ({
+      time: i as unknown as Time,
       open: v,
       high: v,
       low: v,
