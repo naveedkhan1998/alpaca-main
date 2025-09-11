@@ -48,7 +48,7 @@ export function useCandles({
       setCandles(sortDescByDate(results));
       setOffset(results.length);
       setHasMore(!!res?.next);
-    } catch (e) {
+    } catch {
       setErrorInitial('Failed to load data');
     } finally {
       setLoadingInitial(false);

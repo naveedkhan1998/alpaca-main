@@ -43,9 +43,8 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
         scaleMargins: { top: 0.1, bottom: 0.1 },
       },
       grid: {
-        ...(base.grid as any),
-        vertLines: { visible: false },
-        horzLines: (base.grid as any).horzLines,
+        vertLines: { ...(base.grid?.vertLines ?? {}), visible: false },
+        horzLines: base.grid?.horzLines,
       },
     });
 

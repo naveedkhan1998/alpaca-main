@@ -1,9 +1,10 @@
 import { useCallback } from 'react';
+import type { ITimeScaleApi, Time } from 'lightweight-charts';
 
 export function useChartSync(options: {
-  mainChartRef: React.MutableRefObject<any>;
-  volumeChartRef: React.MutableRefObject<any>;
-  indicatorChartRef: React.MutableRefObject<any>;
+  mainChartRef: React.MutableRefObject<ITimeScaleApi<Time> | null>;
+  volumeChartRef: React.MutableRefObject<ITimeScaleApi<Time> | null>;
+  indicatorChartRef: React.MutableRefObject<ITimeScaleApi<Time> | null>;
   shouldShowVolume: boolean;
   activeIndicators: string[];
 }) {
@@ -19,7 +20,7 @@ export function useChartSync(options: {
     if (!mainChartRef.current) return;
 
     const getChartsToSync = () => {
-      const charts: any[] = [];
+      const charts: ITimeScaleApi<Time>[] = [];
       if (shouldShowVolume && volumeChartRef.current)
         charts.push(volumeChartRef.current);
       if (
@@ -38,7 +39,7 @@ export function useChartSync(options: {
         if (!timeScale) return;
         try {
           timeScale.setVisibleRange(mainVisibleRange);
-        } catch (error) {
+        } catch {
           // ignore sync error
         }
       });

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import React from 'react';
+// React import not needed with JSX transform
 import { render, waitFor } from '@testing-library/react';
 import { useCandles } from '../useCandles';
 
@@ -32,7 +32,15 @@ vi.mock('@/api/assetService', () => {
   };
 });
 
-function Harness(props: any) {
+type HarnessProps = {
+  assetId?: string | number;
+  timeframe: number;
+  autoRefresh: boolean;
+  initialLimit?: number;
+  loadMoreLimit?: number;
+};
+
+function Harness(props: HarnessProps) {
   const res = useCandles(props);
   return <pre data-testid="out">{JSON.stringify(res)}</pre>;
 }

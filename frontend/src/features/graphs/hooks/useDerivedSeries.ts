@@ -1,5 +1,10 @@
 import { useMemo } from 'react';
-import { Time } from 'lightweight-charts';
+import type {
+  Time,
+  LineData,
+  BarData,
+  HistogramData,
+} from 'lightweight-charts';
 import type { Candle } from '@/types/common-types';
 import {
   formatDate,
@@ -28,7 +33,7 @@ export function useDerivedSeries({
   );
 
   const seriesData = useMemo(() => {
-    if (!data) return [] as any[];
+    if (!data) return [] as unknown[];
     if (seriesType === 'ohlc') {
       return data.results
         .map(({ date, open, high, low, close }) => ({
@@ -48,11 +53,11 @@ export function useDerivedSeries({
         }))
         .reverse();
     }
-    return [] as any[];
-  }, [data, seriesType]);
+    return [] as unknown[];
+  }, [data, seriesType]) as BarData<Time>[] | LineData<Time>[];
 
-  const volumeData = useMemo(() => {
-    if (!data) return [] as any[];
+  const volumeData = useMemo<HistogramData<Time>[]>(() => {
+    if (!data) return [] as HistogramData<Time>[];
     return data.results
       .map(({ date, close, volume = 0 }, index, array) => {
         const previousClose = index > 0 ? array[index - 1].close : close;
@@ -73,8 +78,9 @@ export function useDerivedSeries({
     return data.results.some(({ volume = 0 }) => volume > 0);
   }, [data]);
 
-  const rsiData = useMemo(() => {
-    if (!data || !activeIndicators.includes('RSI')) return [] as any[];
+  const rsiData = useMemo<LineData<Time>[]>(() => {
+    if (!data || !activeIndicators.includes('RSI'))
+      return [] as LineData<Time>[];
     return calculateRSI(
       data.results.map(d => ({ ...d, time: formatDate(d.date) }))
     )
@@ -83,8 +89,9 @@ export function useDerivedSeries({
       .reverse();
   }, [data, activeIndicators]);
 
-  const atrData = useMemo(() => {
-    if (!data || !activeIndicators.includes('ATR')) return [] as any[];
+  const atrData = useMemo<LineData<Time>[]>(() => {
+    if (!data || !activeIndicators.includes('ATR'))
+      return [] as LineData<Time>[];
     return calculateATR(
       data.results.map(d => ({ ...d, time: formatDate(d.date) }))
     )
@@ -92,26 +99,35 @@ export function useDerivedSeries({
       .reverse();
   }, [data, activeIndicators]);
 
-  const emaData = useMemo(() => {
-    if (!data || !activeIndicators.includes('EMA')) return [] as any[];
+  const emaData = useMemo<LineData<Time>[]>(() => {
+    if (!data || !activeIndicators.includes('EMA'))
+      return [] as LineData<Time>[];
     return calculateMA(
       data.results.map(d => ({ ...d, time: formatDate(d.date) as Time })),
       14
     ).reverse();
   }, [data, activeIndicators]);
 
-  const bollingerBandsData = useMemo(() => {
+  type BollingerPoint = {
+    time: Time;
+    upper: number;
+    middle: number;
+    lower: number;
+  };
+  const bollingerBandsData = useMemo<BollingerPoint[]>(() => {
     if (!data || !activeIndicators.includes('BollingerBands'))
-      return [] as any[];
+      return [] as BollingerPoint[];
     const bands = calculateBollingerBands(
       data.results.map(d => ({ ...d, time: formatDate(d.date) })).reverse()
     );
-    return bands.filter(band => band.time !== undefined) as {
-      time: Time;
-      upper: number;
-      middle: number;
-      lower: number;
-    }[];
+    return bands
+      .filter(band => band.time !== undefined)
+      .map(band => ({
+        time: band.time as Time,
+        upper: band.upper,
+        middle: band.middle,
+        lower: band.lower,
+      }));
   }, [data, activeIndicators]);
 
   return {

@@ -1,8 +1,6 @@
-import type { DeepPartial, ChartOptions, Time } from 'lightweight-charts';
+import type { DeepPartial, ChartOptions } from 'lightweight-charts';
 
-export function getBaseChartOptions(
-  mode: boolean
-): DeepPartial<ChartOptions<Time>> {
+export function getBaseChartOptions(mode: boolean): DeepPartial<ChartOptions> {
   return {
     layout: {
       textColor: mode ? '#E2E8F0' : '#475569',

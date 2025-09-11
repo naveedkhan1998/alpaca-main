@@ -109,7 +109,11 @@ export const calculateBollingerBands = (
 };
 
 export const calculateRSI = (data: Candle[], period: number = 14) => {
-  const rsi = [];
+  // Not enough data points to compute RSI
+  if (!Array.isArray(data) || data.length <= period)
+    return [] as { time: number; value: number }[];
+
+  const rsi = [] as { time: number; value: number }[];
   let gains = 0;
   let losses = 0;
 

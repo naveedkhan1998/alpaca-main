@@ -48,11 +48,6 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
         rsiSeriesRef.current = null;
         atrSeriesRef.current = null;
       }
-      if (resizeObserverRef.current && containerEl) {
-        resizeObserverRef.current.unobserve(containerEl);
-        resizeObserverRef.current.disconnect();
-        resizeObserverRef.current = null;
-      }
       if (legendContainerRef.current && containerEl) {
         containerEl.removeChild(legendContainerRef.current);
         legendContainerRef.current = null;
