@@ -21,11 +21,15 @@ function makeTimeScale() {
   } = {
     _visibleRange: { from: 1 as unknown as Time, to: 2 as unknown as Time },
     setVisibleRange: vi.fn(),
-    getVisibleRange: vi.fn(function (this: { _visibleRange: IRange<Time> | null }) {
+    getVisibleRange: vi.fn(function (this: {
+      _visibleRange: IRange<Time> | null;
+    }) {
       return this._visibleRange;
     }) as () => IRange<Time> | null,
   };
-  api.subscribeVisibleTimeRangeChange = (handler: TimeRangeChangeEventHandler<Time>) => {
+  api.subscribeVisibleTimeRangeChange = (
+    handler: TimeRangeChangeEventHandler<Time>
+  ) => {
     api._handler = handler;
   };
   api.unsubscribeVisibleTimeRangeChange = () => {
@@ -62,7 +66,10 @@ describe('useChartSync', () => {
     expect(ind.setVisibleRange).toHaveBeenCalledWith(main.getVisibleRange());
 
     // Simulate visible range change on main timescale
-    main._visibleRange = { from: 5 as unknown as Time, to: 10 as unknown as Time };
+    main._visibleRange = {
+      from: 5 as unknown as Time,
+      to: 10 as unknown as Time,
+    };
     act(() => {
       // Let the hook subscribe after its debounce
       vi.runOnlyPendingTimers();

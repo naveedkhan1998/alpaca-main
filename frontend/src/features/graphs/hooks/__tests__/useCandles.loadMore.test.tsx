@@ -46,17 +46,19 @@ const secondBatch = [
 ];
 
 vi.mock('@/api/assetService', () => {
-  const trigger = vi.fn().mockImplementation((args: { offset?: number } | undefined) => ({
-    unwrap: async () => {
-      if (!args || args.offset === 0) {
-        return { results: firstBatch, next: true };
-      }
-      if (args.offset === 2) {
-        return { results: secondBatch, next: false };
-      }
-      return { results: [], next: false };
-    },
-  }));
+  const trigger = vi
+    .fn()
+    .mockImplementation((args: { offset?: number } | undefined) => ({
+      unwrap: async () => {
+        if (!args || args.offset === 0) {
+          return { results: firstBatch, next: true };
+        }
+        if (args.offset === 2) {
+          return { results: secondBatch, next: false };
+        }
+        return { results: [], next: false };
+      },
+    }));
   return {
     useLazyGetAssetCandlesQuery: () => [trigger, { isFetching: false }],
   };
