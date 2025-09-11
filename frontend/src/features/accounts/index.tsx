@@ -6,6 +6,7 @@ import {
   PageHeader,
   PageSubHeader,
   PageContent,
+  PageActions,
 } from '@/components/PageLayout';
 
 import { useAppSelector } from 'src/app/hooks';
@@ -38,15 +39,26 @@ const AccountsPage = () => {
 
   return (
     <PageLayout
-      header={
-        <PageHeader>
-          <span className="bg-gradient-to-r from-primary to-accent bg-clip-text">
-            Account Dashboard
-          </span>
-        </PageHeader>
-      }
+      header={<PageHeader>Account Dashboard</PageHeader>}
       subheader={
-        <PageSubHeader>Monitor connection status and sync assets</PageSubHeader>
+        <PageSubHeader>
+          Monitor connection status and sync assets.
+        </PageSubHeader>
+      }
+      actions={
+        <PageActions>
+          <Button
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="w-full sm:w-auto"
+            size="sm"
+          >
+            <RefreshCcw
+              className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`}
+            />
+            {isSyncing ? 'Syncing Assets...' : 'Sync Assets'}
+          </Button>
+        </PageActions>
       }
     >
       <PageContent>
@@ -57,25 +69,6 @@ const AccountsPage = () => {
             transition={{ delay: 0.1 }}
           >
             <AlpacaStatusCard />
-          </motion.div>
-
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-col sm:flex-row gap-4"
-          >
-            <Button
-              onClick={handleSync}
-              disabled={isSyncing}
-              className="w-full sm:w-auto"
-              size="lg"
-            >
-              <RefreshCcw
-                className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`}
-              />
-              {isSyncing ? 'Syncing Assets...' : 'Sync Assets'}
-            </Button>
           </motion.div>
         </div>
       </PageContent>

@@ -1,40 +1,46 @@
-import { useState } from 'react';
-
+import { useEffect, useState } from 'react';
 import { MdAnnouncement } from 'react-icons/md';
 import { HiX } from 'react-icons/hi';
 import { isDevelopment } from '@/lib/environment';
 
+const STORAGE_KEY = 'announcement:dismissed:v1';
+
 export default function AnnouncementBanner() {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (isDevelopment) return; // skip in dev
+    const dismissed = localStorage.getItem(STORAGE_KEY);
+    setIsVisible(!dismissed);
+  }, []);
 
   const handleClose = () => {
     setIsVisible(false);
   };
 
-  if (isDevelopment || !isVisible) {
-    return null;
-  }
+  if (isDevelopment || !isVisible) return null;
 
   return (
-    <div className="flex justify-between w-full p-4 border-b border-border bg-card">
-      <div className="flex items-center mx-auto">
-        <p className="flex items-center text-sm font-normal text-muted-foreground">
-          <MdAnnouncement className="w-4 h-4 mr-4" aria-hidden="true" />
-          <span className="[&_p]:inline">
-            This deployed version is using free services, so the limit for data
-            being fetched is 1 month. To use, input your Breeze API key and
-            secret in the account section, then follow the instructions to get
-            the access token.
+    <div className="w-full border-b border-border/40 bg-surface-gradient">
+      <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-3 px-3 py-3 sm:px-6 lg:px-8">
+        <p className="flex items-center text-xs sm:text-sm text-muted-foreground">
+          <MdAnnouncement
+            className="w-4 h-4 mr-2 text-primary"
+            aria-hidden="true"
+          />
+          <span>
+            This demo uses free services with a 1-month data limit. Provide your
+            Breeze API key/secret in Accounts to enable full access.
           </span>
         </p>
+        <button
+          onClick={handleClose}
+          className="p-1 transition-colors rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+          aria-label="Close announcement"
+        >
+          <HiX className="w-4 h-4" aria-hidden="true" />
+        </button>
       </div>
-      <button
-        onClick={handleClose}
-        className="transition-colors bg-transparent border-0 text-muted-foreground hover:text-foreground"
-        aria-label="Close announcement"
-      >
-        <HiX className="w-4 h-4" aria-hidden="true" />
-      </button>
     </div>
   );
 }

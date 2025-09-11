@@ -4,121 +4,121 @@
 
 @layer base {
   :root {
-    /* Light Mode – Graphite & Emerald (focused, high-contrast, readable) */
-    --background: 220 20% 98%;
-    --foreground: 220 25% 12%;
+    /* Light Mode – Quartz & Azure */
+    --background: 210 33% 99%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 25% 12%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 12%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Primary: clear trading blue */
-    --primary: 200 100% 40%;
+    /* Primary: Azure Blue */
+    --primary: 224 76% 48%;
     --primary-foreground: 210 40% 98%;
 
-    /* Neutrals */
-    --secondary: 220 18% 96%;
-    --secondary-foreground: 220 25% 18%;
+    /* Secondary/Neutrals */
+    --secondary: 210 28% 97%;
+    --secondary-foreground: 222 47% 13%;
 
-    --muted: 220 16% 95%;
-    --muted-foreground: 220 10% 42%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 45%;
 
-    /* Accent: crisp cyan */
-    --accent: 190 90% 42%;
+    /* Accent: Teal */
+    --accent: 182 74% 38%;
     --accent-foreground: 210 40% 98%;
 
     /* Semantic */
-    --destructive: 0 75% 45%;
+    --destructive: 356 75% 49%;
     --destructive-foreground: 0 0% 98%;
 
-    --success: 155 60% 35%;
+    --success: 150 60% 40%;
     --success-foreground: 0 0% 98%;
 
-    --warning: 45 100% 49%;
-    --warning-foreground: 220 25% 12%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 47% 11%;
 
-    --border: 220 20% 88%;
-    --input: 220 20% 88%;
-    --ring: 200 100% 40%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 224 76% 48%;
 
     /* Chart palette (light) */
-    --chart-1: 200 100% 40%;
-    --chart-2: 155 60% 42%;
-    --chart-3: 0 75% 45%;
-    --chart-4: 45 100% 51%;
-    --chart-5: 265 70% 55%;
+    --chart-1: 224 76% 48%;
+    --chart-2: 150 60% 40%;
+    --chart-3: 356 75% 49%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 270 70% 55%;
 
     --radius: 0.5rem;
 
     /* Sidebar */
-    --sidebar-background: 220 18% 97%;
-    --sidebar-foreground: 220 25% 14%;
-    --sidebar-primary: 200 100% 40%;
+    --sidebar-background: 210 28% 98%;
+    --sidebar-foreground: 222 47% 13%;
+    --sidebar-primary: 224 76% 48%;
     --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 220 25% 18%;
-    --sidebar-border: 220 20% 86%;
-    --sidebar-ring: 200 100% 40%;
+    --sidebar-accent: 210 20% 96%;
+    --sidebar-accent-foreground: 222 47% 13%;
+    --sidebar-border: 214 32% 90%;
+    --sidebar-ring: 224 76% 48%;
 
     --vh: 1vh;
   }
 
   .dark {
-    /* Dark Mode – Midnight Terminal (low-glare, vibrant accents) */
-    --background: 220 17% 7%;
-    --foreground: 210 20% 95%;
+    /* Dark Mode – Obsidian & Mint */
+    --background: 222 47% 7%;
+    --foreground: 210 40% 96%;
 
-    --card: 220 15% 12%;
-    --card-foreground: 210 20% 95%;
+    --card: 222 47% 10%;
+    --card-foreground: 210 40% 96%;
 
-    --popover: 220 15% 12%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 222 47% 10%;
+    --popover-foreground: 210 40% 96%;
 
-    /* Primary: electric cyan-blue */
-    --primary: 200 100% 55%;
+    /* Primary: Brighter Azure */
+    --primary: 223 92% 60%;
     --primary-foreground: 222 47% 11%;
 
-    --secondary: 220 12% 16%;
-    --secondary-foreground: 210 20% 92%;
+    --secondary: 220 15% 16%;
+    --secondary-foreground: 210 40% 94%;
 
-    --muted: 220 12% 16%;
-    --muted-foreground: 220 12% 65%;
+    --muted: 222 17% 14%;
+    --muted-foreground: 215 20% 65%;
 
-    /* Accent: saturated violet for highlights */
-    --accent: 265 85% 62%;
+    /* Accent: Teal Glow */
+    --accent: 182 74% 55%;
     --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 75% 58%;
-    --destructive-foreground: 210 20% 95%;
+    --destructive: 356 75% 60%;
+    --destructive-foreground: 210 40% 96%;
 
-    --success: 155 60% 48%;
+    --success: 150 60% 50%;
     --success-foreground: 222 47% 11%;
 
-    --warning: 45 100% 55%;
+    --warning: 38 92% 56%;
     --warning-foreground: 222 47% 11%;
 
-    --border: 220 10% 24%;
-    --input: 220 10% 22%;
-    --ring: 200 100% 55%;
+    --border: 220 15% 24%;
+    --input: 220 15% 22%;
+    --ring: 223 92% 60%;
 
     /* Chart palette (dark) */
-    --chart-1: 200 100% 55%;
-    --chart-2: 155 60% 52%;
-    --chart-3: 0 75% 58%;
-    --chart-4: 45 100% 55%;
-    --chart-5: 265 85% 62%;
+    --chart-1: 223 92% 60%;
+    --chart-2: 150 60% 50%;
+    --chart-3: 356 75% 60%;
+    --chart-4: 38 92% 56%;
+    --chart-5: 270 75% 62%;
 
     /* Sidebar */
-    --sidebar-background: 220 17% 6%;
-    --sidebar-foreground: 210 20% 95%;
-    --sidebar-primary: 200 100% 55%;
+    --sidebar-background: 222 47% 6%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 223 92% 60%;
     --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-accent: 220 12% 14%;
-    --sidebar-accent-foreground: 210 20% 92%;
-    --sidebar-border: 220 10% 20%;
-    --sidebar-ring: 200 100% 55%;
+    --sidebar-accent: 222 17% 12%;
+    --sidebar-accent-foreground: 210 40% 94%;
+    --sidebar-border: 220 15% 20%;
+    --sidebar-ring: 223 92% 60%;
   }
 
   @layer base {
@@ -151,6 +151,14 @@
 
   .scrollbar-hidden::-webkit-scrollbar-thumb {
     background-color: transparent;
+  }
+
+  /* Glass card utility (used by chart overlays) */
+  .glass-card {
+    background: hsl(var(--card) / 0.6);
+    backdrop-filter: saturate(120%) blur(10px);
+    -webkit-backdrop-filter: saturate(120%) blur(10px);
+    border: 1px solid hsl(var(--border) / 0.6);
   }
 
   /* Trading-specific enhancements */

@@ -227,7 +227,7 @@ const HealthStatusComponent: React.FC = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="relative transition-all duration-200 hover:bg-accent/50 hover:scale-105 group"
+          className="relative rounded-full transition-all duration-200 hover:bg-accent/50 hover:scale-105 group"
           aria-label={`System status: ${overallStatus}`}
         >
           <StatusIndicator status={overallStatus} size="md" />

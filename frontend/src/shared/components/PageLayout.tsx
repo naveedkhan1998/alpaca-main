@@ -3,7 +3,6 @@ import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { useIsMobile } from '@/hooks/useMobile';
 
 interface PageLayoutProps {
@@ -124,22 +123,21 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             {/* Header Section */}
             {(header || subheader || actions) && (
               <div className="mb-6 sm:mb-8">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                  <div className="flex-1 space-y-2">
-                    {header}
-                    {subheader}
-                  </div>
-                  {actions && (
-                    <div className="flex-shrink-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {actions}
-                      </div>
+                <div className="p-4 border rounded-xl border-border/40 bg-surface-gradient sm:p-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="flex-1 space-y-2">
+                      {header}
+                      {subheader}
                     </div>
-                  )}
+                    {actions && (
+                      <div className="flex-shrink-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {actions}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                {(header || subheader || actions) && (
-                  <Separator className="mt-6" />
-                )}
               </div>
             )}
 

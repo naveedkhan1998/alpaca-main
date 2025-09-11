@@ -56,7 +56,7 @@ const AlpacaStatusCard: React.FC = () => {
       variants={containerVariants}
       className="w-full"
     >
-      <Card className="overflow-hidden border-border/50 bg-card">
+      <Card className="overflow-hidden border-border/40 bg-card">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -78,7 +78,7 @@ const AlpacaStatusCard: React.FC = () => {
                 )}
               </div>
               <div>
-                <CardTitle className="text-lg font-semibold">
+                <CardTitle className="text-base sm:text-lg font-semibold">
                   Connection Status
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">

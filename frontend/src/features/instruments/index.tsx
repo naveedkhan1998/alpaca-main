@@ -158,32 +158,24 @@ const InstrumentsPage: React.FC = () => {
 
       {/* Exchange Selection */}
       <div>
-        <h3 className="mb-3 text-lg font-semibold text-foreground">
+        <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
           Exchanges
         </h3>
-        <div className="flex flex-col gap-2">
+        <div className="inline-flex flex-wrap w-full gap-1 p-1 border rounded-md border-border/50 bg-card/60">
           {exchanges.map(exchange => {
             const Icon = exchange.icon;
             const isActive = selectedExchange === exchange.value;
             return (
               <Button
                 key={exchange.value}
-                variant={isActive ? 'default' : 'outline'}
+                type="button"
+                variant={isActive ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-8 gap-1 px-2"
                 onClick={() => handleExchangeChange(exchange.value)}
-                className={cn(
-                  'flex items-center justify-start gap-3 h-12 px-4 rounded-md transition-all duration-200',
-                  isActive
-                    ? 'bg-primary text-primary-foreground shadow-md'
-                    : 'hover:bg-secondary'
-                )}
               >
-                <Icon className="w-5 h-5" />
-                <div className="text-left">
-                  <div className="font-semibold">{exchange.label}</div>
-                  <div className="text-xs opacity-80">
-                    {exchange.description}
-                  </div>
-                </div>
+                <Icon className="w-4 h-4" />
+                <span className="hidden sm:inline">{exchange.label}</span>
               </Button>
             );
           })}
@@ -365,37 +357,37 @@ const InstrumentsPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
           {/* Left Column: Filters */}
           <aside className="lg:col-span-1 lg:sticky lg:top-20 h-fit">
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-xl">Filters & Search</CardTitle>
+            <Card className="shadow-sm border-border/40">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base sm:text-lg">Filters</CardTitle>
               </CardHeader>
-              <CardContent>{renderFilters()}</CardContent>
+              <CardContent className="space-y-4">{renderFilters()}</CardContent>
             </Card>
           </aside>
 
           {/* Right Column: Instruments Display */}
           <main className="lg:col-span-3">
-            <Card className="z-20 flex items-center justify-between mb-4 lg:sticky lg:top-20">
-              <CardHeader>
-                <h2 className="text-2xl font-semibold text-foreground">
-                  {currentExchange?.label} Instruments
-                </h2>
-                <p className="mt-1 text-muted-foreground">
-                  {selectedExchange === 'NFO'
-                    ? `Browse ${instrumentType.toLowerCase()}s with advanced filtering`
-                    : `Discover ${currentExchange?.description} instruments`}
-                </p>
-                {searchTerm && (
+            <div className="p-4 mb-4 border rounded-xl border-border/40 bg-surface-gradient">
+              <h2 className="text-xl font-semibold text-foreground">
+                {currentExchange?.label} Instruments
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {selectedExchange === 'NFO'
+                  ? `Browse ${instrumentType.toLowerCase()}s with advanced filtering`
+                  : `Discover ${currentExchange?.description} instruments`}
+              </p>
+              {searchTerm && (
+                <div className="mt-2">
                   <Badge
                     variant="outline"
-                    className="status-badge bg-primary/10 text-primary border-primary/20"
+                    className="bg-primary/10 text-primary border-primary/20"
                   >
                     Searching: "{searchTerm}"
                   </Badge>
-                )}
-              </CardHeader>
-            </Card>
-            <Card className="shadow-xl ">
+                </div>
+              )}
+            </div>
+            <Card className="shadow-sm border-border/40">
               <CardContent className="h-full p-0">
                 {useMemo(
                   () => (

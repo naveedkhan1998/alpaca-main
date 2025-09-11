@@ -32,6 +32,7 @@ import { Toaster } from 'sonner';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useGetLoggedUserQuery } from '@/api/userAuthService';
 import { useAlpacaAccount } from './features/auth/hooks';
+import AnnouncementBanner from '@/components/AnnouncementBanner';
 
 // Subtle page transition loading component
 const PageLoadingFallback = () => (
@@ -176,6 +177,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Analytics />
+      <AnnouncementBanner />
       <GoogleOAuthProvider clientId={clientId}>
         <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
           <Suspense fallback={<PageLoadingFallback />}>

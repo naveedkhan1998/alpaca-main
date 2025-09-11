@@ -121,8 +121,8 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3">
-            <div>
+          <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-3">
+            <div className="rounded-lg border border-border/40 p-3 bg-card/50">
               <p className="text-xs font-medium text-muted-foreground">
                 Assets
               </p>
@@ -130,7 +130,7 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
                 {watchlist.asset_count}
               </p>
             </div>
-            <div>
+            <div className="rounded-lg border border-border/40 p-3 bg-card/50">
               <p className="text-xs font-medium text-muted-foreground">
                 Created
               </p>
@@ -138,7 +138,7 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
                 {new Date(watchlist.created_at).toLocaleDateString()}
               </p>
             </div>
-            <div>
+            <div className="rounded-lg border border-border/40 p-3 bg-card/50">
               <p className="text-xs font-medium text-muted-foreground">
                 Last Updated
               </p>

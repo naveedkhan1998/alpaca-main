@@ -11,10 +11,6 @@ import {
   LineData,
   HistogramData,
   MouseEventParams,
-  CandlestickSeries,
-  BarSeries,
-  AreaSeries,
-  BaselineSeries,
   LineSeries,
 } from 'lightweight-charts';
 
@@ -25,6 +21,9 @@ import {
   selectChartType,
   selectTimeframe,
 } from '../graphSlice';
+import { getBaseChartOptions } from '../lib/chartOptions';
+import { createSeriesForType } from '../lib/createSeries';
+import { useResizeObserver } from '../hooks/useResizeObserver';
 
 interface MainChartProps {
   seriesData: (BarData | LineData | HistogramData)[];
@@ -73,7 +72,7 @@ const MainChart: React.FC<MainChartProps> = ({
   const prevChartTypeRef = useRef<SeriesType>(chartType);
   const timeframeBadgeRef = useRef<HTMLSpanElement | null>(null);
   const legendContainerRef = useRef<HTMLDivElement | null>(null);
-  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  // Resize handled via shared hook
   const loadingIndicatorRef = useRef<HTMLDivElement | null>(null);
   const onLoadMoreDataRef = useRef(onLoadMoreData);
 
@@ -82,61 +81,8 @@ const MainChart: React.FC<MainChartProps> = ({
   }, [onLoadMoreData]);
 
   const createSeries = useCallback(
-    (chart: IChartApi, type: SeriesType): ISeriesApi<SeriesType> => {
-      switch (type) {
-        case 'Candlestick':
-          return chart.addSeries(CandlestickSeries, {
-            upColor: mode ? '#10B981' : '#059669',
-            downColor: mode ? '#EF4444' : '#DC2626',
-            borderVisible: false,
-            wickUpColor: mode ? '#10B981' : '#059669',
-            wickDownColor: mode ? '#EF4444' : '#DC2626',
-          });
-        case 'Bar':
-          return chart.addSeries(BarSeries, {
-            upColor: mode ? '#10B981' : '#059669',
-            downColor: mode ? '#EF4444' : '#DC2626',
-          });
-        case 'Area':
-          return chart.addSeries(AreaSeries, {
-            lineColor: mode ? '#3B82F6' : '#2563EB',
-            topColor: mode
-              ? 'rgba(59, 130, 246, 0.4)'
-              : 'rgba(37, 99, 235, 0.4)',
-            bottomColor: mode
-              ? 'rgba(59, 130, 246, 0)'
-              : 'rgba(37, 99, 235, 0)',
-            lineWidth: 2,
-          });
-        case 'Baseline':
-          return chart.addSeries(BaselineSeries, {
-            baseValue: {
-              type: 'price',
-              price:
-                seriesData.length > 0 && 'close' in seriesData[0]
-                  ? (seriesData[0] as BarData).close
-                  : seriesData.length > 0 && 'value' in seriesData[0]
-                    ? (seriesData[0] as LineData).value
-                    : 0,
-            },
-            topLineColor: mode ? '#10B981' : '#059669',
-            bottomLineColor: mode ? '#EF4444' : '#DC2626',
-            topFillColor1: 'rgba(38, 166, 154, 0.28)',
-            topFillColor2: 'rgba(38, 166, 154, 0.05)',
-            bottomFillColor1: 'rgba(239, 83, 80, 0.05)',
-            bottomFillColor2: 'rgba(239, 83, 80, 0.28)',
-          });
-        case 'Line':
-        default:
-          return chart.addSeries(LineSeries, {
-            color: mode ? '#3B82F6' : '#2563EB',
-            lineWidth: 2,
-            crosshairMarkerVisible: true,
-            crosshairMarkerRadius: 4,
-            lastValueVisible: true,
-          });
-      }
-    },
+    (chart: IChartApi, type: SeriesType): ISeriesApi<SeriesType> =>
+      createSeriesForType(chart, type, mode, seriesData as any),
     [mode, seriesData]
   );
 
@@ -146,66 +92,17 @@ const MainChart: React.FC<MainChartProps> = ({
 
     mainChartContainerRef.current.innerHTML = '';
 
-    const chart = createChart(mainChartContainerRef.current, {
-      layout: {
-        textColor: mode ? '#E2E8F0' : '#475569',
-        background: { color: 'transparent' },
-        fontSize: 12,
-        fontFamily: 'Inter, -apple-system, sans-serif',
-      },
-      timeScale: {
-        timeVisible: true,
-        secondsVisible: false,
-        borderColor: mode ? '#334155' : '#CBD5E1',
-      },
-      rightPriceScale: {
-        borderColor: mode ? '#334155' : '#CBD5E1',
-        scaleMargins: {
-          top: 0.05,
-          bottom: 0.05,
-        },
-      },
-      crosshair: {
-        mode: 1,
-        vertLine: {
-          width: 1,
-          color: mode ? '#64748B' : '#94A3B8',
-          style: 2,
-        },
-        horzLine: {
-          visible: true,
-          labelVisible: true,
-          color: mode ? '#64748B' : '#94A3B8',
-          width: 1,
-          style: 2,
-        },
-      },
-      grid: {
-        vertLines: {
-          color: mode ? '#1E293B' : '#F1F5F9',
-          style: 1,
-        },
-        horzLines: {
-          color: mode ? '#1E293B' : '#F1F5F9',
-          style: 1,
-        },
-      },
-      handleScroll: true,
-      handleScale: true,
-    });
+    const chart = createChart(
+      mainChartContainerRef.current,
+      getBaseChartOptions(mode)
+    );
 
     mainChartRef.current = chart;
     setTimeScale(chart.timeScale());
 
-    // Setup resize observer
-    resizeObserverRef.current = new ResizeObserver(entries => {
-      if (mainChartContainerRef.current && mainChartRef.current) {
-        const { width, height } = entries[0].contentRect;
-        mainChartRef.current.applyOptions({ width, height });
-      }
-    });
-
-    resizeObserverRef.current.observe(mainChartContainerRef.current);
+    // Set initial size
+    const rect = mainChartContainerRef.current.getBoundingClientRect();
+    chart.applyOptions({ width: rect.width, height: rect.height });
 
     // Create legend
     const legendContainer = document.createElement('div');
@@ -368,38 +265,20 @@ const MainChart: React.FC<MainChartProps> = ({
     initializeChart();
   }, [initializeChart]);
 
+  // Keep chart sized to container
+  useResizeObserver(mainChartContainerRef, rect => {
+    if (mainChartRef.current) {
+      mainChartRef.current.applyOptions({
+        width: rect.width,
+        height: rect.height,
+      });
+    }
+  });
+
   // Update chart styling when mode changes
   useEffect(() => {
     if (!mainChartRef.current) return;
-
-    mainChartRef.current.applyOptions({
-      layout: {
-        textColor: mode ? '#E2E8F0' : '#475569',
-        background: { color: 'transparent' },
-      },
-      timeScale: {
-        borderColor: mode ? '#334155' : '#CBD5E1',
-      },
-      rightPriceScale: {
-        borderColor: mode ? '#334155' : '#CBD5E1',
-      },
-      crosshair: {
-        vertLine: {
-          color: mode ? '#64748B' : '#94A3B8',
-        },
-        horzLine: {
-          color: mode ? '#64748B' : '#94A3B8',
-        },
-      },
-      grid: {
-        vertLines: {
-          color: mode ? '#1E293B' : '#F1F5F9',
-        },
-        horzLines: {
-          color: mode ? '#1E293B' : '#F1F5F9',
-        },
-      },
-    });
+    mainChartRef.current.applyOptions(getBaseChartOptions(mode));
 
     // Update series styling for mode change
     if (seriesRef.current && mainChartRef.current) {
@@ -539,9 +418,6 @@ const MainChart: React.FC<MainChartProps> = ({
   // Cleanup effect for component unmount
   useEffect(() => {
     return () => {
-      if (resizeObserverRef.current) {
-        resizeObserverRef.current.disconnect();
-      }
       if (mainChartRef.current) {
         mainChartRef.current.remove();
         mainChartRef.current = null;

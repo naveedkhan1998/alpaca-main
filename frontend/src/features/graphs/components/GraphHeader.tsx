@@ -7,7 +7,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
-
 import {
   Tooltip,
   TooltipContent,
@@ -70,14 +69,12 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
   const isMobile = useIsMobile();
 
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <Helmet>
         <title>{obj?.name} - Alpaca</title>
       </Helmet>
       <div
-        className={`flex items-center justify-between ${
-          isMobile ? 'h-16 px-2' : 'h-20 px-4'
-        } mx-auto sm:px-6 lg:px-8`}
+        className={`flex items-center justify-between ${isMobile ? 'h-14 px-2' : 'h-18 px-4'} mx-auto sm:px-6 lg:px-8`}
       >
         {/* Left Section - Navigation & Title */}
         <div className="flex items-center gap-2">
@@ -145,10 +142,9 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    {autoRefresh ? 'Pause Live Updates' : 'Enable Live Updates'}
+                    {autoRefresh ? 'Pause Live' : 'Enable Live'}
                   </TooltipContent>
                 </Tooltip>
-
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -164,7 +160,6 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                 </Tooltip>
               </>
             )}
-
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -178,7 +173,6 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
               </TooltipTrigger>
               <TooltipContent>Toggle Controls</TooltipContent>
             </Tooltip>
-
             {!isMobile && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -206,7 +200,6 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
             <Separator orientation="vertical" className="h-6 mx-1" />
           )}
 
-          {/* Keyboard shortcuts info */}
           {!isMobile && (
             <TooltipProvider>
               <Tooltip>
@@ -219,15 +212,15 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                   <div className="text-xs space-y-1">
                     <div className="font-medium text-foreground">Shortcuts</div>
                     <div className="text-muted-foreground">
-                      <kbd className="px-1 py-0.5 rounded bg-muted mr-1">F</kbd>
+                      <kbd className="px-1 py-0.5 rounded bg-muted mr-1">F</kbd>{' '}
                       Fullscreen
                     </div>
                     <div className="text-muted-foreground">
-                      <kbd className="px-1 py-0.5 rounded bg-muted mr-1">V</kbd>
+                      <kbd className="px-1 py-0.5 rounded bg-muted mr-1">V</kbd>{' '}
                       Toggle Volume
                     </div>
                     <div className="text-muted-foreground">
-                      <kbd className="px-1 py-0.5 rounded bg-muted mr-1">C</kbd>
+                      <kbd className="px-1 py-0.5 rounded bg-muted mr-1">C</kbd>{' '}
                       Toggle Controls
                     </div>
                   </div>

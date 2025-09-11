@@ -114,7 +114,9 @@ module.exports = {
         shimmer:
           'linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.1) 50%, transparent 75%)',
         'trading-gradient':
-          'linear-gradient(135deg, hsl(var(--primary) / 0.05) 0%, hsl(var(--accent) / 0.05) 100%)',
+          'linear-gradient(135deg, hsl(var(--primary) / 0.06) 0%, hsl(var(--accent) / 0.08) 100%)',
+        'surface-gradient':
+          'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%)',
       },
       fontFamily: {
         mono: [
