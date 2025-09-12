@@ -4,7 +4,7 @@ This document provides a high-level overview of the Django project, its structur
 
 ## Project Overview
 
-This project is a Django-based backend application that serves as a wrapper for the ICICI Breeze API, providing functionalities for managing user accounts, handling financial instrument data, and interacting with the Breeze API for real-time trading data.
+This project is a Django-based backend application that serves as a wrapper for the Alpaca API, providing functionalities for managing user accounts, handling financial instrument data, and interacting with the Alpaca API for real-time trading data.
 
 The project is structured into several Django apps, each responsible for a specific set of features. It uses Django REST Framework for building RESTful APIs, Celery for asynchronous task processing, and Redis for caching and as a message broker.
 
@@ -29,7 +29,7 @@ The project follows a standard Django project layout with a few customizations.
   - **`celery.py`**: Celery application instance.
 - **`apps/`**: This directory contains the individual Django applications.
   - **`account/`**: Manages user authentication, registration, profile management, and password reset functionalities.
-  - **`core/`**: The core application of the project. It handles interactions with the Breeze API, manages financial instruments, subscriptions, and candle data.
+  - **`core/`**: The core application of the project. It handles interactions with the Alpaca API, manages financial instruments, subscriptions, and candle data.
   - **`home/`**: A basic application, likely for a landing page or general-purpose views.
 - **`scripts/`**: Contains shell scripts for running various components of the project, such as the backend server, Celery workers, and Celery Beat.
 - **`pyproject.toml`**: Defines project metadata and dependencies.
@@ -38,7 +38,7 @@ The project follows a standard Django project layout with a few customizations.
 
 ### Important Note on Project Naming
 
-The main Django project directory is named `main` instead of the conventional `config`. This is due to a dependency conflict with `breeze-connect`, which internally references a `config` module.
+The main Django project directory is named `main` instead of the conventional `config`. This naming choice ensures compatibility with the project's dependencies.
 
 ## Key Functionalities
 
@@ -51,8 +51,8 @@ The main Django project directory is named `main` instead of the conventional `c
 
 ### Core Trading Functionalities (`apps/core`)
 
-- **Breeze Account Management:** `BreezeAccountViewSet` allows users to manage their Breeze API credentials.
-- **Breeze API Interaction:** The `breeze` module within the `core` app likely contains the logic for interacting with the Breeze API.
+- **Alpaca Account Management:** `AlpacaAccountViewSet` allows users to manage their Alpaca API credentials.
+- **Alpaca API Interaction:** The `alpaca` module within the `core` app likely contains the logic for interacting with the Alpaca API.
 - **Instrument Management:** `InstrumentViewSet` provides an endpoint to search for financial instruments.
 - **Subscriptions:** `SubscribedInstrumentsViewSet` allows users to subscribe to instruments for real-time data.
 - **Candle Data:** `CandleViewSet` provides historical candle data for subscribed instruments and supports resampling to different timeframes.
