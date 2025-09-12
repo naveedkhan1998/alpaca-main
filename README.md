@@ -177,6 +177,57 @@ docker compose exec frontend pnpm dev
 
 ---
 
+## Production Deployment
+
+### Google Kubernetes Engine (GKE) Deployment
+
+This repository includes comprehensive Helm charts and GitHub Actions workflows for deploying to Google Kubernetes Engine (GKE).
+
+#### 🚀 Quick Deployment
+
+1. **Manual GitHub Actions Deployment** (Recommended):
+   - Go to the **Actions** tab in this repository
+   - Select **"Manual GKE Deployment"** workflow
+   - Click **"Run workflow"** and configure:
+     - Environment: `staging` or `production`
+     - Image tag: `latest` or specific SHA
+     - GKE cluster details
+
+2. **Local Deployment with Helm**:
+   ```bash
+   # Deploy to staging
+   helm upgrade --install alpaca-main charts/alpaca-main \
+       --values charts/alpaca-main/values-staging.yaml \
+       --namespace default
+   
+   # Deploy to production  
+   helm upgrade --install alpaca-main charts/alpaca-main \
+       --values charts/alpaca-main/values-production.yaml \
+       --namespace default
+   ```
+
+#### 📋 Features
+
+- **Complete microservices deployment** (Backend, Frontend, Nginx, PostgreSQL, Redis, Celery, WebSocket)
+- **Production-ready configurations** with secrets management, persistent storage, and autoscaling
+- **Environment-specific values** for staging and production
+- **Ingress with SSL termination** using GKE managed certificates
+- **Horizontal Pod Autoscaling** for dynamic scaling
+- **Resource limits and requests** optimized for GKE
+
+#### 📖 Documentation
+
+For detailed deployment instructions, see: **[docs/GKE_DEPLOYMENT.md](docs/GKE_DEPLOYMENT.md)**
+
+The guide covers:
+- GKE cluster setup
+- GitHub repository secrets configuration
+- Manual and automated deployment options
+- Monitoring and troubleshooting
+- Security best practices
+
+---
+
 ## Testing & Monitoring
 
 ### Follow Celery logs
