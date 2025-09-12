@@ -130,7 +130,7 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
 ## Prerequisites
 
 - **Docker** & **Docker Compose** installed
-- An **ICICI Alpaca API** key & secret
+- An **Alpaca API** key & secret
 
 ---
 
@@ -253,7 +253,7 @@ This project wouldn't be possible without these amazing technologies and resourc
 
 ### Core Technologies
 
-- [ICICI Direct – Alpaca API](https://www.icicidirect.com/) - The financial data API that powers this wrapper
+- [Alpaca API](https://alpaca.markets/) - The financial data API that powers this wrapper
 - [Django](https://www.djangoproject.com/) & [Django REST Framework](https://www.django-rest-framework.org/) - Web framework and API toolkit
 - [Django Channels](https://channels.readthedocs.io/) - WebSocket support for Django
 - [Celery](https://docs.celeryproject.org/) - Distributed task queue
@@ -279,7 +279,7 @@ This project wouldn't be possible without these amazing technologies and resourc
 - The open source community for creating and maintaining these incredible tools
 - All contributors who have helped improve this project
 
-> **Disclaimer:** This project is not affiliated with ICICI Direct. Use at your own risk and ensure compliance with ICICI's terms of service.
+> **Disclaimer:** This project is not affiliated with Alpaca Markets. Use at your own risk and ensure compliance with Alpaca's terms of service.
 
 ---
 
