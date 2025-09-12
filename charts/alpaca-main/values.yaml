@@ -2,11 +2,58 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# Global settings
 replicaCount: 1
+nameOverride: ""
+fullnameOverride: ""
 
+# Image pull secrets for private registries
+imagePullSecrets: []
+
+# Service account configuration
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# Pod security context
+podSecurityContext: {}
+  # fsGroup: 2000
+
+# Container security context
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# Node selector, affinity and tolerations
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Pod annotations
+podAnnotations: {}
+
+# Backend service configuration
 backend:
   image:
-    repository: your-backend-image
+    repository: naveedkhan1998/alpaca-backend
     pullPolicy: IfNotPresent
     tag: "latest"
   service:
@@ -14,25 +61,25 @@ backend:
     port: 8000
   env:
     DJANGO_SETTINGS_MODULE: main.settings.production
-    DATABASE_URL: postgresql://user:password@postgres:5432/breeze
-    REDIS_URL: redis://redis:6379/0
 
+# Frontend service configuration
 frontend:
   image:
-    repository: your-frontend-image
+    repository: naveedkhan1998/alpaca-frontend
     pullPolicy: IfNotPresent
     tag: "latest"
   service:
     type: ClusterIP
     port: 80
 
+# Nginx reverse proxy configuration
 nginx:
   image:
-    repository: nginx
+    repository: naveedkhan1998/alpaca-nginx
     pullPolicy: IfNotPresent
     tag: "latest"
   service:
-    type: LoadBalancer
+    type: ClusterIP
     port: 80
   config: |
     server {
@@ -50,7 +97,7 @@ nginx:
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
         location /ws/ {
-            proxy_pass http://backend:8000;
+            proxy_pass http://websocket:8001;
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection "Upgrade";
@@ -60,59 +107,81 @@ nginx:
         }
     }
 
+# PostgreSQL database configuration
 postgres:
   enabled: true
   image:
     repository: postgres
     pullPolicy: IfNotPresent
-    tag: "13"
+    tag: "16"
   auth:
-    username: user
-    password: password
-    database: breeze
+    username: alpaca_user
+    password: changeme123
+    database: alpaca_db
   service:
     type: ClusterIP
     port: 5432
+  # Persistent storage for postgres data
+  persistence:
+    enabled: true
+    storageClass: "standard-rwo"  # GKE standard storage class
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
 
+# Redis cache/broker configuration
 redis:
   enabled: true
   image:
     repository: redis
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: "7-alpine"
   service:
     type: ClusterIP
     port: 6379
 
-celeryWorker:
+# WebSocket service configuration
+websocket:
   enabled: true
   replicaCount: 1
   image:
-    repository: your-backend-image
+    repository: naveedkhan1998/alpaca-backend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 8001
+  env:
+    DJANGO_SETTINGS_MODULE: main.settings.production
+
+# Celery worker configuration
+celeryWorker:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: naveedkhan1998/alpaca-backend
     pullPolicy: IfNotPresent
     tag: "latest"
   env:
     DJANGO_SETTINGS_MODULE: main.settings.production
-    DATABASE_URL: postgresql://user:password@postgres:5432/breeze
-    REDIS_URL: redis://redis:6379/0
 
+# Celery beat scheduler configuration
 celeryBeat:
   enabled: true
   replicaCount: 1
   image:
-    repository: your-backend-image
+    repository: naveedkhan1998/alpaca-backend
     pullPolicy: IfNotPresent
     tag: "latest"
   env:
     DJANGO_SETTINGS_MODULE: main.settings.production
-    DATABASE_URL: postgresql://user:password@postgres:5432/breeze
-    REDIS_URL: redis://redis:6379/0
 
+# Flower monitoring UI configuration
 flower:
   enabled: true
   replicaCount: 1
   image:
-    repository: your-backend-image
+    repository: naveedkhan1998/alpaca-backend
     pullPolicy: IfNotPresent
     tag: "latest"
   service:
@@ -120,5 +189,52 @@ flower:
     port: 5555
   env:
     DJANGO_SETTINGS_MODULE: main.settings.production
-    DATABASE_URL: postgresql://user:password@postgres:5432/breeze
+
+# Horizontal Pod Autoscaler configuration
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Ingress configuration for external access
+ingress:
+  enabled: true
+  className: "gce"  # GKE ingress class
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: ""  # Set your reserved static IP name
+    networking.gke.io/managed-certificates: ""  # Set your managed certificate name
+  hosts:
+    - host: alpaca.example.com  # Change to your domain
+      paths:
+        - path: /
+          pathType: Prefix
+          service: nginx
+          port: 80
+  tls: []
+    # - secretName: alpaca-tls
+    #   hosts:
+    #     - alpaca.example.com
+
+# Secrets for sensitive data
+secrets:
+  enabled: true
+  data:
+    POSTGRES_PASSWORD: changeme123
+    DJANGO_SECRET_KEY: your-django-secret-key-here
+    ALPACA_API_KEY: your-alpaca-api-key
+    ALPACA_SECRET_KEY: your-alpaca-secret-key
+
+# ConfigMap for non-sensitive configuration
+configMap:
+  enabled: true
+  data:
+    DJANGO_SETTINGS_MODULE: main.settings.production
+    DJANGO_DEBUG: "False"
+    DJANGO_ALLOWED_HOSTS: "*"
+    DATABASE_URL: postgresql://alpaca_user@postgres:5432/alpaca_db
     REDIS_URL: redis://redis:6379/0
+    CELERY_BROKER_URL: redis://redis:6379/0
+    CELERY_RESULT_BACKEND: redis://redis:6379/0

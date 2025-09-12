@@ -1,0 +1,24 @@
+{{- if and .Values.postgres.enabled .Values.postgres.persistence.enabled -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "alpaca-main.fullname" . }}-postgres-pvc
+  labels:
+    {{- include "alpaca-main.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres
+spec:
+  accessModes:
+    {{- range .Values.postgres.persistence.accessModes }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- if .Values.postgres.persistence.storageClass }}
+  {{- if (eq "-" .Values.postgres.persistence.storageClass) }}
+  storageClassName: ""
+  {{- else }}
+  storageClassName: {{ .Values.postgres.persistence.storageClass | quote }}
+  {{- end }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.postgres.persistence.size | quote }}
+{{- end -}}

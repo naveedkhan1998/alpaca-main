@@ -1,0 +1,98 @@
+# Production environment values for alpaca-main
+# Override values for production deployment
+
+# Production resource requirements
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Higher replicas for production
+replicaCount: 2
+celeryWorker:
+  replicaCount: 3
+
+# Enable autoscaling in production
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Production ingress with SSL
+ingress:
+  enabled: true
+  className: "gce"
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "alpaca-main-ip"
+    networking.gke.io/managed-certificates: "alpaca-main-ssl-cert"
+    kubernetes.io/ingress.allow-http: "false"
+  hosts:
+    - host: alpaca.mnaveedk.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: nginx
+          port: 80
+  tls:
+    - secretName: alpaca-tls
+      hosts:
+        - alpaca.mnaveedk.com
+
+# Production postgres with larger storage
+postgres:
+  persistence:
+    enabled: true
+    storageClass: "standard-rwo"
+    size: 50Gi
+
+# Production secrets (these should be injected by CI/CD or external secret management)
+secrets:
+  data:
+    # These should be overridden with real production values
+    POSTGRES_PASSWORD: ""  # Set via CI/CD
+    DJANGO_SECRET_KEY: ""  # Set via CI/CD
+    ALPACA_API_KEY: ""     # Set via CI/CD
+    ALPACA_SECRET_KEY: ""  # Set via CI/CD
+
+# Production ConfigMap
+configMap:
+  data:
+    DJANGO_SETTINGS_MODULE: main.settings.production
+    DJANGO_DEBUG: "False"
+    DJANGO_ALLOWED_HOSTS: "alpaca.mnaveedk.com,*.alpaca.mnaveedk.com"
+    DATABASE_URL: postgresql://alpaca_user@postgres:5432/alpaca_production_db
+
+# Production security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+    - ALL
+
+# Node affinity for production (prefer different nodes)
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - alpaca-main
+        topologyKey: kubernetes.io/hostname

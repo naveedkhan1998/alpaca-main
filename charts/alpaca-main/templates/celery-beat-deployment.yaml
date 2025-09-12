@@ -41,6 +41,27 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+            {{- if .Values.configMap.enabled }}
+            {{- range $key, $value := .Values.configMap.data }}
+            - name: {{ $key }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "alpaca-main.fullname" $ }}-config
+                  key: {{ $key }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.secrets.enabled }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "alpaca-main.fullname" $ }}-secrets
+                  key: POSTGRES_PASSWORD
+            - name: DJANGO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "alpaca-main.fullname" $ }}-secrets
+                  key: DJANGO_SECRET_KEY
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

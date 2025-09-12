@@ -41,13 +41,31 @@ spec:
             - name: POSTGRES_USER
               value: {{ .Values.postgres.auth.username | quote }}
             - name: POSTGRES_PASSWORD
+              {{- if .Values.secrets.enabled }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "alpaca-main.fullname" . }}-secrets
+                  key: POSTGRES_PASSWORD
+              {{- else }}
               value: {{ .Values.postgres.auth.password | quote }}
+              {{- end }}
           ports:
             - name: postgres
               containerPort: {{ .Values.postgres.service.port }}
               protocol: TCP
+          {{- if .Values.postgres.persistence.enabled }}
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      {{- if .Values.postgres.persistence.enabled }}
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: {{ include "alpaca-main.fullname" . }}-postgres-pvc
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
