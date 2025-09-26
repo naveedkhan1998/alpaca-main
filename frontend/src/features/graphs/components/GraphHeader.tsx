@@ -37,7 +37,6 @@ import {
   selectIsFullscreen,
   selectShowControls,
   selectShowVolume,
-  selectTimeframe,
   setAutoRefresh,
   setShowControls,
   setShowVolume,
@@ -61,7 +60,7 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
 }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const timeframe = useAppSelector(selectTimeframe);
+
   const autoRefresh = useAppSelector(selectAutoRefresh);
   const showVolume = useAppSelector(selectShowVolume);
   const showControls = useAppSelector(selectShowControls);
@@ -74,7 +73,7 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
         <title>{obj?.name} - Alpaca</title>
       </Helmet>
       <div
-        className={`flex items-center justify-between ${isMobile ? 'h-14 px-2' : 'h-18 px-4'} mx-auto sm:px-6 lg:px-8`}
+        className={`flex items-center justify-between ${isMobile ? 'h-14 px-2' : 'h-14 px-2'} mx-auto sm:px-6 lg:px-8`}
       >
         {/* Left Section - Navigation & Title */}
         <div className="flex items-center gap-2">
@@ -102,22 +101,6 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
             >
               {obj?.name || 'Chart'}
             </h1>
-            {!isMobile && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>{obj?.symbol || 'N/A'}</span>
-                <Separator orientation="vertical" className="h-3" />
-                <span>{timeframe}m</span>
-                {autoRefresh && (
-                  <>
-                    <Separator orientation="vertical" className="h-3" />
-                    <div className="flex items-center gap-1.5 text-green-500">
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <span>Live</span>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
@@ -209,7 +192,7 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  <div className="text-xs space-y-1">
+                  <div className="space-y-1 text-xs">
                     <div className="font-medium text-foreground">Shortcuts</div>
                     <div className="text-muted-foreground">
                       <kbd className="px-1 py-0.5 rounded bg-muted mr-1">F</kbd>{' '}

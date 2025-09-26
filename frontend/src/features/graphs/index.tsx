@@ -149,7 +149,7 @@ const GraphsPage: React.FC = () => {
   }, [candles, obj?.name, timeframe]);
 
   if (!obj) return <NotFoundScreen />;
-  if (loadingInitial && candles.length === 0) return <LoadingScreen />;
+  if (loadingInitial && mainChartRef.current === null) return <LoadingScreen />;
   if (errorInitial) return <ErrorScreen />;
 
   return (

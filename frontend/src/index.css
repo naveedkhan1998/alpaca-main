@@ -156,9 +156,11 @@
   /* Glass card utility (used by chart overlays) */
   .glass-card {
     background: hsl(var(--card) / 0.6);
-    backdrop-filter: saturate(120%) blur(10px);
-    -webkit-backdrop-filter: saturate(120%) blur(10px);
+    backdrop-filter: saturate(120%) blur(0.01rem);
+    -webkit-backdrop-filter: saturate(120%) blur(0.01rem);
     border: 1px solid hsl(var(--border) / 0.6);
+    z-index: 10;
+    border-radius: var(--radius);
   }
 
   /* Trading-specific enhancements */

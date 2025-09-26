@@ -107,7 +107,7 @@ const MainChart: React.FC<MainChartProps> = ({
     // Create legend
     const legendContainer = document.createElement('div');
     legendContainer.className =
-      'absolute top-2 left-2 p-2 rounded-lg glass-card shadow-md z-[10] flex items-center flex-wrap gap-x-4 gap-y-1';
+      'absolute flex flex-wrap items-center p-2 rounded-lg top-2 left-2 glass-card gap-x-4 gap-y-1';
 
     mainChartContainerRef.current.appendChild(legendContainer);
     legendContainerRef.current = legendContainer;
@@ -118,7 +118,7 @@ const MainChart: React.FC<MainChartProps> = ({
 
     const companyName = document.createElement('span');
     companyName.className =
-      'text-sm font-bold text-slate-900 dark:text-slate-100';
+      'hidden text-sm font-bold text-slate-900 dark:text-slate-100';
     companyName.textContent = obj?.name || '';
 
     const exchangeBadge = document.createElement('span');
@@ -226,7 +226,7 @@ const MainChart: React.FC<MainChartProps> = ({
     // Create loading indicator
     const loadingIndicator = document.createElement('div');
     loadingIndicator.className =
-      'absolute top-12 left-2 p-2 rounded-lg glass-card shadow-md z-[10] hidden';
+      'absolute hidden p-2 rounded-lg shadow-md top-12 left-2 glass-card';
     loadingIndicator.innerHTML = `
       <div class="flex items-center gap-2 text-sm">
         <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
