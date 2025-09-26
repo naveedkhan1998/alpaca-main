@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import type React from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,9 +7,22 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, TrendingDown, TrendingUp } from 'lucide-react';
+import {
+  Loader2,
+  TrendingDown,
+  TrendingUp,
+  BarChart3,
+  Target,
+  Shield,
+  DollarSign,
+  Activity,
+} from 'lucide-react';
 
 import type { Asset } from '@/types/common-types';
+import type {
+  PaperTrade,
+  PaperTradeDirection,
+} from 'src/features/paperTrading/types';
 import {
   useCancelPaperTradeMutation,
   useClosePaperTradeMutation,
@@ -16,12 +30,9 @@ import {
   useDeletePaperTradeMutation,
   useGetPaperTradesQuery,
 } from 'src/features/paperTrading/paperTradingApi';
-import type {
-  PaperTrade,
-  PaperTradeDirection,
-} from 'src/features/paperTrading/types';
-import { useToast } from '@/hooks/useToast';
+
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/useToast';
 
 interface PaperTradingPanelProps {
   asset?: Asset;
@@ -42,15 +53,23 @@ const formatCurrency = (value?: string | number | null) => {
   return currencyFormatter.format(numeric);
 };
 
-const statusVariant: Record<string, 'secondary' | 'destructive' | 'default'> = {
-  OPEN: 'secondary',
-  CLOSED: 'default',
+const statusVariant: Record<
+  string,
+  'secondary' | 'destructive' | 'default' | 'outline'
+> = {
+  OPEN: 'default',
+  CLOSED: 'secondary',
   CANCELLED: 'destructive',
 };
 
 const directionIcon: Record<PaperTradeDirection, React.ReactNode> = {
-  LONG: <TrendingUp className="w-3.5 h-3.5" />,
-  SHORT: <TrendingDown className="w-3.5 h-3.5" />,
+  LONG: <TrendingUp className="w-4 h-4" />,
+  SHORT: <TrendingDown className="w-4 h-4" />,
+};
+
+const directionColors: Record<PaperTradeDirection, string> = {
+  LONG: 'text-profit',
+  SHORT: 'text-loss',
 };
 
 const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
@@ -120,7 +139,8 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
     }
   }, [trades]);
 
-  const [createTrade, { isLoading: isCreating }] = useCreatePaperTradeMutation();
+  const [createTrade, { isLoading: isCreating }] =
+    useCreatePaperTradeMutation();
   const [closeTrade, { isLoading: isClosing }] = useClosePaperTradeMutation();
   const [cancelTrade, { isLoading: isCancelling }] =
     useCancelPaperTradeMutation();
@@ -166,9 +186,7 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
   const resetForm = () => {
     setDirection('LONG');
     setQuantity('1');
-    setEntryPrice(
-      currentPrice !== undefined ? currentPrice.toFixed(2) : ''
-    );
+    setEntryPrice(currentPrice !== undefined ? currentPrice.toFixed(2) : '');
     setTargetPrice('');
     setStopLoss('');
     setTakeProfit('');
@@ -177,9 +195,7 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
     setEntryDirty(false);
   };
 
-  const handleCreateTrade = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleCreateTrade = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!asset) {
       setFormError('Select an asset to open a paper trade.');
@@ -204,7 +220,7 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
         stop_loss: stopLoss || undefined,
         take_profit: takeProfit || undefined,
         notes: notes || undefined,
-      }).unwrap();
+      });
 
       toast({
         title: 'Paper trade opened',
@@ -213,9 +229,7 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
       resetForm();
     } catch (error) {
       console.error('Failed to create paper trade', error);
-      const detail =
-        (error as { data?: { detail?: string } }).data?.detail ??
-        'Unable to create paper trade.';
+      const detail = 'Unable to create paper trade.';
       setFormError(detail);
       toast({
         title: 'Unable to open trade',
@@ -249,7 +263,7 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
         id: closingTradeId,
         exit_price: closingPrice,
         notes: closingNotes || undefined,
-      }).unwrap();
+      });
 
       toast({
         title: 'Trade closed',
@@ -260,9 +274,7 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
       setClosingNotes('');
     } catch (error) {
       console.error('Failed to close paper trade', error);
-      const detail =
-        (error as { data?: { detail?: string } }).data?.detail ??
-        'Unable to close trade.';
+      const detail = 'Unable to close trade.';
       toast({
         title: 'Unable to close trade',
         description: detail,
@@ -273,16 +285,14 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
 
   const handleCancelTrade = async (id: number) => {
     try {
-      await cancelTrade({ id }).unwrap();
+      await cancelTrade({ id });
       toast({
         title: 'Trade cancelled',
         description: 'Paper trade marked cancelled.',
       });
     } catch (error) {
       console.error('Failed to cancel trade', error);
-      const detail =
-        (error as { data?: { detail?: string } }).data?.detail ??
-        'Unable to cancel trade.';
+      const detail = 'Unable to cancel trade.';
       toast({
         title: 'Unable to cancel trade',
         description: detail,
@@ -293,16 +303,14 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
 
   const handleDeleteTrade = async (id: number) => {
     try {
-      await deleteTrade(id).unwrap();
+      await deleteTrade(id);
       toast({
         title: 'Trade removed',
         description: 'Paper trade deleted.',
       });
     } catch (error) {
       console.error('Failed to delete trade', error);
-      const detail =
-        (error as { data?: { detail?: string } }).data?.detail ??
-        'Unable to delete trade.';
+      const detail = 'Unable to delete trade.';
       toast({
         title: 'Unable to delete trade',
         description: detail,
@@ -312,55 +320,86 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
   };
 
   return (
-    <Card className="shadow-sm border-border/50 bg-card/80 backdrop-blur-sm">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center justify-between text-sm">
-          <span>Paper Trading</span>
+    <Card className="border-2 shadow-xl glass-effect">
+      <CardHeader className="pb-6 border-b border-trading-border">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <BarChart3 className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-balance">
+                Paper Trading
+              </h3>
+              <p className="text-sm font-normal text-muted-foreground">
+                Simulate trades without real money
+              </p>
+            </div>
+          </div>
           {asset ? (
-            <Badge variant="outline" className="text-xs uppercase">
-              {asset.symbol}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant="outline"
+                className="px-3 py-1 font-mono text-sm font-medium"
+              >
+                {asset.symbol}
+              </Badge>
+              <div className="text-right">
+                <div className="text-xs text-muted-foreground">Live Price</div>
+                <div className="font-mono text-sm font-semibold">
+                  {currentPrice !== undefined
+                    ? formatCurrency(currentPrice)
+                    : '--'}
+                </div>
+              </div>
+            </div>
           ) : null}
         </CardTitle>
-        <div className="text-xs text-muted-foreground">
-          Simulate entries and track virtual P&amp;L without sending real orders.
-        </div>
       </CardHeader>
 
-      <CardContent className="space-y-5">
-        <section>
-          <header className="flex items-center justify-between mb-3">
-            <div className="text-xs font-medium text-muted-foreground">
-              New Trade
+      <CardContent className="p-6 space-y-8">
+        <section className="space-y-6">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-md bg-primary/10">
+              <Activity className="w-4 h-4 text-primary" />
             </div>
-            <div className="text-xs text-muted-foreground">
-              Live price: {currentPrice !== undefined ? formatCurrency(currentPrice) : '--'}
-            </div>
-          </header>
+            <h4 className="font-semibold text-pretty">New Trade</h4>
+          </div>
 
           {!isAssetAvailable ? (
-            <div className="mb-3 rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
-              Select an asset from the watchlist to start paper trading.
+            <div className="p-6 text-center border-2 border-dashed rounded-xl border-muted-foreground/30">
+              <div className="text-muted-foreground">
+                <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">
+                  Select an asset from the watchlist to start paper trading
+                </p>
+              </div>
             </div>
           ) : null}
 
-          <form className="grid gap-3" onSubmit={handleCreateTrade}>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="paper-direction" className="text-xs">
-                  Direction
-                </Label>
-                <div className="grid grid-cols-2 gap-2">
+          <form className="space-y-6" onSubmit={handleCreateTrade}>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="space-y-3">
+                <Label className="text-sm font-medium" htmlFor="direction">Direction</Label>
+                <div className="grid grid-cols-2 gap-3">
                   {(['LONG', 'SHORT'] as PaperTradeDirection[]).map(option => (
                     <Button
                       key={option}
                       type="button"
-                      variant={direction === option ? 'secondary' : 'outline'}
-                      className="h-8 text-xs"
+                      variant={direction === option ? 'default' : 'outline'}
+                      className={cn(
+                        'h-12 text-sm font-medium transition-all',
+                        direction === option &&
+                          option === 'LONG' &&
+                          'bg-profit hover:bg-profit/90 ',
+                        direction === option &&
+                          option === 'SHORT' &&
+                          'bg-loss hover:bg-loss/90 '
+                      )}
                       onClick={() => setDirection(option)}
                       disabled={!isAssetAvailable}
                     >
-                      <span className="flex items-center gap-1.5">
+                      <span className="flex items-center gap-2">
                         {directionIcon[option]}
                         {option === 'LONG' ? 'Long' : 'Short'}
                       </span>
@@ -368,8 +407,9 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
                   ))}
                 </div>
               </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="paper-quantity" className="text-xs">
+
+              <div className="space-y-3">
+                <Label htmlFor="paper-quantity" className="text-sm font-medium">
                   Quantity
                 </Label>
                 <Input
@@ -379,18 +419,18 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
                   min="0"
                   value={quantity}
                   onChange={event => setQuantity(event.target.value)}
-                  className="h-8 text-xs"
+                  className="h-12 font-mono text-sm"
                   required
                   disabled={!isAssetAvailable}
                 />
               </div>
             </div>
 
-            <div className="grid gap-1.5">
-              <Label htmlFor="paper-entry" className="text-xs">
-                Entry price
+            <div className="space-y-3">
+              <Label htmlFor="paper-entry" className="text-sm font-medium">
+                Entry Price
               </Label>
-              <div className="flex items-center gap-2">
+              <div className="flex gap-3">
                 <Input
                   id="paper-entry"
                   type="number"
@@ -401,15 +441,14 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
                     setEntryPrice(event.target.value);
                     setEntryDirty(true);
                   }}
-                  className="h-8 text-xs"
+                  className="h-12 font-mono text-sm"
                   required
                   disabled={!isAssetAvailable}
                 />
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
-                  className="h-8 text-xs"
+                  className="h-12 px-4 text-sm bg-transparent whitespace-nowrap"
                   onClick={() => {
                     if (currentPrice !== undefined) {
                       setEntryPrice(currentPrice.toFixed(2));
@@ -418,181 +457,250 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
                   }}
                   disabled={!isAssetAvailable || currentPrice === undefined}
                 >
-                  Use market
+                  Use Market
                 </Button>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="paper-target" className="text-xs">
-                  Target
-                </Label>
-                <Input
-                  id="paper-target"
-                  type="number"
-                  step="0.0001"
-                  min="0"
-                  value={targetPrice}
-                  onChange={event => setTargetPrice(event.target.value)}
-                  className="h-8 text-xs"
-                  disabled={!isAssetAvailable}
-                />
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-muted-foreground" />
+                <Label className="text-sm font-medium">Risk Management</Label>
               </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="paper-stop" className="text-xs">
-                  Stop loss
-                </Label>
-                <Input
-                  id="paper-stop"
-                  type="number"
-                  step="0.0001"
-                  min="0"
-                  value={stopLoss}
-                  onChange={event => setStopLoss(event.target.value)}
-                  className="h-8 text-xs"
-                  disabled={!isAssetAvailable}
-                />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="paper-take-profit" className="text-xs">
-                  Take profit
-                </Label>
-                <Input
-                  id="paper-take-profit"
-                  type="number"
-                  step="0.0001"
-                  min="0"
-                  value={takeProfit}
-                  onChange={event => setTakeProfit(event.target.value)}
-                  className="h-8 text-xs"
-                  disabled={!isAssetAvailable}
-                />
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="paper-target"
+                    className="text-xs text-muted-foreground"
+                  >
+                    Target Price
+                  </Label>
+                  <Input
+                    id="paper-target"
+                    type="number"
+                    step="0.0001"
+                    min="0"
+                    value={targetPrice}
+                    onChange={event => setTargetPrice(event.target.value)}
+                    className="h-10 font-mono text-sm"
+                    disabled={!isAssetAvailable}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="paper-stop"
+                    className="text-xs text-muted-foreground"
+                  >
+                    Stop Loss
+                  </Label>
+                  <Input
+                    id="paper-stop"
+                    type="number"
+                    step="0.0001"
+                    min="0"
+                    value={stopLoss}
+                    onChange={event => setStopLoss(event.target.value)}
+                    className="h-10 font-mono text-sm"
+                    disabled={!isAssetAvailable}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="paper-take-profit"
+                    className="text-xs text-muted-foreground"
+                  >
+                    Take Profit
+                  </Label>
+                  <Input
+                    id="paper-take-profit"
+                    type="number"
+                    step="0.0001"
+                    min="0"
+                    value={takeProfit}
+                    onChange={event => setTakeProfit(event.target.value)}
+                    className="h-10 font-mono text-sm"
+                    disabled={!isAssetAvailable}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="grid gap-1.5">
-              <Label htmlFor="paper-notes" className="text-xs">
-                Notes (optional)
+            <div className="space-y-3">
+              <Label htmlFor="paper-notes" className="text-sm font-medium">
+                Notes{' '}
+                <span className="font-normal text-muted-foreground">
+                  (optional)
+                </span>
               </Label>
               <Textarea
                 id="paper-notes"
-                rows={2}
+                rows={3}
                 value={notes}
                 onChange={event => setNotes(event.target.value)}
-                className="text-xs"
+                className="text-sm resize-none"
                 disabled={!isAssetAvailable}
+                placeholder="Add your trading notes or strategy..."
               />
             </div>
 
             {formError ? (
-              <div className="text-xs text-destructive">{formError}</div>
+              <div className="p-3 border rounded-lg bg-destructive/10 border-destructive/20">
+                <p className="text-sm text-destructive">{formError}</p>
+              </div>
             ) : null}
 
-            <div className="flex items-center gap-2 justify-end">
-              <Button type="button" variant="ghost" size="sm" onClick={resetForm}>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button type="button" variant="ghost" onClick={resetForm}>
                 Reset
               </Button>
               <Button
                 type="submit"
-                size="sm"
+                className="px-6"
                 disabled={isCreating || !isAssetAvailable}
               >
                 {isCreating ? (
                   <span className="flex items-center gap-2">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Opening...
+                    <Loader2 className="w-4 h-4 animate-spin" /> Opening...
                   </span>
                 ) : (
-                  'Open trade'
+                  'Open Trade'
                 )}
               </Button>
             </div>
           </form>
         </section>
 
-        <Separator />
+        <Separator className="my-8" />
 
-        <section className="space-y-3">
-          <header className="flex items-center justify-between">
-            <div className="text-xs font-medium text-muted-foreground">
-              Open Trades ({summary.openCount})
-            </div>
-            <div className="text-xs text-muted-foreground">
-              Unrealized P&amp;L: {formatCurrency(summary.openPnL)}
-            </div>
-          </header>
-          <div className="space-y-3">
-            {isFetching ? (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading trades...
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-md bg-success/10">
+                <TrendingUp className="w-4 h-4 text-success" />
               </div>
-            ) : null}
+              <div>
+                <h4 className="font-semibold">Open Positions</h4>
+                <p className="text-xs text-muted-foreground">
+                  {summary.openCount} active trades
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-xs text-muted-foreground">
+                Unrealized P&L
+              </div>
+              <div
+                className={cn(
+                  'text-lg font-mono font-bold',
+                  summary.openPnL >= 0 ? 'profit-text' : 'loss-text'
+                )}
+              >
+                {formatCurrency(summary.openPnL)}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
             {!isFetching && openTrades.length === 0 ? (
-              <div className="rounded-lg border border-dashed p-4 text-xs text-muted-foreground">
-                No open paper trades yet.
+              <div className="p-8 text-center border-2 border-dashed rounded-xl border-muted-foreground/30">
+                <div className="text-muted-foreground">
+                  <Target className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No open paper trades yet</p>
+                  <p className="mt-1 text-xs">Create your first trade above</p>
+                </div>
               </div>
             ) : null}
+
             {openTrades.map(trade => (
               <article
                 key={trade.id}
-                className="rounded-lg border border-border/60 bg-card/70 p-4 text-xs space-y-3"
+                className="p-6 space-y-4 transition-shadow border-2 shadow-sm trading-card rounded-xl hover:shadow-md"
               >
                 <header className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Badge variant={statusVariant[trade.status] ?? 'default'}>
+                  <div className="flex items-center gap-3">
+                    <Badge
+                      variant={statusVariant[trade.status] ?? 'default'}
+                      className="capitalize"
+                    >
                       {trade.status.toLowerCase()}
                     </Badge>
-                    <span className="font-semibold uppercase">
-                      {trade.direction === 'LONG' ? 'Long' : 'Short'} {trade.quantity}
-                    </span>
-                    <span className="text-muted-foreground">
+                    <div
+                      className={cn(
+                        'flex items-center gap-2 font-semibold',
+                        directionColors[trade.direction]
+                      )}
+                    >
+                      {directionIcon[trade.direction]}
+                      <span className="font-mono">
+                        {trade.direction === 'LONG' ? 'LONG' : 'SHORT'}{' '}
+                        {trade.quantity}
+                      </span>
+                    </div>
+                    <span className="font-mono text-sm text-muted-foreground">
                       @ {formatCurrency(trade.entry_price)}
                     </span>
                   </div>
                 </header>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground">Entry value</span>
-                    <span>{formatCurrency(trade.entry_cost)}</span>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">
+                      Entry Value
+                    </div>
+                    <div className="font-mono font-semibold">
+                      {formatCurrency(trade.entry_cost)}
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground">Current value</span>
-                    <span>{formatCurrency(trade.current_value)}</span>
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">
+                      Current Value
+                    </div>
+                    <div className="font-mono font-semibold">
+                      {formatCurrency(trade.current_value)}
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground">Unrealized P&amp;L</span>
-                    <span
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">
+                      Unrealized P&L
+                    </div>
+                    <div
                       className={cn(
+                        'font-mono font-bold',
                         Number(trade.unrealized_pl ?? 0) >= 0
-                          ? 'text-emerald-400'
-                          : 'text-red-400'
+                          ? 'profit-text'
+                          : 'loss-text'
                       )}
                     >
                       {formatCurrency(trade.unrealized_pl)}
-                    </span>
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground">Targets</span>
-                    <span>
-                      {trade.take_profit
-                        ? `TP ${formatCurrency(trade.take_profit)}`
-                        : 'TP --'}
-                    </span>
-                    <span>
-                      {trade.stop_loss
-                        ? `SL ${formatCurrency(trade.stop_loss)}`
-                        : 'SL --'}
-                    </span>
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">Targets</div>
+                    <div className="space-y-0.5">
+                      <div className="font-mono text-xs">
+                        TP:{' '}
+                        {trade.take_profit
+                          ? formatCurrency(trade.take_profit)
+                          : '--'}
+                      </div>
+                      <div className="font-mono text-xs">
+                        SL:{' '}
+                        {trade.stop_loss
+                          ? formatCurrency(trade.stop_loss)
+                          : '--'}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {closingTradeId === trade.id ? (
-                  <div className="grid gap-2">
-                    <Separator />
-                    <div className="grid gap-1.5">
-                      <Label htmlFor={`close-price-${trade.id}`} className="text-xs">
-                        Exit price
+                  <div className="pt-4 space-y-4 border-t border-trading-border">
+                    <div className="space-y-3">
+                      <Label
+                        htmlFor={`close-price-${trade.id}`}
+                        className="text-sm font-medium"
+                      >
+                        Exit Price
                       </Label>
                       <Input
                         id={`close-price-${trade.id}`}
@@ -601,26 +709,32 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
                         min="0"
                         value={closingPrice}
                         onChange={event => setClosingPrice(event.target.value)}
-                        className="h-8 text-xs"
+                        className="h-10 font-mono"
                       />
                     </div>
-                    <div className="grid gap-1.5">
-                      <Label htmlFor={`close-notes-${trade.id}`} className="text-xs">
-                        Notes (optional)
+                    <div className="space-y-3">
+                      <Label
+                        htmlFor={`close-notes-${trade.id}`}
+                        className="text-sm font-medium"
+                      >
+                        Closing Notes{' '}
+                        <span className="font-normal text-muted-foreground">
+                          (optional)
+                        </span>
                       </Label>
                       <Textarea
                         id={`close-notes-${trade.id}`}
                         rows={2}
                         value={closingNotes}
                         onChange={event => setClosingNotes(event.target.value)}
-                        className="text-xs"
+                        className="text-sm resize-none"
+                        placeholder="Why are you closing this trade?"
                       />
                     </div>
-                    <div className="flex items-center gap-2 justify-end">
+                    <div className="flex items-center justify-end gap-3">
                       <Button
                         type="button"
                         variant="ghost"
-                        size="sm"
                         onClick={() => {
                           setClosingTradeId(null);
                           setClosingNotes('');
@@ -630,34 +744,32 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
                       </Button>
                       <Button
                         type="button"
-                        size="sm"
                         onClick={handleConfirmClose}
                         disabled={isClosing}
                       >
                         {isClosing ? (
                           <span className="flex items-center gap-2">
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Closing...
+                            <Loader2 className="w-4 h-4 animate-spin" />{' '}
+                            Closing...
                           </span>
                         ) : (
-                          'Confirm close'
+                          'Confirm Close'
                         )}
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 justify-end">
+                  <div className="flex items-center justify-end gap-3 pt-2">
                     <Button
                       type="button"
                       variant="outline"
-                      size="sm"
                       onClick={() => beginClosingTrade(trade)}
                     >
-                      Close trade
+                      Close Trade
                     </Button>
                     <Button
                       type="button"
                       variant="ghost"
-                      size="sm"
                       onClick={() => handleCancelTrade(trade.id)}
                       disabled={isCancelling}
                     >
@@ -670,75 +782,128 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
           </div>
         </section>
 
-        <Separator />
+        <Separator className="my-8" />
 
-        <section className="space-y-3">
-          <header className="flex items-center justify-between">
-            <div className="text-xs font-medium text-muted-foreground">
-              Closed &amp; Cancelled ({closedTrades.length})
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-md bg-muted">
+                <BarChart3 className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div>
+                <h4 className="font-semibold">Trade History</h4>
+                <p className="text-xs text-muted-foreground">
+                  {closedTrades.length} completed trades
+                </p>
+              </div>
             </div>
-            <div className="text-xs text-muted-foreground">
-              Realized P&amp;L: {formatCurrency(summary.realizedPnL)}
+            <div className="text-right">
+              <div className="text-xs text-muted-foreground">Realized P&L</div>
+              <div
+                className={cn(
+                  'text-lg font-mono font-bold',
+                  summary.realizedPnL >= 0 ? 'profit-text' : 'loss-text'
+                )}
+              >
+                {formatCurrency(summary.realizedPnL)}
+              </div>
             </div>
-          </header>
-          <div className="space-y-3">
+          </div>
+
+          <div className="space-y-4">
             {closedTrades.length === 0 ? (
-              <div className="rounded-lg border border-dashed p-4 text-xs text-muted-foreground">
-                Close trades to see them here.
+              <div className="p-8 text-center border-2 border-dashed rounded-xl border-muted-foreground/30">
+                <div className="text-muted-foreground">
+                  <DollarSign className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No completed trades yet</p>
+                  <p className="mt-1 text-xs">Close trades to see them here</p>
+                </div>
               </div>
             ) : null}
+
             {closedTrades.map(trade => (
               <article
                 key={trade.id}
-                className="rounded-lg border border-border/60 bg-card/70 p-4 text-xs space-y-3"
+                className="p-6 space-y-4 transition-opacity border opacity-75 trading-card rounded-xl hover:opacity-100"
               >
                 <header className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Badge variant={statusVariant[trade.status] ?? 'default'}>
+                  <div className="flex items-center gap-3">
+                    <Badge
+                      variant={statusVariant[trade.status] ?? 'default'}
+                      className="capitalize"
+                    >
                       {trade.status.toLowerCase()}
                     </Badge>
-                    <span className="font-semibold uppercase">
-                      {trade.direction === 'LONG' ? 'Long' : 'Short'} {trade.quantity}
-                    </span>
-                    <span className="text-muted-foreground">
-                      Entry {formatCurrency(trade.entry_price)} ? Exit{' '}
-                      {trade.exit_price ? formatCurrency(trade.exit_price) : '--'}
-                    </span>
-                  </div>
-                </header>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground">Entry value</span>
-                    <span>{formatCurrency(trade.entry_cost)}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground">Exit value</span>
-                    <span>
+                    <div
+                      className={cn(
+                        'flex items-center gap-2 font-semibold',
+                        directionColors[trade.direction]
+                      )}
+                    >
+                      {directionIcon[trade.direction]}
+                      <span className="font-mono">
+                        {trade.direction === 'LONG' ? 'LONG' : 'SHORT'}{' '}
+                        {trade.quantity}
+                      </span>
+                    </div>
+                    <span className="font-mono text-sm text-muted-foreground">
+                      {formatCurrency(trade.entry_price)} →{' '}
                       {trade.exit_price
-                        ? formatCurrency(Number(trade.exit_price) * Number(trade.quantity))
+                        ? formatCurrency(trade.exit_price)
                         : '--'}
                     </span>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground">Realized P&amp;L</span>
-                    <span
+                </header>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">
+                      Entry Value
+                    </div>
+                    <div className="font-mono font-semibold">
+                      {formatCurrency(trade.entry_cost)}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">
+                      Exit Value
+                    </div>
+                    <div className="font-mono font-semibold">
+                      {trade.exit_price
+                        ? formatCurrency(
+                            Number(trade.exit_price) * Number(trade.quantity)
+                          )
+                        : '--'}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">
+                      Realized P&L
+                    </div>
+                    <div
                       className={cn(
+                        'font-mono font-bold',
                         Number(trade.realized_pl ?? 0) >= 0
-                          ? 'text-emerald-400'
-                          : 'text-red-400'
+                          ? 'profit-text'
+                          : 'loss-text'
                       )}
                     >
                       {trade.realized_pl
                         ? formatCurrency(trade.realized_pl)
                         : '--'}
-                    </span>
+                    </div>
                   </div>
                 </div>
+
                 {trade.notes ? (
-                  <div className="text-muted-foreground">
-                    Notes: <span className="text-foreground">{trade.notes}</span>
+                  <div className="pt-2 border-t border-trading-border">
+                    <div className="mb-1 text-xs text-muted-foreground">
+                      Notes:
+                    </div>
+                    <div className="text-sm">{trade.notes}</div>
                   </div>
                 ) : null}
+
                 <div className="flex items-center justify-end">
                   <Button
                     type="button"
@@ -746,6 +911,7 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
                     size="sm"
                     onClick={() => handleDeleteTrade(trade.id)}
                     disabled={isDeleting}
+                    className="text-muted-foreground hover:text-destructive"
                   >
                     Remove
                   </Button>
@@ -755,18 +921,19 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
           </div>
         </section>
 
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-          <span>
-            Updated {lastUpdated ? lastUpdated.toLocaleTimeString() : '--'}
-          </span>
+        <div className="flex items-center justify-between pt-6 border-t border-trading-border">
+          <div className="text-xs text-muted-foreground">
+            Last updated:{' '}
+            {lastUpdated ? lastUpdated.toLocaleTimeString() : '--'}
+          </div>
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-[11px]"
             onClick={() => refetch()}
             disabled={!isAssetAvailable}
+            className="text-xs"
           >
-            Refresh
+            Refresh Data
           </Button>
         </div>
       </CardContent>
@@ -775,5 +942,3 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
 };
 
 export default PaperTradingPanel;
-
-

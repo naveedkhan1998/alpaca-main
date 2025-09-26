@@ -68,6 +68,7 @@ services:
       - ./frontend/public/:/usr/app/public/
       - ./frontend/package.json:/usr/app/package.json
       - ./frontend/package-lock.json:/usr/app/package-lock.json
+      - ./frontend/tailwind.config.js:/usr/app/tailwind.config.js
 
   celery-beat:
     image: naveedkhan1998/alpaca-backend

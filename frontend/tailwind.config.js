@@ -72,6 +72,12 @@ module.exports = {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        profit: 'hsl(var(--profit))',
+        loss: 'hsl(var(--loss))',
+        trading: {
+          card: 'hsl(var(--trading-card))',
+          border: 'hsl(var(--trading-border))',
+        },
       },
       keyframes: {
         'accordion-down': {
