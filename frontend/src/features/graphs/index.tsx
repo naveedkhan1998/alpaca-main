@@ -7,9 +7,10 @@ import {
   ResizablePanelGroup,
 } from '@/components/ui/resizable';
 //
-import { HiChartBar, HiCog } from 'react-icons/hi';
+import { HiChartBar, HiCog, HiLightningBolt } from 'react-icons/hi';
 import type { Asset } from '@/types/common-types';
 import { useTheme } from '@/components/ThemeProvider';
+import { Button } from '@/components/ui/button';
 import ChartControls from './components/ChartControls';
 import MainChart from './components/MainChart';
 import VolumeChart from './components/VolumeChart';
@@ -21,7 +22,9 @@ import GraphHeader from './components/GraphHeader';
 import IndicatorChart from './components/IndicatorChart';
 import { useIsMobile } from '@/hooks/useMobile';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import PanelHeader from './components/PanelHeader';
+import PaperTradingPanel from './components/controls/PaperTradingPanel';
 import { useCandles } from './hooks/useCandles';
 import { useDerivedSeries } from './hooks/useDerivedSeries';
 import { useChartSync } from './hooks/useChartSync';
@@ -60,6 +63,7 @@ const GraphsPage: React.FC = () => {
   const seriesType = useAppSelector(selectSeriesType);
   const showControls = useAppSelector(selectShowControls);
   const activeIndicators = useAppSelector(selectActiveIndicators);
+  const [isPaperTradingOpen, setIsPaperTradingOpen] = React.useState(false);
 
   // Refs
   const mainChartRef = useRef<ITimeScaleApi<Time> | null>(null);
@@ -90,6 +94,7 @@ const GraphsPage: React.FC = () => {
   } = useDerivedSeries({ candles, seriesType, isDarkMode, activeIndicators });
 
   const shouldShowVolume = showVolume && hasValidVolume;
+  const latestPrice = candles.length > 0 ? candles[0]?.close : undefined;
 
   // TimeScale refs setters
   const setMainChartTimeScale = (timeScale: ITimeScaleApi<Time>) => {
@@ -144,7 +149,7 @@ const GraphsPage: React.FC = () => {
   }, [candles, obj?.name, timeframe]);
 
   if (!obj) return <NotFoundScreen />;
-  if (loadingInitial && candles.length === 0) return <LoadingScreen />;
+  if (loadingInitial && mainChartRef.current === null) return <LoadingScreen />;
   if (errorInitial) return <ErrorScreen />;
 
   return (
@@ -366,8 +371,55 @@ const GraphsPage: React.FC = () => {
           </ResizablePanelGroup>
         )}
       </div>
+
+      {isMobile ? (
+        <Sheet open={isPaperTradingOpen} onOpenChange={setIsPaperTradingOpen}>
+          <SheetContent
+            side="bottom"
+            className="h-[85vh] overflow-y-auto p-0"
+          >
+            <PaperTradingPanel
+              asset={obj}
+              currentPrice={latestPrice}
+              enabled={isPaperTradingOpen}
+            />
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Dialog open={isPaperTradingOpen} onOpenChange={setIsPaperTradingOpen}>
+          <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto p-0 sm:rounded-xl">
+            <PaperTradingPanel
+              asset={obj}
+              currentPrice={latestPrice}
+              enabled={isPaperTradingOpen}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      <Button
+        type="button"
+        size="lg"
+        className={`fixed bottom-6 right-6 z-50 shadow-lg transition-opacity ${isPaperTradingOpen ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
+        onClick={() => setIsPaperTradingOpen(true)}
+        aria-label="Open paper trading"
+      >
+        <HiLightningBolt className="w-4 h-4 mr-2" />
+        <span className="hidden sm:inline">Trade</span>
+      </Button>
+
     </div>
   );
 };
 
 export default GraphsPage;
+
+
+
+
+
+
+
+
+
+

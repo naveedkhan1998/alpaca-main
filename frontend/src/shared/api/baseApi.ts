@@ -26,6 +26,7 @@ export const baseApi = createApi({
     'User',
     'Tick',
     'Candle',
+    'PaperTrade',
     'Instrument',
   ],
   endpoints: builder => ({

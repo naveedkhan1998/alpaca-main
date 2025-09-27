@@ -46,8 +46,8 @@ export const ChartToolbar: React.FC<ChartToolbarProps> = ({ compact }) => {
   const showVolume = useAppSelector(selectShowVolume);
 
   const Inline = (
-    <div className="hidden sm:flex items-center gap-2">
-      <div className="flex items-center gap-1 rounded-lg bg-card/80 backdrop-blur border border-border/50 p-1 shadow-sm">
+    <div className="items-center hidden gap-2 sm:flex">
+      <div className="flex items-center gap-1 p-1 glass-card">
         {TF_OPTS.map(tf => (
           <Button
             key={tf.v}
@@ -60,7 +60,7 @@ export const ChartToolbar: React.FC<ChartToolbarProps> = ({ compact }) => {
           </Button>
         ))}
       </div>
-      <div className="flex items-center gap-1 rounded-lg bg-card/80 backdrop-blur border border-border/50 p-1 shadow-sm">
+      <div className="flex items-center gap-1 p-1 glass-card">
         {STYLES.map(s => (
           <Button
             key={s.v}
@@ -75,7 +75,7 @@ export const ChartToolbar: React.FC<ChartToolbarProps> = ({ compact }) => {
           </Button>
         ))}
       </div>
-      <div className="flex items-center gap-1 rounded-lg bg-card/80 backdrop-blur border border-border/50 p-1 shadow-sm">
+      <div className="flex items-center gap-1 p-1 glass-card">
         <Button
           size="sm"
           variant={showVolume ? 'secondary' : 'ghost'}
@@ -103,9 +103,9 @@ export const ChartToolbar: React.FC<ChartToolbarProps> = ({ compact }) => {
             <HiViewGrid className="w-4 h-4" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-auto p-2">
+        <PopoverContent align="end" className="w-auto p-0 border-0 shadow-none glass-card bg-inherit">
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 rounded-lg bg-card/80 border border-border/50 p-1">
+            <div className="flex items-center gap-1 p-1 border rounded-lg bg-card/80 border-border/50">
               {TF_OPTS.map(tf => (
                 <Button
                   key={tf.v}
@@ -118,7 +118,7 @@ export const ChartToolbar: React.FC<ChartToolbarProps> = ({ compact }) => {
                 </Button>
               ))}
             </div>
-            <div className="flex items-center gap-1 rounded-lg bg-card/80 border border-border/50 p-1">
+            <div className="flex items-center gap-1 p-1 border rounded-lg bg-card/80 border-border/50">
               {STYLES.map(s => (
                 <Button
                   key={s.v}
@@ -131,7 +131,7 @@ export const ChartToolbar: React.FC<ChartToolbarProps> = ({ compact }) => {
                 </Button>
               ))}
             </div>
-            <div className="flex items-center gap-1 rounded-lg bg-card/80 border border-border/50 p-1">
+            <div className="flex items-center gap-1 p-1 border rounded-lg bg-card/80 border-border/50">
               <Button
                 size="sm"
                 variant={showVolume ? 'secondary' : 'ghost'}
@@ -148,7 +148,7 @@ export const ChartToolbar: React.FC<ChartToolbarProps> = ({ compact }) => {
   );
 
   return (
-    <div className="absolute top-2 right-2 z-20 flex items-center gap-2">
+    <div className="absolute z-20 flex items-center gap-2 top-2 right-2">
       {Inline}
       {Collapsed}
     </div>

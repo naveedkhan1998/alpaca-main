@@ -20,7 +20,7 @@ export function useCandles({
   const [candles, setCandles] = useState<Candle[]>([]);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [loadingInitial, setLoadingInitial] = useState(false);
+  const [loadingInitial, setLoadingInitial] = useState(true);
   const [errorInitial, setErrorInitial] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 

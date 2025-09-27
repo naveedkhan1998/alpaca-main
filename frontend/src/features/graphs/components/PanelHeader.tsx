@@ -17,7 +17,7 @@ const PanelHeader: React.FC<PanelHeaderProps> = ({
 }) => {
   return (
     <div
-      className={`flex items-center justify-between ${dense ? 'p-2' : 'p-4'} border-b border-border/30`}
+      className={`flex items-center  shadow-md justify-between ${dense ? 'p-2' : 'p-4'} border-b border-border/30`}
     >
       <div className="flex items-center space-x-3">
         {icon ? (

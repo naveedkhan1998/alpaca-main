@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     # custom apps
     "apps.account",
     "apps.core",
+    "apps.paper_trading",
     "apps.home",
 ]
 
@@ -224,3 +225,4 @@ LOGGING = {
 
 APCA_API_KEY = os.getenv("APCA_API_KEY")
 APCA_API_SECRET_KEY = os.getenv("APCA_API_SECRET_KEY")
+
