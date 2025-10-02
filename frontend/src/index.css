@@ -65,14 +65,14 @@
     --vh: 1vh;
 
     /* Added trading-specific colors */
-  --success: 150 60% 40%;
-  --success-foreground: 0 0% 98%;
-  --warning: 38 92% 50%;
-  --warning-foreground: 222 47% 11%;
-  --profit: 150 60% 40%;
-  --loss: 356 75% 49%;
-  --trading-card: 0 0% 100%;
-  --trading-border: 214 32% 91%;
+    --success: 150 60% 40%;
+    --success-foreground: 0 0% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 47% 11%;
+    --profit: 150 60% 40%;
+    --loss: 356 75% 49%;
+    --trading-card: 0 0% 100%;
+    --trading-border: 214 32% 91%;
   }
 
   .dark {
@@ -139,7 +139,6 @@
     --loss: 15 80% 55%;
     --trading-card: 240 10% 15%;
     --trading-border: 240 10% 25%;
-
   }
 
   @layer base {

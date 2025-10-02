@@ -58,7 +58,7 @@ export const paperTradingApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: (result, error, arg) => [
+      invalidatesTags: (_results, _error, arg) => [
         { type: 'PaperTrade', id: arg.id },
         { type: 'PaperTrade', id: 'LIST' },
       ],
@@ -69,7 +69,7 @@ export const paperTradingApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: (result, error, arg) => [
+      invalidatesTags: (_results, _error, arg) => [
         { type: 'PaperTrade', id: arg.id },
         { type: 'PaperTrade', id: 'LIST' },
       ],
@@ -79,7 +79,7 @@ export const paperTradingApi = baseApi.injectEndpoints({
         url: `/paper-trading/trades/${id}/`,
         method: 'DELETE',
       }),
-      invalidatesTags: (result, error, id) => [
+      invalidatesTags: (_results, _error, id) => [
         { type: 'PaperTrade', id },
         { type: 'PaperTrade', id: 'LIST' },
       ],

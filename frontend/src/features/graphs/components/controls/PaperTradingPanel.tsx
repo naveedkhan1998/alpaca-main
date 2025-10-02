@@ -380,7 +380,9 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
           <form className="space-y-6" onSubmit={handleCreateTrade}>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-3">
-                <Label className="text-sm font-medium" htmlFor="direction">Direction</Label>
+                <Label className="text-sm font-medium" htmlFor="direction">
+                  Direction
+                </Label>
                 <div className="grid grid-cols-2 gap-3">
                   {(['LONG', 'SHORT'] as PaperTradeDirection[]).map(option => (
                     <Button

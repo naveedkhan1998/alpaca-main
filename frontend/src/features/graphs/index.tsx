@@ -374,10 +374,7 @@ const GraphsPage: React.FC = () => {
 
       {isMobile ? (
         <Sheet open={isPaperTradingOpen} onOpenChange={setIsPaperTradingOpen}>
-          <SheetContent
-            side="bottom"
-            className="h-[85vh] overflow-y-auto p-0"
-          >
+          <SheetContent side="bottom" className="h-[85vh] overflow-y-auto p-0">
             <PaperTradingPanel
               asset={obj}
               currentPrice={latestPrice}
@@ -407,19 +404,8 @@ const GraphsPage: React.FC = () => {
         <HiLightningBolt className="w-4 h-4 mr-2" />
         <span className="hidden sm:inline">Trade</span>
       </Button>
-
     </div>
   );
 };
 
 export default GraphsPage;
-
-
-
-
-
-
-
-
-
-
