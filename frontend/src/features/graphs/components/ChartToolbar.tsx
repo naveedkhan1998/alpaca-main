@@ -103,7 +103,10 @@ export const ChartToolbar: React.FC<ChartToolbarProps> = ({ compact }) => {
             <HiViewGrid className="w-4 h-4" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-auto p-0 border-0 shadow-none glass-card bg-inherit">
+        <PopoverContent
+          align="end"
+          className="w-auto p-0 border-0 shadow-none glass-card bg-inherit"
+        >
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 p-1 border rounded-lg bg-card/80 border-border/50">
               {TF_OPTS.map(tf => (
