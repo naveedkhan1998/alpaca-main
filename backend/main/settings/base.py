@@ -225,4 +225,3 @@ LOGGING = {
 
 APCA_API_KEY = os.getenv("APCA_API_KEY")
 APCA_API_SECRET_KEY = os.getenv("APCA_API_SECRET_KEY")
-

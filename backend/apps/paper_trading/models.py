@@ -106,7 +106,9 @@ class PaperTrade(models.Model):
         return self._compute_pl(self.exit_price)
 
     def _compute_pl(self, price: Decimal) -> Decimal:
-        multiplier = Decimal("1") if self.direction == self.Direction.LONG else Decimal("-1")
+        multiplier = (
+            Decimal("1") if self.direction == self.Direction.LONG else Decimal("-1")
+        )
         return (price - self.entry_price) * self.quantity * multiplier
 
     def compute_unrealized_pl(self, current_price: Decimal | None) -> Decimal | None:

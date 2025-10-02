@@ -1,4 +1,5 @@
 from decimal import Decimal
+import logging
 
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
@@ -9,6 +10,8 @@ from rest_framework.response import Response
 
 from .models import PaperTrade
 from .serializers import PaperTradeCloseSerializer, PaperTradeSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class PaperTradeViewSet(viewsets.ModelViewSet):
@@ -35,7 +38,7 @@ class PaperTradeViewSet(viewsets.ModelViewSet):
             try:
                 ctx["current_price"] = Decimal(price)
             except Exception:
-                pass
+                logger.warning(f"Invalid current_price parameter: {price}")
         return ctx
 
     def perform_create(self, serializer):
@@ -52,9 +55,7 @@ class PaperTradeViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.update(trade, serializer.validated_data)
         return Response(
-            PaperTradeSerializer(
-                trade, context=self.get_serializer_context()
-            ).data
+            PaperTradeSerializer(trade, context=self.get_serializer_context()).data
         )
 
     @action(detail=True, methods=["post"], url_path="cancel")
@@ -71,7 +72,5 @@ class PaperTradeViewSet(viewsets.ModelViewSet):
             trade.notes = note
         trade.save(update_fields=["status", "exit_at", "notes", "updated_at"])
         return Response(
-            PaperTradeSerializer(
-                trade, context=self.get_serializer_context()
-            ).data
+            PaperTradeSerializer(trade, context=self.get_serializer_context()).data
         )

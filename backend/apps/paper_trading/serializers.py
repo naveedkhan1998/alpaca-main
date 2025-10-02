@@ -13,13 +13,11 @@ class PaperTradeSerializer(serializers.ModelSerializer):
         max_digits=20,
         decimal_places=6,
         read_only=True,
-
     )
     realized_pl = serializers.DecimalField(
         max_digits=20,
         decimal_places=6,
         read_only=True,
-     
     )
     unrealized_pl = serializers.SerializerMethodField()
     current_value = serializers.SerializerMethodField()
