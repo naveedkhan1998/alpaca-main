@@ -3,11 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "description": "Django + React monorepo managed with NX",
-  "workspaces": [
-    "frontend"
-  ],
   "scripts": {
-    "postinstall": "cd backend && uv sync && cd ..",
+    "install:all": "npm install && cd frontend && npm install && cd .. && cd backend && uv sync && cd ..",
+    "install:frontend": "cd frontend && npm install && cd ..",
+    "install:backend": "cd backend && uv sync && cd ..",
     "dev": "nx run-many -t dev --output-style=stream --color",
     "dev:frontend": "nx run frontend:dev",
     "dev:backend": "nx run backend:dev",

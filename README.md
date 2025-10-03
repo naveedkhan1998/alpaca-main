@@ -1,9 +1,9 @@
-
 # Alpaca API Wrapper
 
-> **🎉 This project uses NX for monorepo management!**  
-> 
+> **🎉 This project uses NX for monorepo management!**
+>
 > **Quick Start:**
+>
 > ```bash
 > npm install    # Install all dependencies
 > npm run dev    # Start development (frontend + backend)
@@ -54,20 +54,19 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
 
 ---
 
-
 ## Features
 
-| Category               | What you get                                                                 |
-| ---------------------- | ---------------------------------------------------------------------------- |
-| **Watchlists**         | Create watchlists, add assets, and manage your market focus                  |
-| **Historical Data**    | Assets in watchlists fetch and cache historical OHLCV data automatically     |
-| **Real-Time Data**     | Assets in watchlists are subscribed to real-time Alpaca market feeds         |
-| **WebSocket Service**  | Dedicated Django management command runs in its own container, handling      |
-|                        | real-time tick processing and candle aggregation (1m and higher timeframes)  |
-| **Interactive Analysis**| Access and experiment with real-time and historical data for your watchlists |
-| **Session management** | Secure session generation with your API key & secret                         |
-| **Task orchestration** | Celery + Redis for async jobs & scheduling                                   |
-| **Dockerised stack**   | `docker compose up` and you're done                                          |
+| Category                 | What you get                                                                 |
+| ------------------------ | ---------------------------------------------------------------------------- |
+| **Watchlists**           | Create watchlists, add assets, and manage your market focus                  |
+| **Historical Data**      | Assets in watchlists fetch and cache historical OHLCV data automatically     |
+| **Real-Time Data**       | Assets in watchlists are subscribed to real-time Alpaca market feeds         |
+| **WebSocket Service**    | Dedicated Django management command runs in its own container, handling      |
+|                          | real-time tick processing and candle aggregation (1m and higher timeframes)  |
+| **Interactive Analysis** | Access and experiment with real-time and historical data for your watchlists |
+| **Session management**   | Secure session generation with your API key & secret                         |
+| **Task orchestration**   | Celery + Redis for async jobs & scheduling                                   |
+| **Dockerised stack**     | `docker compose up` and you're done                                          |
 
 ---
 
@@ -85,7 +84,6 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
 | **Dev tooling**       | `uv` (deps) · `black` (format) · `ruff` (lint) · `pytest` (tests) · `vitest` (FE tests) |
 
 ---
-
 
 ## Architecture
 
@@ -132,17 +130,17 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
 
 ### Service Breakdown
 
-| Service            | Purpose                 | Port | Environment | Notes                               |
-| ------------------ | ----------------------- | ---- | ----------- | ----------------------------------- |
+| Service            | Purpose                 | Port | Environment | Notes                                 |
+| ------------------ | ----------------------- | ---- | ----------- | ------------------------------------- |
 | **NX**             | Monorepo orchestration  | N/A  | Local       | Task runner, caching, parallelization |
-| **Frontend**       | React SPA (Vite)        | 5173 | Local       | Hot module replacement enabled       |
-| **Backend**        | Django API + WebSockets | 8000 | Docker      | ASGI server with Channels            |
-| **PostgreSQL**     | Primary database        | 5432 | Docker      | Persistent data storage              |
-| **Redis**          | Cache + Message broker  | 6379 | Docker      | Celery task queue                    |
-| **Celery Workers** | Background tasks        | N/A  | Docker      | Async job processing                 |
-| **Celery Beat**    | Task scheduler          | N/A  | Docker      | Periodic task execution              |
-| **WebSocket**      | Real-time data stream   | 8001 | Docker      | Market data WebSocket service        |
-| **Flower**         | Task monitoring         | 5555 | Docker      | Celery dashboard                     |
+| **Frontend**       | React SPA (Vite)        | 5173 | Local       | Hot module replacement enabled        |
+| **Backend**        | Django API + WebSockets | 8000 | Docker      | ASGI server with Channels             |
+| **PostgreSQL**     | Primary database        | 5432 | Docker      | Persistent data storage               |
+| **Redis**          | Cache + Message broker  | 6379 | Docker      | Celery task queue                     |
+| **Celery Workers** | Background tasks        | N/A  | Docker      | Async job processing                  |
+| **Celery Beat**    | Task scheduler          | N/A  | Docker      | Periodic task execution               |
+| **WebSocket**      | Real-time data stream   | 8001 | Docker      | Market data WebSocket service         |
+| **Flower**         | Task monitoring         | 5555 | Docker      | Celery dashboard                      |
 
 > **Infrastructure services** (backend, db, cache, broker, workers, beat, websocket, flower) are in **`docker-compose.yml`**.  
 > **Frontend runs locally** via NX for fast hot reload. **NX orchestrates** all tasks across the monorepo.
@@ -165,17 +163,23 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
 git clone https://github.com/naveedkhan1998/alpaca-main.git
 cd alpaca-main
 
-# Install all dependencies (frontend + backend)
-npm install
+# Option 1: Install everything (NX + Frontend + Backend)
+npm run install:all
+
+# Option 2: Install individually
+npm install              # Install NX only
+npm run install:frontend # Install frontend dependencies
+npm run install:backend  # Install backend dependencies
 ```
 
-**What happens during installation:**
+**Installation Options:**
 
-1. ✅ **Environment validation** - Checks for required API keys (APCA_API_KEY, APCA_API_SECRET_KEY)
-2. ✅ **Frontend dependencies** - Installs via npm workspaces (~768 packages)
-3. ✅ **Backend dependencies** - Installs via uv (~72 Python packages)
+- **`npm run install:all`** - Installs NX, frontend dependencies (~768 packages), and backend dependencies (~72 Python packages)
+- **`npm run install:frontend`** - Installs only frontend dependencies (useful for production frontend builds)
+- **`npm run install:backend`** - Installs only backend dependencies (useful for backend-only deployments)
+- **`npm install`** - Installs only NX for monorepo orchestration
 
-> **Note:** The installation process automatically validates your environment and installs dependencies for both projects in parallel.
+> **Production Note:** In production environments, you can run `cd frontend && npm install` directly in the frontend directory without triggering the entire monorepo setup.
 
 ---
 
@@ -189,6 +193,7 @@ npm run dev
 ```
 
 This single command will:
+
 - 🚀 Start the frontend Vite dev server (with hot reload)
 - 🐳 Start Docker infrastructure (PostgreSQL, Redis, Backend API, Celery, WebSocket, Flower)
 - ⚡ Run both in parallel automatically via NX
