@@ -38,6 +38,7 @@ interface PaperTradingPanelProps {
   asset?: Asset;
   currentPrice?: number;
   enabled?: boolean;
+  isInDrawer?: boolean;
 }
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
@@ -76,6 +77,7 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
   asset,
   currentPrice,
   enabled = true,
+  isInDrawer = false,
 }) => {
   const { toast } = useToast();
   const [direction, setDirection] = useState<PaperTradeDirection>('LONG');
@@ -320,8 +322,20 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
   };
 
   return (
-    <Card className="border-2 shadow-xl glass-effect">
-      <CardHeader className="pb-6 border-b border-trading-border">
+    <Card
+      className={cn(
+        isInDrawer
+          ? 'border-0 shadow-none -mt-6 mb-0'
+          : ' shadow-xl glass-effect',
+        ''
+      )}
+    >
+      <CardHeader
+        className={cn(
+          'border-b border-trading-border',
+          isInDrawer ? 'pb-4 px-4 pt-6' : 'pb-6'
+        )}
+      >
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
@@ -357,7 +371,12 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="p-6 space-y-8">
+      <CardContent
+        className={cn(
+          'space-y-8 overflow-auto max-h-[calc(100dvh-200px)]',
+          isInDrawer ? 'p-4' : 'p-6'
+        )}
+      >
         <section className="space-y-6">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-md bg-primary/10">
@@ -378,7 +397,7 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
           ) : null}
 
           <form className="space-y-6" onSubmit={handleCreateTrade}>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div className="space-y-3">
                 <Label className="text-sm font-medium" htmlFor="direction">
                   Direction
@@ -469,7 +488,7 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
                 <Shield className="w-4 h-4 text-muted-foreground" />
                 <Label className="text-sm font-medium">Risk Management</Label>
               </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="space-y-2">
                   <Label
                     htmlFor="paper-target"
@@ -644,7 +663,7 @@ const PaperTradingPanel: React.FC<PaperTradingPanelProps> = ({
                   </div>
                 </header>
 
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                   <div className="space-y-1">
                     <div className="text-xs text-muted-foreground">
                       Entry Value

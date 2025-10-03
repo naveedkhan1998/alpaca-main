@@ -267,7 +267,7 @@ export const AssetSearch: React.FC<AssetSearchProps> = ({
     return (
       <>
         <Dialog open={open} onOpenChange={onOpenChange}>
-          <DialogContent className="max-w-2xl p-0 gap-0 max-h-[85vh]">
+          <DialogContent className="max-w-2xl p-0 gap-0 max-h-[85dvh]">
             <DialogHeader className="px-4 pt-4 pb-0">
               <DialogTitle className="flex items-center gap-2">
                 <Search className="w-5 h-5" />
@@ -291,7 +291,7 @@ export const AssetSearch: React.FC<AssetSearchProps> = ({
   return (
     <>
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="h-[90vh] p-0">
+        <DrawerContent className="h-[90dvh] p-0">
           <DrawerHeader className="px-4 pb-0">
             <DrawerTitle className="flex items-center gap-2">
               <Search className="w-5 h-5" />

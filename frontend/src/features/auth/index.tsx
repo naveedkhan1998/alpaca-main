@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import {
   LockIcon,
   UserPlusIcon,
@@ -10,6 +11,9 @@ import {
   BarChart4,
   Clock,
   Smartphone,
+  TrendingUp,
+  Sparkles,
+  ChevronRight,
 } from 'lucide-react';
 import Login from './components/Login';
 import Registration from './components/Registration';
@@ -46,151 +50,284 @@ const LoginRegPage: React.FC = () => {
   ];
 
   return (
-    <div className="h-[100dvh] p-4 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 dark:from-gray-900 dark:via-purple-900 dark:to-violet-900">
-      {/* Animated background elements */}
-      <div className="fixed inset-0">
-        {[...Array(20)].map((_, i) => (
-          <div
+    <div className="relative h-[100dvh] overflow-hidden bg-gradient-to-br from-background via-muted/20 to-background">
+      {/* Modern Grid Background */}
+      <div
+        className="absolute inset-0 opacity-[0.15] dark:opacity-[0.08]"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
+            linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px)
+          `,
+          backgroundSize: '60px 60px',
+        }}
+      />
+
+      {/* Animated gradient orbs */}
+      <div className="fixed inset-0 pointer-events-none">
+        <motion.div
+          className="absolute w-[500px] h-[500px] rounded-full bg-primary/10 blur-[100px]"
+          animate={{
+            x: [0, 100, 0],
+            y: [0, -100, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          style={{ top: '10%', left: '10%' }}
+        />
+        <motion.div
+          className="absolute w-[600px] h-[600px] rounded-full bg-accent/10 blur-[120px]"
+          animate={{
+            x: [0, -100, 0],
+            y: [0, 100, 0],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          style={{ bottom: '10%', right: '10%' }}
+        />
+      </div>
+
+      {/* Floating particles */}
+      <div className="fixed inset-0 pointer-events-none">
+        {[...Array(15)].map((_, i) => (
+          <motion.div
             key={i}
-            className="absolute rounded-full bg-white/5 animate-pulse"
-            style={{
-              width: Math.random() * 300 + 50 + 'px',
-              height: Math.random() * 300 + 50 + 'px',
-              top: Math.random() * 100 + '%',
-              left: Math.random() * 100 + '%',
-              animationDuration: Math.random() * 3 + 2 + 's',
-              animationDelay: Math.random() * 2 + 's',
+            className="absolute w-1 h-1 rounded-full bg-primary/30"
+            initial={{
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+            }}
+            animate={{
+              y: [0, -100, 0],
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+              ease: 'easeInOut',
             }}
           />
         ))}
       </div>
 
-      <div className="relative flex items-center justify-center h-full py-8 mx-auto ">
+      <div className="relative flex items-center justify-center h-full px-4 py-8 mx-auto">
         <motion.div
-          className="w-full max-w-5xl"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          className="w-full max-w-6xl"
+          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, type: 'spring' }}
         >
-          <Card className="grid grid-cols-1 overflow-hidden bg-white shadow-2xl lg:grid-cols-5 dark:bg-gray-800/95 backdrop-blur-lg">
+          <Card className="grid grid-cols-1 overflow-hidden border-2 shadow-2xl lg:grid-cols-5 bg-card/95 backdrop-blur-xl border-border/50">
             {/* Left Panel - Features */}
-            <div className="relative hidden col-span-2 p-8 text-white md:block bg-gradient-to-br from-indigo-600 to-purple-700">
-              <div className="sticky space-y-8 top-8">
-                <div className="space-y-4">
-                  <h1 className="text-4xl font-bold">
-                    Alpaca API for North American Market Data
-                  </h1>
-                  <p className="text-lg text-indigo-100">
-                    Your gateway to intelligent trading
-                  </p>
-                </div>
+            <div className="relative hidden col-span-2 p-10 md:block bg-gradient-to-br from-primary via-primary/90 to-accent overflow-y-auto max-h-[90dvh]">
+              <div className="space-y-8">
+                {/* Logo/Brand Section */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="space-y-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <img
+                        src="/android-chrome-192x192.png"
+                        alt="Alpaca"
+                        className="w-12 h-12 shadow-lg rounded-xl ring-2 ring-white/20"
+                      />
+                      <motion.div
+                        className="absolute -inset-1 bg-white/10 rounded-xl blur"
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">
+                        Alpaca Trading
+                      </h3>
+                      <Badge
+                        variant="secondary"
+                        className="mt-1 text-white border-0 bg-white/20"
+                      >
+                        <Sparkles className="w-3 h-3 mr-1" />
+                        Premium Platform
+                      </Badge>
+                    </div>
+                  </div>
+                </motion.div>
 
-                <div className="space-y-6">
+                {/* Main Heading */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="space-y-4"
+                >
+                  <h1 className="text-3xl font-bold leading-tight text-white">
+                    Start Your Trading Journey
+                  </h1>
+                  <p className="text-lg leading-relaxed text-white/80">
+                    Access real-time market data and trade with confidence using
+                    our advanced platform
+                  </p>
+                  <div className="flex items-center gap-2 pt-2">
+                    <TrendingUp className="w-5 h-5 text-white/80" />
+                    <span className="text-sm text-white/70">
+                      Powered by Alpaca API
+                    </span>
+                  </div>
+                </motion.div>
+
+                {/* Features List */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className="space-y-4"
+                >
                   {features.map((feature, index) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
-                      className="flex items-start space-x-3 group"
+                      transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
+                      className="flex items-start gap-4 p-4 transition-all duration-300 border cursor-pointer rounded-xl bg-white/10 backdrop-blur-sm border-white/10 hover:bg-white/15 group"
                     >
-                      <div className="p-2 rounded-lg bg-white/10 backdrop-blur-lg">
+                      <div className="p-2.5 rounded-lg bg-white/10 text-white group-hover:scale-110 transition-transform duration-300">
                         {feature.icon}
                       </div>
-                      <div className="space-y-1">
-                        <h3 className="font-medium">{feature.title}</h3>
-                        <p className="text-sm text-indigo-100">
+                      <div className="flex-1 space-y-1">
+                        <h3 className="font-semibold text-white transition-transform duration-300 group-hover:translate-x-1">
+                          {feature.title}
+                        </h3>
+                        <p className="text-sm leading-relaxed text-white/70">
                           {feature.description}
                         </p>
                       </div>
+                      <ChevronRight className="w-4 h-4 transition-opacity duration-300 opacity-0 text-white/50 group-hover:opacity-100" />
                     </motion.div>
                   ))}
-                </div>
+                </motion.div>
 
-                <div className="pt-4">
-                  <div className="p-4 rounded-lg bg-white/10 backdrop-blur-lg">
-                    <p className="text-sm text-indigo-100">
+                {/* Testimonial Card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 1 }}
+                  className="relative p-6 overflow-hidden border rounded-2xl bg-white/10 backdrop-blur-sm border-white/10"
+                >
+                  <motion.div
+                    className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-white/50 via-white/80 to-white/50"
+                    animate={{ x: ['-100%', '100%'] }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: 'linear',
+                    }}
+                  />
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-white/80" />
+                      <span className="text-sm font-medium text-white/90">
+                        Why Choose Us
+                      </span>
+                    </div>
+                    <p className="text-sm leading-relaxed text-white/70">
                       "Experience the future of trading with our advanced
-                      platform"
+                      platform, backed by real-time data and institutional-grade
+                      infrastructure."
                     </p>
                   </div>
-                </div>
+                </motion.div>
               </div>
             </div>
 
             {/* Right Panel - Auth Forms */}
-            <div className="col-span-full p-8 max-h-[90vh] overflow-y-auto md:col-span-3">
+            <div className="col-span-full p-8 md:p-10 max-h-[90dvh] overflow-y-auto md:col-span-3">
               <Tabs
                 value={activeTab}
                 onValueChange={setActiveTab}
-                className="space-y-6"
+                className="space-y-8"
               >
-                <TabsList className="sticky top-0 z-10 grid w-full grid-cols-2 bg-white dark:bg-gray-800">
+                <TabsList className="sticky top-0 z-10 grid w-full grid-cols-2 p-1 border bg-muted/50 backdrop-blur-sm border-border/50">
                   <TabsTrigger
                     value="login"
-                    className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300"
                   >
                     <LockIcon className="w-4 h-4 mr-2" />
                     Login
                   </TabsTrigger>
                   <TabsTrigger
                     value="registration"
-                    className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300"
                   >
                     <UserPlusIcon className="w-4 h-4 mr-2" />
                     Register
                   </TabsTrigger>
                 </TabsList>
 
-                <motion.div className="relative">
-                  <TabsContent value="login">
+                <AnimatePresence mode="wait">
+                  <TabsContent value="login" className="mt-0">
                     <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
+                      key="login"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.3 }}
-                      className="mt-4"
                     >
                       <Login />
                     </motion.div>
                   </TabsContent>
 
-                  <TabsContent value="registration">
+                  <TabsContent value="registration" className="mt-0">
                     <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
+                      key="registration"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.3 }}
-                      className="mt-4"
                     >
                       <Registration />
                     </motion.div>
                   </TabsContent>
-                </motion.div>
+                </AnimatePresence>
               </Tabs>
 
               <motion.div
-                className="mt-6 text-center text-gray-500 dark:text-gray-400"
+                className="pt-6 mt-6 text-center border-t border-border/50"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
+                transition={{ delay: 0.6 }}
               >
-                <p className="text-sm">
+                <p className="text-xs leading-relaxed text-muted-foreground">
                   By using this service, you agree to our{' '}
                   <a
-                    href="#"
-                    className="text-indigo-600 hover:underline dark:text-indigo-400"
+                    href="/privacy"
+                    className="font-medium transition-colors text-primary hover:underline"
                   >
                     Terms of Service
                   </a>{' '}
                   and{' '}
                   <a
-                    href="#"
-                    className="text-indigo-600 hover:underline dark:text-indigo-400"
+                    href="/terms"
+                    className="font-medium transition-colors text-primary hover:underline"
                   >
                     Privacy Policy
                   </a>
                 </p>
+                <div className="flex items-center justify-center gap-2 mt-3">
+                  <Shield className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    Secured by 256-bit encryption
+                  </span>
+                </div>
               </motion.div>
             </div>
           </Card>

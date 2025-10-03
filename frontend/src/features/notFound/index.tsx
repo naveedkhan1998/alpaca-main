@@ -16,7 +16,7 @@ const NotFoundPage = () => {
       }
     >
       <PageContent>
-        <div className="flex flex-col items-center justify-center flex-1 min-h-[60vh] space-y-6">
+        <div className="flex flex-col items-center justify-center flex-1 min-h-[60dvh] space-y-6">
           <div className="space-y-2 text-center">
             <h2 className="text-3xl font-bold tracking-tight">
               Oops! Something&apos;s missing.
