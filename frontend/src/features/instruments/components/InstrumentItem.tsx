@@ -43,6 +43,7 @@ interface InstrumentItemProps {
   instrument: InstrumentType;
   onSubscribe: (id: number, duration: number) => Promise<void>;
   isSubscribing: boolean;
+  viewMode?: 'grid' | 'list';
 }
 
 // Animations
@@ -54,12 +55,33 @@ const fadeInUp = {
 };
 
 const InstrumentItem: React.FC<InstrumentItemProps> = memo(
-  ({ instrument, onSubscribe, isSubscribing }) => {
+  ({ instrument, onSubscribe, isSubscribing, viewMode = 'grid' }) => {
     const hasAlpacaAccount = useAppSelector(getHasAlpacaAccount);
     const isAlpacaAccountLoading = useAppSelector(getIsAlpacaAccountLoading);
     const [duration, setDuration] = useState<number>(4);
     const [showAccountDialog, setShowAccountDialog] = useState(false);
     const isMobile = useIsMobile();
+
+    // Define AccountRequiredContent first
+    const AccountRequiredContent = () => (
+      <>
+        <DialogHeader className="text-center">
+          <DialogTitle>Breeze Account Required</DialogTitle>
+          <DialogDescription className="text-center">
+            You need to create and connect a Breeze account to load instrument
+            data. Please set up your Breeze account in the settings to continue.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex justify-center pt-4">
+          <Button
+            onClick={() => setShowAccountDialog(false)}
+            className="w-full max-w-xs"
+          >
+            Got it
+          </Button>
+        </div>
+      </>
+    );
 
     const getTypeConfig = useCallback((series: string) => {
       const configs = {
@@ -118,26 +140,147 @@ const InstrumentItem: React.FC<InstrumentItemProps> = memo(
     const config = getTypeConfig(instrument.series || 'EQ');
     const TypeIcon = config.icon;
 
-    const AccountRequiredContent = () => (
-      <>
-        <DialogHeader className="text-center">
-          <DialogTitle>Breeze Account Required</DialogTitle>
-          <DialogDescription className="text-center">
-            You need to create and connect a Breeze account to load instrument
-            data. Please set up your Breeze account in the settings to continue.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="flex justify-center pt-4">
-          <Button
-            onClick={() => setShowAccountDialog(false)}
-            className="w-full max-w-xs"
-          >
-            Got it
-          </Button>
-        </div>
-      </>
-    );
+    // List view rendering for compact display
+    if (viewMode === 'list') {
+      return (
+        <motion.div {...fadeInUp} className="w-full">
+          <Card className="relative overflow-hidden transition-shadow group hover:shadow-lg">
+            <div className="absolute inset-0 transition-opacity duration-300 opacity-0 pointer-events-none group-hover:opacity-100">
+              <div
+                className={`absolute inset-0 bg-gradient-to-r ${config.gradient} opacity-5`}
+              />
+            </div>
 
+            <CardContent className="p-4 md:p-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center">
+                {/* Left: Main Info */}
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary" className={`${config.colors} text-xs`}>
+                      {instrument.series === 'OPTION'
+                        ? `${instrument.option_type} Option`
+                        : instrument.series === 'FUTURE'
+                          ? 'Future'
+                          : instrument.series === '0'
+                            ? 'Index'
+                            : 'Equity'}
+                    </Badge>
+                    <h3 className="text-lg font-bold truncate md:text-xl text-foreground">
+                      {instrument.exchange_code}
+                    </h3>
+                  </div>
+                  
+                  {instrument.company_name && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Building2 className="w-3.5 h-3.5 flex-shrink-0" />
+                      <span className="truncate">{instrument.company_name}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Middle: Details */}
+                <div className="flex flex-wrap gap-3 text-sm md:gap-4">
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <span className="text-xs">🔢</span>
+                    <span className="text-xs md:text-sm">{instrument.stock_token || instrument.token}</span>
+                  </div>
+
+                  {instrument.strike_price !== null && (
+                    <div className="flex items-center gap-1.5">
+                      <Target className="w-3.5 h-3.5 text-primary" />
+                      <Badge className="font-mono text-xs bg-primary/10 text-primary border-primary/20">
+                        ₹{instrument.strike_price}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {instrument.expiry && (
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span className="text-xs md:text-sm">{formatDate(instrument.expiry)}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right: Actions */}
+                <div className="flex items-center gap-3 md:ml-auto">
+                  <div className="hidden md:block">
+                    <DurationSelector
+                      duration={duration}
+                      onDurationChange={setDuration}
+                    />
+                  </div>
+                  
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleSubscribeClick}
+                    disabled={isSubscribing || isAlpacaAccountLoading}
+                    className="transition-all duration-200 shadow-md bg-primary hover:bg-primary/90 text-primary-foreground hover:shadow-lg whitespace-nowrap"
+                  >
+                    {isSubscribing ? (
+                      <>
+                        <Spinner className="w-4 h-4 mr-2" />
+                        <span className="hidden md:inline">Loading...</span>
+                        <span className="md:hidden">Loading</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4 md:mr-2" />
+                        <span className="hidden md:inline">Load {duration}w Data</span>
+                        <span className="md:hidden">Load</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Mobile Duration Selector */}
+                <div className="w-full md:hidden">
+                  <DurationSelector
+                    duration={duration}
+                    onDurationChange={setDuration}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Account Dialog/Drawer */}
+          {!isMobile && (
+            <Dialog open={showAccountDialog} onOpenChange={setShowAccountDialog}>
+              <DialogContent className="sm:max-w-md">
+                <AccountRequiredContent />
+              </DialogContent>
+            </Dialog>
+          )}
+
+          {isMobile && (
+            <Drawer open={showAccountDialog} onOpenChange={setShowAccountDialog}>
+              <DrawerContent className="p-6">
+                <DrawerHeader className="text-center">
+                  <DrawerTitle>Breeze Account Required</DrawerTitle>
+                  <DrawerDescription className="text-center">
+                    You need to create and connect a Breeze account to load
+                    instrument data. Please set up your Breeze account in the
+                    settings to continue.
+                  </DrawerDescription>
+                </DrawerHeader>
+                <div className="flex justify-center pt-4">
+                  <Button
+                    onClick={() => setShowAccountDialog(false)}
+                    className="w-full max-w-xs"
+                  >
+                    Got it
+                  </Button>
+                </div>
+              </DrawerContent>
+            </Drawer>
+          )}
+        </motion.div>
+      );
+    }
+
+    // Grid view rendering (default)
     return (
       <motion.div {...fadeInUp} className="w-full">
         <Card className="relative h-full overflow-hidden group min-h-[20rem]">

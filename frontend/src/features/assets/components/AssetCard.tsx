@@ -8,8 +8,9 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Heart, Building2 } from 'lucide-react';
+import { Eye, Heart, Building2, TrendingUp, Shield } from 'lucide-react';
 import { Asset } from '@/types/common-types';
+import { motion } from 'framer-motion';
 
 type Props = {
   asset: Asset;
@@ -20,14 +21,32 @@ type Props = {
 const getAssetClassColor = (assetClass: string) => {
   switch (assetClass) {
     case 'us_equity':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      return {
+        badge: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+        gradient: 'from-blue-500 to-indigo-500',
+      };
     case 'us_option':
-      return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+      return {
+        badge: 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+        gradient: 'from-purple-500 to-fuchsia-500',
+      };
     case 'crypto':
-      return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+      return {
+        badge: 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+        gradient: 'from-orange-500 to-amber-500',
+      };
     default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+      return {
+        badge: 'bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-300 border-gray-200 dark:border-gray-800',
+        gradient: 'from-gray-500 to-slate-500',
+      };
   }
+};
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.3 },
 };
 
 export const AssetCard: React.FC<Props> = ({
@@ -35,59 +54,89 @@ export const AssetCard: React.FC<Props> = ({
   onSelect,
   onWatchlist,
 }) => {
+  const config = getAssetClassColor(asset.asset_class);
+  
   return (
-    <Card
-      className="h-full transition cursor-pointer hover:shadow-md"
-      onClick={() => onSelect(asset)}
-    >
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-primary" />
-            <CardTitle className="text-base">{asset.symbol}</CardTitle>
+    <motion.div {...fadeInUp} className="h-full">
+      <Card
+        className="relative h-full overflow-hidden transition cursor-pointer group hover:shadow-lg"
+        onClick={() => onSelect(asset)}
+      >
+        {/* Gradient overlay on hover */}
+        <div className="absolute inset-0 transition-opacity duration-300 opacity-0 pointer-events-none group-hover:opacity-100">
+          <div
+            className={`absolute inset-0 bg-gradient-to-br ${config.gradient} opacity-5`}
+          />
+        </div>
+
+        <CardHeader className="relative">
+          <div className="flex items-center justify-between mb-2">
+            <Badge variant="secondary" className={config.badge}>
+              {asset.asset_class.replace('_', ' ').toUpperCase()}
+            </Badge>
           </div>
-          <Badge className={getAssetClassColor(asset.asset_class)}>
-            {asset.asset_class.replace('_', ' ').toUpperCase()}
-          </Badge>
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground line-clamp-1">
-          {asset.name}
-        </p>
-      </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-2 text-sm">
-        <div>
-          <p className="text-muted-foreground">Exchange</p>
-          <p className="truncate">{asset.exchange}</p>
-        </div>
-        <div>
-          <p className="text-muted-foreground">Tradable</p>
-          <p>{asset.tradable ? 'Yes' : 'No'}</p>
-        </div>
-        <div>
-          <p className="text-muted-foreground">Marginable</p>
-          <p>{asset.marginable ? 'Yes' : 'No'}</p>
-        </div>
-        <div>
-          <p className="text-muted-foreground">Shortable</p>
-          <p>{asset.shortable ? 'Yes' : 'No'}</p>
-        </div>
-      </CardContent>
-      <CardFooter className="flex items-center justify-end gap-2">
-        <Button variant="ghost" size="sm" onClick={e => onWatchlist(asset, e)}>
-          <Heart className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={e => {
-            e.stopPropagation();
-            onSelect(asset);
-          }}
-        >
-          <Eye className="w-4 h-4" />
-        </Button>
-      </CardFooter>
-    </Card>
+          <div className="flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-primary flex-shrink-0" />
+            <CardTitle className="text-xl truncate">{asset.symbol}</CardTitle>
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
+            {asset.name}
+          </p>
+        </CardHeader>
+
+        <CardContent className="relative space-y-3">
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Exchange</p>
+              <p className="font-medium truncate">{asset.exchange}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Tradable</p>
+              <Badge
+                variant={asset.tradable ? 'default' : 'secondary'}
+                className="text-xs"
+              >
+                {asset.tradable ? 'Yes' : 'No'}
+              </Badge>
+            </div>
+          </div>
+          
+          <div className="flex gap-2 pt-2">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Shield className="w-3.5 h-3.5" />
+              <span>{asset.marginable ? 'Marginable' : 'Cash only'}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>{asset.shortable ? 'Shortable' : 'Long only'}</span>
+            </div>
+          </div>
+        </CardContent>
+
+        <CardFooter className="relative flex items-center justify-end gap-2 pt-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={e => onWatchlist(asset, e)}
+            className="hover:text-red-500 transition-colors"
+          >
+            <Heart className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={e => {
+              e.stopPropagation();
+              onSelect(asset);
+            }}
+            className="gap-1"
+          >
+            <Eye className="w-4 h-4" />
+            <span className="hidden sm:inline">View</span>
+          </Button>
+        </CardFooter>
+      </Card>
+    </motion.div>
   );
 };
 

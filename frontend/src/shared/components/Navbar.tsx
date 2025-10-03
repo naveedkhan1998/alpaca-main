@@ -27,7 +27,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -38,6 +37,8 @@ import {
 import { ModeToggle } from './ModeToggle';
 import HealthStatus from './HealthStatus';
 import { removeToken } from '@/api/auth';
+import { AssetSearch } from './AssetSearch';
+import { useIsMobile } from '@/hooks/useMobile';
 
 const Navbar: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -45,8 +46,9 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [isAssetSearchOpen, setIsAssetSearchOpen] = useState(false);
   const user = useAppSelector(getLoggedInUser);
+  const isMobile = useIsMobile();
 
   const isActivePath = useMemo(
     () => (path: string) => location.pathname === path,
@@ -137,21 +139,21 @@ const Navbar: React.FC = () => {
 
             {/* Desktop Search */}
             <div className="flex-1 hidden max-w-2xl mx-6 lg:flex">
-              <div className="relative w-full">
-                <Search className="absolute w-4 h-4 -translate-y-1/2 pointer-events-none left-3.5 top-1/2 text-muted-foreground/70" />
-                <Input
-                  type="text"
-                  placeholder="Search symbols, instruments…"
-                  value={searchQuery}
-                  disabled
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="pr-20 h-10 pl-10 bg-muted/30 border-border/60 focus:bg-background/90 focus:border-primary/50 transition-all duration-200"
-                />
+              <button
+                onClick={() => setIsAssetSearchOpen(true)}
+                className="relative w-full group"
+              >
+                <Search className="absolute w-4 h-4 -translate-y-1/2 pointer-events-none left-3.5 top-1/2 text-muted-foreground/70 group-hover:text-muted-foreground transition-colors" />
+                <div className="w-full h-10 pl-10 pr-20 flex items-center rounded-lg bg-muted/30 border border-border/60 hover:bg-muted/40 hover:border-primary/30 transition-all duration-200 cursor-pointer">
+                  <span className="text-sm text-muted-foreground/70 group-hover:text-muted-foreground transition-colors">
+                    Search assets, add to watchlist...
+                  </span>
+                </div>
                 <span className="hidden md:inline-flex items-center gap-1.5 absolute right-3 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-[10px] font-medium text-muted-foreground/80 ring-1 ring-border/70 bg-muted/30">
                   <span className="font-mono font-semibold">Ctrl</span>
                   <span className="font-mono font-semibold">K</span>
                 </span>
-              </div>
+              </button>
             </div>
 
             {/* Desktop Navigation & Actions */}
@@ -296,7 +298,12 @@ const Navbar: React.FC = () => {
 
             {/* Mobile Actions */}
             <div className="flex items-center gap-1.5 lg:hidden">
-              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-10 w-10 rounded-xl"
+                onClick={() => setIsAssetSearchOpen(true)}
+              >
                 <Search className="w-5 h-5" />
               </Button>
               <ModeToggle />
@@ -356,21 +363,6 @@ const Navbar: React.FC = () => {
                         </div>
                       </CardContent>
                     </Card>
-                  </div>
-
-                  {/* Mobile Search */}
-                  <div className="px-6 pb-4">
-                    <div className="relative">
-                      <Search className="absolute w-5 h-5 -translate-y-1/2 pointer-events-none left-4 top-1/2 text-muted-foreground/70" />
-                      <Input
-                        type="text"
-                        placeholder="Search symbols…"
-                        value={searchQuery}
-                        disabled
-                        onChange={e => setSearchQuery(e.target.value)}
-                        className="text-base h-12 pl-12 rounded-xl bg-muted/40 border-border/50 focus:border-primary/50 transition-all"
-                      />
-                    </div>
                   </div>
 
                   {/* Nav grid */}
@@ -473,6 +465,13 @@ const Navbar: React.FC = () => {
           </div>
         </div>
       </nav>
+
+      {/* Asset Search Modal/Drawer */}
+      <AssetSearch 
+        open={isAssetSearchOpen} 
+        onOpenChange={setIsAssetSearchOpen}
+        isMobile={isMobile}
+      />
 
       {/* Mobile bottom tab bar */}
       <div

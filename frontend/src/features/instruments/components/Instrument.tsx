@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { AlertCircle, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 import type { Instrument as InstrumentType } from '@/types/common-types';
 import { Spinner } from '@/components/ui/spinner';
@@ -21,6 +22,7 @@ interface Props {
   expiryAfter: string;
   expiryBefore: string;
   instrumentType?: 'OPTION' | 'FUTURE';
+  viewMode?: 'grid' | 'list';
 }
 
 // Constants
@@ -40,6 +42,7 @@ const Instrument: React.FC<Props> = ({
   expiryAfter,
   expiryBefore,
   instrumentType,
+  viewMode = 'grid',
 }) => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
   const [debouncedOptionType, setDebouncedOptionType] = useState(optionType);
@@ -203,13 +206,21 @@ const Instrument: React.FC<Props> = ({
       </div>
 
       <div className="flex-1 p-4 overflow-y-auto bg-muted/20">
-        <div className="grid flex-shrink grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-3 auto-rows-max">
+        <div
+          className={cn(
+            'grid gap-4',
+            viewMode === 'grid'
+              ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3'
+              : 'grid-cols-1'
+          )}
+        >
           {instruments.map((instrument: InstrumentType) => (
             <InstrumentItem
               key={instrument.id}
               instrument={instrument}
               onSubscribe={handleSubscribe}
               isSubscribing={subscribingIds.includes(instrument.id)}
+              viewMode={viewMode}
             />
           ))}
         </div>
