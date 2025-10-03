@@ -1,0 +1,19 @@
+{{- if .Values.websocket.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "alpaca-main.fullname" . }}-websocket
+  labels:
+    {{- include "alpaca-main.labels" . | nindent 4 }}
+    app.kubernetes.io/component: websocket
+spec:
+  type: {{ .Values.websocket.service.type }}
+  ports:
+    - port: {{ .Values.websocket.service.port }}
+      targetPort: websocket
+      protocol: TCP
+      name: websocket
+  selector:
+    {{- include "alpaca-main.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: websocket
+{{- end -}}

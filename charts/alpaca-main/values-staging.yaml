@@ -1,0 +1,56 @@
+# Staging environment values for alpaca-main
+# Override values for staging deployment
+
+# Reduce resource requirements for staging
+resources:
+  limits:
+    cpu: 250m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Use smaller replicas for staging
+replicaCount: 1
+celeryWorker:
+  replicaCount: 1
+
+# Staging ingress configuration
+ingress:
+  enabled: true
+  className: "gce"
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+  hosts:
+    - host: alpaca-staging.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: nginx
+          port: 80
+
+# Staging postgres with smaller storage
+postgres:
+  persistence:
+    enabled: true
+    size: 5Gi
+
+# Staging secrets (override these with real values)
+secrets:
+  data:
+    POSTGRES_PASSWORD: staging-password-123
+    DJANGO_SECRET_KEY: staging-django-secret-key
+    ALPACA_API_KEY: staging-alpaca-api-key
+    ALPACA_SECRET_KEY: staging-alpaca-secret-key
+
+# ConfigMap overrides for staging
+configMap:
+  data:
+    DJANGO_SETTINGS_MODULE: main.settings.staging
+    DJANGO_DEBUG: "True"
+    DJANGO_ALLOWED_HOSTS: "alpaca-staging.example.com,*.alpaca-staging.example.com"
+    DATABASE_URL: postgresql://alpaca_user@postgres:5432/alpaca_staging_db
+
+# Disable autoscaling in staging
+autoscaling:
+  enabled: false

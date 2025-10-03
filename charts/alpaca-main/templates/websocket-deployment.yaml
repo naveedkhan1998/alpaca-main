@@ -1,17 +1,17 @@
-{{- if .Values.celeryWorker.enabled -}}
+{{- if .Values.websocket.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "alpaca-main.fullname" . }}-celery-worker
+  name: {{ include "alpaca-main.fullname" . }}-websocket
   labels:
     {{- include "alpaca-main.labels" . | nindent 4 }}
-    app.kubernetes.io/component: celery-worker
+    app.kubernetes.io/component: websocket
 spec:
-  replicas: {{ .Values.celeryWorker.replicaCount }}
+  replicas: {{ .Values.websocket.replicaCount }}
   selector:
     matchLabels:
       {{- include "alpaca-main.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: celery-worker
+      app.kubernetes.io/component: websocket
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -20,7 +20,7 @@ spec:
       {{- end }}
       labels:
         {{- include "alpaca-main.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: celery-worker
+        app.kubernetes.io/component: websocket
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -30,14 +30,14 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: celery-worker
+        - name: websocket
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.celeryWorker.image.repository }}:{{ .Values.celeryWorker.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.celeryWorker.image.pullPolicy }}
-          command: ["celery", "-A", "main", "worker", "-l", "info"]
+          image: "{{ .Values.websocket.image.repository }}:{{ .Values.websocket.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.websocket.image.pullPolicy }}
+          command: ["./scripts/run_websocket.sh"]
           env:
-            {{- range $key, $value := .Values.celeryWorker.env }}
+            {{- range $key, $value := .Values.websocket.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
@@ -61,7 +61,21 @@ spec:
                 secretKeyRef:
                   name: {{ include "alpaca-main.fullname" $ }}-secrets
                   key: DJANGO_SECRET_KEY
+            - name: ALPACA_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "alpaca-main.fullname" $ }}-secrets
+                  key: ALPACA_API_KEY
+            - name: ALPACA_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "alpaca-main.fullname" $ }}-secrets
+                  key: ALPACA_SECRET_KEY
             {{- end }}
+          ports:
+            - name: websocket
+              containerPort: {{ .Values.websocket.service.port }}
+              protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

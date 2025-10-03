@@ -1,0 +1,170 @@
+name: Manual GKE Deployment
+
+on:
+  # Manual trigger only
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      image_tag:
+        description: 'Docker image tag to deploy (default: latest)'
+        required: false
+        default: 'latest'
+        type: string
+      gke_cluster:
+        description: 'GKE cluster name'
+        required: true
+        default: 'alpaca-cluster'
+        type: string
+      gke_zone:
+        description: 'GKE cluster zone'
+        required: true
+        default: 'us-central1-a'
+        type: string
+      namespace:
+        description: 'Kubernetes namespace'
+        required: false
+        default: 'default'
+        type: string
+
+env:
+  GKE_CLUSTER: ${{ inputs.gke_cluster }}
+  GKE_ZONE: ${{ inputs.gke_zone }}
+  DEPLOYMENT_NAME: alpaca-main
+  IMAGE_TAG: ${{ inputs.image_tag }}
+  ENVIRONMENT: ${{ inputs.environment }}
+  NAMESPACE: ${{ inputs.namespace }}
+
+jobs:
+  deploy:
+    name: Deploy to GKE
+    runs-on: ubuntu-latest
+    
+    # Add environment protection for production
+    environment: ${{ inputs.environment }}
+
+    steps:
+    - name: 🛎️ Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔐 Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GKE_SA_KEY }}
+
+    - name: 🔧 Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: 🔧 Configure Docker to use gcloud as credential helper
+      run: |-
+        gcloud --quiet auth configure-docker
+
+    - name: 🎯 Get GKE credentials
+      run: |-
+        gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
+
+    - name: 🔧 Set up Helm
+      uses: azure/setup-helm@v4
+      with:
+        version: '3.14.0'
+
+    - name: 📦 Package Helm chart
+      run: |-
+        cd charts
+        helm package alpaca-main
+
+    - name: 🔍 Validate Helm chart
+      run: |-
+        # Lint the chart
+        helm lint charts/alpaca-main
+        
+        # Dry run the deployment
+        if [ "$ENVIRONMENT" = "production" ]; then
+          helm upgrade --install $DEPLOYMENT_NAME charts/alpaca-main \
+            --namespace $NAMESPACE \
+            --values charts/alpaca-main/values-production.yaml \
+            --set backend.image.tag=$IMAGE_TAG \
+            --set frontend.image.tag=$IMAGE_TAG \
+            --set websocket.image.tag=$IMAGE_TAG \
+            --set celeryWorker.image.tag=$IMAGE_TAG \
+            --set celeryBeat.image.tag=$IMAGE_TAG \
+            --set flower.image.tag=$IMAGE_TAG \
+            --dry-run --debug
+        else
+          helm upgrade --install $DEPLOYMENT_NAME charts/alpaca-main \
+            --namespace $NAMESPACE \
+            --values charts/alpaca-main/values-staging.yaml \
+            --set backend.image.tag=$IMAGE_TAG \
+            --set frontend.image.tag=$IMAGE_TAG \
+            --set websocket.image.tag=$IMAGE_TAG \
+            --set celeryWorker.image.tag=$IMAGE_TAG \
+            --set celeryBeat.image.tag=$IMAGE_TAG \
+            --set flower.image.tag=$IMAGE_TAG \
+            --dry-run --debug
+        fi
+
+    - name: 🚀 Deploy to GKE
+      run: |-
+        echo "Deploying to $ENVIRONMENT environment..."
+        
+        # Deploy based on environment
+        if [ "$ENVIRONMENT" = "production" ]; then
+          echo "🔴 Deploying to PRODUCTION"
+          helm upgrade --install $DEPLOYMENT_NAME charts/alpaca-main \
+            --namespace $NAMESPACE \
+            --values charts/alpaca-main/values-production.yaml \
+            --set backend.image.tag=$IMAGE_TAG \
+            --set frontend.image.tag=$IMAGE_TAG \
+            --set websocket.image.tag=$IMAGE_TAG \
+            --set celeryWorker.image.tag=$IMAGE_TAG \
+            --set celeryBeat.image.tag=$IMAGE_TAG \
+            --set flower.image.tag=$IMAGE_TAG \
+            --wait --timeout=10m
+        else
+          echo "🟡 Deploying to STAGING"
+          helm upgrade --install $DEPLOYMENT_NAME charts/alpaca-main \
+            --namespace $NAMESPACE \
+            --values charts/alpaca-main/values-staging.yaml \
+            --set backend.image.tag=$IMAGE_TAG \
+            --set frontend.image.tag=$IMAGE_TAG \
+            --set websocket.image.tag=$IMAGE_TAG \
+            --set celeryWorker.image.tag=$IMAGE_TAG \
+            --set celeryBeat.image.tag=$IMAGE_TAG \
+            --set flower.image.tag=$IMAGE_TAG \
+            --wait --timeout=10m
+        fi
+
+    - name: ✅ Verify deployment
+      run: |-
+        echo "Verifying deployment..."
+        kubectl get pods --namespace $NAMESPACE -l app.kubernetes.io/instance=$DEPLOYMENT_NAME
+        kubectl get services --namespace $NAMESPACE -l app.kubernetes.io/instance=$DEPLOYMENT_NAME
+        
+        # Check if ingress is enabled and get external IP
+        if kubectl get ingress --namespace $NAMESPACE $DEPLOYMENT_NAME-ingress >/dev/null 2>&1; then
+          echo "🌐 Ingress configuration:"
+          kubectl get ingress --namespace $NAMESPACE $DEPLOYMENT_NAME-ingress
+        fi
+
+    - name: 📊 Deployment Summary
+      if: always()
+      run: |-
+        echo "### 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Environment**: $ENVIRONMENT" >> $GITHUB_STEP_SUMMARY
+        echo "- **Image Tag**: $IMAGE_TAG" >> $GITHUB_STEP_SUMMARY
+        echo "- **GKE Cluster**: $GKE_CLUSTER" >> $GITHUB_STEP_SUMMARY
+        echo "- **GKE Zone**: $GKE_ZONE" >> $GITHUB_STEP_SUMMARY
+        echo "- **Namespace**: $NAMESPACE" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        
+        # Add pod status to summary
+        echo "#### Pod Status" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        kubectl get pods --namespace $NAMESPACE -l app.kubernetes.io/instance=$DEPLOYMENT_NAME >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "Could not get pod status" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
