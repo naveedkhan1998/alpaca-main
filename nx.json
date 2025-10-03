@@ -1,0 +1,56 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "defaultBase": "main",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": [
+      "default",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/.eslintrc.json",
+      "!{projectRoot}/eslint.config.js",
+      "!{projectRoot}/**/*.md"
+    ],
+    "sharedGlobals": []
+  },
+  "targetDefaults": {
+    "install": {
+      "cache": true
+    },
+    "dev": {
+      "cache": false
+    },
+    "lint": {
+      "cache": true,
+      "inputs": ["default"]
+    },
+    "lint-fix": {
+      "cache": false,
+      "inputs": ["default"]
+    },
+    "format": {
+      "cache": false,
+      "inputs": ["default"]
+    },
+    "format-check": {
+      "cache": true,
+      "inputs": ["default"]
+    },
+    "test": {
+      "cache": true,
+      "inputs": ["default", "^production"]
+    },
+    "test-coverage": {
+      "cache": true,
+      "inputs": ["default", "^production"]
+    },
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
+    }
+  },
+  "parallel": 2,
+  "cacheDirectory": ".nx/cache",
+  "useInferencePlugins": false
+}

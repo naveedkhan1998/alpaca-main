@@ -1,6 +1,14 @@
 
 # Alpaca API Wrapper
 
+> **🎉 This project uses NX for monorepo management!**  
+> 
+> **Quick Start:**
+> ```bash
+> npm install    # Install all dependencies
+> npm run dev    # Start development (frontend + backend)
+> ```
+
 **Alpaca API Wrapper** is a Django-based starter project for building your own stock market analysis tools, backtesting engines, or trading bots. It leverages the Alpaca API for real-time market data and provides a full-stack, Dockerized environment.
 
 Use it as a foundation for **backtesting, live-trading bots, research notebooks, or data pipelines**—with built-in support for watchlists, historical and real-time data, and a dedicated WebSocket service for streaming market data.
@@ -22,9 +30,7 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
   - [Running the Application](#running-the-application)
   - [Development Workflow](#development-workflow)
   - [Testing \& Monitoring](#testing--monitoring)
-    - [Follow Celery logs](#follow-celery-logs)
-    - [Multitail (optional)](#multitail-optional)
-    - [Flower dashboard](#flower-dashboard)
+  - [NX Monorepo Benefits](#nx-monorepo-benefits)
   - [Contributing](#contributing)
     - [Development Guidelines](#development-guidelines)
     - [Issues](#issues)
@@ -36,7 +42,6 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
     - [Development Tools](#development-tools)
     - [Special Thanks](#special-thanks)
   - [Contact](#contact)
-  - [to run with observibility](#to-run-with-observibility)
 
 ---
 
@@ -61,12 +66,13 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
 
 | Layer                 | Tech                                                                                    |
 | --------------------- | --------------------------------------------------------------------------------------- |
+| **Monorepo**          | NX · npm workspaces                                                                     |
 | **Backend**           | Django · Django REST Framework                                                          |
 | **Async / broker**    | Celery · Redis                                                                          |
 | **Realtime**          | Django Channels (WebSockets)                                                            |
 | **Frontend**          | React · Vite                                                                            |
 | **Database**          | PostgreSQL                                                                              |
-| **Container / infra** | Docker · Docker Compose · Nginx (reverse proxy)                                         |
+| **Container / infra** | Docker · Docker Compose                                                                 |
 | **Dev tooling**       | `uv` (deps) · `black` (format) · `ruff` (lint) · `pytest` (tests) · `vitest` (FE tests) |
 
 ---
@@ -79,58 +85,68 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
         │   Users / Clients    │
         └─────────┬────────────┘
                   │ HTTP / WebSocket
-            ┌─────┴─────────────┐
-            │                   │                        
-      ┌─────▼─────┐       ┌─────▼─────┐       
-      │   Nginx   │       │   Flower  │        
-      │ (8000)    │       │  (5555)   │        
-      │ Reverse   │       │ Dashboard │       
-      │  Proxy    │       └───────────┘        
-      └─────┬─────┘
+                  │
+            ┌─────▼─────────────┐
+            │                   │
+      ┌─────▼─────┐       ┌─────▼─────┐
+      │ Frontend  │       │   Flower  │
+      │  (5173)   │       │  (5555)   │
+      │ React +   │       │ Dashboard │
+      │  Vite     │       └───────────┘
+      │ (Local)   │
+      └───────────┘
             │
-      ┌─────┴─────────────┬────────────────────────┐
+            │ API calls
+            │
+      ┌─────▼─────────────┬────────────────────────┐
       │                   │                        │
-┌─────▼─────┐       ┌─────▼────────────┐ ┌─────────▼────────────┐ 
-│ Frontend  │       │  Django Backend  │ │ WebSocket Service    │
-│ React +   │       │  API (ASGI)      │ │ (Django mgmt cmd,    │
-│  Vite     │       └─────┬────────────┘ │  separate container) │
-└───────────┘             │              └──────────────────────┘
-                          │
-                          │
-                          │
-          ┌───────────────┼───────────────┐
-          │               │               │
-   ┌──────▼───────┐ ┌─────▼───────┐ ┌─────▼───────┐
-   │ PostgreSQL   │ │   Redis     │ │   Celery    │
-   │   DB         │ │   Broker    │ │ Workers +   │
-   │              │ │ / Cache     │ │   Beat      │
-   └──────────────┘ └─────────────┘ └─────────────┘
-      ▲                               │
-      │                               │
-      └──────────── Task Queue ───────┘
+┌─────▼────────────┐ ┌────▼──────────────┐ ┌──────▼──────────┐
+│ Django Backend   │ │ WebSocket Service │ │   NX Monorepo   │
+│ API (ASGI)       │ │ (Django mgmt cmd, │ │  Orchestration  │
+│ (Docker: 8000)   │ │  Docker container)│ │   (Local CLI)   │
+└─────┬────────────┘ └───────────────────┘ └─────────────────┘
+      │
+      │
+      │
+      ┌───────────────┼───────────────┐
+      │               │               │
+┌─────▼───────┐ ┌─────▼───────┐ ┌─────▼───────┐
+│ PostgreSQL  │ │   Redis     │ │   Celery    │
+│   DB        │ │   Broker    │ │ Workers +   │
+│ (Docker)    │ │  (Docker)   │ │   Beat      │
+│             │ │             │ │  (Docker)   │
+└─────────────┘ └─────────────┘ └─────────────┘
+      ▲                             │
+      │                             │
+      └──────────── Task Queue ─────┘
 ```
 
 ### Service Breakdown
 
-| Service            | Purpose                 | Port     | Notes                          |
-| ------------------ | ----------------------- | -------- | ------------------------------ |
-| **Nginx**          | Reverse proxy           | 8000     | Routes to frontend/backend     |
-| **Frontend**       | React SPA               | Internal | Served via Nginx               |
-| **Backend**        | Django API + WebSockets | Internal | ASGI server with Channels      |
-| **PostgreSQL**     | Primary database        | Internal | Persistent data storage        |
-| **Redis**          | Cache + Message broker  | Internal | Celery task queue              |
-| **Celery Workers** | Background tasks        | Internal | Async job processing           |
-| **Celery Beat**    | Task scheduler          | Internal | Periodic task execution        |
-| **Flower**         | Task monitoring         | 5555     | Direct access (bypasses Nginx) |
+| Service            | Purpose                 | Port | Environment | Notes                               |
+| ------------------ | ----------------------- | ---- | ----------- | ----------------------------------- |
+| **NX**             | Monorepo orchestration  | N/A  | Local       | Task runner, caching, parallelization |
+| **Frontend**       | React SPA (Vite)        | 5173 | Local       | Hot module replacement enabled       |
+| **Backend**        | Django API + WebSockets | 8000 | Docker      | ASGI server with Channels            |
+| **PostgreSQL**     | Primary database        | 5432 | Docker      | Persistent data storage              |
+| **Redis**          | Cache + Message broker  | 6379 | Docker      | Celery task queue                    |
+| **Celery Workers** | Background tasks        | N/A  | Docker      | Async job processing                 |
+| **Celery Beat**    | Task scheduler          | N/A  | Docker      | Periodic task execution              |
+| **WebSocket**      | Real-time data stream   | 8001 | Docker      | Market data WebSocket service        |
+| **Flower**         | Task monitoring         | 5555 | Docker      | Celery dashboard                     |
 
-> All services (backend, frontend, db, cache, broker, workers, beat, Flower & Nginx) are defined in **`docker-compose.yml`**.
+> **Infrastructure services** (backend, db, cache, broker, workers, beat, websocket, flower) are in **`docker-compose.yml`**.  
+> **Frontend runs locally** via NX for fast hot reload. **NX orchestrates** all tasks across the monorepo.
 
 ---
 
 ## Prerequisites
 
+- **Node.js** (v18 or higher) & **npm** installed
 - **Docker** & **Docker Compose** installed
+- **Python 3.13** (for backend development)
 - An **ICICI Alpaca API** key & secret
+- Create a `.env` file from `.env.local` with your API credentials
 
 ---
 
@@ -140,40 +156,112 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
 git clone https://github.com/naveedkhan1998/alpaca-main.git
 cd alpaca-main
 
-# Build and start all services
-docker compose up
+# Install all dependencies (frontend + backend)
+npm install
 ```
 
-Docker Compose will:
+**What happens during installation:**
 
-1. Build the backend, frontend and Nginx images
-2. Pull official images for Postgres & Redis
-3. Spin up Celery workers, beat scheduler and Flower dashboard
+1. ✅ **Environment validation** - Checks for required API keys (APCA_API_KEY, APCA_API_SECRET_KEY)
+2. ✅ **Frontend dependencies** - Installs via npm workspaces (~768 packages)
+3. ✅ **Backend dependencies** - Installs via uv (~72 Python packages)
+
+> **Note:** The installation process automatically validates your environment and installs dependencies for both projects in parallel.
 
 ---
 
 ## Running the Application
 
-Once the stack is up, you can access:
+### Quick Start (Recommended)
 
-- **Main Application**: [http://localhost:8000](http://localhost:8000) — React SPA with API endpoints
-- **Celery Flower Dashboard**: [http://localhost:5555](http://localhost:5555) — Task monitoring
+```bash
+# Start all services (frontend + backend infrastructure)
+npm run dev
+```
 
-> **Note:** Nginx handles internal routing between frontend (`/`) and backend API (`/api/…`) on port 8000. WebSocket connections (`/ws/…`) are also routed through Nginx.
+This single command will:
+- 🚀 Start the frontend Vite dev server (with hot reload)
+- 🐳 Start Docker infrastructure (PostgreSQL, Redis, Backend API, Celery, WebSocket, Flower)
+- ⚡ Run both in parallel automatically via NX
+
+### Individual Services
+
+```bash
+# Frontend only (requires backend infrastructure running)
+npm run dev:frontend
+
+# Backend infrastructure only
+npm run dev:backend
+
+# Or manually start Docker services
+npm run docker:up
+```
+
+### Access Points
+
+Once everything is running, you can access:
+
+- **Frontend Application**: [http://localhost:5173](http://localhost:5173) — React SPA with Vite HMR
+- **Backend API**: [http://localhost:8000](http://localhost:8000) — Django REST API
+- **Django Admin**: [http://localhost:8000/admin](http://localhost:8000/admin) — Admin interface
+- **Celery Flower**: [http://localhost:5555](http://localhost:5555) — Task monitoring dashboard
+- **WebSocket Service**: [ws://localhost:8001](ws://localhost:8001) — Real-time market data
+
+> **Note:** Frontend runs locally with Vite for fast hot reload. Backend services run in Docker for consistency.
 
 ---
 
 ## Development Workflow
 
-Both backend and frontend code are mounted as volumes, so changes hot‑reload instantly.
+### NX Monorepo Commands
+
+All commands run via NX for intelligent caching and parallel execution:
 
 ```bash
-# backend tests
-docker compose exec backend pytest
+# Development
+npm run dev              # Start both frontend + backend
+npm run dev:frontend     # Frontend only
+npm run dev:backend      # Backend only
 
-# FE dev server (if you prefer Vite's dev mode)
-docker compose exec frontend pnpm dev
+# Code Quality
+npm run lint             # Lint both projects
+npm run lint:frontend    # Lint frontend only
+npm run lint:backend     # Lint backend only
+npm run format           # Format both projects
+npm run format:frontend  # Format frontend only
+npm run format:backend   # Format backend only
+
+# Testing
+npm run test             # Test both projects
+npm run test:frontend    # Test frontend only
+npm run test:backend     # Test backend only
+
+# Docker Management
+npm run docker:up        # Start Docker services
+npm run docker:down      # Stop Docker services
+npm run docker:logs      # View Docker logs
+npm run docker:clean     # Clean Docker volumes
 ```
+
+### Hot Reload
+
+- **Frontend**: Vite dev server with instant HMR (Hot Module Replacement)
+- **Backend**: Code mounted as Docker volume, auto-reloads on changes
+
+### Running Tests
+
+```bash
+# All tests with NX caching
+npm run test
+
+# Frontend tests (Vitest)
+npm run test:frontend
+
+# Backend tests (pytest)
+npm run test:backend
+```
+
+> **Tip:** NX caches test results. Only changed projects and their dependents will re-run tests!
 
 ---
 
@@ -254,6 +342,7 @@ This project wouldn't be possible without these amazing technologies and resourc
 ### Core Technologies
 
 - [ICICI Direct – Alpaca API](https://www.icicidirect.com/) - The financial data API that powers this wrapper
+- [NX](https://nx.dev/) - Smart monorepo build system with intelligent caching and task orchestration
 - [Django](https://www.djangoproject.com/) & [Django REST Framework](https://www.django-rest-framework.org/) - Web framework and API toolkit
 - [Django Channels](https://channels.readthedocs.io/) - WebSocket support for Django
 - [Celery](https://docs.celeryproject.org/) - Distributed task queue
@@ -264,7 +353,7 @@ This project wouldn't be possible without these amazing technologies and resourc
 ### Infrastructure & DevOps
 
 - [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/) - Containerization platform
-- [Nginx](https://www.nginx.com/) - Web server and reverse proxy
+- [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces) - Monorepo package management
 - [uv](https://github.com/astral-sh/uv) - Fast Python package installer
 
 ### Development Tools

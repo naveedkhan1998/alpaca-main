@@ -33,7 +33,6 @@ dependencies = [
     "cookiecutter>=2.6.0",
     "cryptography>=45.0.4",
     "cython>=3.1.2",
-    "websocket-client>=1.8.0",
     "daphne>=4.2.0",
     "django>=5.2.3",
     "django-browser-reload>=1.18.0",
