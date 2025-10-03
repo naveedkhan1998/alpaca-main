@@ -1,0 +1,32 @@
+{
+  "name": "alpaca-main",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Django + React monorepo managed with NX",
+  "scripts": {
+    "install:all": "npm install && cd frontend && npm install && cd .. && cd backend && uv sync && cd ..",
+    "install:frontend": "cd frontend && npm install && cd ..",
+    "install:backend": "cd backend && uv sync && cd ..",
+    "dev": "nx run-many -t dev --output-style=stream --color",
+    "dev:frontend": "nx run frontend:dev",
+    "dev:backend": "nx run backend:dev",
+    "lint": "nx run-many -t lint --color",
+    "lint:fix": "nx run-many -t lint-fix --color",
+    "format": "nx run-many -t format --color",
+    "format:check": "nx run-many -t format-check --color",
+    "test": "nx run-many -t test --color",
+    "test:coverage": "nx run-many -t test-coverage --color",
+    "build": "nx run frontend:build",
+    "docker:up": "docker compose up -d  always",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f  always",
+    "docker:clean": "docker compose down -v",
+    "migrate": "nx run backend:migrate",
+    "makemigrations": "nx run backend:makemigrations",
+    "backend:shell": "nx run backend:shell"
+  },
+  "devDependencies": {
+    "nx": "^20.0.0",
+    "@nx/js": "^20.0.0"
+  }
+}

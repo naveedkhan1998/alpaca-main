@@ -4,141 +4,148 @@
 
 @layer base {
   :root {
-    /* Light Mode – Quartz & Azure */
-    --background: 210 33% 99%;
-    --foreground: 222 47% 11%;
+    /* Light Mode - Premium Modern Aesthetic */
+    --background: 220 20% 98%;
+    --foreground: 222 47% 8%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 222 47% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 222 47% 8%;
 
-    /* Primary: Azure Blue */
-    --primary: 224 76% 48%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary: Modern Blue */
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 100%;
 
     /* Secondary/Neutrals */
-    --secondary: 210 28% 97%;
-    --secondary-foreground: 222 47% 13%;
+    --secondary: 220 17% 94%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 16% 45%;
+    --muted: 220 15% 95%;
+    --muted-foreground: 220 10% 46%;
 
-    /* Accent: Teal */
-    --accent: 182 74% 38%;
-    --accent-foreground: 210 40% 98%;
+    /* Accent: Vibrant Teal */
+    --accent: 180 77% 47%;
+    --accent-foreground: 0 0% 100%;
 
-    /* Semantic */
-    --destructive: 356 75% 49%;
-    --destructive-foreground: 0 0% 98%;
+    /* Semantic Colors */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --success: 150 60% 40%;
-    --success-foreground: 0 0% 98%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
-    --warning-foreground: 222 47% 11%;
+    --warning-foreground: 25 5% 5%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 224 76% 48%;
+    --border: 220 13% 88%;
+    --input: 220 13% 91%;
+    --ring: 221 83% 53%;
 
     /* Chart palette (light) */
-    --chart-1: 224 76% 48%;
-    --chart-2: 150 60% 40%;
-    --chart-3: 356 75% 49%;
+    --chart-1: 221 83% 53%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 0 84% 60%;
     --chart-4: 38 92% 50%;
-    --chart-5: 270 70% 55%;
+    --chart-5: 262 80% 60%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     /* Sidebar */
-    --sidebar-background: 210 28% 98%;
-    --sidebar-foreground: 222 47% 13%;
-    --sidebar-primary: 224 76% 48%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 210 20% 96%;
-    --sidebar-accent-foreground: 222 47% 13%;
-    --sidebar-border: 214 32% 90%;
-    --sidebar-ring: 224 76% 48%;
+    --sidebar-background: 220 20% 99%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 221 83% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 15% 95%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 220 13% 90%;
+    --sidebar-ring: 221 83% 53%;
 
     --vh: 1vh;
 
-    /* Added trading-specific colors */
-    --success: 150 60% 40%;
-    --success-foreground: 0 0% 98%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 222 47% 11%;
-    --profit: 150 60% 40%;
-    --loss: 356 75% 49%;
+    /* Trading-specific colors */
+    --profit: 142 71% 45%;
+    --loss: 0 84% 60%;
     --trading-card: 0 0% 100%;
-    --trading-border: 214 32% 91%;
+    --trading-border: 220 13% 88%;
+
+    /* Additional premium variables */
+    --gradient-start: 221 83% 53%;
+    --gradient-end: 262 80% 60%;
+    --glass-bg: 0 0% 100%;
+    --glass-border: 220 13% 88%;
   }
 
   .dark {
-    /* Dark Mode – Obsidian & Mint */
-    --background: 222 47% 7%;
-    --foreground: 210 40% 96%;
+    /* Dark Mode - Premium Deep Aesthetic */
+    --background: 222 47% 4%;
+    --foreground: 220 17% 98%;
 
-    --card: 222 47% 10%;
-    --card-foreground: 210 40% 96%;
+    --card: 222 47% 7%;
+    --card-foreground: 220 17% 98%;
 
-    --popover: 222 47% 10%;
-    --popover-foreground: 210 40% 96%;
+    --popover: 222 47% 7%;
+    --popover-foreground: 220 17% 98%;
 
-    /* Primary: Brighter Azure */
-    --primary: 223 92% 60%;
-    --primary-foreground: 222 47% 11%;
+    /* Primary: Bright Electric Blue */
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 4%;
 
-    --secondary: 220 15% 16%;
-    --secondary-foreground: 210 40% 94%;
+    --secondary: 222 47% 11%;
+    --secondary-foreground: 220 17% 96%;
 
-    --muted: 222 17% 14%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 222 47% 9%;
+    --muted-foreground: 220 17% 70%;
 
-    /* Accent: Teal Glow */
-    --accent: 182 74% 55%;
-    --accent-foreground: 222 47% 11%;
+    --muted: 222 47% 9%;
+    --muted-foreground: 220 17% 70%;
 
-    --destructive: 356 75% 60%;
-    --destructive-foreground: 210 40% 96%;
+    /* Accent: Neon Cyan */
+    --accent: 180 91% 57%;
+    --accent-foreground: 222 47% 4%;
 
-    --success: 150 60% 50%;
-    --success-foreground: 222 47% 11%;
+    --destructive: 0 84% 65%;
+    --destructive-foreground: 220 17% 98%;
 
-    --warning: 38 92% 56%;
-    --warning-foreground: 222 47% 11%;
+    --success: 142 76% 48%;
+    --success-foreground: 222 47% 4%;
 
-    --border: 220 15% 24%;
-    --input: 220 15% 22%;
-    --ring: 223 92% 60%;
+    --warning: 38 100% 60%;
+    --warning-foreground: 25 5% 5%;
+
+    --border: 222 47% 16%;
+    --input: 222 47% 14%;
+    --ring: 217 91% 60%;
 
     /* Chart palette (dark) */
-    --chart-1: 223 92% 60%;
-    --chart-2: 150 60% 50%;
-    --chart-3: 356 75% 60%;
-    --chart-4: 38 92% 56%;
-    --chart-5: 270 75% 62%;
+    --chart-1: 217 91% 60%;
+    --chart-2: 142 76% 48%;
+    --chart-3: 0 84% 65%;
+    --chart-4: 38 100% 60%;
+    --chart-5: 262 83% 68%;
 
     /* Sidebar */
-    --sidebar-background: 222 47% 6%;
-    --sidebar-foreground: 210 40% 96%;
-    --sidebar-primary: 223 92% 60%;
-    --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-accent: 222 17% 12%;
-    --sidebar-accent-foreground: 210 40% 94%;
-    --sidebar-border: 220 15% 20%;
-    --sidebar-ring: 223 92% 60%;
+    --sidebar-background: 222 47% 5%;
+    --sidebar-foreground: 220 17% 98%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 222 47% 4%;
+    --sidebar-accent: 222 47% 10%;
+    --sidebar-accent-foreground: 220 17% 96%;
+    --sidebar-border: 222 47% 14%;
+    --sidebar-ring: 217 91% 60%;
 
     /* Dark mode trading colors */
-    --success: 140 55% 52%;
-    --success-foreground: 240 15% 8%;
-    --warning: 60 60% 60%;
-    --warning-foreground: 240 15% 8%;
-    --profit: 140 55% 56%;
-    --loss: 15 80% 55%;
-    --trading-card: 240 10% 15%;
-    --trading-border: 240 10% 25%;
+    --profit: 142 76% 52%;
+    --loss: 0 84% 65%;
+    --trading-card: 222 47% 8%;
+    --trading-border: 222 47% 16%;
+
+    /* Additional premium variables */
+    --gradient-start: 217 91% 60%;
+    --gradient-end: 262 83% 68%;
+    --glass-bg: 222 47% 7%;
+    --glass-border: 222 47% 16%;
   }
 
   @layer base {
@@ -147,56 +154,67 @@
     }
     body {
       @apply bg-background text-foreground;
+      font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     }
   }
 
-  /* Enhanced scrollbar for trading app */
+  /* Modern scrollbar styling */
   ::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
+    height: 8px;
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 3px;
-    transition: background-color 0.2s ease;
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+    transition: all 0.2s ease;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--muted-foreground) / 0.5);
+    background: hsl(var(--muted-foreground) / 0.5);
   }
 
   ::-webkit-scrollbar-track {
-    background-color: hsl(var(--muted) / 0.3);
+    background: hsl(var(--muted) / 0.2);
   }
 
-  .scrollbar-hidden::-webkit-scrollbar-thumb {
-    background-color: transparent;
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
   }
 
-  /* Glass card utility (used by chart overlays) */
+  /* Premium Glass Effect */
   .glass-card {
-    background: hsl(var(--card) / 0.6);
-    backdrop-filter: saturate(120%) blur(0.01rem);
-    -webkit-backdrop-filter: saturate(120%) blur(0.01rem);
-    border: 1px solid hsl(var(--border) / 0.6);
-    z-index: 10;
-    border-radius: var(--radius);
+    background: hsl(var(--glass-bg) / 0.7);
+    backdrop-filter: saturate(140%) blur(12px);
+    -webkit-backdrop-filter: saturate(140%) blur(12px);
+    border: 1px solid hsl(var(--glass-border) / 0.5);
+    box-shadow:
+      0 0 0 1px hsl(var(--border) / 0.1),
+      0 4px 16px -2px hsl(var(--foreground) / 0.05),
+      0 8px 24px -4px hsl(var(--foreground) / 0.03);
   }
 
-  /* Trading-specific enhancements */
+  .glass-strong {
+    background: hsl(var(--glass-bg) / 0.85);
+    backdrop-filter: saturate(160%) blur(16px);
+    -webkit-backdrop-filter: saturate(160%) blur(16px);
+    border: 1px solid hsl(var(--glass-border) / 0.7);
+  }
+
+  /* Modern Chart Container */
   .chart-container {
     @apply relative overflow-hidden rounded-lg shadow ring-1 ring-border/40;
     background: linear-gradient(
       135deg,
       hsl(var(--card)) 0%,
-      hsl(var(--muted)) 100%
+      hsl(var(--muted) / 0.5) 100%
     );
   }
 
-  /* Professional button styles for trading actions */
+  /* Enhanced Button Effects */
   .action-button {
     @apply relative overflow-hidden transition-all duration-200 ease-out hover:scale-[1.02] active:scale-[0.98];
-    box-shadow: 0 1px 3px hsl(var(--foreground) / 0.1);
+    box-shadow: 0 2px 8px hsl(var(--foreground) / 0.08);
   }
 
   .action-button::before {
@@ -205,7 +223,7 @@
     background: linear-gradient(
       90deg,
       transparent,
-      hsl(var(--primary) / 0.1),
+      hsl(var(--primary) / 0.15),
       transparent
     );
   }
@@ -214,7 +232,7 @@
     @apply translate-x-full;
   }
 
-  /* Trading status indicators */
+  /* Status Indicators */
   .status-positive {
     @apply text-green-600 dark:text-green-400;
   }
@@ -227,7 +245,7 @@
     @apply text-muted-foreground;
   }
 
-  /* Live data pulse animation */
+  /* Smooth Animations */
   .live-pulse {
     animation: live-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
@@ -239,12 +257,12 @@
       transform: scale(1);
     }
     50% {
-      opacity: 0.85;
-      transform: scale(1.02);
+      opacity: 0.9;
+      transform: scale(1.015);
     }
   }
 
-  /* Market hours indicator */
+  /* Market Status */
   .market-open {
     @apply text-success;
   }
@@ -257,7 +275,7 @@
     @apply text-warning;
   }
 
-  /* Data table enhancements */
+  /* Enhanced Data Tables */
   .data-table {
     @apply border-separate border-spacing-0;
   }
@@ -271,47 +289,100 @@
   }
 
   .data-table tr:hover {
-    background-color: hsl(var(--muted) / 0.4);
+    background-color: hsl(var(--muted) / 0.3);
+    transition: background-color 0.15s ease;
   }
 
-  /* Price change indicators */
+  /* Price Change Indicators */
   .price-up {
-    padding: 0.25rem 0.5rem; /* px-2 py-1 */
-    font-weight: 500; /* font-medium */
-    border-radius: 0.125rem; /* rounded-sm */
+    padding: 0.375rem 0.625rem;
+    font-weight: 600;
+    border-radius: 0.375rem;
     color: hsl(var(--success));
-    background-color: hsl(var(--success) / 0.1);
+    background-color: hsl(var(--success) / 0.12);
+    transition: all 0.2s ease;
   }
 
   .price-down {
-    padding: 0.25rem 0.5rem;
-    font-weight: 500;
-    border-radius: 0.125rem;
+    padding: 0.375rem 0.625rem;
+    font-weight: 600;
+    border-radius: 0.375rem;
     color: hsl(var(--destructive));
-    background-color: hsl(var(--destructive) / 0.1);
+    background-color: hsl(var(--destructive) / 0.12);
+    transition: all 0.2s ease;
   }
 
   .price-unchanged {
-    padding: 0.25rem 0.5rem;
-    font-weight: 500;
-    border-radius: 0.125rem;
+    padding: 0.375rem 0.625rem;
+    font-weight: 600;
+    border-radius: 0.375rem;
     color: hsl(var(--muted-foreground));
     background-color: hsl(var(--muted) / 0.5);
+    transition: all 0.2s ease;
   }
 }
 
-/* Added custom trading styles */
+/* Premium Utilities */
 @layer utilities {
   .profit-text {
     @apply text-profit;
   }
+
   .loss-text {
     @apply text-loss;
   }
+
   .trading-card {
     @apply bg-trading-card border-trading-border;
   }
+
   .glass-effect {
-    @apply backdrop-blur-sm bg-card/80 border-border/50;
+    @apply backdrop-blur-md bg-card/70 border-border/50;
+  }
+
+  .gradient-premium {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--gradient-start)) 0%,
+      hsl(var(--gradient-end)) 100%
+    );
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(
+      to right,
+      hsl(var(--primary)),
+      hsl(var(--accent))
+    );
+  }
+
+  .animate-in {
+    animation: animate-in 0.4s ease-out;
+  }
+
+  @keyframes animate-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .shadow-premium {
+    box-shadow:
+      0 0 0 1px hsl(var(--border) / 0.1),
+      0 4px 16px -2px hsl(var(--foreground) / 0.08),
+      0 12px 32px -4px hsl(var(--foreground) / 0.04);
+  }
+
+  .shadow-premium-lg {
+    box-shadow:
+      0 0 0 1px hsl(var(--border) / 0.1),
+      0 8px 24px -4px hsl(var(--foreground) / 0.12),
+      0 20px 48px -8px hsl(var(--foreground) / 0.08);
   }
 }

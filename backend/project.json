@@ -1,0 +1,95 @@
+{
+  "name": "backend",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "backend",
+  "projectType": "application",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose up -d --build",
+        "cwd": "."
+      },
+      "dependsOn": ["env-check"]
+    },
+    "runserver": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run manage.py runserver",
+        "cwd": "backend"
+      }
+    },
+    "migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose exec backend python3 manage.py migrate",
+        "cwd": "backend"
+      }
+    },
+    "makemigrations": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose exec backend python3 manage.py makemigrations",
+        "cwd": "backend"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uvx ruff check .",
+        "cwd": "backend"
+      }
+    },
+    "lint-fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uvx ruff check --fix .",
+        "cwd": "backend"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uvx black .",
+        "cwd": "backend"
+      }
+    },
+    "format-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uvx black --check .",
+        "cwd": "backend"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run pytest",
+        "cwd": "backend"
+      }
+    },
+    "test-coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run pytest --cov",
+        "cwd": "backend"
+      }
+    },
+    "env-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["node ../scripts/check-env.js"],
+        "cwd": "backend"
+      }
+    },
+
+    "shell": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose exec backend sh",
+        "cwd": "."
+      }
+    }
+  },
+  "tags": ["type:app", "stack:django"]
+}

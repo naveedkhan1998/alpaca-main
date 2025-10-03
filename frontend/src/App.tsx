@@ -25,6 +25,8 @@ const ProfilePage = lazy(() => import('./features/profile'));
 const DashBoardPage = lazy(() => import('./features/dashboard'));
 const AssetsPage = lazy(() => import('./features/assets'));
 const WatchlistsPage = lazy(() => import('./features/watchlists'));
+const PrivacyPage = lazy(() => import('./features/privacy'));
+const TermsPage = lazy(() => import('./features/terms'));
 
 import { checkEnvironment, GOOGLE_CLIENT_ID } from './shared/lib/environment';
 import { ThemeProvider } from './shared/components/ThemeProvider';
@@ -36,8 +38,8 @@ import AnnouncementBanner from '@/components/AnnouncementBanner';
 
 // Subtle page transition loading component
 const PageLoadingFallback = () => (
-  <div className="fixed top-0 left-0 z-50 w-full h-1">
-    <div className="h-full bg-primary/20 animate-pulse" />
+  <div className="fixed top-0 left-0 z-50 w-full h-1.5">
+    <div className="h-full bg-gradient-to-r from-primary via-accent to-primary animate-shimmer bg-[length:200%_100%]" />
   </div>
 );
 
@@ -170,6 +172,8 @@ export default function App() {
     { path: '/graphs/:id', element: <GraphsPage />, private: true },
     { path: '/accounts', element: <AccountsPage />, private: true },
     { path: '/contact', element: <ContactPage />, private: true },
+    { path: '/privacy', element: <PrivacyPage />, private: false },
+    { path: '/terms', element: <TermsPage />, private: false },
     { path: '/login', element: <LoginRegPage />, private: false },
     { path: '*', element: <NotFoundPage />, private: false },
   ];
@@ -179,7 +183,7 @@ export default function App() {
       <Analytics />
       <AnnouncementBanner />
       <GoogleOAuthProvider clientId={clientId}>
-        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
           <Suspense fallback={<PageLoadingFallback />}>
             <Routes>
               {routes.map(({ path, element, private: isPrivate }) => (
@@ -193,7 +197,13 @@ export default function App() {
               ))}
             </Routes>
           </Suspense>
-          <Toaster />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              className: 'glass-card',
+              duration: 3000,
+            }}
+          />
         </ThemeProvider>
       </GoogleOAuthProvider>
     </BrowserRouter>

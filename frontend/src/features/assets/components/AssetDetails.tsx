@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { Calendar } from 'lucide-react';
+import { Calendar, Heart } from 'lucide-react';
 import { useGetAssetByIdQuery } from '@/api/assetService';
+import { AddToWatchlistDialog } from './AddToWatchlistDialog';
 
 interface AssetDetailsProps {
   assetId: number;
@@ -13,6 +15,7 @@ interface AssetDetailsProps {
 
 export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
   const { data: asset, isLoading, error } = useGetAssetByIdQuery(assetId);
+  const [showWatchlistDialog, setShowWatchlistDialog] = useState(false);
 
   if (isLoading) {
     return (
@@ -58,13 +61,13 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
   const getAssetClassColor = (assetClass: string) => {
     switch (assetClass) {
       case 'us_equity':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+        return 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 border-blue-200 dark:border-blue-800';
       case 'us_option':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+        return 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 border-purple-200 dark:border-purple-800';
       case 'crypto':
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+        return 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300 border-orange-200 dark:border-orange-800';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+        return 'bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-300 border-gray-200 dark:border-gray-800';
     }
   };
 
@@ -72,18 +75,30 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex-1">
               <CardTitle className="text-2xl tracking-tight">
                 {asset.symbol}
               </CardTitle>
               <p className="mt-1 text-muted-foreground">{asset.name}</p>
             </div>
-            <Badge
-              className={`${getAssetClassColor(asset.asset_class)} shadow-sm`}
-            >
-              {asset.asset_class.replace('_', ' ').toUpperCase()}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge
+                className={`${getAssetClassColor(asset.asset_class)} shadow-sm`}
+              >
+                {asset.asset_class.replace('_', ' ').toUpperCase()}
+              </Badge>
+              <Button
+                onClick={() => setShowWatchlistDialog(true)}
+                variant="outline"
+                size="sm"
+                className="gap-2 hover:text-red-500 hover:border-red-500 transition-colors"
+              >
+                <Heart className="w-4 h-4" />
+                <span className="hidden sm:inline">Add to Watchlist</span>
+                <span className="sm:hidden">Watchlist</span>
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -150,6 +165,12 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
           </div>
         </CardContent>
       </Card>
+
+      <AddToWatchlistDialog
+        asset={asset}
+        open={showWatchlistDialog}
+        onOpenChange={setShowWatchlistDialog}
+      />
     </div>
   );
 };

@@ -19,8 +19,8 @@ export const PageHeader: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <div className={`mb-3 sm:mb-5 ${className}`}>
-    <h1 className="text-xl font-semibold tracking-tight sm:text-2xl lg:text-3xl text-foreground">
+  <div className={`mb-4 sm:mb-6 animate-fade-in ${className}`}>
+    <h1 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl text-foreground">
       {children}
     </h1>
   </div>
@@ -31,7 +31,8 @@ export const PageSubHeader: React.FC<{
   className?: string;
 }> = ({ children, className = '' }) => (
   <div
-    className={`mb-4 sm:mb-6 text-sm sm:text-base text-muted-foreground leading-relaxed ${className}`}
+    className={`mb-6 sm:mb-8 text-base sm:text-lg text-muted-foreground leading-relaxed animate-fade-in ${className}`}
+    style={{ animationDelay: '0.1s' }}
   >
     {children}
   </div>
@@ -41,7 +42,10 @@ export const PageActions: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <div className={`flex flex-wrap items-center gap-3 mb-8 ${className}`}>
+  <div
+    className={`flex flex-wrap items-center gap-3 mb-8 animate-fade-in ${className}`}
+    style={{ animationDelay: '0.2s' }}
+  >
     {children}
   </div>
 );
@@ -50,7 +54,12 @@ export const PageContent: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <main className={`flex-1 w-full ${className}`}>{children}</main>
+  <main
+    className={`flex-1 w-full animate-fade-in ${className}`}
+    style={{ animationDelay: '0.3s' }}
+  >
+    {children}
+  </main>
 );
 
 const extractTextContent = (element: React.ReactNode): string => {
@@ -89,11 +98,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   const getContainerClasses = () => {
     switch (effectiveVariant) {
       case 'clean':
-        return 'mx-auto w-full max-w-[1400px] px-3 py-6 sm:px-6 lg:px-8';
+        return 'mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10';
       case 'full-width':
-        return 'w-full px-3 py-6 sm:px-6 lg:px-8';
+        return 'w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10';
       default:
-        return 'mx-auto w-full max-w-[1400px] px-3 py-6 sm:px-6 lg:px-8';
+        return 'mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10';
     }
   };
 
@@ -104,7 +113,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       case 'full-width':
         return `${contentClassName}`;
       default:
-        return `bg-card text-card-foreground border border-border/40 rounded-lg shadow-sm ${contentClassName}`;
+        return `rounded-2xl bg-gradient-to-br from-card/50 to-card/30 border border-border/50 backdrop-blur-sm ${contentClassName}`;
     }
   };
 
@@ -114,7 +123,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         <title>{pageTitle} - Alpaca Trading</title>
       </Helmet>
       <div
-        className={`flex min-h-[100dvh] flex-col bg-background ${className}`}
+        className={`flex min-h-[100dvh] flex-col bg-background pb-20 lg:pb-0 ${className}`}
       >
         <Navbar />
 
@@ -122,16 +131,16 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           <div className={getContainerClasses()}>
             {/* Header Section */}
             {(header || subheader || actions) && (
-              <div className="mb-6 sm:mb-8">
-                <div className="p-4 border rounded-xl border-border/40 bg-surface-gradient sm:p-5">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex-1 space-y-2">
+              <div className="mb-8 sm:mb-10">
+                <div className="p-6 border rounded-2xl border-border/50 bg-gradient-to-br from-card/60 to-muted/30 backdrop-blur-sm shadow-premium sm:p-8">
+                  <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="flex-1 space-y-3">
                       {header}
                       {subheader}
                     </div>
                     {actions && (
                       <div className="flex-shrink-0">
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-3">
                           {actions}
                         </div>
                       </div>
@@ -144,12 +153,12 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             {/* Content Section */}
             {effectiveVariant === 'default' ? (
               <Card className={getContentClasses()}>
-                <CardContent className="p-5 sm:p-6">{children}</CardContent>
+                <CardContent className="p-6 sm:p-8">{children}</CardContent>
               </Card>
             ) : (
               <div className={getContentClasses()}>
                 {effectiveVariant === 'clean' ? (
-                  <div className="space-y-4 sm:space-y-6">{children}</div>
+                  <div className="space-y-6 sm:space-y-8">{children}</div>
                 ) : (
                   children
                 )}
@@ -159,35 +168,35 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         </div>
 
         {/* Footer */}
-        <footer className="border-t bg-background/80 backdrop-blur">
-          <div className="mx-auto w-full max-w-[1400px] px-3 py-5 sm:px-6 lg:px-8">
+        <footer className="border-t bg-background/90 backdrop-blur-xl shadow-[0_-2px_16px_rgba(0,0,0,0.04)]">
+          <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
             <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <img
                   src="/android-chrome-192x192.png"
                   alt="Logo"
-                  className="w-6 h-6 rounded"
+                  className="w-7 h-7 rounded-lg ring-2 ring-border/40"
                 />
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm font-medium text-muted-foreground">
                   © {new Date().getFullYear()} MNK All rights reserved.
                 </span>
               </div>
-              <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+              <div className="flex items-center space-x-6 text-sm font-medium text-muted-foreground">
                 <Link
                   to="/privacy"
-                  className="transition-colors hover:text-foreground"
+                  className="transition-all hover:text-foreground hover:underline underline-offset-4"
                 >
                   Privacy
                 </Link>
                 <Link
                   to="/terms"
-                  className="transition-colors hover:text-foreground"
+                  className="transition-all hover:text-foreground hover:underline underline-offset-4"
                 >
                   Terms
                 </Link>
                 <Link
-                  to="/support"
-                  className="transition-colors hover:text-foreground"
+                  to="/contact"
+                  className="transition-all hover:text-foreground hover:underline underline-offset-4"
                 >
                   Support
                 </Link>

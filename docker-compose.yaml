@@ -24,22 +24,6 @@ services:
       timeout: 5s
       retries: 5
 
-  nginx:
-    build:
-      context: nginx
-      dockerfile: Dockerfile.dev
-    restart: always
-    container_name: alpaca-nginx
-    ports:
-      - "8000:80"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      frontend:
-        condition: service_started
-      backend:
-        condition: service_started
-
   backend:
     build:
       context: backend/
@@ -50,25 +34,13 @@ services:
       - ./.envs/.env
     volumes:
       - ./backend/:/app/
+    ports:
+      - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-
-  frontend:
-    build:
-      context: frontend/
-      dockerfile: Dockerfile.dev
-    container_name: alpaca-frontend
-    environment:
-      - WATCHPACK_POLLING=true
-    volumes:
-      - ./frontend/src/:/usr/app/src/
-      - ./frontend/public/:/usr/app/public/
-      - ./frontend/package.json:/usr/app/package.json
-      - ./frontend/package-lock.json:/usr/app/package-lock.json
-      - ./frontend/tailwind.config.js:/usr/app/tailwind.config.js
 
   celery-beat:
     image: naveedkhan1998/alpaca-backend
