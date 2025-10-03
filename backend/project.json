@@ -7,7 +7,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docker compose up --build",
+        "command": "docker compose up -d --build",
         "cwd": "."
       },
       "dependsOn": ["env-check"]
@@ -22,14 +22,14 @@
     "migrate": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "uv run manage.py migrate",
+        "command": "docker compose exec backend python3 manage.py migrate",
         "cwd": "backend"
       }
     },
     "makemigrations": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "uv run manage.py makemigrations",
+        "command": "docker compose exec backend python3 manage.py makemigrations",
         "cwd": "backend"
       }
     },
@@ -78,10 +78,16 @@
     "env-check": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          "node ../scripts/check-env.js"
-        ],
+        "commands": ["node ../scripts/check-env.js"],
         "cwd": "backend"
+      }
+    },
+
+    "shell": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose exec backend sh",
+        "cwd": "."
       }
     }
   },

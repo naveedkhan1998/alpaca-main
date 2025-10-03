@@ -19,12 +19,13 @@
     "test": "nx run-many -t test --color",
     "test:coverage": "nx run-many -t test-coverage --color",
     "build": "nx run frontend:build",
-    "docker:up": "docker compose up -d --ansi always",
+    "docker:up": "docker compose up -d  always",
     "docker:down": "docker compose down",
-    "docker:logs": "docker compose logs -f --ansi always",
+    "docker:logs": "docker compose logs -f  always",
     "docker:clean": "docker compose down -v",
     "migrate": "nx run backend:migrate",
-    "makemigrations": "nx run backend:makemigrations"
+    "makemigrations": "nx run backend:makemigrations",
+    "backend:shell": "nx run backend:shell"
   },
   "devDependencies": {
     "nx": "^20.0.0",
