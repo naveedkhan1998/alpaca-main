@@ -1,8 +1,7 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createElement } from 'react';
 import { Card } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TrendingUp, BarChart3, Shield, Zap } from 'lucide-react';
 
 interface LoadingPhase {
   message: string;
@@ -10,59 +9,65 @@ interface LoadingPhase {
   maxDuration: number;
   progress: number;
   subTasks?: string[];
+  icon?: React.ComponentType<{ className?: string }>;
 }
 
 const loadingPhases: LoadingPhase[] = [
   {
-    message: 'Initializing trading platform',
-    minDuration: 2000,
-    maxDuration: 6000,
-    progress: 15,
+    message: 'Initializing Platform',
+    minDuration: 1500,
+    maxDuration: 3000,
+    progress: 20,
     subTasks: [
       'Loading core systems',
-      'Starting services',
       'Verifying credentials',
+      'Starting services',
     ],
+    icon: Zap,
   },
   {
-    message: 'Connecting to markets',
-    minDuration: 3000,
-    maxDuration: 12000,
-    progress: 40,
+    message: 'Connecting to Markets',
+    minDuration: 2000,
+    maxDuration: 4000,
+    progress: 45,
     subTasks: [
       'Establishing connections',
-      'Authenticating',
+      'Authenticating session',
       'Syncing market data',
     ],
+    icon: TrendingUp,
   },
   {
-    message: 'Loading portfolio data',
-    minDuration: 3000,
-    maxDuration: 15000,
-    progress: 65,
+    message: 'Loading Portfolio',
+    minDuration: 1800,
+    maxDuration: 3500,
+    progress: 70,
     subTasks: [
       'Fetching positions',
       'Analyzing performance',
       'Building reports',
     ],
+    icon: BarChart3,
   },
   {
-    message: 'Preparing dashboard',
-    minDuration: 2000,
-    maxDuration: 10000,
-    progress: 85,
+    message: 'Finalizing Setup',
+    minDuration: 1200,
+    maxDuration: 2500,
+    progress: 90,
     subTasks: [
-      'Setting up workspace',
       'Loading preferences',
       'Applying themes',
+      'Setting up workspace',
     ],
+    icon: Shield,
   },
   {
-    message: 'Almost ready',
-    minDuration: 1500,
-    maxDuration: 5000,
+    message: 'Ready to Trade',
+    minDuration: 800,
+    maxDuration: 1500,
     progress: 100,
-    subTasks: ['Finalizing setup', 'All systems ready'],
+    subTasks: ['All systems ready', 'Welcome back!'],
+    icon: TrendingUp,
   },
 ];
 
@@ -147,16 +152,16 @@ const LoadingScreen = () => {
   }, []);
 
   return (
-    <div className="relative min-h-[100dvh] overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="relative min-h-[100dvh] overflow-hidden bg-gradient-to-br from-background via-muted/20 to-background">
       {/* Enhanced Grid Background */}
       <div
-        className="absolute inset-0 opacity-30"
+        className="absolute inset-0 opacity-20 dark:opacity-10"
         style={{
           backgroundImage: `
-            linear-gradient(rgba(139,92,246,0.3) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(139,92,246,0.3) 1px, transparent 1px)
+            linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
+            linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px)
           `,
-          backgroundSize: '60px 60px',
+          backgroundSize: '80px 80px',
         }}
       />
 
@@ -164,7 +169,7 @@ const LoadingScreen = () => {
       {particles.map(particle => (
         <motion.div
           key={particle.id}
-          className="absolute w-1 h-1 bg-purple-400 rounded-full opacity-60"
+          className="absolute w-1.5 h-1.5 bg-primary/40 rounded-full"
           initial={{ x: particle.x, y: particle.y, scale: 0 }}
           animate={{
             y: particle.y - 100,
@@ -182,37 +187,57 @@ const LoadingScreen = () => {
 
       {/* Brand Section */}
       <motion.div
-        className="absolute z-50 text-white top-8 left-8"
+        className="absolute z-50 top-8 left-8"
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8 }}
       >
         <div className="flex items-center gap-3">
-          <motion.div
-            className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-400 to-blue-400"
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-          />
-          <span className="text-xl font-semibold tracking-wide">System</span>
-        </div>
-        <div className="max-w-sm mt-8">
-          <h2 className="mb-3 text-2xl font-bold text-transparent bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text">
-            Initializing Application
-          </h2>
-          <p className="text-sm leading-relaxed text-gray-300">
-            Please wait while we prepare everything for you →
-          </p>
+          <div className="relative">
+            <img
+              src="/android-chrome-192x192.png"
+              alt="Alpaca"
+              className="w-12 h-12 shadow-lg rounded-xl ring-2 ring-border/50"
+            />
+            <motion.div
+              className="absolute opacity-75 -inset-1 bg-gradient-to-r from-primary/20 to-accent/20 rounded-xl blur"
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+            />
+          </div>
+          <div>
+            <span className="text-xl font-bold tracking-tight text-foreground">
+              Alpaca Trading
+            </span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <motion.div
+                className="w-2 h-2 rounded-full bg-primary"
+                animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+              />
+              <span className="text-xs font-medium text-muted-foreground">
+                Loading...
+              </span>
+            </div>
+          </div>
         </div>
       </motion.div>
 
       {/* Status Indicator */}
       <motion.div
-        className="absolute text-sm tracking-wider text-purple-300 top-8 right-8"
+        className="absolute flex items-center gap-2 top-8 right-8"
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8, delay: 0.2 }}
       >
-        → SYSTEM ONLINE
+        <motion.div
+          className="w-2 h-2 rounded-full bg-success"
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
+        />
+        <span className="text-sm font-medium tracking-wider text-success">
+          ONLINE
+        </span>
       </motion.div>
 
       {/* Enhanced Animated Blocks */}
@@ -280,86 +305,101 @@ const LoadingScreen = () => {
       {/* Enhanced Progress Card - Properly Centered */}
       <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
         <motion.div
-          className="pointer-events-auto"
+          className="w-full max-w-md mx-4 pointer-events-auto"
           initial={{ opacity: 0, y: 50, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
         >
-          <Card className="w-[400px] mx-4 border shadow-2xl border-purple-500/30 bg-slate-900/95 backdrop-blur-xl shadow-purple-500/20">
-            <div className="p-8 space-y-6 h-80">
-              {' '}
-              {/* Fixed height container */}
-              {/* Phase Message - Fixed height */}
-              <div className="flex flex-col justify-center h-20 space-y-4 text-center">
+          <Card className="border-2 shadow-2xl border-primary/20 bg-card/95 backdrop-blur-xl">
+            <div className="p-8 space-y-6">
+              {/* Icon and Phase Message */}
+              <div className="flex flex-col items-center space-y-4 text-center">
                 <AnimatePresence mode="wait">
-                  <motion.h2
+                  <motion.div
+                    key={`icon-${currentPhase}`}
+                    className="relative"
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    exit={{ scale: 0, rotate: 180 }}
+                    transition={{ duration: 0.5, type: 'spring' }}
+                  >
+                    <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 ring-2 ring-primary/30">
+                      {loadingPhases[currentPhase]?.icon &&
+                        createElement(loadingPhases[currentPhase].icon!, {
+                          className: 'w-8 h-8 text-primary',
+                        })}
+                    </div>
+                    <motion.div
+                      className="absolute opacity-50 -inset-2 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur-lg -z-10"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{
+                        duration: 2,
+                        repeat: Number.POSITIVE_INFINITY,
+                      }}
+                    />
+                  </motion.div>
+                </AnimatePresence>
+
+                <AnimatePresence mode="wait">
+                  <motion.div
                     key={currentPhase}
-                    className="flex items-center justify-center h-8 text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400"
+                    className="space-y-2"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.3 }}
                   >
-                    {loadingPhases[currentPhase]?.message || 'Initializing'}
-                    <span className="inline-block w-6 text-left">{dots}</span>
-                  </motion.h2>
+                    <h2 className="flex items-center justify-center text-2xl font-bold text-foreground">
+                      {loadingPhases[currentPhase]?.message || 'Initializing'}
+                      <span className="inline-block w-8 text-left text-primary">
+                        {dots}
+                      </span>
+                    </h2>
+                    <AnimatePresence mode="wait">
+                      <motion.p
+                        key={`${currentPhase}-subtask`}
+                        className="text-sm text-muted-foreground"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {loadingPhases[currentPhase]?.subTasks?.[
+                          Math.floor(Date.now() / 2000) %
+                            (loadingPhases[currentPhase]?.subTasks?.length || 1)
+                        ] || 'Processing...'}
+                      </motion.p>
+                    </AnimatePresence>
+                  </motion.div>
                 </AnimatePresence>
-
-                {/* Sub-task indicator - Fixed height */}
-                <div className="flex items-center justify-center h-5">
-                  <AnimatePresence mode="wait">
-                    <motion.p
-                      key={`${currentPhase}-subtask`}
-                      className="text-sm text-slate-400"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      {loadingPhases[currentPhase]?.subTasks?.[
-                        Math.floor(Date.now() / 2000) %
-                          (loadingPhases[currentPhase]?.subTasks?.length || 1)
-                      ] || 'Processing...'}
-                    </motion.p>
-                  </AnimatePresence>
-                </div>
               </div>
-              {/* Enhanced Progress Bar - Fixed height */}
-              <div className="h-20 space-y-4">
-                <div className="relative w-full h-4 overflow-hidden rounded-full bg-slate-800">
+
+              {/* Enhanced Progress Bar */}
+              <div className="space-y-3">
+                <div className="relative w-full h-3 overflow-hidden rounded-full bg-muted">
                   <motion.div
-                    className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-purple-500 via-blue-500 to-purple-600"
+                    className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-primary via-accent to-primary"
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.3, ease: 'easeOut' }}
                   />
                   <motion.div
-                    className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-white/40 to-transparent"
+                    className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-white/40 via-white/60 to-transparent"
                     animate={{
-                      x: [`-100%`, `${Math.min(progress + 15, 100)}%`],
+                      x: [`-30%`, `${Math.min(progress + 30, 130)}%`],
                     }}
                     transition={{
-                      duration: 2,
+                      duration: 1.5,
                       repeat: Number.POSITIVE_INFINITY,
-                      ease: 'easeInOut',
+                      ease: 'linear',
                     }}
                     style={{ width: '30%' }}
                   />
-                  {/* Progress segments */}
-                  <div className="absolute inset-0 flex">
-                    {loadingPhases.map((_, i) => (
-                      <div
-                        key={i}
-                        className="flex-1 border-r border-slate-700 last:border-r-0"
-                        style={{ opacity: i <= currentPhase ? 0.3 : 0.1 }}
-                      />
-                    ))}
-                  </div>
                 </div>
 
-                <div className="flex items-center justify-between h-8">
+                <div className="flex items-center justify-between">
                   <motion.p
-                    className="text-lg font-semibold text-purple-300"
+                    className="text-lg font-bold text-primary"
                     animate={{ opacity: [0.7, 1, 0.7] }}
                     transition={{
                       duration: 2,
@@ -368,63 +408,51 @@ const LoadingScreen = () => {
                   >
                     {Math.round(progress)}%
                   </motion.p>
-                  <div className="flex space-x-1">
-                    {[0, 1, 2].map(i => (
-                      <motion.div
-                        key={i}
-                        className="w-2 h-2 bg-purple-400 rounded-full"
-                        animate={{ opacity: [0.3, 1, 0.3] }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Number.POSITIVE_INFINITY,
-                          delay: i * 0.2,
-                        }}
-                      />
-                    ))}
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span>
+                      Step {currentPhase + 1} of {loadingPhases.length}
+                    </span>
                   </div>
                 </div>
               </div>
-              {/* Enhanced Status Info - Fixed height */}
-              <div className="flex flex-col justify-center h-24 space-y-3 text-center">
-                <motion.p
-                  className="flex items-center justify-center h-5 text-sm text-slate-400"
-                  animate={{ opacity: [0.5, 0.8, 0.5] }}
-                  transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
-                >
-                  This may take a few moments...
-                </motion.p>
-                <div className="flex justify-center h-4 space-x-6 text-xs text-slate-500">
-                  <span>
-                    Phase {currentPhase + 1}/{loadingPhases.length}
-                  </span>
-                  <span>•</span>
-                  <span>
-                    {progress < 50
-                      ? 'Initializing'
-                      : progress < 90
-                        ? 'Almost ready'
-                        : 'Finishing up'}
-                  </span>
-                </div>
-              </div>
-              {/* Long loading encouragement - Fixed height area */}
-              <div className="flex items-center justify-center h-16">
-                {progress > 30 && progress < 95 && (
+
+              {/* Phase Indicators */}
+              <div className="flex items-center justify-center gap-2">
+                {loadingPhases.map((_, i) => (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="w-full p-3 border rounded-lg bg-slate-800/50 border-slate-700"
-                  >
-                    <p className="text-xs leading-relaxed text-center text-slate-400">
-                      {progress < 60
-                        ? 'Setting up your personalized experience...'
-                        : progress < 80
-                          ? 'Optimizing performance for the best experience...'
-                          : 'Putting the finishing touches...'}
-                    </p>
-                  </motion.div>
-                )}
+                    key={i}
+                    className="h-1.5 rounded-full"
+                    style={{
+                      width: i === currentPhase ? '32px' : '8px',
+                    }}
+                    animate={{
+                      backgroundColor:
+                        i <= currentPhase
+                          ? 'hsl(var(--primary))'
+                          : 'hsl(var(--muted))',
+                      width: i === currentPhase ? '32px' : '8px',
+                    }}
+                    transition={{ duration: 0.3 }}
+                  />
+                ))}
               </div>
+
+              {/* Status Message */}
+              {progress > 20 && progress < 95 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3 border rounded-lg bg-muted/50 border-border/50"
+                >
+                  <p className="text-xs text-center text-muted-foreground">
+                    {progress < 50
+                      ? '🚀 Setting up your trading environment...'
+                      : progress < 75
+                        ? '⚡ Loading real-time market data...'
+                        : '✨ Almost there! Preparing your dashboard...'}
+                  </p>
+                </motion.div>
+              )}
             </div>
           </Card>
         </motion.div>
