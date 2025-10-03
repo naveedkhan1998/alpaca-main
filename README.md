@@ -28,9 +28,17 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
   - [Running the Application](#running-the-application)
+    - [Quick Start (Recommended)](#quick-start-recommended)
+    - [Individual Services](#individual-services)
+    - [Access Points](#access-points)
   - [Development Workflow](#development-workflow)
+    - [NX Monorepo Commands](#nx-monorepo-commands)
+    - [Hot Reload](#hot-reload)
+    - [Running Tests](#running-tests)
   - [Testing \& Monitoring](#testing--monitoring)
-  - [NX Monorepo Benefits](#nx-monorepo-benefits)
+    - [Follow Celery logs](#follow-celery-logs)
+    - [Multitail (optional)](#multitail-optional)
+    - [Flower dashboard](#flower-dashboard)
   - [Contributing](#contributing)
     - [Development Guidelines](#development-guidelines)
     - [Issues](#issues)
@@ -42,6 +50,7 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
     - [Development Tools](#development-tools)
     - [Special Thanks](#special-thanks)
   - [Contact](#contact)
+  - [to run with observibility](#to-run-with-observibility)
 
 ---
 
@@ -341,7 +350,7 @@ This project wouldn't be possible without these amazing technologies and resourc
 
 ### Core Technologies
 
-- [ICICI Direct – Alpaca API](https://www.icicidirect.com/) - The financial data API that powers this wrapper
+- [Alpaca API](https://alpaca.markets/) - The financial data API that powers this wrapper
 - [NX](https://nx.dev/) - Smart monorepo build system with intelligent caching and task orchestration
 - [Django](https://www.djangoproject.com/) & [Django REST Framework](https://www.django-rest-framework.org/) - Web framework and API toolkit
 - [Django Channels](https://channels.readthedocs.io/) - WebSocket support for Django
@@ -368,7 +377,7 @@ This project wouldn't be possible without these amazing technologies and resourc
 - The open source community for creating and maintaining these incredible tools
 - All contributors who have helped improve this project
 
-> **Disclaimer:** This project is not affiliated with ICICI Direct. Use at your own risk and ensure compliance with ICICI's terms of service.
+> **Disclaimer:** This project is not affiliated with Alpaca Markets. Use at your own risk and ensure compliance with Alpaca's terms of service.
 
 ---
 

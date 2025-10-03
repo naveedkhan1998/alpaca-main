@@ -1,6 +1,6 @@
-## Codebase Overview: Breeze Trading App (Frontend)
+## Codebase Overview: Alpaca Trading App (Frontend)
 
-This document provides a detailed overview of the React frontend application for the Breeze Trading App, covering its architecture, state management (Redux), and styling.
+This document provides a detailed overview of the React frontend application for the Alpaca Trading App, covering its architecture, state management (Redux), and styling.
 
 ### 1. Redux Implementation
 
