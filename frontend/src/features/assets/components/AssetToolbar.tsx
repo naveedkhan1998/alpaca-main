@@ -112,7 +112,7 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
                   )}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="bottom" className="h-[80vh]">
+              <SheetContent side="bottom" className="h-[80dvh]">
                 <SheetHeader>
                   <SheetTitle>Filter Assets</SheetTitle>
                   <SheetDescription>

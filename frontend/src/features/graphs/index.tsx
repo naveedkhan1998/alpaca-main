@@ -23,6 +23,7 @@ import IndicatorChart from './components/IndicatorChart';
 import { useIsMobile } from '@/hooks/useMobile';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import PanelHeader from './components/PanelHeader';
 import PaperTradingPanel from './components/controls/PaperTradingPanel';
 import { useCandles } from './hooks/useCandles';
@@ -373,18 +374,19 @@ const GraphsPage: React.FC = () => {
       </div>
 
       {isMobile ? (
-        <Sheet open={isPaperTradingOpen} onOpenChange={setIsPaperTradingOpen}>
-          <SheetContent side="bottom" className="h-[85vh] overflow-y-auto p-0">
+        <Drawer open={isPaperTradingOpen} onOpenChange={setIsPaperTradingOpen}>
+          <DrawerContent className="h-[90dvh]  p-0 ">
             <PaperTradingPanel
               asset={obj}
               currentPrice={latestPrice}
               enabled={isPaperTradingOpen}
+              isInDrawer={true}
             />
-          </SheetContent>
-        </Sheet>
+          </DrawerContent>
+        </Drawer>
       ) : (
         <Dialog open={isPaperTradingOpen} onOpenChange={setIsPaperTradingOpen}>
-          <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto p-0 sm:rounded-xl">
+          <DialogContent className="max-w-7xl w-full max-h-[90dvh] p-0 sm:rounded-xl m-auto">
             <PaperTradingPanel
               asset={obj}
               currentPrice={latestPrice}

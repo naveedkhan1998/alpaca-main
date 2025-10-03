@@ -193,18 +193,18 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
                   <div className="space-y-1 text-xs">
-                    <div className="font-medium text-foreground">Shortcuts</div>
+                    <div className="font-medium ">Shortcuts</div>
                     <div className="text-muted-foreground">
-                      <kbd className="px-1 py-0.5 rounded bg-muted mr-1">F</kbd>{' '}
+                      <kbd className="px-1 py-0.5 rounded  mr-1">F</kbd>{' '}
                       Fullscreen
                     </div>
                     <div className="text-muted-foreground">
-                      <kbd className="px-1 py-0.5 rounded bg-muted mr-1">V</kbd>{' '}
-                      Toggle Volume
+                      <kbd className="px-1 py-0.5 rounded  mr-1">V</kbd> Toggle
+                      Volume
                     </div>
                     <div className="text-muted-foreground">
-                      <kbd className="px-1 py-0.5 rounded bg-muted mr-1">C</kbd>{' '}
-                      Toggle Controls
+                      <kbd className="px-1 py-0.5 rounded  mr-1">C</kbd> Toggle
+                      Controls
                     </div>
                   </div>
                 </TooltipContent>
