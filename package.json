@@ -7,7 +7,6 @@
     "frontend"
   ],
   "scripts": {
-    "preinstall": "node scripts/check-env.js",
     "postinstall": "cd backend && uv sync && cd ..",
     "dev": "nx run-many -t dev --output-style=stream --color",
     "dev:frontend": "nx run frontend:dev",
