@@ -70,7 +70,7 @@ export default function AnnouncementBanner() {
                     This demo runs on free hosting and database services and
                     retains data for up to{' '}
                     <span className="font-semibold text-foreground">
-                      6 months
+                      1 year
                     </span>
                     .
                     <span className="hidden sm:inline">
