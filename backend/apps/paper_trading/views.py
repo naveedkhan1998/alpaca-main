@@ -44,7 +44,7 @@ class PaperTradeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-    @action(detail=True, methods=["post"], url_path="close")
+    @action(detail=True, methods=["post"], url_path="close", url_name="close")
     def close_trade(self, request, pk=None):
         trade: PaperTrade = self.get_object()
         if not trade.is_open:
@@ -58,7 +58,7 @@ class PaperTradeViewSet(viewsets.ModelViewSet):
             PaperTradeSerializer(trade, context=self.get_serializer_context()).data
         )
 
-    @action(detail=True, methods=["post"], url_path="cancel")
+    @action(detail=True, methods=["post"], url_path="cancel", url_name="cancel")
     def cancel_trade(self, request, pk=None):
         trade: PaperTrade = self.get_object()
         if not trade.is_open:
@@ -74,3 +74,4 @@ class PaperTradeViewSet(viewsets.ModelViewSet):
         return Response(
             PaperTradeSerializer(trade, context=self.get_serializer_context()).data
         )
+
