@@ -377,9 +377,16 @@ export const AssetTable: React.FC = () => {
       {!isLoading && totalCount > 0 && (
         <div className="flex flex-col gap-4 p-4 border-t sm:flex-row sm:items-center sm:justify-between bg-muted/20">
           <div className="text-sm text-muted-foreground">
-            Showing <span className="font-medium text-foreground">{currentPage * pageSize + 1}</span> to{' '}
-            <span className="font-medium text-foreground">{Math.min((currentPage + 1) * pageSize, totalCount)}</span> of{' '}
-            <span className="font-medium text-foreground">{totalCount}</span> assets
+            Showing{' '}
+            <span className="font-medium text-foreground">
+              {currentPage * pageSize + 1}
+            </span>{' '}
+            to{' '}
+            <span className="font-medium text-foreground">
+              {Math.min((currentPage + 1) * pageSize, totalCount)}
+            </span>{' '}
+            of <span className="font-medium text-foreground">{totalCount}</span>{' '}
+            assets
           </div>
           <div className="flex flex-col items-center gap-2 sm:flex-row">
             {/* Page Size Selector */}
@@ -400,7 +407,7 @@ export const AssetTable: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             {/* Pagination Controls */}
             <div className="flex items-center gap-1">
               <Button
@@ -413,7 +420,7 @@ export const AssetTable: React.FC = () => {
                 <ChevronLeft className="w-4 h-4" />
                 <span className="hidden sm:inline ml-1">Prev</span>
               </Button>
-              
+
               {/* Page Numbers */}
               <div className="flex items-center gap-1">
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -435,7 +442,7 @@ export const AssetTable: React.FC = () => {
                   );
                 })}
               </div>
-              
+
               <Button
                 variant="outline"
                 size="sm"

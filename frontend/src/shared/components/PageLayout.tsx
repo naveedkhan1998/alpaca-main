@@ -42,8 +42,10 @@ export const PageActions: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <div className={`flex flex-wrap items-center gap-3 mb-8 animate-fade-in ${className}`}
-    style={{ animationDelay: '0.2s' }}>
+  <div
+    className={`flex flex-wrap items-center gap-3 mb-8 animate-fade-in ${className}`}
+    style={{ animationDelay: '0.2s' }}
+  >
     {children}
   </div>
 );
@@ -52,8 +54,10 @@ export const PageContent: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <main className={`flex-1 w-full animate-fade-in ${className}`}
-    style={{ animationDelay: '0.3s' }}>
+  <main
+    className={`flex-1 w-full animate-fade-in ${className}`}
+    style={{ animationDelay: '0.3s' }}
+  >
     {children}
   </main>
 );

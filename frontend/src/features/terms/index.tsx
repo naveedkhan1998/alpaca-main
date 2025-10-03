@@ -5,14 +5,7 @@ import {
   PageContent,
 } from '@/components/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  FileText,
-  AlertCircle,
-  Shield,
-  Users,
-  Gavel,
-  Ban,
-} from 'lucide-react';
+import { FileText, AlertCircle, Shield, Users, Gavel, Ban } from 'lucide-react';
 
 const TermsPage = () => {
   const sections = [
@@ -169,9 +162,7 @@ const TermsPage = () => {
         {/* Additional Terms */}
         <Card className="mt-8 border-border/50 bg-gradient-to-br from-card/60 to-muted/30">
           <CardContent className="p-8">
-            <h3 className="text-xl font-bold mb-4">
-              Limitation of Liability
-            </h3>
+            <h3 className="text-xl font-bold mb-4">Limitation of Liability</h3>
             <p className="text-sm text-muted-foreground mb-4">
               To the maximum extent permitted by law, Alpaca Trading shall not
               be liable for any indirect, incidental, special, consequential, or

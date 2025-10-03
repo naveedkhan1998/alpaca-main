@@ -171,7 +171,9 @@ const Navbar: React.FC = () => {
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                       }`}
                     >
-                      <item.icon className={`w-4 h-4 ${active ? 'animate-pulse-blue' : ''}`} />
+                      <item.icon
+                        className={`w-4 h-4 ${active ? 'animate-pulse-blue' : ''}`}
+                      />
                       <span>{item.label}</span>
                       {active && (
                         <span className="absolute inset-x-4 -bottom-1 h-1 rounded-full bg-gradient-to-r from-primary to-accent" />
@@ -222,7 +224,10 @@ const Navbar: React.FC = () => {
                       <div className="absolute w-3 h-3 border-2 rounded-full -right-0.5 -bottom-0.5 border-background bg-success animate-pulse" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="p-2 w-80 animate-scale-in">
+                  <DropdownMenuContent
+                    align="end"
+                    className="p-2 w-80 animate-scale-in"
+                  >
                     <DropdownMenuLabel className="p-4">
                       <div className="flex items-center space-x-3">
                         <Avatar className="w-14 h-14 ring-2 ring-primary/20">
@@ -243,10 +248,16 @@ const Navbar: React.FC = () => {
                             {user?.email || ''}
                           </p>
                           <div className="flex items-center space-x-2">
-                            <Badge variant="outline" className="text-xs font-semibold">
+                            <Badge
+                              variant="outline"
+                              className="text-xs font-semibold"
+                            >
                               {user?.is_admin ? 'Admin' : 'User'}
                             </Badge>
-                            <Badge variant="secondary" className="text-xs font-semibold">
+                            <Badge
+                              variant="secondary"
+                              className="text-xs font-semibold"
+                            >
                               {user?.auth_provider}
                             </Badge>
                           </div>
@@ -254,7 +265,10 @@ const Navbar: React.FC = () => {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild className="p-3 cursor-pointer rounded-lg hover:bg-muted/70 transition-colors">
+                    <DropdownMenuItem
+                      asChild
+                      className="p-3 cursor-pointer rounded-lg hover:bg-muted/70 transition-colors"
+                    >
                       <Link to="/profile" className="flex items-center">
                         <User className="w-4 h-4 mr-3" />
                         <div className="flex flex-col">
@@ -298,9 +312,9 @@ const Navbar: React.FC = () => {
 
             {/* Mobile Actions */}
             <div className="flex items-center gap-1.5 lg:hidden">
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="h-10 w-10 rounded-xl"
                 onClick={() => setIsAssetSearchOpen(true)}
               >
@@ -313,7 +327,11 @@ const Navbar: React.FC = () => {
                 onOpenChange={setIsMobileMenuOpen}
               >
                 <DrawerTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-xl"
+                  >
                     <Menu className="w-5 h-5" />
                   </Button>
                 </DrawerTrigger>
@@ -355,7 +373,10 @@ const Navbar: React.FC = () => {
                               >
                                 {user?.is_admin ? 'Admin' : 'User'}
                               </Badge>
-                              <Badge variant="secondary" className="text-xs font-semibold">
+                              <Badge
+                                variant="secondary"
+                                className="text-xs font-semibold"
+                              >
                                 {user?.auth_provider}
                               </Badge>
                             </div>
@@ -467,8 +488,8 @@ const Navbar: React.FC = () => {
       </nav>
 
       {/* Asset Search Modal/Drawer */}
-      <AssetSearch 
-        open={isAssetSearchOpen} 
+      <AssetSearch
+        open={isAssetSearchOpen}
         onOpenChange={setIsAssetSearchOpen}
         isMobile={isMobile}
       />

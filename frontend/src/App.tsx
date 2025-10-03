@@ -197,7 +197,7 @@ export default function App() {
               ))}
             </Routes>
           </Suspense>
-          <Toaster 
+          <Toaster
             position="top-right"
             toastOptions={{
               className: 'glass-card',

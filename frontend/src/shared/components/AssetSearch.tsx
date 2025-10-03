@@ -32,22 +32,26 @@ const getAssetClassColor = (assetClass: string) => {
   switch (assetClass) {
     case 'us_equity':
       return {
-        badge: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+        badge:
+          'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 border-blue-200 dark:border-blue-800',
         gradient: 'from-blue-500 to-indigo-500',
       };
     case 'us_option':
       return {
-        badge: 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+        badge:
+          'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 border-purple-200 dark:border-purple-800',
         gradient: 'from-purple-500 to-fuchsia-500',
       };
     case 'crypto':
       return {
-        badge: 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+        badge:
+          'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300 border-orange-200 dark:border-orange-800',
         gradient: 'from-orange-500 to-amber-500',
       };
     default:
       return {
-        badge: 'bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-300 border-gray-200 dark:border-gray-800',
+        badge:
+          'bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-300 border-gray-200 dark:border-gray-800',
         gradient: 'from-gray-500 to-slate-500',
       };
   }
@@ -90,7 +94,7 @@ const AssetSearchItem: React.FC<{
         <Button
           size="sm"
           variant="ghost"
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             onAddToWatchlist(asset);
           }}
@@ -168,7 +172,7 @@ export const AssetSearch: React.FC<AssetSearchProps> = ({
           type="text"
           placeholder="Search assets by symbol or name..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={e => setSearchQuery(e.target.value)}
           className="h-12 pl-12 text-base border-border/60 focus:border-primary/50"
           autoFocus
         />
@@ -202,7 +206,9 @@ export const AssetSearch: React.FC<AssetSearchProps> = ({
           ) : isLoading || isFetching ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="w-8 h-8 mb-4 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Searching assets...</p>
+              <p className="text-sm text-muted-foreground">
+                Searching assets...
+              </p>
             </div>
           ) : assets.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -222,7 +228,7 @@ export const AssetSearch: React.FC<AssetSearchProps> = ({
                 <p className="px-3 py-2 text-xs font-semibold tracking-wider uppercase text-muted-foreground">
                   {assets.length} {assets.length === 1 ? 'Result' : 'Results'}
                 </p>
-                {assets.map((asset) => (
+                {assets.map(asset => (
                   <AssetSearchItem
                     key={asset.id}
                     asset={asset}

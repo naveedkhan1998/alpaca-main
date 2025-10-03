@@ -33,7 +33,7 @@ const AssetsPage: React.FC = () => {
   const assetState = useAppSelector(state => state.asset);
   const selectedAsset = assetState.selectedAsset;
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   const { data: stats } = useGetAssetStatsQuery();
 
   const fadeIn = {
@@ -182,7 +182,8 @@ const AssetsPage: React.FC = () => {
                   {stats.asset_classes?.length || 0}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {stats.asset_classes?.map(ac => ac.label).join(', ') || 'Multiple types'}
+                  {stats.asset_classes?.map(ac => ac.label).join(', ') ||
+                    'Multiple types'}
                 </p>
               </CardContent>
             </Card>
@@ -196,18 +197,19 @@ const AssetsPage: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {(assetState.assetClassFilter ? 1 : 0) + (assetState.tradableFilter ? 1 : 0)}
+                  {(assetState.assetClassFilter ? 1 : 0) +
+                    (assetState.tradableFilter ? 1 : 0)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {(assetState.assetClassFilter || assetState.tradableFilter) 
-                    ? 'Filters applied' 
+                  {assetState.assetClassFilter || assetState.tradableFilter
+                    ? 'Filters applied'
                     : 'No filters applied'}
                 </p>
               </CardContent>
             </Card>
           </motion.div>
         )}
-        
+
         <div className="space-y-8">
           {selectedAsset ? (
             <AssetDetails assetId={selectedAsset.id} />

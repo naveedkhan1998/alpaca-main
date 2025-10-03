@@ -69,7 +69,7 @@
     --loss: 0 84% 60%;
     --trading-card: 0 0% 100%;
     --trading-border: 220 13% 88%;
-    
+
     /* Additional premium variables */
     --gradient-start: 221 83% 53%;
     --gradient-end: 262 80% 60%;
@@ -140,7 +140,7 @@
     --loss: 0 84% 65%;
     --trading-card: 222 47% 8%;
     --trading-border: 222 47% 16%;
-    
+
     /* Additional premium variables */
     --gradient-start: 217 91% 60%;
     --gradient-end: 262 83% 68%;
@@ -154,7 +154,7 @@
     }
     body {
       @apply bg-background text-foreground;
-      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     }
   }
 
@@ -188,7 +188,7 @@
     backdrop-filter: saturate(140%) blur(12px);
     -webkit-backdrop-filter: saturate(140%) blur(12px);
     border: 1px solid hsl(var(--glass-border) / 0.5);
-    box-shadow: 
+    box-shadow:
       0 0 0 1px hsl(var(--border) / 0.1),
       0 4px 16px -2px hsl(var(--foreground) / 0.05),
       0 8px 24px -4px hsl(var(--foreground) / 0.03);
@@ -251,7 +251,8 @@
   }
 
   @keyframes live-pulse {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 1;
       transform: scale(1);
     }
@@ -326,19 +327,19 @@
   .profit-text {
     @apply text-profit;
   }
-  
+
   .loss-text {
     @apply text-loss;
   }
-  
+
   .trading-card {
     @apply bg-trading-card border-trading-border;
   }
-  
+
   .glass-effect {
     @apply backdrop-blur-md bg-card/70 border-border/50;
   }
-  
+
   .gradient-premium {
     background: linear-gradient(
       135deg,
@@ -346,7 +347,7 @@
       hsl(var(--gradient-end)) 100%
     );
   }
-  
+
   .text-gradient {
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(
@@ -355,11 +356,11 @@
       hsl(var(--accent))
     );
   }
-  
+
   .animate-in {
     animation: animate-in 0.4s ease-out;
   }
-  
+
   @keyframes animate-in {
     from {
       opacity: 0;
@@ -370,16 +371,16 @@
       transform: translateY(0);
     }
   }
-  
+
   .shadow-premium {
-    box-shadow: 
+    box-shadow:
       0 0 0 1px hsl(var(--border) / 0.1),
       0 4px 16px -2px hsl(var(--foreground) / 0.08),
       0 12px 32px -4px hsl(var(--foreground) / 0.04);
   }
-  
+
   .shadow-premium-lg {
-    box-shadow: 
+    box-shadow:
       0 0 0 1px hsl(var(--border) / 0.1),
       0 8px 24px -4px hsl(var(--foreground) / 0.12),
       0 20px 48px -8px hsl(var(--foreground) / 0.08);

@@ -165,7 +165,7 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
           </div>
         </CardContent>
       </Card>
-      
+
       <AddToWatchlistDialog
         asset={asset}
         open={showWatchlistDialog}

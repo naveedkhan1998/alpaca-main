@@ -156,7 +156,10 @@ const InstrumentItem: React.FC<InstrumentItemProps> = memo(
                 {/* Left: Main Info */}
                 <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary" className={`${config.colors} text-xs`}>
+                    <Badge
+                      variant="secondary"
+                      className={`${config.colors} text-xs`}
+                    >
                       {instrument.series === 'OPTION'
                         ? `${instrument.option_type} Option`
                         : instrument.series === 'FUTURE'
@@ -169,11 +172,13 @@ const InstrumentItem: React.FC<InstrumentItemProps> = memo(
                       {instrument.exchange_code}
                     </h3>
                   </div>
-                  
+
                   {instrument.company_name && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Building2 className="w-3.5 h-3.5 flex-shrink-0" />
-                      <span className="truncate">{instrument.company_name}</span>
+                      <span className="truncate">
+                        {instrument.company_name}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -182,7 +187,9 @@ const InstrumentItem: React.FC<InstrumentItemProps> = memo(
                 <div className="flex flex-wrap gap-3 text-sm md:gap-4">
                   <div className="flex items-center gap-1.5 text-muted-foreground">
                     <span className="text-xs">🔢</span>
-                    <span className="text-xs md:text-sm">{instrument.stock_token || instrument.token}</span>
+                    <span className="text-xs md:text-sm">
+                      {instrument.stock_token || instrument.token}
+                    </span>
                   </div>
 
                   {instrument.strike_price !== null && (
@@ -197,7 +204,9 @@ const InstrumentItem: React.FC<InstrumentItemProps> = memo(
                   {instrument.expiry && (
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                       <Calendar className="w-3.5 h-3.5" />
-                      <span className="text-xs md:text-sm">{formatDate(instrument.expiry)}</span>
+                      <span className="text-xs md:text-sm">
+                        {formatDate(instrument.expiry)}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -210,7 +219,7 @@ const InstrumentItem: React.FC<InstrumentItemProps> = memo(
                       onDurationChange={setDuration}
                     />
                   </div>
-                  
+
                   <Button
                     variant="default"
                     size="sm"
@@ -227,7 +236,9 @@ const InstrumentItem: React.FC<InstrumentItemProps> = memo(
                     ) : (
                       <>
                         <Plus className="w-4 h-4 md:mr-2" />
-                        <span className="hidden md:inline">Load {duration}w Data</span>
+                        <span className="hidden md:inline">
+                          Load {duration}w Data
+                        </span>
                         <span className="md:hidden">Load</span>
                       </>
                     )}
@@ -247,7 +258,10 @@ const InstrumentItem: React.FC<InstrumentItemProps> = memo(
 
           {/* Account Dialog/Drawer */}
           {!isMobile && (
-            <Dialog open={showAccountDialog} onOpenChange={setShowAccountDialog}>
+            <Dialog
+              open={showAccountDialog}
+              onOpenChange={setShowAccountDialog}
+            >
               <DialogContent className="sm:max-w-md">
                 <AccountRequiredContent />
               </DialogContent>
@@ -255,7 +269,10 @@ const InstrumentItem: React.FC<InstrumentItemProps> = memo(
           )}
 
           {isMobile && (
-            <Drawer open={showAccountDialog} onOpenChange={setShowAccountDialog}>
+            <Drawer
+              open={showAccountDialog}
+              onOpenChange={setShowAccountDialog}
+            >
               <DrawerContent className="p-6">
                 <DrawerHeader className="text-center">
                   <DrawerTitle>Breeze Account Required</DrawerTitle>

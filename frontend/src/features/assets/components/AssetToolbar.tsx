@@ -98,7 +98,11 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
             {/* Mobile Filter Button */}
             <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="relative lg:hidden">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="relative lg:hidden"
+                >
                   <Filter className="w-4 h-4 mr-2" />
                   Filters
                   {activeFilterCount > 0 && (
@@ -138,7 +142,9 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Tradable Status</label>
+                    <label className="text-sm font-medium">
+                      Tradable Status
+                    </label>
                     <Select
                       value={tradableFilter || 'all'}
                       onValueChange={v =>

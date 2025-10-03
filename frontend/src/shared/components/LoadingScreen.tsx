@@ -18,7 +18,11 @@ const loadingPhases: LoadingPhase[] = [
     minDuration: 2000,
     maxDuration: 6000,
     progress: 15,
-    subTasks: ['Loading core systems', 'Starting services', 'Verifying credentials'],
+    subTasks: [
+      'Loading core systems',
+      'Starting services',
+      'Verifying credentials',
+    ],
   },
   {
     message: 'Connecting to markets',
@@ -36,14 +40,22 @@ const loadingPhases: LoadingPhase[] = [
     minDuration: 3000,
     maxDuration: 15000,
     progress: 65,
-    subTasks: ['Fetching positions', 'Analyzing performance', 'Building reports'],
+    subTasks: [
+      'Fetching positions',
+      'Analyzing performance',
+      'Building reports',
+    ],
   },
   {
     message: 'Preparing dashboard',
     minDuration: 2000,
     maxDuration: 10000,
     progress: 85,
-    subTasks: ['Setting up workspace', 'Loading preferences', 'Applying themes'],
+    subTasks: [
+      'Setting up workspace',
+      'Loading preferences',
+      'Applying themes',
+    ],
   },
   {
     message: 'Almost ready',

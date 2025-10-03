@@ -155,7 +155,14 @@ const InstrumentsPage: React.FC = () => {
       if (expiryBefore) count++;
     }
     return count;
-  }, [searchTerm, selectedExchange, optionType, strikePrice, expiryAfter, expiryBefore]);
+  }, [
+    searchTerm,
+    selectedExchange,
+    optionType,
+    strikePrice,
+    expiryAfter,
+    expiryBefore,
+  ]);
 
   const renderFilters = () => (
     <div className="space-y-6">
@@ -476,7 +483,9 @@ const InstrumentsPage: React.FC = () => {
                       : `Discover ${currentExchange?.description} instruments`}
                   </p>
                 </div>
-                <Badge className={`${currentExchange?.color} text-white px-3 py-1`}>
+                <Badge
+                  className={`${currentExchange?.color} text-white px-3 py-1`}
+                >
                   {currentExchange?.label}
                 </Badge>
               </div>
@@ -487,8 +496,7 @@ const InstrumentsPage: React.FC = () => {
                       variant="secondary"
                       className="bg-primary/10 text-primary border-primary/30 gap-1.5"
                     >
-                      <Search className="w-3 h-3" />
-                      "{searchTerm}"
+                      <Search className="w-3 h-3" />"{searchTerm}"
                       <X
                         className="w-3 h-3 cursor-pointer hover:text-destructive"
                         onClick={() => setSearchTerm('')}
@@ -496,10 +504,7 @@ const InstrumentsPage: React.FC = () => {
                     </Badge>
                   )}
                   {selectedExchange === 'NFO' && optionType && (
-                    <Badge
-                      variant="secondary"
-                      className="gap-1.5"
-                    >
+                    <Badge variant="secondary" className="gap-1.5">
                       {optionType === 'CE' ? '📞 Call' : '📉 Put'}
                       <X
                         className="w-3 h-3 cursor-pointer hover:text-destructive"

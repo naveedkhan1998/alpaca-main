@@ -22,22 +22,26 @@ const getAssetClassColor = (assetClass: string) => {
   switch (assetClass) {
     case 'us_equity':
       return {
-        badge: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+        badge:
+          'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 border-blue-200 dark:border-blue-800',
         gradient: 'from-blue-500 to-indigo-500',
       };
     case 'us_option':
       return {
-        badge: 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+        badge:
+          'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 border-purple-200 dark:border-purple-800',
         gradient: 'from-purple-500 to-fuchsia-500',
       };
     case 'crypto':
       return {
-        badge: 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+        badge:
+          'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300 border-orange-200 dark:border-orange-800',
         gradient: 'from-orange-500 to-amber-500',
       };
     default:
       return {
-        badge: 'bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-300 border-gray-200 dark:border-gray-800',
+        badge:
+          'bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-300 border-gray-200 dark:border-gray-800',
         gradient: 'from-gray-500 to-slate-500',
       };
   }
@@ -55,7 +59,7 @@ export const AssetCard: React.FC<Props> = ({
   onWatchlist,
 }) => {
   const config = getAssetClassColor(asset.asset_class);
-  
+
   return (
     <motion.div {...fadeInUp} className="h-full">
       <Card
@@ -100,7 +104,7 @@ export const AssetCard: React.FC<Props> = ({
               </Badge>
             </div>
           </div>
-          
+
           <div className="flex gap-2 pt-2">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Shield className="w-3.5 h-3.5" />
@@ -114,9 +118,9 @@ export const AssetCard: React.FC<Props> = ({
         </CardContent>
 
         <CardFooter className="relative flex items-center justify-end gap-2 pt-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={e => onWatchlist(asset, e)}
             className="hover:text-red-500 transition-colors"
           >
