@@ -74,4 +74,3 @@ class PaperTradeViewSet(viewsets.ModelViewSet):
         return Response(
             PaperTradeSerializer(trade, context=self.get_serializer_context()).data
         )
-
