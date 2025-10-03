@@ -64,14 +64,7 @@ export const WatchlistsPage: React.FC = () => {
     <PageLayout
       header={
         <PageHeader>
-          <div className="flex items-center gap-3">
-            Watchlists
-            {!!watchlists.length && (
-              <Badge variant="secondary" className="ml-1">
-                {watchlists.length}
-              </Badge>
-            )}
-          </div>
+          <div className="flex items-center gap-3">Watchlist</div>
         </PageHeader>
       }
       subheader={
