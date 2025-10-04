@@ -244,7 +244,7 @@ const HealthStatusComponent: React.FC<{ compact?: boolean }> = ({ compact = fals
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        {compact ? (
+        {!compact ? (
           <Button
             variant="outline"
             className={`flex flex-col items-center justify-center h-16 gap-1 hover:bg-sidebar-accent relative ${config.className}`}
@@ -262,7 +262,7 @@ const HealthStatusComponent: React.FC<{ compact?: boolean }> = ({ compact = fals
           <Button
             variant="ghost"
             size="icon"
-            className="relative transition-all duration-200 rounded-full hover:bg-accent/50 hover:scale-105 group"
+            
             aria-label={`System status: ${overallStatus}`}
           >
             <StatusIndicator status={overallStatus} size="md" />

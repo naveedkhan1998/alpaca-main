@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { AppSidebar } from './AppSidebar';
 import {
@@ -192,7 +191,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset
-          className={`rounded-md overflow-auto shadow border m-auto h-[100dvh]  max-h-[calc(100dvh-${isMobile ? '64px' : '16px'})] ${className}`}
+          className={`md:rounded-md overflow-auto shadow border m-auto h-screen md:max-h-[calc(100dvh-1rem)]  ${className}`}
         >
           {/* Header with sidebar trigger */}
           <header className="sticky top-0 z-10 flex items-center h-16 gap-2 px-4 transition-[width,height] ease-linear shrink-0 border-b bg-background/95 backdrop-blur-[0.099rem] supports-[backdrop-filter]:bg-background/60">
@@ -200,6 +199,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             <Separator orientation="vertical" className="h-6 mr-2" />
             <div className="flex items-center justify-between flex-1 gap-2">
               <h2 className="text-lg font-semibold">{pageTitle}</h2>
+              {/* search button cntrl + k to open */}
               <Button
                 variant="outline"
                 size="sm"
@@ -208,6 +208,9 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               >
                 <Search className="w-4 h-4" />
                 <span className="hidden sm:inline">Search Assets</span>
+                <span className="hidden text-xs sm:inline text-muted-foreground">
+                  (Ctrl + K)
+                </span>
               </Button>
             </div>
           </header>
@@ -257,44 +260,6 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               )}
             </div>
           </div>
-
-          {/* Footer */}
-          <footer className=" border-t bg-background/90 backdrop-blur-xl shadow-[0_-2px_16px_rgba(0,0,0,0.04)]">
-            <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
-              <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-                <div className="flex items-center space-x-3">
-                  <img
-                    src="/android-chrome-192x192.png"
-                    alt="Logo"
-                    className="rounded-lg w-7 h-7 ring-2 ring-border/40"
-                  />
-                  <span className="text-sm font-medium text-muted-foreground">
-                    © {new Date().getFullYear()} MNK All rights reserved.
-                  </span>
-                </div>
-                <div className="flex items-center space-x-6 text-sm font-medium text-muted-foreground">
-                  <Link
-                    to="/privacy"
-                    className="transition-all hover:text-foreground hover:underline underline-offset-4"
-                  >
-                    Privacy
-                  </Link>
-                  <Link
-                    to="/terms"
-                    className="transition-all hover:text-foreground hover:underline underline-offset-4"
-                  >
-                    Terms
-                  </Link>
-                  <Link
-                    to="/contact"
-                    className="transition-all hover:text-foreground hover:underline underline-offset-4"
-                  >
-                    Support
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </footer>
         </SidebarInset>
       </SidebarProvider>
     </>

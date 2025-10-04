@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -9,14 +9,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Building2, Trash2, AlertCircle, ChartBarIcon } from 'lucide-react';
-import {
-  useGetWatchListByIdQuery,
-  useRemoveAssetFromWatchListMutation,
-} from '@/api/watchlistService';
+import { Building2, AlertCircle } from 'lucide-react';
+import { useGetWatchListByIdQuery } from '@/api/watchlistService';
 
 interface WatchListAssetsProps {
   watchlistId: number;
@@ -30,25 +27,8 @@ export const WatchListAssets: React.FC<WatchListAssetsProps> = ({
     isLoading,
     error,
   } = useGetWatchListByIdQuery(watchlistId);
-  const [removeAsset, { isLoading: isRemoving }] =
-    useRemoveAssetFromWatchListMutation();
 
-  const handleRemoveAsset = async (assetId: number) => {
-    if (
-      window.confirm(
-        'Are you sure you want to remove this asset from the watchlist?'
-      )
-    ) {
-      try {
-        await removeAsset({
-          watchlist_id: watchlistId,
-          asset_id: assetId,
-        }).unwrap();
-      } catch (error) {
-        console.error('Error removing asset:', error);
-      }
-    }
-  };
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -90,7 +70,7 @@ export const WatchListAssets: React.FC<WatchListAssetsProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden rounded-md border border-border/40">
+      <div className="overflow-hidden border rounded-md border-border/40">
         <Table>
           <TableHeader>
             <TableRow>
@@ -99,15 +79,22 @@ export const WatchListAssets: React.FC<WatchListAssetsProps> = ({
               <TableHead>Asset Class</TableHead>
               <TableHead>Exchange</TableHead>
               <TableHead>Added</TableHead>
-              <TableHead className="w-20">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {watchlist.assets.map(watchlistAsset => (
-              <TableRow key={watchlistAsset.id}>
+              <TableRow
+                key={watchlistAsset.id}
+                onClick={() =>
+                  navigate(`/graphs/${watchlistAsset.asset.id}`, {
+                    state: { obj: watchlistAsset.asset },
+                  })
+                }
+                className="cursor-pointer hover:bg-accent/10"
+              >
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-primary" />
+                    <Building2 className="w-4 h-4 text-primary" />
                     {watchlistAsset.asset.symbol}
                   </div>
                 </TableCell>
@@ -126,32 +113,6 @@ export const WatchListAssets: React.FC<WatchListAssetsProps> = ({
                 <TableCell>{watchlistAsset.asset.exchange}</TableCell>
                 <TableCell>
                   {new Date(watchlistAsset.added_at).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-end gap-2">
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                    >
-                      <Link
-                        to={`/graphs/${watchlistAsset.asset.id}`}
-                        state={{ obj: watchlistAsset.asset }}
-                      >
-                        <ChartBarIcon className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => handleRemoveAsset(watchlistAsset.asset.id)}
-                      disabled={isRemoving}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
                 </TableCell>
               </TableRow>
             ))}

@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import {
   TrendingUp,
   User,
-  Home,
   BarChart3,
   Mail,
   Menu,
@@ -14,8 +13,6 @@ import {
   LogOut,
   Search,
   ChevronRight,
-  LineChart,
-  Bell,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -73,13 +70,6 @@ const Navbar: React.FC = () => {
   const navItems = [
     {
       path: '/',
-      label: 'Dashboard',
-      icon: Home,
-      description: 'Overview & analytics',
-      color: 'from-blue-500 to-cyan-500',
-    },
-    {
-      path: '/watchlists',
       label: 'Watchlists',
       icon: TrendingUp,
       description: 'Manage your watchlists',
@@ -92,20 +82,7 @@ const Navbar: React.FC = () => {
       description: 'Trading instruments',
       color: 'from-green-500 to-emerald-500',
     },
-    {
-      path: '/strategy-lab',
-      label: 'Strategy Lab',
-      icon: LineChart,
-      description: 'Build & backtest strategies',
-      color: 'from-orange-500 to-red-500',
-    },
-    {
-      path: '/alerts',
-      label: 'Alerts',
-      icon: Bell,
-      description: 'Manage alerts & automations',
-      color: 'from-yellow-500 to-amber-500',
-    },
+
     {
       path: '/contact',
       label: 'Support',

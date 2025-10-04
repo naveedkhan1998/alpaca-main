@@ -3,11 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { toast } from 'sonner';
 import {
-  Home,
   TrendingUp,
   BarChart3,
-  LineChart,
-  Bell,
   Mail,
   User,
   Settings,
@@ -55,16 +52,11 @@ import {
 import { useTheme } from './ThemeProvider';
 import HealthStatus from './HealthStatus';
 import { removeToken } from '@/api/auth';
+import SidebarFooterContent from './SidebarFooterContent';
 
 const navItems = [
   {
     path: '/',
-    label: 'Dashboard',
-    icon: Home,
-    description: 'Overview & analytics',
-  },
-  {
-    path: '/watchlists',
     label: 'Watchlists',
     icon: TrendingUp,
     description: 'Manage your watchlists',
@@ -74,18 +66,6 @@ const navItems = [
     label: 'Instruments',
     icon: BarChart3,
     description: 'Trading instruments',
-  },
-  {
-    path: '/strategy-lab',
-    label: 'Strategy Lab',
-    icon: LineChart,
-    description: 'Build & backtest strategies',
-  },
-  {
-    path: '/alerts',
-    label: 'Alerts',
-    icon: Bell,
-    description: 'Manage alerts & automations',
   },
   {
     path: '/contact',
@@ -190,6 +170,9 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
+        {/* Footer Links and Copyright */}
+        <SidebarFooterContent />
+
         {/* Theme Toggle and Health Status Row */}
         {state === 'expanded' && (
           <div className="px-2 py-2">
@@ -202,8 +185,8 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
                       onClick={toggleTheme}
                       className="flex flex-col items-center justify-center h-16 gap-1 hover:bg-sidebar-accent"
                     >
-                      <Sun className="w-4 h-4 transition-all scale-100 rotate-0 dark:-rotate-90 dark:scale-0" />
-                      <Moon className="absolute w-4 h-4 transition-all scale-0 rotate-90 dark:rotate-0 dark:scale-100" />
+                      <Sun className="w-4 h-4 transition-all scale-100 rotate-0 dark:-rotate-180 dark:scale-0" />
+                      <Moon className="absolute w-4 h-4 transition-all scale-0 rotate-180 dark:rotate-0 dark:scale-100" />
                       <span className="text-xs font-medium">
                         {theme === 'dark' ? 'Dark' : 'Light'}
                       </span>
@@ -215,13 +198,13 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
                 </Tooltip>
               </TooltipProvider>
 
-              <HealthStatus compact />
+              <HealthStatus />
             </div>
           </div>
         )}
 
         {state === 'collapsed' && (
-          <div className="px-2 py-2">
+        
             <div className="flex flex-col gap-2">
               <TooltipProvider>
                 <Tooltip>
@@ -244,7 +227,7 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
 
               <HealthStatus compact />
             </div>
-          </div>
+      
         )}
 
         <SidebarMenu>
