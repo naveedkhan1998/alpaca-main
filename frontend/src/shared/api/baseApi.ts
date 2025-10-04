@@ -51,7 +51,9 @@ const baseQueryWithReauth: BaseQueryFn<
     // Only clear tokens and redirect if:
     // 1. Not on login page already
     // 2. Not a public endpoint
-    const isLoginPage = window.location.pathname === '/login';
+    const isLoginPage = ['/login', '/app/login'].includes(
+      window.location.pathname
+    );
 
     if (!isLoginPage && !isPublicEndpoint) {
       // Clear tokens from storage

@@ -177,7 +177,7 @@ export default function App() {
   ];
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/app">
       <Analytics />
       <AnnouncementBanner />
       <GoogleOAuthProvider clientId={clientId}>

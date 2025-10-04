@@ -6,14 +6,491 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
     />
-    <title>Alpaca Main</title>
+    <link rel="stylesheet" href="/src/index.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="index,follow" />
+    <meta
+      name="description"
+      content="Alpaca API Wrapper is the missing-middle starter kit for real-time market data-Django, Celery, Redis, React + TradingView, and Docker Compose powered by a free Alpaca API key."
+    />
+    <meta
+      name="keywords"
+      content="alpaca api wrapper, real-time market data, django, celery, react, tradingview, docker compose, nx monorepo, open source trading"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Alpaca API Wrapper" />
+    <meta
+      property="og:title"
+      content="Alpaca API Wrapper - Real-time Alpaca developer starter"
+    />
+    <meta
+      property="og:description"
+      content="Launch a production-grade Alpaca stack with Django models, TradingView charts, Celery workers, and Docker-ready to stream up to 30 assets in real time."
+    />
+    <meta property="og:url" content="https://alpaca.mnaveedk.com/" />
+    <meta
+      property="og:image"
+      content="https://alpaca.mnaveedk.com/android-chrome-512x512.png"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Alpaca API Wrapper" />
+    <meta
+      name="twitter:description"
+      content="Open-source full-stack starter that streams Alpaca market data, aggregates candles, and ships a TradingView-style UI out of the box."
+    />
+    <meta
+      name="twitter:image"
+      content="https://alpaca.mnaveedk.com/android-chrome-512x512.png"
+    />
+    <meta name="theme-color" content="#020817" />
+    <title>Alpaca API Wrapper - Real-time Alpaca developer starter</title>
+    <script>
+      (function () {
+        var storageKey = 'vite-ui-theme';
+        var root = document.documentElement;
+        var savedTheme;
+
+        try {
+          savedTheme = localStorage.getItem(storageKey);
+        } catch (error) {
+          savedTheme = null;
+        }
+
+        var prefersDark = false;
+        if (window.matchMedia) {
+          prefersDark = window.matchMedia(
+            '(prefers-color-scheme: dark)'
+          ).matches;
+        }
+
+        var theme =
+          savedTheme === 'light' || savedTheme === 'dark'
+            ? savedTheme
+            : prefersDark
+              ? 'dark'
+              : 'light';
+        root.classList.remove('light', 'dark');
+        root.classList.add(theme);
+
+        var path = window.location.pathname;
+        var appPrefixes = [
+          '/app',
+          '/login',
+          '/contact',
+          '/privacy',
+          '/terms',
+          '/profile',
+          '/accounts',
+          '/instruments',
+          '/graphs',
+          '/watchlists',
+        ];
+        if (path !== '/' && !path.startsWith('/app')) {
+          var shouldRewrite = appPrefixes.some(function (prefix) {
+            return path === prefix || path.indexOf(prefix + '/') === 0;
+          });
+          if (shouldRewrite) {
+            var newPath = '/app' + path;
+            var newUrl =
+              newPath + window.location.search + window.location.hash;
+            window.history.replaceState(null, '', newUrl);
+            path = newPath;
+          }
+        }
+        if (path !== '/' && path !== '' && path !== '/index.html') {
+          root.classList.add('is-app-route');
+        }
+      })();
+    </script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+      body {
+        background-color: hsl(var(--background, 222 47% 4%));
+      }
+      html.is-app-route #landing-root {
+        display: none;
+      }
+      #app-root {
+        min-height: 100vh;
+      }
+      #app-root[hidden] {
+        display: none !important;
+      }
+    </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Alpaca API Wrapper",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Web",
+        "description": "Open-source Alpaca starter kit with Django, Celery, Redis, React, and TradingView components for streaming market data in real time.",
+        "image": "https://alpaca.mnaveedk.com/android-chrome-512x512.png",
+        "url": "https://alpaca.mnaveedk.com/",
+        "author": {
+          "@type": "Person",
+          "name": "Naveed Khan"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "sameAs": ["https://github.com/naveedkhan1998/alpaca-main"]
+      }
+    </script>
   </head>
-  <body>
-    <div id="root"></div>
+  <body class="bg-background text-foreground antialiased">
+    <div
+      id="landing-root"
+      class="relative flex min-h-screen flex-col overflow-hidden"
+    >
+      <div
+        class="pointer-events-none absolute inset-0 -z-20 bg-gradient-to-b from-primary/5 via-background to-background"
+      ></div>
+      <div
+        class="pointer-events-none absolute -top-64 left-1/2 -z-10 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-primary/30 blur-[160px]"
+      ></div>
+      <div
+        class="pointer-events-none absolute bottom-[-10rem] right-[-8rem] -z-10 h-[28rem] w-[28rem] rounded-full bg-accent/25 blur-[160px]"
+      ></div>
+      <div class="relative z-10 flex grow flex-col">
+        <header class="px-6 pt-20 pb-12 sm:px-8 md:pt-28 md:pb-16">
+          <div
+            class="mx-auto flex w-full max-w-6xl flex-col gap-12 md:flex-row md:items-center"
+          >
+            <div class="md:flex-1">
+              <div
+                class="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-primary"
+              >
+                Open source
+                <span class="h-[3px] w-[3px] rounded-full bg-primary"></span>
+                Free real-time data tier
+              </div>
+              <h1
+                class="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl"
+              >
+                The missing-middle starter for Alpaca-powered market data apps.
+              </h1>
+              <p
+                class="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg"
+              >
+                Alpaca API Wrapper spins up Django models that auto-sync market
+                candles, a TradingView-style React UI, and Dockerized services
+                for streaming, aggregation, and caching. Bring a free Alpaca key
+                (up to 30 assets) and start building research tools, dashboards,
+                or trading ideas today.
+              </p>
+              <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <a
+                  class="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-premium transition duration-200 hover:-translate-y-0.5 hover:shadow-premium-lg"
+                  href="/app"
+                >
+                  Launch the app
+                </a>
+                <a
+                  class="inline-flex items-center justify-center rounded-full border border-border px-6 py-3 text-sm font-semibold text-muted-foreground transition duration-200 hover:-translate-y-0.5 hover:border-primary/60 hover:text-foreground"
+                  href="https://github.com/naveedkhan1998/alpaca-main"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View on GitHub
+                </a>
+              </div>
+              <div
+                class="mt-10 grid gap-4 text-sm text-muted-foreground sm:grid-cols-3"
+              >
+                <div
+                  class="glass-effect flex items-center gap-3 rounded-2xl border border-border/40 bg-card/80 px-4 py-3 shadow-premium"
+                >
+                  <span
+                    class="inline-flex h-2 w-2 animate-pulse rounded-full bg-success"
+                  ></span>
+                  Django models with live candle sync
+                </div>
+                <div
+                  class="glass-effect flex items-center gap-3 rounded-2xl border border-border/40 bg-card/80 px-4 py-3 shadow-premium"
+                >
+                  <span
+                    class="inline-flex h-2 w-2 animate-pulse rounded-full bg-accent"
+                  ></span>
+                  TradingView-style React dashboard
+                </div>
+                <div
+                  class="glass-effect flex items-center gap-3 rounded-2xl border border-border/40 bg-card/80 px-4 py-3 shadow-premium"
+                >
+                  <span
+                    class="inline-flex h-2 w-2 animate-pulse rounded-full bg-primary"
+                  ></span>
+                  Docker + NX orchestration in one command
+                </div>
+              </div>
+            </div>
+            <div
+              class="glass-effect relative w-full max-w-md rounded-3xl border border-border/40 bg-card/80 p-6 shadow-premium"
+            >
+              <div
+                class="absolute -top-6 right-8 h-12 w-12 rounded-full bg-primary/15 blur-2xl"
+              ></div>
+              <span
+                class="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground"
+                >Stack snapshot</span
+              >
+              <ul class="mt-6 space-y-4 text-sm text-muted-foreground">
+                <li class="flex items-start gap-3">
+                  <span
+                    class="mt-1 inline-flex h-2 w-2 rounded-full bg-primary"
+                  ></span>
+                  <div>
+                    <p class="font-semibold text-foreground">
+                      Self-contained backend
+                    </p>
+                    <p>
+                      Django REST API, Channels WebSocket ingestion, Celery
+                      workers, Redis, and PostgreSQL behind Docker Compose.
+                    </p>
+                  </div>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span
+                    class="mt-1 inline-flex h-2 w-2 rounded-full bg-accent"
+                  ></span>
+                  <div>
+                    <p class="font-semibold text-foreground">
+                      Trading-ready frontend
+                    </p>
+                    <p>
+                      Vite + React with TradingView charting, watchlists, and
+                      real-time visuals powered by RTK Query.
+                    </p>
+                  </div>
+                </li>
+                <li class="flex items-start gap-3">
+                  <span
+                    class="mt-1 inline-flex h-2 w-2 rounded-full bg-success"
+                  ></span>
+                  <div>
+                    <p class="font-semibold text-foreground">
+                      Free-tier friendly
+                    </p>
+                    <p>
+                      Streams up to 30 symbols on Alpaca's free key, with
+                      resilience, resubscribe logic, and cached aggregates.
+                    </p>
+                  </div>
+                </li>
+              </ul>
+              <div
+                class="mt-6 rounded-2xl border border-border/30 bg-background/70 p-4 text-xs text-muted-foreground"
+              >
+                <p class="font-semibold text-foreground">Quick start:</p>
+                <p class="mt-2 font-mono text-[0.7rem]">npm run dev</p>
+                <p class="mt-2">
+                  Launches React locally and Docker containers for Django,
+                  Postgres, Redis, WebSocket, Celery, and Flower.
+                </p>
+              </div>
+            </div>
+          </div>
+        </header>
+        <main class="flex-1 px-6 pb-16 sm:px-8">
+          <div class="mx-auto flex w-full max-w-6xl flex-col gap-10">
+            <section
+              class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
+            >
+              <article
+                class="glass-effect rounded-3xl border border-border/40 bg-card/85 p-8 shadow-premium-lg"
+              >
+                <h2 class="text-2xl font-semibold tracking-tight">
+                  Why we built it
+                </h2>
+                <p class="mt-4 text-base text-muted-foreground">
+                  Working with live markets usually means tiny tutorials that
+                  end at a single fetch, or massive frameworks that dictate how
+                  you trade. Alpaca API Wrapper sits in the missing middle-a
+                  production-grade foundation that you can understand in an
+                  afternoon and extend for research, analytics, or algorithmic
+                  experiments.
+                </p>
+                <ul class="mt-6 space-y-3 text-sm text-muted-foreground">
+                  <li>
+                    <strong class="text-foreground">Lower the barrier:</strong>
+                    plug in a free Alpaca API key, pick up to 30 symbols, and
+                    the stack handles streaming, storage, and aggregation.
+                  </li>
+                  <li>
+                    <strong class="text-foreground">Stay flexible:</strong>
+                    iterate on strategies, dashboards, or APIs without fighting
+                    rigid abstractions or paid platforms.
+                  </li>
+                  <li>
+                    <strong class="text-foreground">Own your data loop:</strong>
+                    query rich Django models, run Celery tasks, and ship
+                    features without reinventing infra.
+                  </li>
+                </ul>
+              </article>
+              <aside
+                class="glass-effect rounded-3xl border border-border/40 bg-card/85 p-8 shadow-premium-lg"
+              >
+                <h3 class="text-xl font-semibold tracking-tight">
+                  Developer experience
+                </h3>
+                <ul class="mt-6 space-y-4 text-sm text-muted-foreground">
+                  <li>
+                    <strong class="text-foreground">NX monorepo:</strong>
+                    unified commands, caching, and task orchestration across
+                    frontend and backend.
+                  </li>
+                  <li>
+                    <strong class="text-foreground"
+                      >Hot reload everywhere:</strong
+                    >
+                    Vite for the UI, Django auto reload via Docker volumes, and
+                    Flower dashboard for Celery.
+                  </li>
+                  <li>
+                    <strong class="text-foreground">Purposeful logging:</strong>
+                    Docker services surface stdout to your terminal, keeping
+                    ingestion and worker activity transparent.
+                  </li>
+                  <li>
+                    <strong class="text-foreground">Tooling included:</strong>
+                    Ruff, Black, Prettier, Pytest, Vitest, and uv ship with sane
+                    configs so you can focus on your ideas.
+                  </li>
+                </ul>
+              </aside>
+            </section>
+            <section class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              <div
+                class="glass-effect rounded-3xl border border-border/40 bg-card/85 p-6 shadow-premium"
+              >
+                <h4 class="text-lg font-semibold">
+                  Watchlists & symbol control
+                </h4>
+                <p class="mt-3 text-sm text-muted-foreground">
+                  Create and manage watchlists without leaving the UI. Store
+                  them in Django, sync with Alpaca, and keep everything ready
+                  for research or automation.
+                </p>
+              </div>
+              <div
+                class="glass-effect rounded-3xl border border-border/40 bg-card/85 p-6 shadow-premium"
+              >
+                <h4 class="text-lg font-semibold">Real-time candle pipeline</h4>
+                <p class="mt-3 text-sm text-muted-foreground">
+                  WebSocket ingestion builds 1-minute candles on the fly while
+                  Celery resamples into 5m, 15m, 1h, 4h, and daily intervals.
+                  Reconnect logic keeps feeds resilient.
+                </p>
+              </div>
+              <div
+                class="glass-effect rounded-3xl border border-border/40 bg-card/85 p-6 shadow-premium"
+              >
+                <h4 class="text-lg font-semibold">Paper trading loop</h4>
+                <p class="mt-3 text-sm text-muted-foreground">
+                  Experiment with mock orders, visualize P/L instantly, and wire
+                  Celery tasks for alerts or strategy execution without touching
+                  production capital.
+                </p>
+              </div>
+            </section>
+            <section
+              class="glass-effect rounded-3xl border border-border/40 bg-card/85 p-8 shadow-premium-lg"
+            >
+              <h3 class="text-xl font-semibold tracking-tight">
+                Infrastructure highlights
+              </h3>
+              <div class="mt-6 grid gap-6 md:grid-cols-3">
+                <div>
+                  <p class="text-sm font-semibold text-foreground">
+                    Docker Compose stack
+                  </p>
+                  <p class="mt-2 text-sm text-muted-foreground">
+                    Backend ASGI app, Celery worker + beat, WebSocket service,
+                    Postgres, Redis, nginx-ready configs, and Flower monitoring.
+                  </p>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-foreground">
+                    Extendable backend APIs
+                  </p>
+                  <p class="mt-2 text-sm text-muted-foreground">
+                    Prebuilt models for assets, candles, watchlists, and paper
+                    trades-ready for new endpoints, scripts, or notebooks.
+                  </p>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-foreground">
+                    Ops-ready diagnostics
+                  </p>
+                  <p class="mt-2 text-sm text-muted-foreground">
+                    Health checks warm services in the background, and
+                    multitail-friendly logs keep ingestion, workers, and
+                    schedulers observable.
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </main>
+        <footer class="mt-auto px-6 pb-10 sm:px-8">
+          <div
+            class="mx-auto flex w-full max-w-6xl flex-col gap-4 rounded-3xl border border-border/40 bg-background/80 px-6 py-6 text-sm text-muted-foreground shadow-premium sm:flex-row sm:items-center sm:justify-between"
+          >
+            <span
+              >Deploy in minutes with docker-compose or Render, then shape it
+              into your research lab or trading cockpit.</span
+            >
+            <a
+              class="inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:text-primary/80"
+              href="https://github.com/naveedkhan1998/alpaca-main"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Star the repository
+            </a>
+          </div>
+        </footer>
+      </div>
+    </div>
+    <div id="app-root" hidden></div>
+    <noscript>
+      <style>
+        #app-root {
+          display: none !important;
+        }
+      </style>
+      <div
+        style="
+          max-width: 600px;
+          margin: 1.5rem auto;
+          padding: 1rem 1.25rem;
+          border-radius: 12px;
+          background: #0f172a;
+          color: #e2e8f0;
+          border: 1px solid rgba(148, 163, 184, 0.25);
+        "
+      >
+        JavaScript is required to launch the interactive Alpaca API Wrapper app,
+        but the landing content and documentation links remain available without
+        it.
+      </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -7,10 +7,17 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docker compose up -d --build",
+        "command": "docker compose up -d ",
         "cwd": "."
       },
       "dependsOn": ["env-check"]
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose build",
+        "cwd": "."
+      }
     },
     "runserver": {
       "executor": "nx:run-commands",
