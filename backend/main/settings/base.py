@@ -31,8 +31,6 @@ INSTALLED_APPS = [
     "apps.account",
     "apps.core",
     "apps.paper_trading",
-    "apps.strategy",
-    "apps.alerts",
     "apps.home",
 ]
 
