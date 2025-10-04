@@ -200,7 +200,9 @@ const ServiceStatusItem = ({
   );
 };
 
-const HealthStatusComponent: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
+const HealthStatusComponent: React.FC<{ compact?: boolean }> = ({
+  compact = false,
+}) => {
   // Using mock data - replace with your actual selector
   const healthStatus = useAppSelector(selectHealthStatus);
 
@@ -262,7 +264,6 @@ const HealthStatusComponent: React.FC<{ compact?: boolean }> = ({ compact = fals
           <Button
             variant="ghost"
             size="icon"
-            
             aria-label={`System status: ${overallStatus}`}
           >
             <StatusIndicator status={overallStatus} size="md" />

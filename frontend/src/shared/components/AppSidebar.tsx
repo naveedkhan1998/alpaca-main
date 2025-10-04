@@ -204,30 +204,28 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
         )}
 
         {state === 'collapsed' && (
-        
-            <div className="flex flex-col gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={toggleTheme}
-                      className="w-8 h-8 rounded-md hover:bg-sidebar-accent"
-                    >
-                      <Sun className="w-4 h-4 transition-all scale-100 rotate-0 dark:-rotate-90 dark:scale-0" />
-                      <Moon className="absolute w-4 h-4 transition-all scale-0 rotate-90 dark:rotate-0 dark:scale-100" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <p>Toggle theme</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+          <div className="flex flex-col gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleTheme}
+                    className="w-8 h-8 rounded-md hover:bg-sidebar-accent"
+                  >
+                    <Sun className="w-4 h-4 transition-all scale-100 rotate-0 dark:-rotate-90 dark:scale-0" />
+                    <Moon className="absolute w-4 h-4 transition-all scale-0 rotate-90 dark:rotate-0 dark:scale-100" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>Toggle theme</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
-              <HealthStatus compact />
-            </div>
-      
+            <HealthStatus compact />
+          </div>
         )}
 
         <SidebarMenu>
