@@ -7,6 +7,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  actions: read
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -21,7 +25,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # ───────── Setup Node.js (required for NX) ─────────
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -30,6 +33,9 @@ jobs:
 
       - name: Install root dependencies
         run: npm install
+
+      - name: Set up NX SHAs for affected detection
+        uses: nrwl/nx-set-shas@v4
 
       # ───────── Setup Python ─────────
       - name: Set up Python
@@ -52,20 +58,9 @@ jobs:
         working-directory: ./backend
         run: uv sync --dev --frozen
 
-      # ───────── Run NX affected tasks ─────────
-      - name: Run format check (affected)
-        run: npx nx affected -t format-check --base=origin/main --head=HEAD
+      - name: Run affected tasks
+        run: npx nx affected -t format-check lint test build
 
-      - name: Run linting (affected)
-        run: npx nx affected -t lint --base=origin/main --head=HEAD
-
-      - name: Run tests (affected)
-        run: npx nx affected -t test --base=origin/main --head=HEAD
-
-      - name: Build (affected)
-        run: npx nx affected -t build --base=origin/main --head=HEAD
-
-      # ───────── Summary ─────────
       - name: CI Summary
         if: always()
         run: |
