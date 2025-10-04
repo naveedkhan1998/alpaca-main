@@ -18,7 +18,7 @@ export const checkHealth = createAsyncThunk<
   { dispatch: Dispatch }
 >('health/checkHealth', async (_, { dispatch }) => {
   // need to skip this for development since everything is running on localhost
-  if (!process.env.production) {
+  if (process.env.NODE_ENV !== 'production') {
     return [];
   }
   const workers = getCeleryWorkerUrls();
