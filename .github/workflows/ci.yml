@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install root dependencies
+        run: npm install
+
+      - name: Set up NX SHAs for affected detection
+        uses: nrwl/nx-set-shas@v4
+
+      # ───────── Setup Python ─────────
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "backend/**/pyproject.toml"
+
+      # ───────── Install project dependencies ─────────
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm install
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: uv sync --dev --frozen
+
+      - name: Run affected tasks
+        run: npx nx affected -t format-check lint test build
+
+      - name: CI Summary
+        if: always()
+        run: |
+          echo "### CI Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Format check: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Linting: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Build: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
