@@ -7,7 +7,7 @@
     "install:all": "npm install && cd frontend && npm install && cd .. && cd backend && uv sync && cd ..",
     "install:frontend": "cd frontend && npm install && cd ..",
     "install:backend": "cd backend && uv sync && cd ..",
-    "dev": "nx run-many -t dev --output-style=stream --color",
+    "dev": "node scripts/dev-bootstrap.js",
     "dev:frontend": "nx run frontend:dev",
     "dev:backend": "nx run backend:dev",
     "lint": "nx run-many -t lint --color",
