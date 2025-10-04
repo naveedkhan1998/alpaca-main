@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import {
   TrendingUp,
   User,
-  Home,
   BarChart3,
   Mail,
   Menu,
@@ -71,10 +70,10 @@ const Navbar: React.FC = () => {
   const navItems = [
     {
       path: '/',
-      label: 'Home',
-      icon: Home,
-      description: 'Overview & analytics',
-      color: 'from-blue-500 to-cyan-500',
+      label: 'Watchlists',
+      icon: TrendingUp,
+      description: 'Manage your watchlists',
+      color: 'from-purple-500 to-pink-500',
     },
     {
       path: '/instruments',
@@ -83,13 +82,7 @@ const Navbar: React.FC = () => {
       description: 'Trading instruments',
       color: 'from-green-500 to-emerald-500',
     },
-    {
-      path: '/accounts',
-      label: 'Account',
-      icon: TrendingUp,
-      description: 'Account management',
-      color: 'from-purple-500 to-pink-500',
-    },
+
     {
       path: '/contact',
       label: 'Support',
@@ -118,11 +111,11 @@ const Navbar: React.FC = () => {
                 <img
                   src="/android-chrome-192x192.png"
                   alt="Alpaca"
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl shadow-md ring-2 ring-border/50 group-hover:ring-primary/40 group-hover:scale-105 transition-all duration-200"
+                  className="transition-all duration-200 shadow-md w-9 h-9 sm:w-10 sm:h-10 rounded-xl ring-2 ring-border/50 group-hover:ring-primary/40 group-hover:scale-105"
                 />
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-accent/20 rounded-xl opacity-0 group-hover:opacity-100 blur transition-opacity duration-300 -z-10" />
+                <div className="absolute transition-opacity duration-300 opacity-0 -inset-1 bg-gradient-to-r from-primary/20 to-accent/20 rounded-xl group-hover:opacity-100 blur -z-10" />
               </div>
-              <div className="hidden sm:flex flex-col">
+              <div className="flex-col hidden sm:flex">
                 <span className="text-xl font-bold tracking-tight text-foreground">
                   Alpaca Trading
                 </span>
@@ -144,8 +137,8 @@ const Navbar: React.FC = () => {
                 className="relative w-full group"
               >
                 <Search className="absolute w-4 h-4 -translate-y-1/2 pointer-events-none left-3.5 top-1/2 text-muted-foreground/70 group-hover:text-muted-foreground transition-colors" />
-                <div className="w-full h-10 pl-10 pr-20 flex items-center rounded-lg bg-muted/30 border border-border/60 hover:bg-muted/40 hover:border-primary/30 transition-all duration-200 cursor-pointer">
-                  <span className="text-sm text-muted-foreground/70 group-hover:text-muted-foreground transition-colors">
+                <div className="flex items-center w-full h-10 pl-10 pr-20 transition-all duration-200 border rounded-lg cursor-pointer bg-muted/30 border-border/60 hover:bg-muted/40 hover:border-primary/30">
+                  <span className="text-sm transition-colors text-muted-foreground/70 group-hover:text-muted-foreground">
                     Search assets, add to watchlist...
                   </span>
                 </div>
@@ -176,7 +169,7 @@ const Navbar: React.FC = () => {
                       />
                       <span>{item.label}</span>
                       {active && (
-                        <span className="absolute inset-x-4 -bottom-1 h-1 rounded-full bg-gradient-to-r from-primary to-accent" />
+                        <span className="absolute h-1 rounded-full inset-x-4 -bottom-1 bg-gradient-to-r from-primary to-accent" />
                       )}
                     </Link>
                   );
@@ -194,7 +187,7 @@ const Navbar: React.FC = () => {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="relative px-2 rounded-xl h-11 hover:bg-muted/50 transition-all duration-200"
+                      className="relative px-2 transition-all duration-200 rounded-xl h-11 hover:bg-muted/50"
                     >
                       <div className="flex items-center gap-2.5">
                         <Avatar className="w-9 h-9 ring-2 ring-border/50">
@@ -238,7 +231,7 @@ const Navbar: React.FC = () => {
                             }
                             alt="Profile"
                           />
-                          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/20 font-bold text-base">
+                          <AvatarFallback className="text-base font-bold bg-gradient-to-br from-primary/20 to-accent/20">
                             NK
                           </AvatarFallback>
                         </Avatar>
@@ -267,7 +260,7 @@ const Navbar: React.FC = () => {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       asChild
-                      className="p-3 cursor-pointer rounded-lg hover:bg-muted/70 transition-colors"
+                      className="p-3 transition-colors rounded-lg cursor-pointer hover:bg-muted/70"
                     >
                       <Link to="/profile" className="flex items-center">
                         <User className="w-4 h-4 mr-3" />
@@ -281,7 +274,7 @@ const Navbar: React.FC = () => {
                         </div>
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="p-3 cursor-pointer rounded-lg hover:bg-muted/70 transition-colors">
+                    <DropdownMenuItem className="p-3 transition-colors rounded-lg cursor-pointer hover:bg-muted/70">
                       <Settings className="w-4 h-4 mr-3" />
                       <div className="flex flex-col">
                         <span className="text-sm font-semibold">
@@ -295,7 +288,7 @@ const Navbar: React.FC = () => {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={signOut}
-                      className="p-3 cursor-pointer rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      className="p-3 transition-colors rounded-lg cursor-pointer text-destructive hover:text-destructive hover:bg-destructive/10"
                     >
                       <LogOut className="w-4 h-4 mr-3" />
                       <div className="flex flex-col">
@@ -315,7 +308,7 @@ const Navbar: React.FC = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-xl"
+                className="w-10 h-10 rounded-xl"
                 onClick={() => setIsAssetSearchOpen(true)}
               >
                 <Search className="w-5 h-5" />
@@ -330,7 +323,7 @@ const Navbar: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-10 w-10 rounded-xl"
+                    className="w-10 h-10 rounded-xl"
                   >
                     <Menu className="w-5 h-5" />
                   </Button>
@@ -338,11 +331,11 @@ const Navbar: React.FC = () => {
                 <DrawerContent className="h-[95dvh] p-0 bg-background/98 backdrop-blur-xl">
                   <div className="relative p-6 pb-4">
                     {/* Profile */}
-                    <Card className="mt-2 border-border/60 shadow-lg bg-gradient-to-br from-card to-muted/20">
+                    <Card className="mt-2 shadow-lg border-border/60 bg-gradient-to-br from-card to-muted/20">
                       <CardContent className="p-5">
                         <div className="flex items-center space-x-4">
                           <div className="relative">
-                            <Avatar className="h-16 w-16 ring-2 ring-border/60">
+                            <Avatar className="w-16 h-16 ring-2 ring-border/60">
                               <AvatarImage
                                 src={
                                   user?.avatar ||
@@ -441,7 +434,7 @@ const Navbar: React.FC = () => {
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         <div className="flex items-center space-x-3">
-                          <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg">
+                          <div className="flex items-center justify-center shadow-lg w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500">
                             <User className="w-5 h-5 text-white" />
                           </div>
                           <div>
@@ -464,7 +457,7 @@ const Navbar: React.FC = () => {
                         }}
                       >
                         <div className="flex items-center space-x-3">
-                          <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br from-red-500 to-red-600 shadow-lg">
+                          <div className="flex items-center justify-center shadow-lg w-11 h-11 rounded-xl bg-gradient-to-br from-red-500 to-red-600">
                             <LogOut className="w-5 h-5 text-white" />
                           </div>
                           <div className="text-left">
@@ -518,7 +511,7 @@ const Navbar: React.FC = () => {
                   />
                   <span className="leading-none">{item.label}</span>
                   {active && (
-                    <span className="absolute top-0 h-1 w-8 rounded-full bg-gradient-to-r from-primary to-accent" />
+                    <span className="absolute top-0 w-8 h-1 rounded-full bg-gradient-to-r from-primary to-accent" />
                   )}
                 </Link>
               );

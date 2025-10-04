@@ -200,7 +200,9 @@ const ServiceStatusItem = ({
   );
 };
 
-const HealthStatusComponent: React.FC = () => {
+const HealthStatusComponent: React.FC<{ compact?: boolean }> = ({
+  compact = false,
+}) => {
   // Using mock data - replace with your actual selector
   const healthStatus = useAppSelector(selectHealthStatus);
 
@@ -221,26 +223,61 @@ const HealthStatusComponent: React.FC = () => {
     status => status === 'error'
   ).length;
 
+  const statusConfig = {
+    ok: {
+      text: 'Healthy',
+      icon: <CheckCircle className="w-4 h-4" />,
+      className: 'text-success',
+    },
+    pending: {
+      text: 'Checking',
+      icon: <Clock className="w-4 h-4 animate-pulse" />,
+      className: 'text-warning',
+    },
+    error: {
+      text: 'Issues',
+      icon: <XCircle className="w-4 h-4" />,
+      className: 'text-destructive',
+    },
+  };
+
+  const config = statusConfig[overallStatus];
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative rounded-full transition-all duration-200 hover:bg-accent/50 hover:scale-105 group"
-          aria-label={`System status: ${overallStatus}`}
-        >
-          <StatusIndicator status={overallStatus} size="md" />
-          {errorCount > 0 && (
-            <span className="absolute flex items-center justify-center w-3 h-3 rounded-full -top-1 -right-1 bg-destructive animate-pulse">
-              <span className="text-[10px] font-bold text-destructive-foreground">
+        {!compact ? (
+          <Button
+            variant="outline"
+            className={`flex flex-col items-center justify-center h-16 gap-1 hover:bg-sidebar-accent relative ${config.className}`}
+            aria-label={`System status: ${overallStatus}`}
+          >
+            {config.icon}
+            <span className="text-xs font-medium">{config.text}</span>
+            {errorCount > 0 && (
+              <span className="absolute flex items-center justify-center w-4 h-4 text-xs font-bold rounded-full top-1 right-1 bg-destructive text-destructive-foreground">
                 {errorCount}
               </span>
-            </span>
-          )}
-          {/* Subtle glow effect on hover */}
-          <div className="absolute inset-0 transition-opacity duration-200 rounded-md opacity-0 bg-accent/10 group-hover:opacity-100 -z-10" />
-        </Button>
+            )}
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`System status: ${overallStatus}`}
+          >
+            <StatusIndicator status={overallStatus} size="md" />
+            {errorCount > 0 && (
+              <span className="absolute flex items-center justify-center w-3 h-3 rounded-full -top-1 -right-1 bg-destructive animate-pulse">
+                <span className="text-[10px] font-bold text-destructive-foreground">
+                  {errorCount}
+                </span>
+              </span>
+            )}
+            {/* Subtle glow effect on hover */}
+            <div className="absolute inset-0 transition-opacity duration-200 rounded-md opacity-0 bg-accent/10 group-hover:opacity-100 -z-10" />
+          </Button>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent
         className="p-0 shadow-xl w-96 border-border/50"

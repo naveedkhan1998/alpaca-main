@@ -418,7 +418,7 @@ export const AssetTable: React.FC = () => {
                 className="h-9"
               >
                 <ChevronLeft className="w-4 h-4" />
-                <span className="hidden sm:inline ml-1">Prev</span>
+                <span className="hidden ml-1 sm:inline">Prev</span>
               </Button>
 
               {/* Page Numbers */}
@@ -450,7 +450,7 @@ export const AssetTable: React.FC = () => {
                 disabled={currentPage >= totalPages - 1}
                 className="h-9"
               >
-                <span className="hidden sm:inline mr-1">Next</span>
+                <span className="hidden mr-1 sm:inline">Next</span>
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>

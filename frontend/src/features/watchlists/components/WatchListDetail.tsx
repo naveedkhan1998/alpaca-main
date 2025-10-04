@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -83,11 +89,11 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
         <CardHeader>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <CardTitle className="text-xl sm:text-2xl font-semibold truncate">
+              <CardTitle className="text-xl font-semibold truncate sm:text-2xl">
                 {watchlist.name}
               </CardTitle>
               {watchlist.description && (
-                <p className="mt-1 text-sm text-muted-foreground truncate">
+                <p className="mt-1 text-sm truncate text-muted-foreground">
                   {watchlist.description}
                 </p>
               )}
@@ -98,13 +104,13 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
               </Badge>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreVertical className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" className="w-8 h-8">
+                    <MoreVertical className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
-                    <Edit className="mr-2 h-4 w-4" />
+                    <Edit className="w-4 h-4 mr-2" />
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -112,7 +118,7 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
                     onClick={handleDelete}
                     className="text-destructive focus:text-destructive"
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
+                    <Trash2 className="w-4 h-4 mr-2" />
                     Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -122,15 +128,15 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-3">
-            <div className="rounded-lg border border-border/40 p-3 bg-card/50">
+            <div className="p-3 border rounded-lg border-border/40 bg-card/50">
               <p className="text-xs font-medium text-muted-foreground">
                 Assets
               </p>
-              <p className="text-xl sm:text-2xl font-bold">
+              <p className="text-xl font-bold sm:text-2xl">
                 {watchlist.asset_count}
               </p>
             </div>
-            <div className="rounded-lg border border-border/40 p-3 bg-card/50">
+            <div className="p-3 border rounded-lg border-border/40 bg-card/50">
               <p className="text-xs font-medium text-muted-foreground">
                 Created
               </p>
@@ -138,7 +144,7 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
                 {new Date(watchlist.created_at).toLocaleDateString()}
               </p>
             </div>
-            <div className="rounded-lg border border-border/40 p-3 bg-card/50">
+            <div className="p-3 border rounded-lg border-border/40 bg-card/50">
               <p className="text-xs font-medium text-muted-foreground">
                 Last Updated
               </p>
@@ -153,6 +159,9 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
       <Card className="border-border/40">
         <CardHeader>
           <CardTitle>Assets ({watchlist.asset_count})</CardTitle>
+          <CardDescription>
+            Click on an asset to view detailed charts and information.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <WatchListAssets watchlistId={watchlistId} />

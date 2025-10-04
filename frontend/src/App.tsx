@@ -22,7 +22,6 @@ const ContactPage = lazy(() => import('./features/contact'));
 const LoginRegPage = lazy(() => import('./features/auth'));
 const NotFoundPage = lazy(() => import('./features/notFound'));
 const ProfilePage = lazy(() => import('./features/profile'));
-const DashBoardPage = lazy(() => import('./features/dashboard'));
 const AssetsPage = lazy(() => import('./features/assets'));
 const WatchlistsPage = lazy(() => import('./features/watchlists'));
 const PrivacyPage = lazy(() => import('./features/privacy'));
@@ -167,7 +166,6 @@ export default function App() {
   const routes = [
     { path: '/', element: <WatchlistsPage />, private: true },
     { path: '/profile', element: <ProfilePage />, private: true },
-    { path: '/dashboard', element: <DashBoardPage />, private: true },
     { path: '/instruments', element: <AssetsPage />, private: true },
     { path: '/graphs/:id', element: <GraphsPage />, private: true },
     { path: '/accounts', element: <AccountsPage />, private: true },
