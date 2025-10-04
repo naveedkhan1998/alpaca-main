@@ -164,7 +164,7 @@ export const AssetSearch: React.FC<AssetSearchProps> = ({
   }, [open, onOpenChange, handleClose]);
 
   const content = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col ">
       {/* Search Input */}
       <div className="relative px-4 py-3">
         <Search className="absolute w-5 h-5 -translate-y-1/2 pointer-events-none left-7 top-1/2 text-muted-foreground" />
@@ -189,7 +189,7 @@ export const AssetSearch: React.FC<AssetSearchProps> = ({
       </div>
 
       {/* Results */}
-      <ScrollArea className="flex-1 px-4">
+      <ScrollArea className="flex-1 px-4 max-h-[70dvh]">
         <div className="pb-4 space-y-1">
           {!searchQuery || searchQuery.length < 2 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">

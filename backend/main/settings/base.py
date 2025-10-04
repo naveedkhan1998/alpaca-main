@@ -31,6 +31,8 @@ INSTALLED_APPS = [
     "apps.account",
     "apps.core",
     "apps.paper_trading",
+    "apps.strategy",
+    "apps.alerts",
     "apps.home",
 ]
 
@@ -117,6 +119,8 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 20,
 }
 
 # Internationalization

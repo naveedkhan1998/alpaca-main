@@ -1,9 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
-import Navbar from './Navbar';
+import { Search } from 'lucide-react';
+import { AppSidebar } from './AppSidebar';
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { AssetSearch } from './AssetSearch';
 import { useIsMobile } from '@/hooks/useMobile';
+import { useAppSelector } from '../../app/hooks';
+import { getCurrentToken } from 'src/features/auth/authSlice';
 
 interface PageLayoutProps {
   children?: React.ReactNode;
@@ -90,6 +101,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 }) => {
   const pageTitle = header ? extractTextContent(header) : 'Alpaca Trading';
   const isMobile = useIsMobile();
+  const accessToken = useAppSelector(getCurrentToken);
+  const [isAssetSearchOpen, setIsAssetSearchOpen] = useState(false);
 
   // Use clean variant on mobile by default
   const effectiveVariant =
@@ -117,94 +130,173 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
     }
   };
 
+  // If user is not logged in, show simplified layout without sidebar
+  if (!accessToken) {
+    return (
+      <>
+        <Helmet>
+          <title>{pageTitle} - Alpaca Trading</title>
+        </Helmet>
+        <div
+          className={`flex min-h-[100dvh] flex-col bg-background ${className}`}
+        >
+          <div className="flex-1 w-full">
+            <div className={getContainerClasses()}>
+              {/* Header Section */}
+              {(header || subheader || actions) && (
+                <div className="mb-8 sm:mb-10">
+                  <div className="p-6 border rounded-2xl border-border/50 bg-gradient-to-br from-card/60 to-muted/30 backdrop-blur-sm shadow-premium sm:p-8">
+                    <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="flex-1 space-y-3">
+                        {header}
+                        {subheader}
+                      </div>
+                      {actions && (
+                        <div className="flex-shrink-0">
+                          <div className="flex flex-wrap items-center gap-3">
+                            {actions}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Content Section */}
+              {effectiveVariant === 'default' ? (
+                <Card className={getContentClasses()}>
+                  <CardContent className="p-6 sm:p-8">{children}</CardContent>
+                </Card>
+              ) : (
+                <div className={getContentClasses()}>
+                  {effectiveVariant === 'clean' ? (
+                    <div className="space-y-6 sm:space-y-8">{children}</div>
+                  ) : (
+                    children
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Helmet>
         <title>{pageTitle} - Alpaca Trading</title>
       </Helmet>
-      <div
-        className={`flex min-h-[100dvh] flex-col bg-background pb-20 lg:pb-0 ${className}`}
-      >
-        <Navbar />
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset
+          className={`rounded-md overflow-auto shadow border m-auto h-[100dvh]  max-h-[calc(100dvh-${isMobile ? '64px' : '16px'})] ${className}`}
+        >
+          {/* Header with sidebar trigger */}
+          <header className="sticky top-0 z-10 flex items-center h-16 gap-2 px-4 transition-[width,height] ease-linear shrink-0 border-b bg-background/95 backdrop-blur-[0.099rem] supports-[backdrop-filter]:bg-background/60">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="h-6 mr-2" />
+            <div className="flex items-center justify-between flex-1 gap-2">
+              <h2 className="text-lg font-semibold">{pageTitle}</h2>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setIsAssetSearchOpen(true)}
+              >
+                <Search className="w-4 h-4" />
+                <span className="hidden sm:inline">Search Assets</span>
+              </Button>
+            </div>
+          </header>
 
-        <div className="flex-1 w-full">
-          <div className={getContainerClasses()}>
-            {/* Header Section */}
-            {(header || subheader || actions) && (
-              <div className="mb-8 sm:mb-10">
-                <div className="p-6 border rounded-2xl border-border/50 bg-gradient-to-br from-card/60 to-muted/30 backdrop-blur-sm shadow-premium sm:p-8">
-                  <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex-1 space-y-3">
-                      {header}
-                      {subheader}
-                    </div>
-                    {actions && (
-                      <div className="flex-shrink-0">
-                        <div className="flex flex-wrap items-center gap-3">
-                          {actions}
-                        </div>
+          <AssetSearch
+            open={isAssetSearchOpen}
+            onOpenChange={setIsAssetSearchOpen}
+            isMobile={isMobile}
+          />
+
+          <div className="flex-1 w-full bg-background">
+            <div className={getContainerClasses()}>
+              {/* Header Section */}
+              {(header || subheader || actions) && (
+                <div className="mb-8 sm:mb-10">
+                  <div className="p-6 border rounded-2xl border-border/50 bg-gradient-to-br from-card/60 to-muted/30 backdrop-blur-sm shadow-premium sm:p-8">
+                    <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="flex-1 space-y-3">
+                        {header}
+                        {subheader}
                       </div>
-                    )}
+                      {actions && (
+                        <div className="flex-shrink-0">
+                          <div className="flex flex-wrap items-center gap-3">
+                            {actions}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Content Section */}
-            {effectiveVariant === 'default' ? (
-              <Card className={getContentClasses()}>
-                <CardContent className="p-6 sm:p-8">{children}</CardContent>
-              </Card>
-            ) : (
-              <div className={getContentClasses()}>
-                {effectiveVariant === 'clean' ? (
-                  <div className="space-y-6 sm:space-y-8">{children}</div>
-                ) : (
-                  children
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <footer className="border-t bg-background/90 backdrop-blur-xl shadow-[0_-2px_16px_rgba(0,0,0,0.04)]">
-          <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
-            <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-              <div className="flex items-center space-x-3">
-                <img
-                  src="/android-chrome-192x192.png"
-                  alt="Logo"
-                  className="w-7 h-7 rounded-lg ring-2 ring-border/40"
-                />
-                <span className="text-sm font-medium text-muted-foreground">
-                  © {new Date().getFullYear()} MNK All rights reserved.
-                </span>
-              </div>
-              <div className="flex items-center space-x-6 text-sm font-medium text-muted-foreground">
-                <Link
-                  to="/privacy"
-                  className="transition-all hover:text-foreground hover:underline underline-offset-4"
-                >
-                  Privacy
-                </Link>
-                <Link
-                  to="/terms"
-                  className="transition-all hover:text-foreground hover:underline underline-offset-4"
-                >
-                  Terms
-                </Link>
-                <Link
-                  to="/contact"
-                  className="transition-all hover:text-foreground hover:underline underline-offset-4"
-                >
-                  Support
-                </Link>
-              </div>
+              {/* Content Section */}
+              {effectiveVariant === 'default' ? (
+                <Card className={getContentClasses()}>
+                  <CardContent className="p-6 sm:p-8">{children}</CardContent>
+                </Card>
+              ) : (
+                <div className={getContentClasses()}>
+                  {effectiveVariant === 'clean' ? (
+                    <div className="space-y-6 sm:space-y-8">{children}</div>
+                  ) : (
+                    children
+                  )}
+                </div>
+              )}
             </div>
           </div>
-        </footer>
-      </div>
+
+          {/* Footer */}
+          <footer className=" border-t bg-background/90 backdrop-blur-xl shadow-[0_-2px_16px_rgba(0,0,0,0.04)]">
+            <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
+              <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+                <div className="flex items-center space-x-3">
+                  <img
+                    src="/android-chrome-192x192.png"
+                    alt="Logo"
+                    className="rounded-lg w-7 h-7 ring-2 ring-border/40"
+                  />
+                  <span className="text-sm font-medium text-muted-foreground">
+                    © {new Date().getFullYear()} MNK All rights reserved.
+                  </span>
+                </div>
+                <div className="flex items-center space-x-6 text-sm font-medium text-muted-foreground">
+                  <Link
+                    to="/privacy"
+                    className="transition-all hover:text-foreground hover:underline underline-offset-4"
+                  >
+                    Privacy
+                  </Link>
+                  <Link
+                    to="/terms"
+                    className="transition-all hover:text-foreground hover:underline underline-offset-4"
+                  >
+                    Terms
+                  </Link>
+                  <Link
+                    to="/contact"
+                    className="transition-all hover:text-foreground hover:underline underline-offset-4"
+                  >
+                    Support
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </footer>
+        </SidebarInset>
+      </SidebarProvider>
     </>
   );
 };
