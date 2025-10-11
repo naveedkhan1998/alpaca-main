@@ -50,7 +50,6 @@
     "@types/react-helmet": "^6.1.11",
     "@types/react-redux": "^7.1.33",
     "@types/react-window": "^1.8.8",
-    "@vercel/analytics": "^1.5.0",
     "@vitest/coverage-v8": "^3.2.4",
     "ag-grid-community": "^31.0.0",
     "ag-grid-react": "^31.0.0",

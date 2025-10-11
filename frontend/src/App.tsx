@@ -1,6 +1,5 @@
 import { useEffect, useState, Suspense, lazy } from 'react';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
-import { Analytics } from '@vercel/analytics/react';
 import { useAppDispatch, useAppSelector } from './app/hooks';
 import {
   getCurrentToken,
@@ -178,7 +177,6 @@ export default function App() {
 
   return (
     <BrowserRouter basename="/app">
-      <Analytics />
       <AnnouncementBanner />
       <GoogleOAuthProvider clientId={clientId}>
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
