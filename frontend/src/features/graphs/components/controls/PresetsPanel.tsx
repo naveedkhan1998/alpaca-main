@@ -16,46 +16,45 @@ interface PresetsPanelProps {
 
 export const PresetsPanel: React.FC<PresetsPanelProps> = ({ onPreset }) => {
   return (
-    <Card className="shadow-lg border-border/50 bg-card/80 backdrop-blur-sm">
-      <CardHeader className="px-3 pb-2">
-        <CardTitle className="flex items-center gap-2 text-sm">
-          <div className="p-1.5 border rounded-lg bg-primary/10 text-primary border-primary/20 shrink-0">
-            <HiAdjustments className="w-3 h-3" />
+    <Card className="overflow-hidden shadow-md border-border/40 bg-gradient-to-br from-card via-card to-muted/10 backdrop-blur-sm">
+      <CardHeader className="px-4 py-3 bg-gradient-to-r from-muted/40 via-muted/20 to-transparent border-b border-border/30">
+        <CardTitle className="flex items-center gap-2.5 text-sm">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/20 shadow-sm">
+            <HiAdjustments className="w-3.5 h-3.5 text-primary" />
           </div>
-          <span className="font-semibold text-card-foreground">Presets</span>
+          <span className="font-bold text-foreground tracking-tight">
+            Quick Presets
+          </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-3 pb-3">
-        <div className="grid grid-cols-3 gap-1.5">
+      <CardContent className="px-4 py-3">
+        <div className="grid grid-cols-3 gap-2">
           <Button
             size="sm"
             variant="outline"
-            className="justify-center h-8 gap-1 px-2 text-xs"
+            className="flex-col justify-center h-auto gap-2 px-2 py-3 text-xs transition-all hover:bg-primary/10 hover:border-primary/30 hover:shadow-sm group"
             onClick={() => onPreset('classic')}
           >
-            <HiChartBar className="w-3 h-3 shrink-0" />
-            <span className="hidden sm:inline">Classic</span>
-            <span className="sm:hidden">C</span>
+            <HiChartBar className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            <span className="font-medium">Classic</span>
           </Button>
           <Button
             size="sm"
             variant="outline"
-            className="justify-center h-8 gap-1 px-2 text-xs"
+            className="flex-col justify-center h-auto gap-2 px-2 py-3 text-xs transition-all hover:bg-primary/10 hover:border-primary/30 hover:shadow-sm group"
             onClick={() => onPreset('clean')}
           >
-            <HiTrendingUp className="w-3 h-3 shrink-0" />
-            <span className="hidden sm:inline">Clean</span>
-            <span className="sm:hidden">Cl</span>
+            <HiTrendingUp className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            <span className="font-medium">Clean</span>
           </Button>
           <Button
             size="sm"
             variant="outline"
-            className="justify-center h-8 gap-1 px-2 text-xs"
+            className="flex-col justify-center h-auto gap-2 px-2 py-3 text-xs transition-all hover:bg-primary/10 hover:border-primary/30 hover:shadow-sm group"
             onClick={() => onPreset('baseline')}
           >
-            <HiBeaker className="w-3 h-3 shrink-0" />
-            <span className="hidden sm:inline">Base</span>
-            <span className="sm:hidden">B</span>
+            <HiBeaker className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            <span className="font-medium">Baseline</span>
           </Button>
         </div>
       </CardContent>

@@ -6,6 +6,7 @@ import type {
   HistogramData,
 } from 'lightweight-charts';
 import type { Candle } from '@/types/common-types';
+import type { IndicatorConfig } from '../graphSlice';
 import {
   formatDate,
   calculateRSI,
@@ -19,6 +20,7 @@ interface UseDerivedSeriesParams {
   seriesType: 'ohlc' | 'price' | 'volume';
   isDarkMode: boolean;
   activeIndicators: string[];
+  indicatorConfigs: IndicatorConfig;
 }
 
 export function useDerivedSeries({
@@ -26,6 +28,7 @@ export function useDerivedSeries({
   seriesType,
   isDarkMode,
   activeIndicators,
+  indicatorConfigs,
 }: UseDerivedSeriesParams) {
   const data = useMemo(
     () => ({ results: candles, count: candles.length }),
@@ -81,32 +84,37 @@ export function useDerivedSeries({
   const rsiData = useMemo<LineData<Time>[]>(() => {
     if (!data || !activeIndicators.includes('RSI'))
       return [] as LineData<Time>[];
+    const config = indicatorConfigs.RSI;
     return calculateRSI(
-      data.results.map(d => ({ ...d, time: formatDate(d.date) }))
+      data.results.map(d => ({ ...d, time: formatDate(d.date) })),
+      config.period
     )
       .filter(item => item.time !== undefined)
       .map(item => ({ ...item, time: item.time as Time }))
       .reverse();
-  }, [data, activeIndicators]);
+  }, [data, activeIndicators, indicatorConfigs.RSI]);
 
   const atrData = useMemo<LineData<Time>[]>(() => {
     if (!data || !activeIndicators.includes('ATR'))
       return [] as LineData<Time>[];
+    const config = indicatorConfigs.ATR;
     return calculateATR(
-      data.results.map(d => ({ ...d, time: formatDate(d.date) }))
+      data.results.map(d => ({ ...d, time: formatDate(d.date) })),
+      config.period
     )
       .map(item => ({ ...item, time: item.time as Time }))
       .reverse();
-  }, [data, activeIndicators]);
+  }, [data, activeIndicators, indicatorConfigs.ATR]);
 
   const emaData = useMemo<LineData<Time>[]>(() => {
     if (!data || !activeIndicators.includes('EMA'))
       return [] as LineData<Time>[];
+    const config = indicatorConfigs.EMA;
     return calculateMA(
       data.results.map(d => ({ ...d, time: formatDate(d.date) as Time })),
-      14
+      config.period
     ).reverse();
-  }, [data, activeIndicators]);
+  }, [data, activeIndicators, indicatorConfigs.EMA]);
 
   type BollingerPoint = {
     time: Time;
@@ -117,8 +125,11 @@ export function useDerivedSeries({
   const bollingerBandsData = useMemo<BollingerPoint[]>(() => {
     if (!data || !activeIndicators.includes('BollingerBands'))
       return [] as BollingerPoint[];
+    const config = indicatorConfigs.BollingerBands;
     const bands = calculateBollingerBands(
-      data.results.map(d => ({ ...d, time: formatDate(d.date) })).reverse()
+      data.results.map(d => ({ ...d, time: formatDate(d.date) })).reverse(),
+      config.period,
+      config.stdDev
     );
     return bands
       .filter(band => band.time !== undefined)
@@ -128,7 +139,7 @@ export function useDerivedSeries({
         middle: band.middle,
         lower: band.lower,
       }));
-  }, [data, activeIndicators]);
+  }, [data, activeIndicators, indicatorConfigs.BollingerBands]);
 
   return {
     data,

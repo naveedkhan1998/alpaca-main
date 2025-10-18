@@ -66,40 +66,40 @@ export default function ChartControls() {
   };
 
   return (
-    <div className="space-y-3 scrollbar-hidden ">
+    <div className="space-y-4 scrollbar-hidden">
       {autoRefresh && (
-        <Card className="shadow-sm border-green-500/30 bg-gradient-to-r from-green-500/10 via-green-400/10 to-green-500/10 backdrop-blur-sm">
-          <CardContent className="px-3 py-2">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center flex-1 min-w-0 gap-2">
+        <Card className="overflow-hidden shadow-md border-emerald-500/30 bg-gradient-to-r from-emerald-500/15 via-emerald-400/10 to-emerald-500/15 backdrop-blur-sm animate-in">
+          <CardContent className="px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center flex-1 min-w-0 gap-2.5">
                 <div className="relative">
-                  <div className="absolute w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <div className="absolute w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></div>
+                  <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full"></div>
                 </div>
-                <span className="text-xs font-medium text-green-400 truncate">
-                  Live data active
+                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 truncate tracking-wide">
+                  Live Market Data
                 </span>
               </div>
               <Badge
                 variant="secondary"
-                className="text-xs text-green-400 bg-green-500/20 border-green-500/30 shrink-0"
+                className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/25 border-emerald-500/40 shrink-0 shadow-sm px-2.5 py-0.5"
               >
-                LIVE
+                STREAMING
               </Badge>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <Card className="shadow-sm border-border/50 bg-card/80 backdrop-blur-sm">
-        <CardContent className="px-3 py-2">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <HiInformationCircle className="w-3 h-3 shrink-0" />
+      <Card className="overflow-hidden shadow-sm border-border/40 bg-card/60 backdrop-blur-sm">
+        <CardContent className="px-4 py-3">
+          <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+            <HiInformationCircle className="w-4 h-4 shrink-0 text-primary/60" />
             <div className="overflow-hidden">
               <div className="hidden sm:block">
-                <span>
+                <span className="font-medium">
                   Shortcuts:{' '}
-                  <kbd className="px-1 py-0.5 rounded bg-muted mx-1 text-[10px]">
+                  <kbd className="px-1.5 py-0.5 rounded bg-muted mx-1 text-[10px] font-mono border border-border/50">
                     F
                   </kbd>{' '}
                   Fullscreen
@@ -107,7 +107,7 @@ export default function ChartControls() {
                     orientation="vertical"
                     className="inline-block h-3 mx-2"
                   />
-                  <kbd className="px-1 py-0.5 rounded bg-muted mx-1 text-[10px]">
+                  <kbd className="px-1.5 py-0.5 rounded bg-muted mx-1 text-[10px] font-mono border border-border/50">
                     V
                   </kbd>{' '}
                   Volume
@@ -115,14 +115,14 @@ export default function ChartControls() {
                     orientation="vertical"
                     className="inline-block h-3 mx-2"
                   />
-                  <kbd className="px-1 py-0.5 rounded bg-muted mx-1 text-[10px]">
+                  <kbd className="px-1.5 py-0.5 rounded bg-muted mx-1 text-[10px] font-mono border border-border/50">
                     C
                   </kbd>{' '}
                   Controls
                 </span>
               </div>
-              <div className="block sm:hidden text-[10px]">
-                <span>Tap and hold chart for options</span>
+              <div className="block sm:hidden text-[10px] font-medium">
+                <span>Tap and hold chart for more options</span>
               </div>
             </div>
           </div>

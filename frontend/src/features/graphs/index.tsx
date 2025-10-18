@@ -41,6 +41,7 @@ import {
   setShowControls,
   selectSeriesType,
   selectActiveIndicators,
+  selectIndicatorConfigs,
   removeIndicator,
 } from './graphSlice';
 
@@ -64,6 +65,7 @@ const GraphsPage: React.FC = () => {
   const seriesType = useAppSelector(selectSeriesType);
   const showControls = useAppSelector(selectShowControls);
   const activeIndicators = useAppSelector(selectActiveIndicators);
+  const indicatorConfigs = useAppSelector(selectIndicatorConfigs);
   const [isPaperTradingOpen, setIsPaperTradingOpen] = React.useState(false);
 
   // Refs
@@ -92,7 +94,13 @@ const GraphsPage: React.FC = () => {
     atrData,
     emaData,
     bollingerBandsData,
-  } = useDerivedSeries({ candles, seriesType, isDarkMode, activeIndicators });
+  } = useDerivedSeries({
+    candles,
+    seriesType,
+    isDarkMode,
+    activeIndicators,
+    indicatorConfigs,
+  });
 
   const shouldShowVolume = showVolume && hasValidVolume;
   const latestPrice = candles.length > 0 ? candles[0]?.close : undefined;
@@ -154,7 +162,7 @@ const GraphsPage: React.FC = () => {
   if (errorInitial) return <ErrorScreen />;
 
   return (
-    <div className="flex flex-col h-[100dvh] text-foreground bg-gradient-to-br from-background via-background to-muted/10">
+    <div className="flex flex-col h-[100dvh] text-foreground bg-gradient-to-br from-background via-muted/5 to-background">
       {/* Header */}
       <GraphHeader
         obj={obj}
@@ -168,26 +176,28 @@ const GraphsPage: React.FC = () => {
         ref={chartSectionRef}
         className={
           `flex flex-1 overflow-hidden ` +
-          (isFullscreenView ? 'bg-background' : 'bg-trading-gradient')
+          (isFullscreenView
+            ? 'bg-background'
+            : 'bg-gradient-to-br from-muted/10 via-background to-muted/5')
         }
       >
         {isMobile ? (
-          <div className="flex-1 p-2">
+          <div className="flex-1 p-3">
             <Sheet
               open={showControls}
               onOpenChange={open => dispatch(setShowControls(open))}
             >
               <SheetContent
                 side="left"
-                className="p-0 bg-card text-card-foreground"
+                className="p-0 bg-gradient-to-b from-card via-card to-muted/20 text-card-foreground"
               >
                 <div className="flex flex-col h-full">
                   <PanelHeader
-                    title="Controls"
-                    icon={<HiCog className="w-4 h-4 text-chart-1" />}
+                    title="Chart Controls"
+                    icon={<HiCog className="w-4 h-4 text-primary" />}
                     dense
                   />
-                  <div className="flex-1 p-5 overflow-y-auto">
+                  <div className="flex-1 p-4 overflow-y-auto scrollbar-hidden">
                     <ChartControls />
                   </div>
                 </div>
@@ -278,15 +288,15 @@ const GraphsPage: React.FC = () => {
                   defaultSize={25}
                   minSize={20}
                   maxSize={35}
-                  className="min-w-0"
+                  className="min-w-0 bg-gradient-to-b from-card/80 via-card/60 to-muted/20 border-r border-border/40"
                 >
                   <div className="flex flex-col h-full">
                     <PanelHeader
-                      title="Controls"
-                      icon={<HiCog className="w-4 h-4 text-chart-1" />}
+                      title="Chart Controls"
+                      icon={<HiCog className="w-4 h-4 text-primary" />}
                       onClose={() => dispatch(setShowControls(false))}
                     />
-                    <div className="flex-1 p-4 overflow-y-auto">
+                    <div className="flex-1 p-4 overflow-y-auto scrollbar-hidden">
                       <ChartControls />
                     </div>
                   </div>
@@ -297,7 +307,7 @@ const GraphsPage: React.FC = () => {
 
             {/* Charts Area */}
             <ResizablePanel defaultSize={showControls ? 75 : 100}>
-              <div className="h-full p-4">
+              <div className="h-full p-4 bg-gradient-to-br from-transparent via-muted/5 to-transparent">
                 <ResizablePanelGroup direction="vertical">
                   {/* Main Chart */}
                   <ResizablePanel defaultSize={shouldShowVolume ? 75 : 100}>
@@ -399,12 +409,17 @@ const GraphsPage: React.FC = () => {
       <Button
         type="button"
         size="lg"
-        className={`fixed bottom-6 right-6 z-50 shadow-lg transition-opacity ${isPaperTradingOpen ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
+        className={`fixed bottom-6 right-6 z-50 shadow-2xl transition-all duration-300 bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary text-primary-foreground font-bold rounded-xl ${
+          isPaperTradingOpen
+            ? 'pointer-events-none opacity-0 scale-90'
+            : 'opacity-100 scale-100 hover:scale-105'
+        }`}
         onClick={() => setIsPaperTradingOpen(true)}
         aria-label="Open paper trading"
       >
-        <HiLightningBolt className="w-4 h-4 mr-2" />
-        <span className="hidden sm:inline">Trade</span>
+        <HiLightningBolt className="w-5 h-5 mr-2" />
+        <span className="hidden sm:inline tracking-wide">Start Trading</span>
+        <span className="sm:hidden">Trade</span>
       </Button>
     </div>
   );
