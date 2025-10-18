@@ -454,7 +454,7 @@ const GraphsPage: React.FC = () => {
         className={`fixed bottom-6 right-6 z-50 shadow-2xl transition-all duration-300 bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary text-primary-foreground font-bold rounded-xl ${
           isPaperTradingOpen
             ? 'pointer-events-none opacity-0 scale-90'
-            : 'opacity-100 scale-100 hover:scale-105'
+            : 'opacity-95 scale-75 hover:scale-105'
         }`}
         onClick={() => setIsPaperTradingOpen(true)}
         aria-label="Open paper trading"

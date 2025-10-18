@@ -73,6 +73,23 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
     containerEl.appendChild(legend);
     legendRef.current = legend;
 
+    // Subscribe to crosshair move to update legend
+    chart.subscribeCrosshairMove(param => {
+      if (!legendRef.current || !volumeSeriesRef.current) return;
+
+      const volumePoint = param.seriesData.get(
+        volumeSeriesRef.current
+      ) as HistogramData<Time> | undefined;
+
+      if (volumePoint && 'value' in volumePoint) {
+        const value = Number(volumePoint.value).toLocaleString();
+        legendRef.current.innerHTML = `<span class="font-medium text-slate-700 dark:text-slate-300">Volume: ${value}</span>`;
+      } else {
+        legendRef.current.innerHTML =
+          '<span class="font-medium text-slate-700 dark:text-slate-300">Volume: —</span>';
+      }
+    });
+
     // Clean up on unmount
     return () => {
       chart.remove();
