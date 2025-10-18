@@ -71,7 +71,8 @@ const GraphsPage: React.FC = () => {
   // Refs
   const mainChartRef = useRef<ITimeScaleApi<Time> | null>(null);
   const volumeChartRef = useRef<ITimeScaleApi<Time> | null>(null);
-  const indicatorChartRef = useRef<ITimeScaleApi<Time> | null>(null);
+  const rsiChartRef = useRef<ITimeScaleApi<Time> | null>(null);
+  const atrChartRef = useRef<ITimeScaleApi<Time> | null>(null);
   const chartSectionRef = useRef<HTMLDivElement>(null);
 
   // Data & derived series
@@ -112,15 +113,19 @@ const GraphsPage: React.FC = () => {
   const setVolumeChartTimeScale = (timeScale: ITimeScaleApi<Time>) => {
     volumeChartRef.current = timeScale;
   };
-  const setIndicatorChartTimeScale = (timeScale: ITimeScaleApi<Time>) => {
-    indicatorChartRef.current = timeScale;
+  const setRSIChartTimeScale = (timeScale: ITimeScaleApi<Time>) => {
+    rsiChartRef.current = timeScale;
+  };
+  const setATRChartTimeScale = (timeScale: ITimeScaleApi<Time>) => {
+    atrChartRef.current = timeScale;
   };
 
   // Sync charts & fullscreen
   const { syncCharts } = useChartSync({
     mainChartRef,
     volumeChartRef,
-    indicatorChartRef,
+    rsiChartRef,
+    atrChartRef,
     shouldShowVolume,
     activeIndicators,
   });
@@ -250,26 +255,43 @@ const GraphsPage: React.FC = () => {
                 </>
               )}
 
-              {/* Indicator Chart */}
-              {(activeIndicators.includes('RSI') ||
-                activeIndicators.includes('ATR')) && (
+              {/* RSI Chart */}
+              {activeIndicators.includes('RSI') && (
                 <>
                   <ResizableHandle withHandle />
-                  <ResizablePanel defaultSize={25} minSize={15}>
+                  <ResizablePanel defaultSize={20} minSize={15}>
                     <PanelHeader
-                      title="Indicators"
-                      icon={<HiChartBar className="w-4 h-4 text-chart-1" />}
-                      onClose={() => {
-                        dispatch(removeIndicator('RSI'));
-                        dispatch(removeIndicator('ATR'));
-                      }}
+                      title="RSI"
+                      icon={<HiChartBar className="w-4 h-4 text-amber-500" />}
+                      onClose={() => dispatch(removeIndicator('RSI'))}
                       dense
                     />
                     <IndicatorChart
                       rsiData={rsiData}
+                      atrData={[]}
+                      mode={isDarkMode}
+                      setTimeScale={setRSIChartTimeScale}
+                    />
+                  </ResizablePanel>
+                </>
+              )}
+
+              {/* ATR Chart */}
+              {activeIndicators.includes('ATR') && (
+                <>
+                  <ResizableHandle withHandle />
+                  <ResizablePanel defaultSize={20} minSize={15}>
+                    <PanelHeader
+                      title="ATR"
+                      icon={<HiChartBar className="w-4 h-4 text-blue-500" />}
+                      onClose={() => dispatch(removeIndicator('ATR'))}
+                      dense
+                    />
+                    <IndicatorChart
+                      rsiData={[]}
                       atrData={atrData}
                       mode={isDarkMode}
-                      setTimeScale={setIndicatorChartTimeScale}
+                      setTimeScale={setATRChartTimeScale}
                     />
                   </ResizablePanel>
                 </>
@@ -353,25 +375,41 @@ const GraphsPage: React.FC = () => {
                     </>
                   )}
 
-                  {/* Indicator Chart */}
-                  {(activeIndicators.includes('RSI') ||
-                    activeIndicators.includes('ATR')) && (
+                  {/* RSI Chart */}
+                  {activeIndicators.includes('RSI') && (
                     <>
                       <ResizableHandle withHandle />
-                      <ResizablePanel defaultSize={25} minSize={15}>
+                      <ResizablePanel defaultSize={20} minSize={15}>
                         <PanelHeader
-                          title="Indicators"
-                          icon={<HiChartBar className="w-4 h-4 text-chart-1" />}
-                          onClose={() => {
-                            dispatch(removeIndicator('RSI'));
-                            dispatch(removeIndicator('ATR'));
-                          }}
+                          title="RSI"
+                          icon={<HiChartBar className="w-4 h-4 text-amber-500" />}
+                          onClose={() => dispatch(removeIndicator('RSI'))}
                         />
                         <IndicatorChart
                           rsiData={rsiData}
+                          atrData={[]}
+                          mode={isDarkMode}
+                          setTimeScale={setRSIChartTimeScale}
+                        />
+                      </ResizablePanel>
+                    </>
+                  )}
+
+                  {/* ATR Chart */}
+                  {activeIndicators.includes('ATR') && (
+                    <>
+                      <ResizableHandle withHandle />
+                      <ResizablePanel defaultSize={20} minSize={15}>
+                        <PanelHeader
+                          title="ATR"
+                          icon={<HiChartBar className="w-4 h-4 text-blue-500" />}
+                          onClose={() => dispatch(removeIndicator('ATR'))}
+                        />
+                        <IndicatorChart
+                          rsiData={[]}
                           atrData={atrData}
                           mode={isDarkMode}
-                          setTimeScale={setIndicatorChartTimeScale}
+                          setTimeScale={setATRChartTimeScale}
                         />
                       </ResizablePanel>
                     </>
