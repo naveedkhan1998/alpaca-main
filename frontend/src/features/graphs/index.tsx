@@ -382,7 +382,9 @@ const GraphsPage: React.FC = () => {
                       <ResizablePanel defaultSize={20} minSize={15}>
                         <PanelHeader
                           title="RSI"
-                          icon={<HiChartBar className="w-4 h-4 text-amber-500" />}
+                          icon={
+                            <HiChartBar className="w-4 h-4 text-amber-500" />
+                          }
                           onClose={() => dispatch(removeIndicator('RSI'))}
                         />
                         <IndicatorChart
@@ -402,7 +404,9 @@ const GraphsPage: React.FC = () => {
                       <ResizablePanel defaultSize={20} minSize={15}>
                         <PanelHeader
                           title="ATR"
-                          icon={<HiChartBar className="w-4 h-4 text-blue-500" />}
+                          icon={
+                            <HiChartBar className="w-4 h-4 text-blue-500" />
+                          }
                           onClose={() => dispatch(removeIndicator('ATR'))}
                         />
                         <IndicatorChart

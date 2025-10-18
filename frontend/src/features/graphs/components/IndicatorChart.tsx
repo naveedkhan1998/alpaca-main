@@ -50,7 +50,7 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
     // Legend overlay
     const legendContainer = document.createElement('div');
     legendContainer.className =
-      'absolute top-2 left-2 p-2 rounded-lg glass-card shadow-md z-[10] text-xs flex items-center gap-3';
+      'absolute -top-4 left-2 p-2 rounded-lg glass-card shadow-md z-[10] text-xs flex items-center gap-3';
     const rsiSpan = document.createElement('span');
     rsiSpan.className = 'font-medium text-amber-600 dark:text-amber-300';
     rsiSpan.textContent = '';
@@ -74,7 +74,7 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
 
       const [rsiLabel, atrLabel] = legendContainerRef.current
         .children as unknown as HTMLSpanElement[];
-      
+
       if (rsiLabel) {
         if (rsiSeriesRef.current && rsiPoint) {
           rsiLabel.textContent = `RSI: ${Number(rsiPoint.value).toFixed(2)}`;
@@ -139,10 +139,11 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
         });
         rsiSeriesRef.current.setData(rsiData);
         prevRsiLengthRef.current = rsiData.length;
-        
+
         // Update legend with initial value
         if (legendContainerRef.current) {
-          const rsiLabel = legendContainerRef.current.children[0] as HTMLSpanElement;
+          const rsiLabel = legendContainerRef.current
+            .children[0] as HTMLSpanElement;
           if (rsiLabel) {
             rsiLabel.textContent = `RSI: ${Number(rsiData.at(-1)?.value ?? 0).toFixed(2)}`;
           }
@@ -158,10 +159,11 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
           const lastPoint = rsiData[rsiData.length - 1];
           rsiSeriesRef.current.update(lastPoint);
         }
-        
+
         // Update legend with latest value
         if (legendContainerRef.current) {
-          const rsiLabel = legendContainerRef.current.children[0] as HTMLSpanElement;
+          const rsiLabel = legendContainerRef.current
+            .children[0] as HTMLSpanElement;
           if (rsiLabel) {
             rsiLabel.textContent = `RSI: ${Number(rsiData.at(-1)?.value ?? 0).toFixed(2)}`;
           }
@@ -172,10 +174,11 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
         indicatorChartRef.current.removeSeries(rsiSeriesRef.current);
         rsiSeriesRef.current = null;
         prevRsiLengthRef.current = 0;
-        
+
         // Clear legend
         if (legendContainerRef.current) {
-          const rsiLabel = legendContainerRef.current.children[0] as HTMLSpanElement;
+          const rsiLabel = legendContainerRef.current
+            .children[0] as HTMLSpanElement;
           if (rsiLabel) {
             rsiLabel.textContent = '';
           }
@@ -199,10 +202,11 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
         });
         atrSeriesRef.current.setData(atrData);
         prevAtrLengthRef.current = atrData.length;
-        
+
         // Update legend with initial value
         if (legendContainerRef.current) {
-          const atrLabel = legendContainerRef.current.children[1] as HTMLSpanElement;
+          const atrLabel = legendContainerRef.current
+            .children[1] as HTMLSpanElement;
           if (atrLabel) {
             atrLabel.textContent = `ATR: ${Number(atrData.at(-1)?.value ?? 0).toFixed(2)}`;
           }
@@ -218,10 +222,11 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
           const lastPoint = atrData[atrData.length - 1];
           atrSeriesRef.current.update(lastPoint);
         }
-        
+
         // Update legend with latest value
         if (legendContainerRef.current) {
-          const atrLabel = legendContainerRef.current.children[1] as HTMLSpanElement;
+          const atrLabel = legendContainerRef.current
+            .children[1] as HTMLSpanElement;
           if (atrLabel) {
             atrLabel.textContent = `ATR: ${Number(atrData.at(-1)?.value ?? 0).toFixed(2)}`;
           }
@@ -232,10 +237,11 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
         indicatorChartRef.current.removeSeries(atrSeriesRef.current);
         atrSeriesRef.current = null;
         prevAtrLengthRef.current = 0;
-        
+
         // Clear legend
         if (legendContainerRef.current) {
-          const atrLabel = legendContainerRef.current.children[1] as HTMLSpanElement;
+          const atrLabel = legendContainerRef.current
+            .children[1] as HTMLSpanElement;
           if (atrLabel) {
             atrLabel.textContent = '';
           }
