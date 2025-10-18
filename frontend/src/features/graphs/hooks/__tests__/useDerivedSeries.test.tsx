@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 // React import not needed with JSX transform
 import { render } from '@testing-library/react';
 import { useDerivedSeries } from '../useDerivedSeries';
+import { defaultIndicatorConfigs } from '../../graphSlice';
 
 const sampleCandles = [
   {
@@ -43,7 +44,10 @@ type HookHarnessProps = {
 };
 
 function HookHarness(props: HookHarnessProps) {
-  const res = useDerivedSeries(props);
+  const res = useDerivedSeries({
+    ...props,
+    indicatorConfigs: defaultIndicatorConfigs,
+  });
   return <pre data-testid="out">{JSON.stringify(res)}</pre>;
 }
 
