@@ -359,7 +359,7 @@ const GraphsPage: React.FC = () => {
                   {/* Volume Chart */}
                   {shouldShowVolume && (
                     <>
-                      <ResizableHandle className='p-0' withHandle />
+                      <ResizableHandle className="p-0" withHandle />
                       <ResizablePanel defaultSize={25} minSize={15}>
                         <PanelHeader
                           title="Volume"
@@ -378,7 +378,7 @@ const GraphsPage: React.FC = () => {
                   {/* RSI Chart */}
                   {activeIndicators.includes('RSI') && (
                     <>
-                      <ResizableHandle className='p-0' withHandle />
+                      <ResizableHandle className="p-0" withHandle />
                       <ResizablePanel defaultSize={20} minSize={15}>
                         <PanelHeader
                           title="RSI"
@@ -400,7 +400,7 @@ const GraphsPage: React.FC = () => {
                   {/* ATR Chart */}
                   {activeIndicators.includes('ATR') && (
                     <>
-                      <ResizableHandle className='p-0' withHandle />
+                      <ResizableHandle className="p-0" withHandle />
                       <ResizablePanel defaultSize={20} minSize={15}>
                         <PanelHeader
                           title="ATR"

@@ -79,9 +79,7 @@ const IndicatorSettingsDialog: React.FC<IndicatorSettingsDialogProps> = ({
           max={50}
           step={1}
           value={[cfg.period]}
-          onValueChange={([value]) =>
-            setLocalConfig({ ...cfg, period: value })
-          }
+          onValueChange={([value]) => setLocalConfig({ ...cfg, period: value })}
           className="w-full"
         />
       </div>
@@ -158,9 +156,7 @@ const IndicatorSettingsDialog: React.FC<IndicatorSettingsDialogProps> = ({
           max={50}
           step={1}
           value={[cfg.period]}
-          onValueChange={([value]) =>
-            setLocalConfig({ ...cfg, period: value })
-          }
+          onValueChange={([value]) => setLocalConfig({ ...cfg, period: value })}
           className="w-full"
         />
       </div>
@@ -195,9 +191,7 @@ const IndicatorSettingsDialog: React.FC<IndicatorSettingsDialogProps> = ({
           max={200}
           step={1}
           value={[cfg.period]}
-          onValueChange={([value]) =>
-            setLocalConfig({ ...cfg, period: value })
-          }
+          onValueChange={([value]) => setLocalConfig({ ...cfg, period: value })}
           className="w-full"
         />
       </div>
@@ -232,9 +226,7 @@ const IndicatorSettingsDialog: React.FC<IndicatorSettingsDialogProps> = ({
           max={50}
           step={1}
           value={[cfg.period]}
-          onValueChange={([value]) =>
-            setLocalConfig({ ...cfg, period: value })
-          }
+          onValueChange={([value]) => setLocalConfig({ ...cfg, period: value })}
           className="w-full"
         />
       </div>
@@ -252,9 +244,7 @@ const IndicatorSettingsDialog: React.FC<IndicatorSettingsDialogProps> = ({
           max={4}
           step={0.1}
           value={[cfg.stdDev]}
-          onValueChange={([value]) =>
-            setLocalConfig({ ...cfg, stdDev: value })
-          }
+          onValueChange={([value]) => setLocalConfig({ ...cfg, stdDev: value })}
           className="w-full"
         />
       </div>
@@ -433,7 +423,9 @@ const IndicatorSettingsDialog: React.FC<IndicatorSettingsDialogProps> = ({
       case 'EMA':
         return renderEMASettings(localConfig as EMAConfig);
       case 'BollingerBands':
-        return renderBollingerBandsSettings(localConfig as BollingerBandsConfig);
+        return renderBollingerBandsSettings(
+          localConfig as BollingerBandsConfig
+        );
       case 'MACD':
         return renderMACDSettings(localConfig as MACDConfig);
       default:
@@ -493,9 +485,7 @@ const IndicatorSettingsDialog: React.FC<IndicatorSettingsDialogProps> = ({
             </DrawerDescription>
           </DrawerHeader>
 
-          <div className="flex-1 overflow-y-auto">
-            {settingsContent}
-          </div>
+          <div className="flex-1 overflow-y-auto">{settingsContent}</div>
         </DrawerContent>
       </Drawer>
     );

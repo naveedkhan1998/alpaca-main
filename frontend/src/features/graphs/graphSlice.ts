@@ -141,7 +141,10 @@ export const graphSlice = createSlice({
     },
     updateIndicatorConfig: <K extends keyof IndicatorConfig>(
       state: GraphState,
-      action: PayloadAction<{ indicator: K; config: Partial<IndicatorConfig[K]> }>
+      action: PayloadAction<{
+        indicator: K;
+        config: Partial<IndicatorConfig[K]>;
+      }>
     ) => {
       const { indicator, config } = action.payload;
       state.indicatorConfigs[indicator] = {
@@ -153,7 +156,8 @@ export const graphSlice = createSlice({
       state: GraphState,
       action: PayloadAction<K>
     ) => {
-      state.indicatorConfigs[action.payload] = defaultIndicatorConfigs[action.payload];
+      state.indicatorConfigs[action.payload] =
+        defaultIndicatorConfigs[action.payload];
     },
   },
 });
@@ -184,8 +188,9 @@ export const selectActiveIndicators = (state: RootState) =>
   state.graph.activeIndicators;
 export const selectIndicatorConfigs = (state: RootState) =>
   state.graph.indicatorConfigs;
-export const selectIndicatorConfig = <K extends keyof IndicatorConfig>(
-  indicator: K
-) => (state: RootState) => state.graph.indicatorConfigs[indicator];
+export const selectIndicatorConfig =
+  <K extends keyof IndicatorConfig>(indicator: K) =>
+  (state: RootState) =>
+    state.graph.indicatorConfigs[indicator];
 
 export default graphSlice.reducer;

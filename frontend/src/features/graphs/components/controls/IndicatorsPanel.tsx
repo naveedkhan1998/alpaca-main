@@ -52,10 +52,7 @@ export const IndicatorsPanel: React.FC<IndicatorsPanelProps> = ({
     indicator: string | null;
   }>({ isOpen: false, indicator: null });
 
-  const handleSettingsClick = (
-    e: React.MouseEvent,
-    indicatorName: string,
-  ) => {
+  const handleSettingsClick = (e: React.MouseEvent, indicatorName: string) => {
     e.stopPropagation();
     setSettingsDialog({ isOpen: true, indicator: indicatorName });
   };

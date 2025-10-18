@@ -77,9 +77,9 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
     chart.subscribeCrosshairMove(param => {
       if (!legendRef.current || !volumeSeriesRef.current) return;
 
-      const volumePoint = param.seriesData.get(
-        volumeSeriesRef.current
-      ) as HistogramData<Time> | undefined;
+      const volumePoint = param.seriesData.get(volumeSeriesRef.current) as
+        | HistogramData<Time>
+        | undefined;
 
       if (volumePoint && 'value' in volumePoint) {
         const value = Number(volumePoint.value).toLocaleString();
