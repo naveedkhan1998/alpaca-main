@@ -52,10 +52,10 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
     legendContainer.className =
       'absolute top-2 left-2 p-2 rounded-lg glass-card shadow-md z-[10] text-xs flex items-center gap-3';
     const rsiSpan = document.createElement('span');
-    rsiSpan.className = 'text-amber-600 dark:text-amber-300 font-medium';
+    rsiSpan.className = 'font-medium text-amber-600 dark:text-amber-300';
     rsiSpan.textContent = '';
     const atrSpan = document.createElement('span');
-    atrSpan.className = 'text-blue-600 dark:text-blue-300 font-medium';
+    atrSpan.className = 'font-medium text-blue-600 dark:text-blue-300';
     atrSpan.textContent = '';
     legendContainer.appendChild(rsiSpan);
     legendContainer.appendChild(atrSpan);
@@ -105,7 +105,8 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
         legendContainerRef.current = null;
       }
     };
-  }, [mode, setTimeScale]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Keep chart sized to container
   useResizeObserver(indicatorChartContainerRef, rect => {

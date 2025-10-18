@@ -288,7 +288,7 @@ const GraphsPage: React.FC = () => {
                   defaultSize={25}
                   minSize={20}
                   maxSize={35}
-                  className="min-w-0 bg-gradient-to-b from-card/80 via-card/60 to-muted/20 border-r border-border/40"
+                  className="min-w-0 border-r bg-gradient-to-b from-card/80 via-card/60 to-muted/20 border-border/40"
                 >
                   <div className="flex flex-col h-full">
                     <PanelHeader
@@ -418,7 +418,7 @@ const GraphsPage: React.FC = () => {
         aria-label="Open paper trading"
       >
         <HiLightningBolt className="w-5 h-5 mr-2" />
-        <span className="hidden sm:inline tracking-wide">Start Trading</span>
+        <span className="hidden tracking-wide sm:inline">Start Trading</span>
         <span className="sm:hidden">Trade</span>
       </Button>
     </div>
