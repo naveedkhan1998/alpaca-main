@@ -1,5 +1,6 @@
 import { useEffect, useState, Suspense, lazy } from 'react';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { useAppDispatch, useAppSelector } from './app/hooks';
 import {
   getCurrentToken,
@@ -13,6 +14,8 @@ import {
 } from './features/health/healthSlice';
 import { useHealthCheckQuery } from '@/api/baseApi';
 import LoadingScreen from './shared/components/LoadingScreen';
+import { initGA4 } from '@/lib/analytics';
+import { usePageTracking } from '@/hooks/usePageTracking';
 
 // Lazy load pages
 const GraphsPage = lazy(() => import('./features/graphs'));
@@ -75,6 +78,11 @@ export default function App() {
     pollingInterval: hasInitialApiHealthCheck ? HEALTH_CHECK_INTERVAL : 0,
     skip: false,
   });
+
+  // Initialize Google Analytics
+  useEffect(() => {
+    initGA4();
+  }, []);
 
   // on mount check if we have user in redux store else fetch it
   useEffect(() => {
@@ -176,32 +184,41 @@ export default function App() {
   ];
 
   return (
-    <BrowserRouter basename="/app">
-      <AnnouncementBanner />
-      <GoogleOAuthProvider clientId={clientId}>
-        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-          <Suspense fallback={<PageLoadingFallback />}>
-            <Routes>
-              {routes.map(({ path, element, private: isPrivate }) => (
-                <Route
-                  key={path}
-                  path={path}
-                  element={
-                    isPrivate ? <PrivateRoute element={element} /> : element
-                  }
-                />
-              ))}
-            </Routes>
-          </Suspense>
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              className: 'glass-card',
-              duration: 3000,
-            }}
-          />
-        </ThemeProvider>
-      </GoogleOAuthProvider>
-    </BrowserRouter>
+    <HelmetProvider>
+      <BrowserRouter basename="/app">
+        <PageTracker />
+        <AnnouncementBanner />
+        <GoogleOAuthProvider clientId={clientId}>
+          <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+            <Suspense fallback={<PageLoadingFallback />}>
+              <Routes>
+                {routes.map(({ path, element, private: isPrivate }) => (
+                  <Route
+                    key={path}
+                    path={path}
+                    element={
+                      isPrivate ? <PrivateRoute element={element} /> : element
+                    }
+                  />
+                ))}
+              </Routes>
+            </Suspense>
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                className: 'glass-card',
+                duration: 3000,
+              }}
+            />
+          </ThemeProvider>
+        </GoogleOAuthProvider>
+      </BrowserRouter>
+    </HelmetProvider>
   );
 }
+
+// Component to track page views
+const PageTracker = () => {
+  usePageTracking();
+  return null;
+};

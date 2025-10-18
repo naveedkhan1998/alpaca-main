@@ -6,6 +6,7 @@ import graphSlice from '../features/graphs/graphSlice';
 import healthSlice from '../features/health/healthSlice';
 import watchlistSlice from '../features/watchlists/watchlistSlice';
 import assetSlice from '../features/assets/assetSlice';
+import { analyticsMiddleware } from './analyticsMiddleware';
 
 export const store = configureStore({
   reducer: {
@@ -18,7 +19,9 @@ export const store = configureStore({
   },
 
   middleware: getDefaultMiddleware =>
-    getDefaultMiddleware().concat(baseApi.middleware),
+    getDefaultMiddleware()
+      .concat(baseApi.middleware)
+      .concat(analyticsMiddleware),
 });
 
 setupListeners(store.dispatch);

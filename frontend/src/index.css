@@ -349,7 +349,7 @@
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent;
+    @apply text-transparent bg-clip-text;
     background-image: linear-gradient(
       to right,
       hsl(var(--primary)),
