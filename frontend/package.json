@@ -69,6 +69,7 @@
     "react-chartjs-2": "^5.2.0",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
+    "react-ga4": "^2.1.0",
     "react-helmet": "^6.1.0",
     "react-hook-form": "^7.54.2",
     "react-icons": "^5.2.1",
@@ -86,6 +87,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
@@ -107,7 +109,6 @@
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.18.2",
     "vite": "^6.0.5",
-    "vitest": "^3.2.4",
-    "@testing-library/dom": "^10.4.0"
+    "vitest": "^3.2.4"
   }
 }

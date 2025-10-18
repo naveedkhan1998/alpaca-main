@@ -153,13 +153,13 @@
       }
     </script>
   </head>
-  <body class="bg-background text-foreground antialiased">
+  <body class="antialiased bg-background text-foreground">
     <div
       id="landing-root"
-      class="relative flex min-h-screen flex-col overflow-hidden"
+      class="relative flex flex-col min-h-screen overflow-hidden"
     >
       <div
-        class="pointer-events-none absolute inset-0 -z-20 bg-gradient-to-b from-primary/5 via-background to-background"
+        class="absolute inset-0 pointer-events-none -z-20 bg-gradient-to-b from-primary/5 via-background to-background"
       ></div>
       <div
         class="pointer-events-none absolute -top-64 left-1/2 -z-10 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-primary/30 blur-[160px]"
@@ -167,10 +167,10 @@
       <div
         class="pointer-events-none absolute bottom-[-10rem] right-[-8rem] -z-10 h-[28rem] w-[28rem] rounded-full bg-accent/25 blur-[160px]"
       ></div>
-      <div class="relative z-10 flex grow flex-col">
+      <div class="relative z-10 flex flex-col grow">
         <header class="px-6 pt-20 pb-12 sm:px-8 md:pt-28 md:pb-16">
           <div
-            class="mx-auto flex w-full max-w-6xl flex-col gap-12 md:flex-row md:items-center"
+            class="flex flex-col w-full max-w-6xl gap-12 mx-auto md:flex-row md:items-center"
           >
             <div class="md:flex-1">
               <div
@@ -186,7 +186,7 @@
                 The missing-middle starter for Alpaca-powered market data apps.
               </h1>
               <p
-                class="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg"
+                class="max-w-2xl mt-6 text-base leading-relaxed text-muted-foreground md:text-lg"
               >
                 Alpaca API Wrapper spins up Django models that auto-sync market
                 candles, a TradingView-style React UI, and Dockerized services
@@ -194,7 +194,7 @@
                 (up to 30 assets) and start building research tools, dashboards,
                 or trading ideas today.
               </p>
-              <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div class="flex flex-col gap-3 mt-8 sm:flex-row sm:items-center">
                 <a
                   class="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-premium transition duration-200 hover:-translate-y-0.5 hover:shadow-premium-lg"
                   href="/app"
@@ -211,39 +211,39 @@
                 </a>
               </div>
               <div
-                class="mt-10 grid gap-4 text-sm text-muted-foreground sm:grid-cols-3"
+                class="grid gap-4 mt-10 text-sm text-muted-foreground sm:grid-cols-3"
               >
                 <div
-                  class="glass-effect flex items-center gap-3 rounded-2xl border border-border/40 bg-card/80 px-4 py-3 shadow-premium"
+                  class="flex items-center gap-3 px-4 py-3 border glass-effect rounded-2xl border-border/40 bg-card/80 shadow-premium"
                 >
                   <span
-                    class="inline-flex h-2 w-2 animate-pulse rounded-full bg-success"
+                    class="inline-flex w-2 h-2 rounded-full animate-pulse bg-success"
                   ></span>
                   Django models with live candle sync
                 </div>
                 <div
-                  class="glass-effect flex items-center gap-3 rounded-2xl border border-border/40 bg-card/80 px-4 py-3 shadow-premium"
+                  class="flex items-center gap-3 px-4 py-3 border glass-effect rounded-2xl border-border/40 bg-card/80 shadow-premium"
                 >
                   <span
-                    class="inline-flex h-2 w-2 animate-pulse rounded-full bg-accent"
+                    class="inline-flex w-2 h-2 rounded-full animate-pulse bg-accent"
                   ></span>
                   TradingView-style React dashboard
                 </div>
                 <div
-                  class="glass-effect flex items-center gap-3 rounded-2xl border border-border/40 bg-card/80 px-4 py-3 shadow-premium"
+                  class="flex items-center gap-3 px-4 py-3 border glass-effect rounded-2xl border-border/40 bg-card/80 shadow-premium"
                 >
                   <span
-                    class="inline-flex h-2 w-2 animate-pulse rounded-full bg-primary"
+                    class="inline-flex w-2 h-2 rounded-full animate-pulse bg-primary"
                   ></span>
                   Docker + NX orchestration in one command
                 </div>
               </div>
             </div>
             <div
-              class="glass-effect relative w-full max-w-md rounded-3xl border border-border/40 bg-card/80 p-6 shadow-premium"
+              class="relative w-full max-w-md p-6 border glass-effect rounded-3xl border-border/40 bg-card/80 shadow-premium"
             >
               <div
-                class="absolute -top-6 right-8 h-12 w-12 rounded-full bg-primary/15 blur-2xl"
+                class="absolute w-12 h-12 rounded-full -top-6 right-8 bg-primary/15 blur-2xl"
               ></div>
               <span
                 class="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground"
@@ -252,7 +252,7 @@
               <ul class="mt-6 space-y-4 text-sm text-muted-foreground">
                 <li class="flex items-start gap-3">
                   <span
-                    class="mt-1 inline-flex h-2 w-2 rounded-full bg-primary"
+                    class="inline-flex w-2 h-2 mt-1 rounded-full bg-primary"
                   ></span>
                   <div>
                     <p class="font-semibold text-foreground">
@@ -266,7 +266,7 @@
                 </li>
                 <li class="flex items-start gap-3">
                   <span
-                    class="mt-1 inline-flex h-2 w-2 rounded-full bg-accent"
+                    class="inline-flex w-2 h-2 mt-1 rounded-full bg-accent"
                   ></span>
                   <div>
                     <p class="font-semibold text-foreground">
@@ -280,7 +280,7 @@
                 </li>
                 <li class="flex items-start gap-3">
                   <span
-                    class="mt-1 inline-flex h-2 w-2 rounded-full bg-success"
+                    class="inline-flex w-2 h-2 mt-1 rounded-full bg-success"
                   ></span>
                   <div>
                     <p class="font-semibold text-foreground">
@@ -294,7 +294,7 @@
                 </li>
               </ul>
               <div
-                class="mt-6 rounded-2xl border border-border/30 bg-background/70 p-4 text-xs text-muted-foreground"
+                class="p-4 mt-6 text-xs border rounded-2xl border-border/30 bg-background/70 text-muted-foreground"
               >
                 <p class="font-semibold text-foreground">Quick start:</p>
                 <p class="mt-2 font-mono text-[0.7rem]">npm run dev</p>
@@ -307,12 +307,12 @@
           </div>
         </header>
         <main class="flex-1 px-6 pb-16 sm:px-8">
-          <div class="mx-auto flex w-full max-w-6xl flex-col gap-10">
+          <div class="flex flex-col w-full max-w-6xl gap-10 mx-auto">
             <section
               class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
             >
               <article
-                class="glass-effect rounded-3xl border border-border/40 bg-card/85 p-8 shadow-premium-lg"
+                class="p-8 border glass-effect rounded-3xl border-border/40 bg-card/85 shadow-premium-lg"
               >
                 <h2 class="text-2xl font-semibold tracking-tight">
                   Why we built it
@@ -344,7 +344,7 @@
                 </ul>
               </article>
               <aside
-                class="glass-effect rounded-3xl border border-border/40 bg-card/85 p-8 shadow-premium-lg"
+                class="p-8 border glass-effect rounded-3xl border-border/40 bg-card/85 shadow-premium-lg"
               >
                 <h3 class="text-xl font-semibold tracking-tight">
                   Developer experience
@@ -377,7 +377,7 @@
             </section>
             <section class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               <div
-                class="glass-effect rounded-3xl border border-border/40 bg-card/85 p-6 shadow-premium"
+                class="p-6 border glass-effect rounded-3xl border-border/40 bg-card/85 shadow-premium"
               >
                 <h4 class="text-lg font-semibold">
                   Watchlists & symbol control
@@ -389,7 +389,7 @@
                 </p>
               </div>
               <div
-                class="glass-effect rounded-3xl border border-border/40 bg-card/85 p-6 shadow-premium"
+                class="p-6 border glass-effect rounded-3xl border-border/40 bg-card/85 shadow-premium"
               >
                 <h4 class="text-lg font-semibold">Real-time candle pipeline</h4>
                 <p class="mt-3 text-sm text-muted-foreground">
@@ -399,7 +399,7 @@
                 </p>
               </div>
               <div
-                class="glass-effect rounded-3xl border border-border/40 bg-card/85 p-6 shadow-premium"
+                class="p-6 border glass-effect rounded-3xl border-border/40 bg-card/85 shadow-premium"
               >
                 <h4 class="text-lg font-semibold">Paper trading loop</h4>
                 <p class="mt-3 text-sm text-muted-foreground">
@@ -410,12 +410,12 @@
               </div>
             </section>
             <section
-              class="glass-effect rounded-3xl border border-border/40 bg-card/85 p-8 shadow-premium-lg"
+              class="p-8 border glass-effect rounded-3xl border-border/40 bg-card/85 shadow-premium-lg"
             >
               <h3 class="text-xl font-semibold tracking-tight">
                 Infrastructure highlights
               </h3>
-              <div class="mt-6 grid gap-6 md:grid-cols-3">
+              <div class="grid gap-6 mt-6 md:grid-cols-3">
                 <div>
                   <p class="text-sm font-semibold text-foreground">
                     Docker Compose stack
@@ -448,16 +448,16 @@
             </section>
           </div>
         </main>
-        <footer class="mt-auto px-6 pb-10 sm:px-8">
+        <footer class="px-6 pb-10 mt-auto sm:px-8">
           <div
-            class="mx-auto flex w-full max-w-6xl flex-col gap-4 rounded-3xl border border-border/40 bg-background/80 px-6 py-6 text-sm text-muted-foreground shadow-premium sm:flex-row sm:items-center sm:justify-between"
+            class="flex flex-col w-full max-w-6xl gap-4 px-6 py-6 mx-auto text-sm border rounded-3xl border-border/40 bg-background/80 text-muted-foreground shadow-premium sm:flex-row sm:items-center sm:justify-between"
           >
             <span
               >Deploy in minutes with docker-compose or Render, then shape it
               into your research lab or trading cockpit.</span
             >
             <a
-              class="inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:text-primary/80"
+              class="inline-flex items-center gap-2 text-sm font-semibold transition text-primary hover:text-primary/80"
               href="https://github.com/naveedkhan1998/alpaca-main"
               target="_blank"
               rel="noopener noreferrer"

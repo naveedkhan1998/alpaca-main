@@ -13,6 +13,8 @@ import {
 } from './features/health/healthSlice';
 import { useHealthCheckQuery } from '@/api/baseApi';
 import LoadingScreen from './shared/components/LoadingScreen';
+import { initGA4 } from '@/lib/analytics';
+import { usePageTracking } from '@/hooks/usePageTracking';
 
 // Lazy load pages
 const GraphsPage = lazy(() => import('./features/graphs'));
@@ -75,6 +77,11 @@ export default function App() {
     pollingInterval: hasInitialApiHealthCheck ? HEALTH_CHECK_INTERVAL : 0,
     skip: false,
   });
+
+  // Initialize Google Analytics
+  useEffect(() => {
+    initGA4();
+  }, []);
 
   // on mount check if we have user in redux store else fetch it
   useEffect(() => {
@@ -177,6 +184,7 @@ export default function App() {
 
   return (
     <BrowserRouter basename="/app">
+      <PageTracker />
       <AnnouncementBanner />
       <GoogleOAuthProvider clientId={clientId}>
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -205,3 +213,9 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
+// Component to track page views
+const PageTracker = () => {
+  usePageTracking();
+  return null;
+};
