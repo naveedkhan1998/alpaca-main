@@ -256,7 +256,7 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
         <div
           ref={indicatorChartContainerRef}
           className="relative w-full h-full"
-          style={{ height: 'calc(100% - 64px)' }}
+          style={{ height: 'calc(100% - 32px)' }}
         ></div>
       ) : null}
     </div>

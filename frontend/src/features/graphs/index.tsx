@@ -187,7 +187,7 @@ const GraphsPage: React.FC = () => {
         }
       >
         {isMobile ? (
-          <div className="flex-1 p-3">
+          <div className="flex-1 ">
             <Sheet
               open={showControls}
               onOpenChange={open => dispatch(setShowControls(open))}
@@ -329,7 +329,7 @@ const GraphsPage: React.FC = () => {
 
             {/* Charts Area */}
             <ResizablePanel defaultSize={showControls ? 75 : 100}>
-              <div className="h-full p-4 bg-gradient-to-br from-transparent via-muted/5 to-transparent">
+              <div className="h-full bg-gradient-to-br from-transparent via-muted/5 to-transparent">
                 <ResizablePanelGroup direction="vertical">
                   {/* Main Chart */}
                   <ResizablePanel defaultSize={shouldShowVolume ? 75 : 100}>
@@ -359,7 +359,7 @@ const GraphsPage: React.FC = () => {
                   {/* Volume Chart */}
                   {shouldShowVolume && (
                     <>
-                      <ResizableHandle withHandle />
+                      <ResizableHandle className='p-0' withHandle />
                       <ResizablePanel defaultSize={25} minSize={15}>
                         <PanelHeader
                           title="Volume"
@@ -378,7 +378,7 @@ const GraphsPage: React.FC = () => {
                   {/* RSI Chart */}
                   {activeIndicators.includes('RSI') && (
                     <>
-                      <ResizableHandle withHandle />
+                      <ResizableHandle className='p-0' withHandle />
                       <ResizablePanel defaultSize={20} minSize={15}>
                         <PanelHeader
                           title="RSI"
@@ -400,7 +400,7 @@ const GraphsPage: React.FC = () => {
                   {/* ATR Chart */}
                   {activeIndicators.includes('ATR') && (
                     <>
-                      <ResizableHandle withHandle />
+                      <ResizableHandle className='p-0' withHandle />
                       <ResizablePanel defaultSize={20} minSize={15}>
                         <PanelHeader
                           title="ATR"

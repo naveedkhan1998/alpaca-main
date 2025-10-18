@@ -121,7 +121,7 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
       <div
         ref={volumeChartContainerRef}
         className="relative w-full h-full"
-        style={{ height: 'calc(100% - 64px)' }}
+        style={{ height: 'calc(100% - 32px)' }}
       />
     </div>
   );
