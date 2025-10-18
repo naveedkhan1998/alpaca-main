@@ -1,5 +1,6 @@
 import { useEffect, useState, Suspense, lazy } from 'react';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { useAppDispatch, useAppSelector } from './app/hooks';
 import {
   getCurrentToken,
@@ -183,34 +184,36 @@ export default function App() {
   ];
 
   return (
-    <BrowserRouter basename="/app">
-      <PageTracker />
-      <AnnouncementBanner />
-      <GoogleOAuthProvider clientId={clientId}>
-        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-          <Suspense fallback={<PageLoadingFallback />}>
-            <Routes>
-              {routes.map(({ path, element, private: isPrivate }) => (
-                <Route
-                  key={path}
-                  path={path}
-                  element={
-                    isPrivate ? <PrivateRoute element={element} /> : element
-                  }
-                />
-              ))}
-            </Routes>
-          </Suspense>
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              className: 'glass-card',
-              duration: 3000,
-            }}
-          />
-        </ThemeProvider>
-      </GoogleOAuthProvider>
-    </BrowserRouter>
+    <HelmetProvider>
+      <BrowserRouter basename="/app">
+        <PageTracker />
+        <AnnouncementBanner />
+        <GoogleOAuthProvider clientId={clientId}>
+          <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+            <Suspense fallback={<PageLoadingFallback />}>
+              <Routes>
+                {routes.map(({ path, element, private: isPrivate }) => (
+                  <Route
+                    key={path}
+                    path={path}
+                    element={
+                      isPrivate ? <PrivateRoute element={element} /> : element
+                    }
+                  />
+                ))}
+              </Routes>
+            </Suspense>
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                className: 'glass-card',
+                duration: 3000,
+              }}
+            />
+          </ThemeProvider>
+        </GoogleOAuthProvider>
+      </BrowserRouter>
+    </HelmetProvider>
   );
 }
 

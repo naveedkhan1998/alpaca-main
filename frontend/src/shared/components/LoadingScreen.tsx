@@ -79,6 +79,47 @@ const LoadingScreen = () => {
     Array<{ id: number; x: number; y: number; delay: number }>
   >([]);
 
+  // Get computed colors from CSS variables
+  const [colors, setColors] = useState({
+    primary: 'hsl(221 83% 53%)',
+    primaryDark: 'hsl(217 91% 60%)',
+    muted: 'hsl(220 15% 95%)',
+    mutedDark: 'hsl(222 47% 9%)',
+  });
+
+  useEffect(() => {
+    // Get actual computed values from CSS variables
+    if (typeof window !== 'undefined') {
+      const root = document.documentElement;
+      const isDark = root.classList.contains('dark');
+      
+      setColors({
+        primary: isDark ? 'hsl(217 91% 60%)' : 'hsl(221 83% 53%)',
+        primaryDark: 'hsl(217 91% 60%)',
+        muted: isDark ? 'hsl(222 47% 9%)' : 'hsl(220 15% 95%)',
+        mutedDark: 'hsl(222 47% 9%)',
+      });
+
+      // Listen for theme changes
+      const observer = new MutationObserver(() => {
+        const isDark = root.classList.contains('dark');
+        setColors({
+          primary: isDark ? 'hsl(217 91% 60%)' : 'hsl(221 83% 53%)',
+          primaryDark: 'hsl(217 91% 60%)',
+          muted: isDark ? 'hsl(222 47% 9%)' : 'hsl(220 15% 95%)',
+          mutedDark: 'hsl(222 47% 9%)',
+        });
+      });
+      
+      observer.observe(root, {
+        attributes: true,
+        attributeFilter: ['class'],
+      });
+
+      return () => observer.disconnect();
+    }
+  }, []);
+
   // Generate particles
   useEffect(() => {
     const newParticles = Array.from({ length: 20 }, (_, i) => ({
@@ -422,15 +463,15 @@ const LoadingScreen = () => {
                   <motion.div
                     key={i}
                     className="h-1.5 rounded-full"
-                    style={{
+                    initial={{
                       width: i === currentPhase ? '32px' : '8px',
                     }}
                     animate={{
-                      backgroundColor:
-                        i <= currentPhase
-                          ? 'hsl(var(--primary))'
-                          : 'hsl(var(--muted))',
                       width: i === currentPhase ? '32px' : '8px',
+                    }}
+                    style={{
+                      backgroundColor:
+                        i <= currentPhase ? colors.primary : colors.muted,
                     }}
                     transition={{ duration: 0.3 }}
                   />
