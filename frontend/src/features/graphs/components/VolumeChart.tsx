@@ -67,11 +67,28 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
     // Legend overlay
     const legend = document.createElement('div');
     legend.className =
-      'absolute top-2 left-2 p-2 rounded-lg glass-card shadow-md z-[10] text-xs';
+      'absolute -top-4 left-2 p-2 rounded-lg glass-card shadow-md z-[10] text-xs';
     legend.innerHTML =
       '<span class="font-medium text-slate-700 dark:text-slate-300">Volume: —</span>';
     containerEl.appendChild(legend);
     legendRef.current = legend;
+
+    // Subscribe to crosshair move to update legend
+    chart.subscribeCrosshairMove(param => {
+      if (!legendRef.current || !volumeSeriesRef.current) return;
+
+      const volumePoint = param.seriesData.get(volumeSeriesRef.current) as
+        | HistogramData<Time>
+        | undefined;
+
+      if (volumePoint && 'value' in volumePoint) {
+        const value = Number(volumePoint.value).toLocaleString();
+        legendRef.current.innerHTML = `<span class="font-medium text-slate-700 dark:text-slate-300">Volume: ${value}</span>`;
+      } else {
+        legendRef.current.innerHTML =
+          '<span class="font-medium text-slate-700 dark:text-slate-300">Volume: —</span>';
+      }
+    });
 
     // Clean up on unmount
     return () => {
@@ -121,7 +138,7 @@ const VolumeChart: React.FC<VolumeChartProps> = ({
       <div
         ref={volumeChartContainerRef}
         className="relative w-full h-full"
-        style={{ height: 'calc(100% - 64px)' }}
+        style={{ height: 'calc(100% - 32px)' }}
       />
     </div>
   );

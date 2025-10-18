@@ -66,7 +66,9 @@ export const trackEvent = (
     });
     // Only log in development, and make it less verbose
     if (!IS_PRODUCTION) {
-      console.log(`📊 GA4 Event: ${category} - ${action}${label ? ` (${label})` : ''}`);
+      console.log(
+        `📊 GA4 Event: ${category} - ${action}${label ? ` (${label})` : ''}`
+      );
     }
   } catch (error) {
     console.error('Failed to track event:', error);
@@ -145,7 +147,11 @@ export const trackTradingAction = (
  * Track account actions
  */
 export const trackAccountAction = (
-  action: 'view_account' | 'connect_alpaca' | 'disconnect_alpaca' | 'update_alpaca',
+  action:
+    | 'view_account'
+    | 'connect_alpaca'
+    | 'disconnect_alpaca'
+    | 'update_alpaca',
   label?: string
 ): void => {
   trackEvent('Account', action, label);
@@ -154,7 +160,10 @@ export const trackAccountAction = (
 /**
  * Set user properties
  */
-export const setUserProperties = (userId: string, properties?: Record<string, string | number | boolean>): void => {
+export const setUserProperties = (
+  userId: string,
+  properties?: Record<string, string | number | boolean>
+): void => {
   if (!GA4_MEASUREMENT_ID) return;
 
   try {
@@ -187,7 +196,9 @@ export const trackTiming = (
     });
     // Only log in development
     if (!IS_PRODUCTION) {
-      console.log(`📊 GA4 Timing: ${category} - ${variable} (${Math.round(value)}ms)`);
+      console.log(
+        `📊 GA4 Timing: ${category} - ${variable} (${Math.round(value)}ms)`
+      );
     }
   } catch (error) {
     console.error('Failed to track timing:', error);

@@ -70,7 +70,7 @@ export const analyticsMiddleware: Middleware = () => next => action => {
     // User Authentication (RTK Query)
     if (actionType === 'baseApi/executeMutation/fulfilled') {
       const endpointName = typedAction.meta?.arg?.endpointName;
-      
+
       if (endpointName === 'loginUser') {
         trackLogin('credentials');
         if (typedAction.payload?.data?.user) {
@@ -81,7 +81,7 @@ export const analyticsMiddleware: Middleware = () => next => action => {
           });
         }
       }
-      
+
       if (endpointName === 'googleLogin') {
         trackLogin('google');
         if (typedAction.payload?.data?.user) {
@@ -92,7 +92,7 @@ export const analyticsMiddleware: Middleware = () => next => action => {
           });
         }
       }
-      
+
       if (endpointName === 'registerUser') {
         trackRegistration('credentials');
       }
@@ -110,12 +110,18 @@ export const analyticsMiddleware: Middleware = () => next => action => {
 
       if (endpointName === 'addAssetToWatchList') {
         const args = typedAction.meta?.arg?.originalArgs;
-        trackWatchlistAction('add_asset', `watchlist:${args?.watchlist_id}, asset:${args?.asset_id}`);
+        trackWatchlistAction(
+          'add_asset',
+          `watchlist:${args?.watchlist_id}, asset:${args?.asset_id}`
+        );
       }
 
       if (endpointName === 'removeAssetFromWatchList') {
         const args = typedAction.meta?.arg?.originalArgs;
-        trackWatchlistAction('remove_asset', `watchlist:${args?.watchlist_id}, asset:${args?.asset_id}`);
+        trackWatchlistAction(
+          'remove_asset',
+          `watchlist:${args?.watchlist_id}, asset:${args?.asset_id}`
+        );
       }
 
       if (endpointName === 'updateWatchList') {
@@ -155,17 +161,19 @@ export const analyticsMiddleware: Middleware = () => next => action => {
     }
 
     // Track RTK Query errors (but filter out false positives)
-    if (actionType === 'baseApi/executeMutation/rejected' || 
-        actionType === 'baseApi/executeQuery/rejected') {
+    if (
+      actionType === 'baseApi/executeMutation/rejected' ||
+      actionType === 'baseApi/executeQuery/rejected'
+    ) {
       const endpointName = typedAction.meta?.arg?.endpointName;
       const errorMessage = typedAction.error?.message || 'Unknown error';
-      
+
       // Filter out RTK Query false positives that aren't actual errors
-      const isFalsePositive = 
+      const isFalsePositive =
         errorMessage.includes('Aborted due to condition callback') || // Skipped queries
-        errorMessage.includes('Promise was aborted') ||                 // User cancelled
-        errorMessage.includes('Request was cancelled');                 // Intentional cancellation
-      
+        errorMessage.includes('Promise was aborted') || // User cancelled
+        errorMessage.includes('Request was cancelled'); // Intentional cancellation
+
       // Only track actual errors
       if (endpointName && !isFalsePositive) {
         trackError(`${endpointName}: ${errorMessage}`, 'API Error');

@@ -45,14 +45,16 @@ describe('useChartSync', () => {
   it('syncs visible ranges across charts when called', () => {
     const main = makeTimeScale();
     const vol = makeTimeScale();
-    const ind = makeTimeScale();
+    const rsi = makeTimeScale();
+    const atr = makeTimeScale();
 
     vi.useFakeTimers();
     const { result } = renderHook(() =>
       useChartSync({
         mainChartRef: { current: main },
         volumeChartRef: { current: vol },
-        indicatorChartRef: { current: ind },
+        rsiChartRef: { current: rsi },
+        atrChartRef: { current: atr },
         shouldShowVolume: true,
         activeIndicators: ['RSI'],
       })
@@ -63,7 +65,7 @@ describe('useChartSync', () => {
     });
 
     expect(vol.setVisibleRange).toHaveBeenCalledWith(main.getVisibleRange());
-    expect(ind.setVisibleRange).toHaveBeenCalledWith(main.getVisibleRange());
+    expect(rsi.setVisibleRange).toHaveBeenCalledWith(main.getVisibleRange());
 
     // Simulate visible range change on main timescale
     main._visibleRange = {
@@ -76,6 +78,6 @@ describe('useChartSync', () => {
       main._handler?.(main.getVisibleRange()!);
     });
     expect(vol.setVisibleRange).toHaveBeenLastCalledWith({ from: 5, to: 10 });
-    expect(ind.setVisibleRange).toHaveBeenLastCalledWith({ from: 5, to: 10 });
+    expect(rsi.setVisibleRange).toHaveBeenLastCalledWith({ from: 5, to: 10 });
   });
 });

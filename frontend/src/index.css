@@ -4,44 +4,44 @@
 
 @layer base {
   :root {
-    /* Light Mode - Premium Modern Aesthetic */
-    --background: 220 20% 98%;
-    --foreground: 222 47% 8%;
+    /* Light Mode - Premium Professional Aesthetic */
+    --background: 220 18% 97%;
+    --foreground: 222 50% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 8%;
+    --card-foreground: 222 50% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 8%;
+    --popover-foreground: 222 50% 10%;
 
-    /* Primary: Modern Blue */
-    --primary: 221 83% 53%;
+    /* Primary: Modern Professional Blue */
+    --primary: 217 91% 55%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary/Neutrals */
-    --secondary: 220 17% 94%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 220 20% 92%;
+    --secondary-foreground: 222 47% 12%;
 
-    --muted: 220 15% 95%;
-    --muted-foreground: 220 10% 46%;
+    --muted: 220 18% 94%;
+    --muted-foreground: 220 12% 42%;
 
-    /* Accent: Vibrant Teal */
-    --accent: 180 77% 47%;
+    /* Accent: Vibrant Professional Teal */
+    --accent: 180 82% 50%;
     --accent-foreground: 0 0% 100%;
 
     /* Semantic Colors */
-    --destructive: 0 84% 60%;
+    --destructive: 0 86% 62%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;
+    --success: 142 76% 42%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    --warning: 38 95% 52%;
     --warning-foreground: 25 5% 5%;
 
-    --border: 220 13% 88%;
-    --input: 220 13% 91%;
-    --ring: 221 83% 53%;
+    --border: 220 15% 86%;
+    --input: 220 15% 89%;
+    --ring: 217 91% 55%;
 
     /* Chart palette (light) */
     --chart-1: 221 83% 53%;
@@ -65,58 +65,55 @@
     --vh: 1vh;
 
     /* Trading-specific colors */
-    --profit: 142 71% 45%;
-    --loss: 0 84% 60%;
+    --profit: 142 76% 42%;
+    --loss: 0 86% 62%;
     --trading-card: 0 0% 100%;
-    --trading-border: 220 13% 88%;
+    --trading-border: 220 15% 86%;
 
     /* Additional premium variables */
-    --gradient-start: 221 83% 53%;
-    --gradient-end: 262 80% 60%;
+    --gradient-start: 217 91% 55%;
+    --gradient-end: 262 83% 62%;
     --glass-bg: 0 0% 100%;
-    --glass-border: 220 13% 88%;
+    --glass-border: 220 15% 86%;
   }
 
   .dark {
-    /* Dark Mode - Premium Deep Aesthetic */
-    --background: 222 47% 4%;
-    --foreground: 220 17% 98%;
+    /* Dark Mode - Premium Professional Deep Aesthetic */
+    --background: 222 50% 5%;
+    --foreground: 220 20% 96%;
 
-    --card: 222 47% 7%;
-    --card-foreground: 220 17% 98%;
+    --card: 222 47% 8%;
+    --card-foreground: 220 20% 96%;
 
-    --popover: 222 47% 7%;
-    --popover-foreground: 220 17% 98%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 220 20% 96%;
 
-    /* Primary: Bright Electric Blue */
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 4%;
+    /* Primary: Vibrant Professional Blue */
+    --primary: 217 91% 62%;
+    --primary-foreground: 222 50% 5%;
 
-    --secondary: 222 47% 11%;
-    --secondary-foreground: 220 17% 96%;
+    --secondary: 222 47% 12%;
+    --secondary-foreground: 220 20% 94%;
 
-    --muted: 222 47% 9%;
-    --muted-foreground: 220 17% 70%;
+    --muted: 222 47% 10%;
+    --muted-foreground: 220 20% 65%;
 
-    --muted: 222 47% 9%;
-    --muted-foreground: 220 17% 70%;
+    /* Accent: Professional Neon Cyan */
+    --accent: 180 91% 58%;
+    --accent-foreground: 222 50% 5%;
 
-    /* Accent: Neon Cyan */
-    --accent: 180 91% 57%;
-    --accent-foreground: 222 47% 4%;
+    --destructive: 0 86% 67%;
+    --destructive-foreground: 220 20% 96%;
 
-    --destructive: 0 84% 65%;
-    --destructive-foreground: 220 17% 98%;
+    --success: 142 76% 50%;
+    --success-foreground: 222 50% 5%;
 
-    --success: 142 76% 48%;
-    --success-foreground: 222 47% 4%;
-
-    --warning: 38 100% 60%;
+    --warning: 38 100% 62%;
     --warning-foreground: 25 5% 5%;
 
-    --border: 222 47% 16%;
-    --input: 222 47% 14%;
-    --ring: 217 91% 60%;
+    --border: 222 47% 18%;
+    --input: 222 47% 15%;
+    --ring: 217 91% 62%;
 
     /* Chart palette (dark) */
     --chart-1: 217 91% 60%;
@@ -136,16 +133,16 @@
     --sidebar-ring: 217 91% 60%;
 
     /* Dark mode trading colors */
-    --profit: 142 76% 52%;
-    --loss: 0 84% 65%;
+    --profit: 142 76% 50%;
+    --loss: 0 86% 67%;
     --trading-card: 222 47% 8%;
-    --trading-border: 222 47% 16%;
+    --trading-border: 222 47% 18%;
 
     /* Additional premium variables */
-    --gradient-start: 217 91% 60%;
+    --gradient-start: 217 91% 62%;
     --gradient-end: 262 83% 68%;
-    --glass-bg: 222 47% 7%;
-    --glass-border: 222 47% 16%;
+    --glass-bg: 222 47% 8%;
+    --glass-border: 222 47% 18%;
   }
 
   @layer base {

@@ -27,10 +27,10 @@ let healthInterval: number | undefined;
 export function bootstrapLanding() {
   // Initialize GA4 for landing page
   initGA4();
-  
+
   // Track landing page view
   trackPageView('/', 'Landing Page');
-  
+
   const landingRoot = document.getElementById('landing-root');
   if (landingRoot) {
     landingRoot.removeAttribute('hidden');
@@ -68,22 +68,25 @@ export function bootstrapLanding() {
  */
 function setupLandingPageTracking() {
   // Track CTA clicks
-  document.addEventListener('click', (e) => {
+  document.addEventListener('click', e => {
     const target = e.target as HTMLElement;
-    
+
     // Track links to app
-    if (target.closest('a[href*="/app"]') || target.closest('a[href*="/login"]')) {
+    if (
+      target.closest('a[href*="/app"]') ||
+      target.closest('a[href*="/login"]')
+    ) {
       const link = target.closest('a') as HTMLAnchorElement;
       trackEvent('Landing Page', 'Click', `CTA: ${link.href}`);
     }
-    
+
     // Track any button clicks with tracking data
     const button = target.closest('button[data-track]');
     if (button) {
       const trackLabel = button.getAttribute('data-track');
       trackEvent('Landing Page', 'Click', trackLabel || 'Button');
     }
-    
+
     // Track navigation links
     const navLink = target.closest('nav a');
     if (navLink) {
@@ -96,9 +99,11 @@ function setupLandingPageTracking() {
   let maxScroll = 0;
   const trackScrollDepth = () => {
     const scrollPercent = Math.round(
-      (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100
+      (window.scrollY /
+        (document.documentElement.scrollHeight - window.innerHeight)) *
+        100
     );
-    
+
     if (scrollPercent > maxScroll && scrollPercent % 25 === 0) {
       maxScroll = scrollPercent;
       trackEvent('Landing Page', 'Scroll', `${scrollPercent}%`);
@@ -106,8 +111,12 @@ function setupLandingPageTracking() {
   };
 
   let scrollTimeout: number;
-  window.addEventListener('scroll', () => {
-    clearTimeout(scrollTimeout);
-    scrollTimeout = window.setTimeout(trackScrollDepth, 150);
-  }, { passive: true });
+  window.addEventListener(
+    'scroll',
+    () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = window.setTimeout(trackScrollDepth, 150);
+    },
+    { passive: true }
+  );
 }

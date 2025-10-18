@@ -104,31 +104,31 @@ const MainChart: React.FC<MainChartProps> = ({
     const rect = mainChartContainerRef.current.getBoundingClientRect();
     chart.applyOptions({ width: rect.width, height: rect.height });
 
-    // Create legend
+    // Create legend with modern styling
     const legendContainer = document.createElement('div');
     legendContainer.className =
-      'absolute flex flex-wrap items-center p-2 rounded-lg top-2 left-2 glass-card gap-x-4 gap-y-1';
+      'absolute flex flex-wrap items-center px-4 py-2.5 rounded-xl top-3 left-3 bg-card/95 backdrop-blur-xl border border-border/40 shadow-lg gap-x-4 gap-y-2';
 
     mainChartContainerRef.current.appendChild(legendContainer);
     legendContainerRef.current = legendContainer;
 
     // Left section: Company name and exchange
     const infoSection = document.createElement('div');
-    infoSection.className = 'flex items-center gap-2';
+    infoSection.className = 'flex items-center gap-2.5';
 
     const companyName = document.createElement('span');
     companyName.className =
-      'hidden text-sm font-bold text-slate-900 dark:text-slate-100';
+      'hidden text-sm font-bold text-foreground tracking-tight';
     companyName.textContent = obj?.name || '';
 
     const exchangeBadge = document.createElement('span');
     exchangeBadge.className =
-      'text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded';
+      'text-xs px-2 py-1 font-semibold bg-primary/15 text-primary rounded-lg border border-primary/30 shadow-sm';
     exchangeBadge.textContent = obj?.symbol || '';
 
     const timeframeBadge = document.createElement('span');
     timeframeBadge.className =
-      'text-xs px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 rounded ml-1';
+      'text-xs px-2 py-1 font-semibold bg-muted/80 text-muted-foreground rounded-lg border border-border/50';
     timeframeBadge.textContent = `${timeframe}m`;
     timeframeBadgeRef.current = timeframeBadge;
 
@@ -139,7 +139,7 @@ const MainChart: React.FC<MainChartProps> = ({
 
     // Right section: OHLC values
     const priceSection = document.createElement('div');
-    priceSection.className = 'flex items-center gap-3 text-xs';
+    priceSection.className = 'flex items-center gap-3 text-xs font-semibold';
     legendContainer.appendChild(priceSection);
 
     const updateLegend = (data: any | null) => {
@@ -159,16 +159,15 @@ const MainChart: React.FC<MainChartProps> = ({
 
           priceItems.forEach(({ label, value }) => {
             const item = document.createElement('div');
-            item.className = 'flex items-center';
+            item.className = 'flex items-center gap-1';
 
             const labelSpan = document.createElement('span');
             labelSpan.className =
-              'mr-1 font-medium text-slate-500 dark:text-slate-400';
+              'font-bold text-muted-foreground uppercase tracking-wide';
             labelSpan.textContent = label;
 
             const valueSpan = document.createElement('span');
-            valueSpan.className =
-              'font-semibold text-slate-900 dark:text-slate-100';
+            valueSpan.className = 'font-bold text-foreground';
             valueSpan.textContent = value;
 
             item.appendChild(labelSpan);
@@ -178,16 +177,15 @@ const MainChart: React.FC<MainChartProps> = ({
         } else if ('value' in data) {
           const { value } = data as LineData;
           const item = document.createElement('div');
-          item.className = 'flex items-center';
+          item.className = 'flex items-center gap-1';
 
           const labelSpan = document.createElement('span');
           labelSpan.className =
-            'mr-1 font-medium text-slate-500 dark:text-slate-400';
+            'font-bold text-muted-foreground uppercase tracking-wide';
           labelSpan.textContent = 'Price';
 
           const valueSpan = document.createElement('span');
-          valueSpan.className =
-            'font-semibold text-slate-900 dark:text-slate-100';
+          valueSpan.className = 'font-bold text-foreground';
           valueSpan.textContent = (value as number).toFixed(2);
 
           item.appendChild(labelSpan);
@@ -223,14 +221,14 @@ const MainChart: React.FC<MainChartProps> = ({
       updateLegend(seriesData[seriesData.length - 1]);
     }
 
-    // Create loading indicator
+    // Create loading indicator with modern styling
     const loadingIndicator = document.createElement('div');
     loadingIndicator.className =
-      'absolute hidden p-2 rounded-lg shadow-md top-12 left-2 glass-card';
+      'absolute hidden px-4 py-2.5 rounded-xl shadow-lg top-16 left-3 bg-card/95 backdrop-blur-xl border border-border/40';
     loadingIndicator.innerHTML = `
-      <div class="flex items-center gap-2 text-sm">
-        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-        <span class="text-slate-700 dark:text-slate-300">Loading historical data...</span>
+      <div class="flex items-center gap-2.5 text-sm">
+        <div class="animate-spin rounded-full h-4 w-4 border-2 border-primary/30 border-t-primary"></div>
+        <span class="text-foreground font-semibold">Loading historical data...</span>
       </div>
     `;
     mainChartContainerRef.current.appendChild(loadingIndicator);

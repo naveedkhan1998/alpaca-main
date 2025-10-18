@@ -41,6 +41,7 @@ import {
   setShowControls,
   selectSeriesType,
   selectActiveIndicators,
+  selectIndicatorConfigs,
   removeIndicator,
 } from './graphSlice';
 
@@ -64,12 +65,14 @@ const GraphsPage: React.FC = () => {
   const seriesType = useAppSelector(selectSeriesType);
   const showControls = useAppSelector(selectShowControls);
   const activeIndicators = useAppSelector(selectActiveIndicators);
+  const indicatorConfigs = useAppSelector(selectIndicatorConfigs);
   const [isPaperTradingOpen, setIsPaperTradingOpen] = React.useState(false);
 
   // Refs
   const mainChartRef = useRef<ITimeScaleApi<Time> | null>(null);
   const volumeChartRef = useRef<ITimeScaleApi<Time> | null>(null);
-  const indicatorChartRef = useRef<ITimeScaleApi<Time> | null>(null);
+  const rsiChartRef = useRef<ITimeScaleApi<Time> | null>(null);
+  const atrChartRef = useRef<ITimeScaleApi<Time> | null>(null);
   const chartSectionRef = useRef<HTMLDivElement>(null);
 
   // Data & derived series
@@ -92,7 +95,13 @@ const GraphsPage: React.FC = () => {
     atrData,
     emaData,
     bollingerBandsData,
-  } = useDerivedSeries({ candles, seriesType, isDarkMode, activeIndicators });
+  } = useDerivedSeries({
+    candles,
+    seriesType,
+    isDarkMode,
+    activeIndicators,
+    indicatorConfigs,
+  });
 
   const shouldShowVolume = showVolume && hasValidVolume;
   const latestPrice = candles.length > 0 ? candles[0]?.close : undefined;
@@ -104,15 +113,19 @@ const GraphsPage: React.FC = () => {
   const setVolumeChartTimeScale = (timeScale: ITimeScaleApi<Time>) => {
     volumeChartRef.current = timeScale;
   };
-  const setIndicatorChartTimeScale = (timeScale: ITimeScaleApi<Time>) => {
-    indicatorChartRef.current = timeScale;
+  const setRSIChartTimeScale = (timeScale: ITimeScaleApi<Time>) => {
+    rsiChartRef.current = timeScale;
+  };
+  const setATRChartTimeScale = (timeScale: ITimeScaleApi<Time>) => {
+    atrChartRef.current = timeScale;
   };
 
   // Sync charts & fullscreen
   const { syncCharts } = useChartSync({
     mainChartRef,
     volumeChartRef,
-    indicatorChartRef,
+    rsiChartRef,
+    atrChartRef,
     shouldShowVolume,
     activeIndicators,
   });
@@ -154,7 +167,7 @@ const GraphsPage: React.FC = () => {
   if (errorInitial) return <ErrorScreen />;
 
   return (
-    <div className="flex flex-col h-[100dvh] text-foreground bg-gradient-to-br from-background via-background to-muted/10">
+    <div className="flex flex-col h-[100dvh] text-foreground bg-gradient-to-br from-background via-muted/5 to-background">
       {/* Header */}
       <GraphHeader
         obj={obj}
@@ -168,26 +181,28 @@ const GraphsPage: React.FC = () => {
         ref={chartSectionRef}
         className={
           `flex flex-1 overflow-hidden ` +
-          (isFullscreenView ? 'bg-background' : 'bg-trading-gradient')
+          (isFullscreenView
+            ? 'bg-background'
+            : 'bg-gradient-to-br from-muted/10 via-background to-muted/5')
         }
       >
         {isMobile ? (
-          <div className="flex-1 p-2">
+          <div className="flex-1 ">
             <Sheet
               open={showControls}
               onOpenChange={open => dispatch(setShowControls(open))}
             >
               <SheetContent
                 side="left"
-                className="p-0 bg-card text-card-foreground"
+                className="p-0 bg-gradient-to-b from-card via-card to-muted/20 text-card-foreground"
               >
                 <div className="flex flex-col h-full">
                   <PanelHeader
-                    title="Controls"
-                    icon={<HiCog className="w-4 h-4 text-chart-1" />}
+                    title="Chart Controls"
+                    icon={<HiCog className="w-4 h-4 text-primary" />}
                     dense
                   />
-                  <div className="flex-1 p-5 overflow-y-auto">
+                  <div className="flex-1 p-4 overflow-y-auto scrollbar-hidden">
                     <ChartControls />
                   </div>
                 </div>
@@ -240,26 +255,43 @@ const GraphsPage: React.FC = () => {
                 </>
               )}
 
-              {/* Indicator Chart */}
-              {(activeIndicators.includes('RSI') ||
-                activeIndicators.includes('ATR')) && (
+              {/* RSI Chart */}
+              {activeIndicators.includes('RSI') && (
                 <>
                   <ResizableHandle withHandle />
-                  <ResizablePanel defaultSize={25} minSize={15}>
+                  <ResizablePanel defaultSize={20} minSize={15}>
                     <PanelHeader
-                      title="Indicators"
-                      icon={<HiChartBar className="w-4 h-4 text-chart-1" />}
-                      onClose={() => {
-                        dispatch(removeIndicator('RSI'));
-                        dispatch(removeIndicator('ATR'));
-                      }}
+                      title="RSI"
+                      icon={<HiChartBar className="w-4 h-4 text-amber-500" />}
+                      onClose={() => dispatch(removeIndicator('RSI'))}
                       dense
                     />
                     <IndicatorChart
                       rsiData={rsiData}
+                      atrData={[]}
+                      mode={isDarkMode}
+                      setTimeScale={setRSIChartTimeScale}
+                    />
+                  </ResizablePanel>
+                </>
+              )}
+
+              {/* ATR Chart */}
+              {activeIndicators.includes('ATR') && (
+                <>
+                  <ResizableHandle withHandle />
+                  <ResizablePanel defaultSize={20} minSize={15}>
+                    <PanelHeader
+                      title="ATR"
+                      icon={<HiChartBar className="w-4 h-4 text-blue-500" />}
+                      onClose={() => dispatch(removeIndicator('ATR'))}
+                      dense
+                    />
+                    <IndicatorChart
+                      rsiData={[]}
                       atrData={atrData}
                       mode={isDarkMode}
-                      setTimeScale={setIndicatorChartTimeScale}
+                      setTimeScale={setATRChartTimeScale}
                     />
                   </ResizablePanel>
                 </>
@@ -278,15 +310,15 @@ const GraphsPage: React.FC = () => {
                   defaultSize={25}
                   minSize={20}
                   maxSize={35}
-                  className="min-w-0"
+                  className="min-w-0 border-r bg-gradient-to-b from-card/80 via-card/60 to-muted/20 border-border/40"
                 >
                   <div className="flex flex-col h-full">
                     <PanelHeader
-                      title="Controls"
-                      icon={<HiCog className="w-4 h-4 text-chart-1" />}
+                      title="Chart Controls"
+                      icon={<HiCog className="w-4 h-4 text-primary" />}
                       onClose={() => dispatch(setShowControls(false))}
                     />
-                    <div className="flex-1 p-4 overflow-y-auto">
+                    <div className="flex-1 p-4 overflow-y-auto scrollbar-hidden">
                       <ChartControls />
                     </div>
                   </div>
@@ -297,7 +329,7 @@ const GraphsPage: React.FC = () => {
 
             {/* Charts Area */}
             <ResizablePanel defaultSize={showControls ? 75 : 100}>
-              <div className="h-full p-4">
+              <div className="h-full bg-gradient-to-br from-transparent via-muted/5 to-transparent">
                 <ResizablePanelGroup direction="vertical">
                   {/* Main Chart */}
                   <ResizablePanel defaultSize={shouldShowVolume ? 75 : 100}>
@@ -327,7 +359,7 @@ const GraphsPage: React.FC = () => {
                   {/* Volume Chart */}
                   {shouldShowVolume && (
                     <>
-                      <ResizableHandle withHandle />
+                      <ResizableHandle className="p-0" withHandle />
                       <ResizablePanel defaultSize={25} minSize={15}>
                         <PanelHeader
                           title="Volume"
@@ -343,25 +375,45 @@ const GraphsPage: React.FC = () => {
                     </>
                   )}
 
-                  {/* Indicator Chart */}
-                  {(activeIndicators.includes('RSI') ||
-                    activeIndicators.includes('ATR')) && (
+                  {/* RSI Chart */}
+                  {activeIndicators.includes('RSI') && (
                     <>
-                      <ResizableHandle withHandle />
-                      <ResizablePanel defaultSize={25} minSize={15}>
+                      <ResizableHandle className="p-0" withHandle />
+                      <ResizablePanel defaultSize={20} minSize={15}>
                         <PanelHeader
-                          title="Indicators"
-                          icon={<HiChartBar className="w-4 h-4 text-chart-1" />}
-                          onClose={() => {
-                            dispatch(removeIndicator('RSI'));
-                            dispatch(removeIndicator('ATR'));
-                          }}
+                          title="RSI"
+                          icon={
+                            <HiChartBar className="w-4 h-4 text-amber-500" />
+                          }
+                          onClose={() => dispatch(removeIndicator('RSI'))}
                         />
                         <IndicatorChart
                           rsiData={rsiData}
+                          atrData={[]}
+                          mode={isDarkMode}
+                          setTimeScale={setRSIChartTimeScale}
+                        />
+                      </ResizablePanel>
+                    </>
+                  )}
+
+                  {/* ATR Chart */}
+                  {activeIndicators.includes('ATR') && (
+                    <>
+                      <ResizableHandle className="p-0" withHandle />
+                      <ResizablePanel defaultSize={20} minSize={15}>
+                        <PanelHeader
+                          title="ATR"
+                          icon={
+                            <HiChartBar className="w-4 h-4 text-blue-500" />
+                          }
+                          onClose={() => dispatch(removeIndicator('ATR'))}
+                        />
+                        <IndicatorChart
+                          rsiData={[]}
                           atrData={atrData}
                           mode={isDarkMode}
-                          setTimeScale={setIndicatorChartTimeScale}
+                          setTimeScale={setATRChartTimeScale}
                         />
                       </ResizablePanel>
                     </>
@@ -399,12 +451,17 @@ const GraphsPage: React.FC = () => {
       <Button
         type="button"
         size="lg"
-        className={`fixed bottom-6 right-6 z-50 shadow-lg transition-opacity ${isPaperTradingOpen ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
+        className={`fixed bottom-6 right-6 z-50 shadow-2xl transition-all duration-300 bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary text-primary-foreground font-bold rounded-xl ${
+          isPaperTradingOpen
+            ? 'pointer-events-none opacity-0 scale-90'
+            : 'opacity-95 scale-75 hover:scale-105'
+        }`}
         onClick={() => setIsPaperTradingOpen(true)}
         aria-label="Open paper trading"
       >
-        <HiLightningBolt className="w-4 h-4 mr-2" />
-        <span className="hidden sm:inline">Trade</span>
+        <HiLightningBolt className="w-5 h-5 mr-2" />
+        <span className="hidden tracking-wide sm:inline">Start Trading</span>
+        <span className="sm:hidden">Trade</span>
       </Button>
     </div>
   );

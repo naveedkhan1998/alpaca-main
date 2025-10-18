@@ -92,7 +92,7 @@ const LoadingScreen = () => {
     if (typeof window !== 'undefined') {
       const root = document.documentElement;
       const isDark = root.classList.contains('dark');
-      
+
       setColors({
         primary: isDark ? 'hsl(217 91% 60%)' : 'hsl(221 83% 53%)',
         primaryDark: 'hsl(217 91% 60%)',
@@ -110,7 +110,7 @@ const LoadingScreen = () => {
           mutedDark: 'hsl(222 47% 9%)',
         });
       });
-      
+
       observer.observe(root, {
         attributes: true,
         attributeFilter: ['class'],

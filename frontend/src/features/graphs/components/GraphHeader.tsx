@@ -68,15 +68,15 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
   const isMobile = useIsMobile();
 
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-30 border-b border-border/40 bg-card/95 backdrop-blur-xl supports-[backdrop-filter]:bg-card/90 shadow-sm">
       <Helmet>
         <title>{obj?.name} - Alpaca</title>
       </Helmet>
       <div
-        className={`flex items-center justify-between ${isMobile ? 'h-14 px-2' : 'h-14 px-2'} mx-auto sm:px-6 lg:px-8`}
+        className={`flex items-center justify-between ${isMobile ? 'h-16 px-3' : 'h-16 px-4'} mx-auto sm:px-6 lg:px-8`}
       >
         {/* Left Section - Navigation & Title */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <TooltipProvider>
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
@@ -84,23 +84,45 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => navigate(-1)}
-                  className="rounded-full"
+                  className="transition-colors rounded-lg hover:bg-muted/80"
                 >
                   <HiArrowLeft className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="bottom">Go back</TooltipContent>
+              <TooltipContent side="bottom" className="text-xs">
+                Go back
+              </TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
-          <div>
-            <h1
-              className={`${
-                isMobile ? 'text-base' : 'text-lg'
-              } font-semibold text-foreground`}
-            >
-              {obj?.name || 'Chart'}
-            </h1>
+          <div className="flex items-center gap-2">
+            <div>
+              <h1
+                className={`${
+                  isMobile ? 'text-base' : 'text-lg'
+                } font-bold text-foreground tracking-tight`}
+              >
+                {obj?.symbol || 'Chart'}
+              </h1>
+              {!isMobile && obj?.name && (
+                <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                  {obj.name}
+                </p>
+              )}
+            </div>
+            {autoRefresh && (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                <div className="relative">
+                  <div className="absolute w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></div>
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                </div>
+                {!isMobile && (
+                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                    Live
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -108,24 +130,28 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
         <div className="flex items-center gap-1">
           <TooltipProvider>
             {!isMobile && (
-              <>
+              <div className="flex items-center gap-1 mr-1">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant={autoRefresh ? 'secondary' : 'ghost'}
+                      variant={autoRefresh ? 'default' : 'ghost'}
                       size="icon"
                       onClick={() => dispatch(setAutoRefresh(!autoRefresh))}
-                      className="rounded-full"
+                      className={`rounded-lg transition-all ${
+                        autoRefresh
+                          ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md'
+                          : 'hover:bg-muted/80'
+                      }`}
                     >
                       {autoRefresh ? (
-                        <HiPause className="w-5 h-5" />
+                        <HiPause className="w-4 h-4" />
                       ) : (
-                        <HiPlay className="w-5 h-5" />
+                        <HiPlay className="w-4 h-4" />
                       )}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    {autoRefresh ? 'Pause Live' : 'Enable Live'}
+                  <TooltipContent className="text-xs">
+                    {autoRefresh ? 'Pause Live Data' : 'Enable Live Data'}
                   </TooltipContent>
                 </Tooltip>
                 <Tooltip>
@@ -134,90 +160,122 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                       variant="ghost"
                       size="icon"
                       onClick={refetch}
-                      className="rounded-full"
+                      className="transition-colors rounded-lg hover:bg-muted/80"
                     >
-                      <HiRefresh className="w-5 h-5" />
+                      <HiRefresh className="w-4 h-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Refresh Data</TooltipContent>
+                  <TooltipContent className="text-xs">
+                    Refresh Data
+                  </TooltipContent>
                 </Tooltip>
-              </>
+              </div>
             )}
+
+            <Separator orientation="vertical" className="h-6 mx-1" />
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant={showControls ? 'secondary' : 'ghost'}
                   size="icon"
                   onClick={() => dispatch(setShowControls(!showControls))}
-                  className="rounded-full"
+                  className={`rounded-lg transition-all ${
+                    showControls
+                      ? 'bg-primary/15 text-primary hover:bg-primary/20'
+                      : 'hover:bg-muted/80'
+                  }`}
                 >
-                  <HiCog className="w-5 h-5" />
+                  <HiCog className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Toggle Controls</TooltipContent>
+              <TooltipContent className="text-xs">
+                {showControls ? 'Hide Controls' : 'Show Controls'}
+              </TooltipContent>
             </Tooltip>
+
             {!isMobile && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={toggleFullscreen}
-                    className="rounded-full"
-                  >
-                    {isFullscreen ? (
-                      <HiX className="w-5 h-5" />
-                    ) : (
-                      <HiArrowsExpand className="w-5 h-5" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
-                </TooltipContent>
-              </Tooltip>
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={toggleFullscreen}
+                      className="transition-colors rounded-lg hover:bg-muted/80"
+                    >
+                      {isFullscreen ? (
+                        <HiX className="w-4 h-4" />
+                      ) : (
+                        <HiArrowsExpand className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="text-xs">
+                    {isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+                  </TooltipContent>
+                </Tooltip>
+
+                <Separator orientation="vertical" className="h-6 mx-1" />
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-lg hover:bg-muted/80"
+                    >
+                      <HiInformationCircle className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs">
+                    <div className="space-y-2 text-xs">
+                      <div className="font-semibold text-foreground">
+                        Keyboard Shortcuts
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-muted-foreground">
+                            Fullscreen
+                          </span>
+                          <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">
+                            F
+                          </kbd>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-muted-foreground">
+                            Toggle Volume
+                          </span>
+                          <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">
+                            V
+                          </kbd>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-muted-foreground">
+                            Toggle Controls
+                          </span>
+                          <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">
+                            C
+                          </kbd>
+                        </div>
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </>
             )}
           </TooltipProvider>
-
-          {!isMobile && (
-            <Separator orientation="vertical" className="h-6 mx-1" />
-          )}
-
-          {!isMobile && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <HiInformationCircle className="w-5 h-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <div className="space-y-1 text-xs">
-                    <div className="font-medium ">Shortcuts</div>
-                    <div className="text-muted-foreground">
-                      <kbd className="px-1 py-0.5 rounded  mr-1">F</kbd>{' '}
-                      Fullscreen
-                    </div>
-                    <div className="text-muted-foreground">
-                      <kbd className="px-1 py-0.5 rounded  mr-1">V</kbd> Toggle
-                      Volume
-                    </div>
-                    <div className="text-muted-foreground">
-                      <kbd className="px-1 py-0.5 rounded  mr-1">C</kbd> Toggle
-                      Controls
-                    </div>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
 
           <ModeToggle />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <HiDotsVertical className="w-5 h-5" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="transition-colors rounded-lg hover:bg-muted/80"
+              >
+                <HiDotsVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">

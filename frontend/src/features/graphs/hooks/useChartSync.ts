@@ -4,14 +4,16 @@ import type { ITimeScaleApi, Time } from 'lightweight-charts';
 export function useChartSync(options: {
   mainChartRef: React.MutableRefObject<ITimeScaleApi<Time> | null>;
   volumeChartRef: React.MutableRefObject<ITimeScaleApi<Time> | null>;
-  indicatorChartRef: React.MutableRefObject<ITimeScaleApi<Time> | null>;
+  rsiChartRef: React.MutableRefObject<ITimeScaleApi<Time> | null>;
+  atrChartRef: React.MutableRefObject<ITimeScaleApi<Time> | null>;
   shouldShowVolume: boolean;
   activeIndicators: string[];
 }) {
   const {
     mainChartRef,
     volumeChartRef,
-    indicatorChartRef,
+    rsiChartRef,
+    atrChartRef,
     shouldShowVolume,
     activeIndicators,
   } = options;
@@ -23,12 +25,10 @@ export function useChartSync(options: {
       const charts: ITimeScaleApi<Time>[] = [];
       if (shouldShowVolume && volumeChartRef.current)
         charts.push(volumeChartRef.current);
-      if (
-        (activeIndicators.includes('RSI') ||
-          activeIndicators.includes('ATR')) &&
-        indicatorChartRef.current
-      )
-        charts.push(indicatorChartRef.current);
+      if (activeIndicators.includes('RSI') && rsiChartRef.current)
+        charts.push(rsiChartRef.current);
+      if (activeIndicators.includes('ATR') && atrChartRef.current)
+        charts.push(atrChartRef.current);
       return charts;
     };
 
@@ -63,7 +63,8 @@ export function useChartSync(options: {
   }, [
     mainChartRef,
     volumeChartRef,
-    indicatorChartRef,
+    rsiChartRef,
+    atrChartRef,
     shouldShowVolume,
     activeIndicators,
   ]);
