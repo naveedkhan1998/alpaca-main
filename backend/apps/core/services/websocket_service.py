@@ -40,6 +40,7 @@ import websocket
 
 from apps.core.models import Asset, Candle, WatchListAsset
 from apps.core.tasks import fetch_historical_data as task_fetch_historical_data
+from main import const
 from main.settings.base import APCA_API_KEY, APCA_API_SECRET_KEY
 
 # --------------------------------------------------------------------------- #
@@ -87,15 +88,7 @@ class WebsocketClient:
         self.tick_buffer = Queue()  # producer/consumer buffer
 
         # Timeframe aggregation config
-        self.TF_CFG = {
-            "1T": timedelta(minutes=1),
-            "5T": timedelta(minutes=5),
-            "15T": timedelta(minutes=15),
-            "30T": timedelta(minutes=30),
-            "1H": timedelta(hours=1),
-            "4H": timedelta(hours=4),
-            "1D": timedelta(days=1),
-        }
+        self.TF_CFG = const.TF_CFG
         # Accumulators for higher timeframes; 1T is written directly from trades
         self._tf_acc = {tf: {} for tf in self.TF_CFG if tf != "1T"}
 
@@ -834,3 +827,8 @@ class WebsocketClient:
             return start <= t < end
         except Exception:  # be safe, default to allow
             return True
+
+
+"""
+
+"""

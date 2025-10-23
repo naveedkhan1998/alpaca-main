@@ -9,6 +9,8 @@ import {
   PageActions,
 } from '@/components/PageLayout';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { RefreshCcw, AlertTriangle } from 'lucide-react';
 
 import { ArrowLeft } from 'lucide-react';
 
@@ -27,6 +29,7 @@ import {
   setDensity,
 } from './assetSlice';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
+import { useGetSyncStatusQuery, useSyncAssetsMutation } from '@/api/assetService';
 
 const AssetsPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -34,9 +37,21 @@ const AssetsPage: React.FC = () => {
   const selectedAsset = assetState.selectedAsset;
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Sync status
+  const { data: syncStatus } = useGetSyncStatusQuery();
+  const [syncAssets, { isLoading: isSyncing }] = useSyncAssetsMutation();
+
   const handleBack = useCallback(() => {
     dispatch(setSelectedAsset(null));
   }, [dispatch]);
+
+  const handleSyncAssets = useCallback(async () => {
+    try {
+      await syncAssets().unwrap();
+    } catch (error) {
+      console.error('Failed to sync assets:', error);
+    }
+  }, [syncAssets]);
 
   // Read URL params -> Redux state
   useEffect(() => {
@@ -142,6 +157,33 @@ const AssetsPage: React.FC = () => {
         </PageActions>
       }
     >
+      {/* Sync Banner */}
+      {syncStatus?.needs_sync && (
+        <Alert className="mb-6 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+          <AlertTriangle className="w-4 h-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>
+              {syncStatus.is_syncing
+                ? "Assets are currently being synced..."
+                : syncStatus.total_assets === 0
+                ? "No assets found in your database. Sync assets to get started."
+                : "Your asset data is outdated. Consider syncing to get the latest information."}
+            </span>
+            {!syncStatus.is_syncing && (
+              <Button
+                onClick={handleSyncAssets}
+                disabled={isSyncing}
+                size="sm"
+                className="ml-4"
+              >
+                <RefreshCcw className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+                {isSyncing ? 'Syncing...' : 'Sync Assets'}
+              </Button>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <PageContent>
         <div className="space-y-8">
           {selectedAsset ? (

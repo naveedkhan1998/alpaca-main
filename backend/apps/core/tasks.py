@@ -12,6 +12,8 @@ from apps.core.models import (
     Candle,
     WatchListAsset,
 )
+from main import const
+from main.cache_keys import cache_keys
 
 from .services.alpaca_service import alpaca_service
 
@@ -78,7 +80,6 @@ def alpaca_sync_task(asset_classes: list = None, batch_size: int = 1000):
     Optimized sync task that efficiently syncs assets from Alpaca API.
 
     Args:
-        alpaca_account_id: ID of the Alpaca account to use for API calls
         asset_classes: List of asset classes to sync (defaults to all: ["us_equity", "us_option", "crypto"])
         batch_size: Number of assets to process in each batch
     """
@@ -86,6 +87,19 @@ def alpaca_sync_task(asset_classes: list = None, batch_size: int = 1000):
         asset_classes = ["us_equity", "us_option", "crypto"]
 
     try:
+        from django.utils import timezone
+
+        from apps.core.models import SyncStatus
+
+        # Get or create sync status for assets
+        sync_status, created = SyncStatus.objects.get_or_create(
+            sync_type="assets",
+            defaults={"total_items": 0, "is_syncing": True}
+        )
+
+        # Mark as syncing
+        sync_status.is_syncing = True
+        sync_status.save()
 
         service = alpaca_service
 
@@ -257,39 +271,46 @@ def alpaca_sync_task(asset_classes: list = None, batch_size: int = 1000):
             "asset_classes_processed": asset_classes,
         }
 
+        # Update sync status on successful sync
+        sync_status.last_sync_at = timezone.now()
+        sync_status.total_items = Asset.objects.filter(status="active").count()
+        sync_status.is_syncing = False
+        sync_status.save()
+
         logger.info(f"Asset sync completed: {result}")
         return result
 
     except Exception as e:
         error_msg = f"Critical error in alpaca_sync_task: {e}"
         logger.error(error_msg, exc_info=True)
+
+        # Mark sync as not running on error
+        try:
+            sync_status.is_syncing = False
+            sync_status.save()
+        except Exception:
+            pass  # Ignore errors when updating sync status
+
         return {"success": False, "error": error_msg}
 
 
 @shared_task(name="fetch_historical_data", base=SingleInstanceTask)
-def fetch_historical_data(watchlist_asset_id: int):
+def fetch_historical_data(asset_id: int):
     """
     Backfill strategy:
     1) Fetch only 1-minute bars from Alpaca and persist as 1T.
     2) For each higher timeframe (5T, 15T, 30T, 1H, 4H, 1D), resample from stored 1T
        to compute OHLCV and persist, storing the list of minute candle IDs used.
     """
-    watchlist_asset = (
-        WatchListAsset.objects.filter(id=watchlist_asset_id)
-        .select_related("asset", "watchlist__user")
-        .first()
-    )
-    if not watchlist_asset:
-        logger.error(f"WatchListAsset with ID {watchlist_asset_id} does not exist.")
+    asset = Asset.objects.filter(id=asset_id).first()
+    if not asset:
+        logger.error(f"Asset with ID {asset_id} does not exist.")
         return
 
-    asset = watchlist_asset.asset
     symbol = asset.symbol
 
-    # Acquire per-asset distributed lock to avoid duplicate backfills
-    RUNNING_TTL = 60 * 10  # 10 minutes; adjust as needed
-    running_key = f"backfill:running:{asset.id}"
-    if not cache.add(running_key, 1, timeout=RUNNING_TTL):
+    running_key = cache_keys.backfill(asset.id).running()
+    if not cache.add(running_key, 1, timeout=LOCK_TTL):
         logger.info(
             "Backfill already running for asset_id=%s symbol=%s — skipping.",
             asset.id,
@@ -298,19 +319,8 @@ def fetch_historical_data(watchlist_asset_id: int):
         return
 
     try:
-
         service = alpaca_service
-
         # Define timeframes
-        TF_LIST = [
-            ("1T", timedelta(minutes=1)),
-            ("5T", timedelta(minutes=5)),
-            ("15T", timedelta(minutes=15)),
-            ("30T", timedelta(minutes=30)),
-            ("1H", timedelta(hours=1)),
-            ("4H", timedelta(hours=4)),
-            ("1D", timedelta(days=1)),
-        ]
 
         end_date = timezone.now()
 
@@ -385,7 +395,7 @@ def fetch_historical_data(watchlist_asset_id: int):
             logger.error("Error backfilling 1T for %s: %s", symbol, e, exc_info=True)
 
         # Step 2: Resample from 1T to higher TFs and persist with linkage
-        for tf, delta in TF_LIST:
+        for tf, delta in const.TF_LIST:
             if tf == "1T":
                 continue
             try:
@@ -532,14 +542,15 @@ def fetch_historical_data(watchlist_asset_id: int):
 
         # Mark backfill as complete by setting a cache flag
         # This allows WebSocket to know it's safe to create higher TF candles
-        completion_key = f"backfill:complete:{asset.id}"
+        completion_key = cache_keys.backfill(asset.id).completed()
         cache.set(completion_key, 1, timeout=86400 * 1)  # Keep for 1 day
         logger.info(f"Marked backfill complete for asset_id={asset.id} symbol={symbol}")
 
     finally:
         # Always release the lock and clear any queued marker for this asset
+        queued_key = cache_keys.backfill(asset.id).queued()
         cache.delete(running_key)
-        cache.delete(f"backfill:queued:{asset.id}")
+        cache.delete(queued_key)
 
 
 def _is_market_hours(dt: datetime) -> bool:

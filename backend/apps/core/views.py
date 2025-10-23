@@ -123,6 +123,25 @@ class AlpacaAccountViewSet(viewsets.ModelViewSet):
         Sync assets from Alpaca API to local database.
         """
         try:
+            from apps.core.models import SyncStatus
+
+            # Get or create sync status for assets
+            sync_status, created = SyncStatus.objects.get_or_create(
+                sync_type="assets",
+                defaults={"total_items": 0, "is_syncing": False}
+            )
+
+            # Check if already syncing
+            if sync_status.is_syncing:
+                return Response(
+                    {"msg": "Sync already in progress"},
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+            # Mark as syncing
+            sync_status.is_syncing = True
+            sync_status.save()
+
             alpaca_sync_task.delay()
             return Response(
                 {
@@ -135,6 +154,60 @@ class AlpacaAccountViewSet(viewsets.ModelViewSet):
             logger.error(f"Error syncing assets: {e}", exc_info=True)
             return Response(
                 {"msg": "Error syncing assets", "error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    @action(detail=False, methods=["get"], url_path="sync_status")
+    def get_sync_status(self, request):
+        """
+        Get the sync status including last sync time and asset count.
+        """
+        try:
+            from apps.core.models import Asset, SyncStatus
+
+            # Get total asset count
+            total_assets = Asset.objects.filter(status="active").count()
+
+            # Get sync status
+            sync_status, created = SyncStatus.objects.get_or_create(
+                sync_type="assets",
+                defaults={"total_items": total_assets, "is_syncing": False}
+            )
+
+            # Update total_items if it doesn't match
+            if sync_status.total_items != total_assets:
+                sync_status.total_items = total_assets
+                sync_status.save()
+
+            # Check if sync is needed (no assets or last sync > 1 week ago)
+            from datetime import timedelta
+
+            from django.utils import timezone
+
+            needs_sync = False
+            if total_assets == 0:
+                needs_sync = True
+            elif sync_status.last_sync_at:
+                one_week_ago = timezone.now() - timedelta(days=7)
+                if sync_status.last_sync_at < one_week_ago:
+                    needs_sync = True
+
+            return Response(
+                {
+                    "msg": "Sync status retrieved",
+                    "data": {
+                        "last_sync_at": sync_status.last_sync_at,
+                        "total_assets": total_assets,
+                        "needs_sync": needs_sync,
+                        "is_syncing": sync_status.is_syncing,
+                    },
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            logger.error(f"Error getting sync status: {e}", exc_info=True)
+            return Response(
+                {"msg": "Error getting sync status", "error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -530,7 +603,7 @@ class WatchListViewSet(viewsets.ModelViewSet):
         )
 
         # Idempotent backfill schedule via coordinator (deduped per-asset across processes)
-        request_backfill(watchlist_asset.id, source="watchlist.add_asset")
+        request_backfill(watchlist_asset.asset.id, source="watchlist.add_asset")
 
         if not created and not watchlist_asset.is_active:
             watchlist_asset.is_active = True
@@ -560,6 +633,13 @@ class WatchListViewSet(viewsets.ModelViewSet):
         Remove an asset from a watchlist.
         """
         watchlist = self.get_object()
+
+        # only allow removing from user-owned watchlists or admin
+        if request.user != watchlist.user and not request.user.is_staff:
+            return Response(
+                {"msg": "Permission denied"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         try:
             watchlist_asset = WatchListAsset.objects.get(
