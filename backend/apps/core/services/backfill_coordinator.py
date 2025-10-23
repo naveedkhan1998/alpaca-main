@@ -4,42 +4,31 @@ import logging
 
 from django.core.cache import cache
 
-from apps.core.models import WatchListAsset
 from apps.core.tasks import fetch_historical_data
+from main.cache_keys import cache_keys
 
 logger = logging.getLogger(__name__)
 
+TTL_SECONDS = 60 * 10  # 10 minutes
+
 
 def request_backfill(
-    watchlist_asset_id: int,
+    asset_id: int,
     *,
     source: str = "unknown",
-    queued_ttl_seconds: int = 60 * 10,  # 10 minutes
+    queued_ttl_seconds: int = TTL_SECONDS,
 ) -> bool:
-    """Idempotently enqueue a historical backfill for the asset of this watchlist asset.
+    """
+    Idempotently enqueue a historical backfill for an asset.
 
     Uses a per-asset queued lock so multiple callers (websocket, views, etc.) do not
     enqueue duplicate work across processes. The actual task also enforces a per-asset
     running lock for double safety.
 
-    Returns True when a backfill was scheduled, False if skipped due to existing queued lock
-    or missing WatchListAsset.
+    Returns True when a backfill was scheduled, False if skipped due to existing queued lock.
     """
-    wla = (
-        WatchListAsset.objects.filter(id=watchlist_asset_id)
-        .select_related("asset")
-        .first()
-    )
-    if not wla:
-        logger.warning(
-            "Backfill request skipped: WatchListAsset %s not found (source=%s)",
-            watchlist_asset_id,
-            source,
-        )
-        return False
-
-    asset_id = wla.asset_id
-    key = f"backfill:queued:{asset_id}"
+    asset_id = asset_id
+    key = cache_keys.backfill(asset_id=asset_id).queued()
     if not cache.add(key, 1, timeout=queued_ttl_seconds):
         logger.info(
             "Backfill already queued for asset_id=%s (source=%s) — skipping",
@@ -49,11 +38,10 @@ def request_backfill(
         return False
 
     # Queue the job
-    fetch_historical_data.delay(watchlist_asset_id)
+    fetch_historical_data.delay(asset_id)
     logger.info(
-        "Backfill scheduled for asset_id=%s symbol=%s by %s",
+        "Backfill scheduled for asset_id=%s by %s",
         asset_id,
-        wla.asset.symbol,
         source,
     )
     return True

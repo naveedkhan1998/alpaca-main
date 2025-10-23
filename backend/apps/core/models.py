@@ -7,12 +7,40 @@ from apps.account.models import User
 # Create your models here.
 
 
+class SyncStatus(models.Model):
+    """Global sync status for asset synchronization"""
+
+    SYNC_TYPE_CHOICES = [
+        ("assets", "Assets"),
+    ]
+
+    sync_type = models.CharField(
+        max_length=20,
+        choices=SYNC_TYPE_CHOICES,
+        default="assets",
+        unique=True
+    )
+    last_sync_at = models.DateTimeField(blank=True, null=True)
+    total_items = models.IntegerField(default=0)
+    is_syncing = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Sync Status"
+        verbose_name_plural = "Sync Statuses"
+
+    def __str__(self):
+        return f"{self.sync_type} sync - Last: {self.last_sync_at}"
+
+
 class AlpacaAccount(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(default="ADMIN", max_length=255)
     api_key = models.CharField(default=" ", max_length=255)
     api_secret = models.CharField(default=" ", max_length=255)
     last_updated = models.DateTimeField(auto_now=True)
+    last_sync_at = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self) -> str:

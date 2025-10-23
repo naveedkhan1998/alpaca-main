@@ -82,6 +82,7 @@ export const baseApi = createApi({
     'Candle',
     'PaperTrade',
     'Instrument',
+    'SyncStatus',
   ],
   endpoints: builder => ({
     healthCheck: builder.query<void, void>({

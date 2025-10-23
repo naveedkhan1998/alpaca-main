@@ -189,6 +189,50 @@ const assetApi = baseApi.injectEndpoints({
         'Candle',
       ],
     }),
+
+    // Get sync status
+    getSyncStatus: builder.query<
+      {
+        last_sync_at: string | null;
+        total_assets: number;
+        needs_sync: boolean;
+        is_syncing: boolean;
+      },
+      void
+    >({
+      query: () => ({
+        url: 'core/alpaca/sync_status/',
+        method: 'GET',
+        headers: {
+          'Content-type': 'application/json',
+        },
+      }),
+      transformResponse: (response: {
+        msg: string;
+        data: {
+          last_sync_at: string | null;
+          total_assets: number;
+          needs_sync: boolean;
+          is_syncing: boolean;
+        };
+      }) => response.data,
+      providesTags: ['SyncStatus'],
+    }),
+
+    // Sync assets
+    syncAssets: builder.mutation<
+      { msg: string; data: string },
+      void
+    >({
+      query: () => ({
+        url: 'core/alpaca/sync_assets/',
+        method: 'POST',
+        headers: {
+          'Content-type': 'application/json',
+        },
+      }),
+      invalidatesTags: ['Asset', 'SyncStatus'],
+    }),
   }),
 });
 
@@ -200,5 +244,7 @@ export const {
   useGetAssetByIdQuery,
   useGetAssetCandlesQuery,
   useLazyGetAssetCandlesQuery,
+  useGetSyncStatusQuery,
+  useSyncAssetsMutation,
 } = assetApi;
 export { assetApi };
