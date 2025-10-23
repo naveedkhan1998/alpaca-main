@@ -395,13 +395,25 @@ class WebsocketClient:
 
         # Check if backfill is currently running
         running_key = f"backfill:running:{asset_id}"
-        if cache.get(running_key):
-            return False
+        # To avoid crashes on free tier Redis in prod, wrap in try/except
+        try:
+            if cache.get(running_key):
+                return False
+        except Exception as e:
+            logger.warning(f"Failed to check cache for running backfill {running_key}: {e}")
+            # Assume not running if we can't check
+            pass
 
         # Check if backfill has been explicitly marked as complete
         completion_key = f"backfill:complete:{asset_id}"
-        if cache.get(completion_key):
-            return True
+        # To avoid crashes on free tier Redis in prod, wrap in try/except
+        try:
+            if cache.get(completion_key):
+                return True
+        except Exception as e:
+            logger.warning(f"Failed to check cache for backfill completion {completion_key}: {e}")
+            # Assume not complete if we can't check
+            pass
 
         # For assets without explicit completion flag, use heuristics
         # Check if we have sufficient historical 1T data coverage
