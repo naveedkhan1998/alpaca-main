@@ -118,17 +118,17 @@ const MainChart: React.FC<MainChartProps> = ({
 
     const companyName = document.createElement('span');
     companyName.className =
-      'hidden text-sm font-bold text-foreground tracking-tight';
+      'hidden text-sm font-bold tracking-tight text-foreground';
     companyName.textContent = obj?.name || '';
 
     const exchangeBadge = document.createElement('span');
     exchangeBadge.className =
-      'text-xs px-2 py-1 font-semibold bg-primary/15 text-primary rounded-lg border border-primary/30 shadow-sm';
+      'px-2 py-1 text-xs font-semibold border rounded-lg shadow-sm bg-primary/15 text-primary border-primary/30';
     exchangeBadge.textContent = obj?.symbol || '';
 
     const timeframeBadge = document.createElement('span');
     timeframeBadge.className =
-      'text-xs px-2 py-1 font-semibold bg-muted/80 text-muted-foreground rounded-lg border border-border/50';
+      'px-2 py-1 text-xs font-semibold border rounded-lg bg-muted/80 text-muted-foreground border-border/50';
     timeframeBadge.textContent = `${timeframe}m`;
     timeframeBadgeRef.current = timeframeBadge;
 
@@ -163,7 +163,7 @@ const MainChart: React.FC<MainChartProps> = ({
 
             const labelSpan = document.createElement('span');
             labelSpan.className =
-              'font-bold text-muted-foreground uppercase tracking-wide';
+              'font-bold tracking-wide uppercase text-muted-foreground';
             labelSpan.textContent = label;
 
             const valueSpan = document.createElement('span');
@@ -181,7 +181,7 @@ const MainChart: React.FC<MainChartProps> = ({
 
           const labelSpan = document.createElement('span');
           labelSpan.className =
-            'font-bold text-muted-foreground uppercase tracking-wide';
+            'font-bold tracking-wide uppercase text-muted-foreground';
           labelSpan.textContent = 'Price';
 
           const valueSpan = document.createElement('span');

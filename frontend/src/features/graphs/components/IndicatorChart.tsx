@@ -252,13 +252,11 @@ const IndicatorChart: React.FC<IndicatorChartProps> = ({
 
   return (
     <div className="w-full h-full">
-      {(rsiData && rsiData.length > 0) || (atrData && atrData.length > 0) ? (
-        <div
-          ref={indicatorChartContainerRef}
-          className="relative w-full h-full"
-          style={{ height: 'calc(100% - 32px)' }}
-        ></div>
-      ) : null}
+      <div
+        ref={indicatorChartContainerRef}
+        className="relative w-full h-full"
+        style={{ height: 'calc(100% - 32px)' }}
+      />
     </div>
   );
 };
