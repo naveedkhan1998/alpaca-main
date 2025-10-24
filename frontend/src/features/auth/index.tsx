@@ -255,7 +255,7 @@ const LoginRegPage: React.FC = () => {
             </div>
 
             {/* Right Panel - Auth Forms */}
-            <div className="relative flex items-start justify-center px-4 py-6 overflow-y-auto col-span-full lg:col-span-1 lg:items-center lg:p-6 bg-background/50 backdrop-blur-sm safe-top safe-bottom">
+            <div className="relative flex items-start justify-center px-4 py-6 overflow-y-auto [@media(min-height:1080px)]:items-center col-span-full lg:col-span-1 lg:p-6 bg-background/50 backdrop-blur-sm safe-top safe-bottom">
               <div className="w-full max-w-md space-y-6 lg:space-y-8">
                 <Tabs
                   value={activeTab}
