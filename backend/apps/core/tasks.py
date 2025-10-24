@@ -552,6 +552,382 @@ def fetch_historical_data(asset_id: int):
         cache.delete(queued_key)
 
 
+@shared_task(name="check_watchlist_candles")
+def check_watchlist_candles():
+    """
+    Periodic task to check watchlist assets for missing 1T candles in the last month.
+    If missing candles are found, fetch them from Alpaca and resample higher timeframes.
+    Only runs during North American market hours (9:30 AM - 4:00 PM ET, weekdays).
+    """
+    from django.utils import timezone
+
+    now = timezone.now()
+
+    # Check if it's market hours
+    if not _is_market_hours(now):
+        logger.info("Not market hours, skipping watchlist candle check")
+        return
+
+    logger.info("Starting watchlist candle check task")
+
+    # Get all active watchlist assets
+    watchlist_assets = WatchListAsset.objects.filter(
+        is_active=True,
+        watchlist__is_active=True
+    ).select_related("asset", "watchlist").distinct("asset")
+
+    end_date = timezone.now()
+    start_date = end_date - timedelta(days=30)  # Last 1 month
+
+    total_missing_found = 0
+    assets_processed = 0
+
+    for wla in watchlist_assets:
+        asset = wla.asset
+        symbol = asset.symbol
+
+        try:
+            # Skip if backfill is currently running for this asset
+            running_key = cache_keys.backfill(asset.id).running()
+            try:
+                if cache.get(running_key):
+                    logger.info(f"Backfill running for {symbol}, skipping candle check")
+                    continue
+            except Exception as e:
+                logger.warning(f"Failed to check backfill status for {symbol}: {e}")
+                # Continue anyway if we can't check
+
+            # Check for missing 1T candles in the last month
+            # We'll look for gaps in the timestamp sequence during market hours
+            missing_periods = _find_missing_candle_periods(asset, start_date, end_date)
+
+            if not missing_periods:
+                logger.debug(f"No missing candles for {symbol}")
+                continue
+
+            logger.info(f"Found {len(missing_periods)} missing periods for {symbol}")
+
+            # Fetch missing data from Alpaca
+            fetched_count = _fetch_missing_candles(asset, missing_periods)
+            total_missing_found += fetched_count
+
+            # Resample higher timeframes for the affected periods
+            if fetched_count > 0:
+                _resample_higher_timeframes(asset, start_date, end_date)
+
+        except Exception as e:
+            logger.error(f"Error processing {symbol}: {e}", exc_info=True)
+            continue
+
+        assets_processed += 1
+
+    logger.info(f"Watchlist candle check completed. Processed {assets_processed} assets, fetched {total_missing_found} missing candles")
+
+
+def _find_missing_candle_periods(asset, start_date, end_date):
+    """
+    Find periods where 1T candles are missing during market hours.
+    Returns list of (start, end) tuples for missing periods.
+    """
+
+    missing_periods = []
+
+    # Get all existing 1T candles in the period, ordered by timestamp
+    existing_candles = list(
+        Candle.objects.filter(
+            asset=asset,
+            timeframe="1T",
+            timestamp__gte=start_date,
+            timestamp__lt=end_date
+        ).order_by("timestamp").values_list("timestamp", flat=True)
+    )
+
+    if not existing_candles:
+        # No candles at all, return the entire period
+        return [(start_date, end_date)]
+
+    # Check for gaps between consecutive candles
+    prev_ts = None
+    for ts in existing_candles:
+        if prev_ts and _is_market_hours(prev_ts):
+            # Calculate expected next timestamp (1 minute later)
+            expected_next = prev_ts + timedelta(minutes=1)
+
+            # If there's a gap and we're still in market hours, it's missing
+            if expected_next < ts and _is_market_hours(expected_next):
+                missing_periods.append((expected_next, ts))
+
+        prev_ts = ts
+
+    # Check if we need data before the first candle
+    first_candle = existing_candles[0]
+    if start_date < first_candle and _is_market_hours(start_date):
+        missing_periods.append((start_date, first_candle))
+
+    # Check if we need data after the last candle
+    last_candle = existing_candles[-1]
+    if last_candle < end_date and _is_market_hours(last_candle + timedelta(minutes=1)):
+        missing_periods.append((last_candle + timedelta(minutes=1), end_date))
+
+    return missing_periods
+
+
+def _fetch_missing_candles(asset, missing_periods):
+    """
+    Fetch missing 1T candles from Alpaca for the given periods.
+    Returns the number of candles fetched.
+    """
+    service = alpaca_service
+    symbol = asset.symbol
+    total_fetched = 0
+
+    for start_period, end_period in missing_periods:
+        try:
+            # Fetch in chunks to avoid API limits
+            current_end = end_period
+            chunk_days = 7  # Fetch 1 week at a time
+
+            while current_end > start_period:
+                chunk_start = max(start_period, current_end - timedelta(days=chunk_days))
+
+                start_str = chunk_start.strftime("%Y-%m-%dT%H:%M:%SZ")
+                end_str = current_end.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+                try:
+                    resp = service.get_historic_bars(
+                        symbol=symbol,
+                        start=start_str,
+                        end=end_str,
+                        sort="desc",
+                        timeframe="1T"
+                    )
+                except Exception as e:
+                    logger.error(f"API error fetching {symbol} {chunk_start}->{current_end}: {e}")
+                    current_end = chunk_start
+                    continue
+
+                bars = (resp or {}).get("bars") or []
+                candles = []
+
+                for bar in bars:
+                    ts = datetime.fromisoformat(bar["t"].replace("Z", "+00:00"))
+                    if not _is_market_hours(ts):
+                        continue
+
+                    candles.append(
+                        Candle(
+                            asset=asset,
+                            timestamp=ts,
+                            open=float(bar["o"]),
+                            high=float(bar["h"]),
+                            low=float(bar["l"]),
+                            close=float(bar["c"]),
+                            volume=int(bar.get("v", 0)),
+                            trade_count=bar.get("n"),
+                            vwap=bar.get("vw"),
+                            timeframe="1T",
+                        )
+                    )
+
+                if candles:
+                    Candle.objects.bulk_create(candles, ignore_conflicts=True)
+                    total_fetched += len(candles)
+                    logger.debug(f"Fetched {len(candles)} candles for {symbol} in {chunk_start}->{current_end}")
+
+                current_end = chunk_start
+
+        except Exception as e:
+            logger.error(f"Error fetching missing candles for {symbol}: {e}", exc_info=True)
+            continue
+
+    return total_fetched
+
+
+def _resample_higher_timeframes(asset, start_date, end_date):
+    """
+    Resample higher timeframes from 1T candles for the given period.
+    Uses similar logic to fetch_historical_data task.
+    Only resamples if backfill is complete (following websocket service logic).
+    """
+    from django.db import connection
+
+    # Check if backfill is complete before resampling higher TFs
+    # This follows the same logic as websocket_service._is_historical_backfill_complete
+    if not _is_backfill_complete_for_asset(asset):
+        logger.info(f"Skipping higher TF resampling for {asset.symbol} - backfill not complete")
+        return
+
+    for tf, delta in const.TF_LIST:
+        if tf == "1T":
+            continue
+
+        try:
+            # Build buckets using SQL for efficiency
+            anchor = "1970-01-01 09:30:00-05:00"
+
+            with connection.cursor() as cur:
+                cur.execute(
+                    """
+                    WITH m1 AS (
+                        SELECT id, timestamp, open, high, low, close, volume
+                        FROM core_candle
+                        WHERE asset_id = %s AND timeframe = '1T' AND timestamp >= %s AND timestamp < %s
+                    ),
+                    binned AS (
+                        SELECT
+                            date_bin(INTERVAL %s, timestamp, TIMESTAMP %s) AS bucket,
+                            id,
+                            open, high, low, close, volume,
+                            row_number() OVER (PARTITION BY date_bin(INTERVAL %s, timestamp, TIMESTAMP %s) ORDER BY timestamp ASC) AS rn_open,
+                            row_number() OVER (PARTITION BY date_bin(INTERVAL %s, timestamp, TIMESTAMP %s) ORDER BY timestamp DESC) AS rn_close
+                        FROM m1
+                    ),
+                    agg AS (
+                        SELECT
+                            bucket,
+                            MIN(low) AS l,
+                            MAX(high) AS h,
+                            SUM(volume) AS v,
+                            ARRAY_AGG(id ORDER BY id) AS ids,
+                            MIN(CASE WHEN rn_open=1 THEN open END) AS o,
+                            MIN(CASE WHEN rn_close=1 THEN close END) AS c
+                        FROM binned
+                        GROUP BY bucket
+                    )
+                    SELECT bucket, o, h, l, c, v, ids
+                    FROM agg
+                    ORDER BY bucket DESC
+                    ;
+                    """,
+                    [
+                        asset.id,
+                        start_date,
+                        end_date,
+                        delta,
+                        anchor,
+                        delta,
+                        anchor,
+                        delta,
+                        anchor,
+                    ],
+                )
+                rows = cur.fetchall()
+
+            if not rows:
+                continue
+
+            # Upsert aggregated candles
+            buckets = [row[0] for row in rows]
+            existing = {
+                c.timestamp: c
+                for c in Candle.objects.filter(
+                    asset=asset, timeframe=tf, timestamp__in=buckets
+                )
+            }
+
+            to_create = []
+            to_update = []
+            for bucket, o, h, low_, c, v, ids in rows:
+                if bucket in existing:
+                    cobj = existing[bucket]
+                    cobj.open = float(o)
+                    cobj.high = float(h)
+                    cobj.low = float(low_)
+                    cobj.close = float(c)
+                    cobj.volume = int(v or 0)
+                    cobj.minute_candle_ids = list(ids) if ids else []
+                    to_update.append(cobj)
+                else:
+                    to_create.append(
+                        Candle(
+                            asset=asset,
+                            timeframe=tf,
+                            timestamp=bucket,
+                            open=float(o),
+                            high=float(h),
+                            low=float(low_),
+                            close=float(c),
+                            volume=int(v or 0),
+                            minute_candle_ids=list(ids) if ids else [],
+                        )
+                    )
+
+            if to_create:
+                Candle.objects.bulk_create(to_create, ignore_conflicts=True)
+            if to_update:
+                Candle.objects.bulk_update(
+                    to_update,
+                    [
+                        "open",
+                        "high",
+                        "low",
+                        "close",
+                        "volume",
+                        "minute_candle_ids",
+                    ],
+                )
+            logger.info(
+                f"Resampled {len(to_create)} new and updated {len(to_update)} {tf} candles for {asset.symbol}"
+            )
+
+        except Exception as e:
+            logger.error(
+                f"Error resampling {tf} for {asset.symbol}: {e}", exc_info=True
+            )
+
+
+def _is_backfill_complete_for_asset(asset):
+    """
+    Check if historical backfill is complete for this asset.
+    Mirrors websocket_service._is_historical_backfill_complete logic.
+    """
+    # Check if backfill is currently running
+    running_key = cache_keys.backfill(asset.id).running()
+    try:
+        if cache.get(running_key):
+            return False
+    except Exception as e:
+        logger.warning(f"Failed to check cache for running backfill {running_key}: {e}")
+        # Assume not running if we can't check
+        pass
+
+    # Check if backfill has been explicitly marked as complete
+    completion_key = cache_keys.backfill(asset.id).completed()
+    try:
+        if cache.get(completion_key):
+            return True
+    except Exception as e:
+        logger.warning(f"Failed to check cache for backfill completion {completion_key}: {e}")
+        # Assume not complete if we can't check
+        pass
+
+    # For assets without explicit completion flag, use heuristics
+    # Check if we have sufficient historical 1T data coverage (at least 2 days of 1T data)
+    now_dt = timezone.now()
+    coverage_threshold = now_dt - timedelta(days=4)
+
+    earliest_1t = (
+        Candle.objects.filter(asset=asset, timeframe="1T")
+        .order_by("timestamp")
+        .first()
+    )
+
+    if not earliest_1t or earliest_1t.timestamp > coverage_threshold:
+        # Not enough historical coverage, let backfill handle higher TFs
+        return False
+
+    # Check if higher TF already has historical data (not just today's data)
+    historical_threshold = now_dt.replace(
+        hour=0, minute=0, second=0, microsecond=0
+    ) - timedelta(days=1)
+    existing_historical_higher_tf = Candle.objects.filter(
+        asset=asset, timeframe__in=["5T", "15T", "30T", "1H", "4H", "1D"],
+        timestamp__lt=historical_threshold
+    ).exists()
+
+    return existing_historical_higher_tf
+
+
 def _is_market_hours(dt: datetime) -> bool:
     eastern = pytz.timezone("US/Eastern")
     if dt.tzinfo is None:
