@@ -93,8 +93,7 @@ def alpaca_sync_task(asset_classes: list = None, batch_size: int = 1000):
 
         # Get or create sync status for assets
         sync_status, created = SyncStatus.objects.get_or_create(
-            sync_type="assets",
-            defaults={"total_items": 0, "is_syncing": True}
+            sync_type="assets", defaults={"total_items": 0, "is_syncing": True}
         )
 
         # Mark as syncing

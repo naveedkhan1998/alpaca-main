@@ -29,7 +29,10 @@ import {
   setDensity,
 } from './assetSlice';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
-import { useGetSyncStatusQuery, useSyncAssetsMutation } from '@/api/assetService';
+import {
+  useGetSyncStatusQuery,
+  useSyncAssetsMutation,
+} from '@/api/assetService';
 
 const AssetsPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -164,10 +167,10 @@ const AssetsPage: React.FC = () => {
           <AlertDescription className="flex items-center justify-between">
             <span>
               {syncStatus.is_syncing
-                ? "Assets are currently being synced..."
+                ? 'Assets are currently being synced...'
                 : syncStatus.total_assets === 0
-                ? "No assets found in your database. Sync assets to get started."
-                : "Your asset data is outdated. Consider syncing to get the latest information."}
+                  ? 'No assets found in your database. Sync assets to get started.'
+                  : 'Your asset data is outdated. Consider syncing to get the latest information.'}
             </span>
             {!syncStatus.is_syncing && (
               <Button
@@ -176,7 +179,9 @@ const AssetsPage: React.FC = () => {
                 size="sm"
                 className="ml-4"
               >
-                <RefreshCcw className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+                <RefreshCcw
+                  className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`}
+                />
                 {isSyncing ? 'Syncing...' : 'Sync Assets'}
               </Button>
             )}

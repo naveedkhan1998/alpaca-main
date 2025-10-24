@@ -5,7 +5,7 @@
 > **Quick Start:**
 >
 > ```bash
-> npm install    # Install all dependencies
+> npm install    # Install all dependencies with prerequisite checks
 > npm run dev    # Start development (frontend + backend)
 > ```
 
@@ -34,6 +34,7 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
   - [Development Workflow](#development-workflow)
     - [NX Monorepo Commands](#nx-monorepo-commands)
     - [Hot Reload](#hot-reload)
+    - [Database Development](#database-development)
     - [Running Tests](#running-tests)
   - [Testing \& Monitoring](#testing--monitoring)
     - [Follow Celery logs](#follow-celery-logs)
@@ -81,52 +82,13 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
 | **Frontend**          | React · Vite                                                                            |
 | **Database**          | PostgreSQL                                                                              |
 | **Container / infra** | Docker · Docker Compose                                                                 |
-| **Dev tooling**       | `uv` (deps) · `black` (format) · `ruff` (lint) · `pytest` (tests) · `vitest` (FE tests) |
+| **Dev tooling**       | `uv` (deps) · `black` (format) · `ruff` (lint) · `pytest` (tests) · `vitest` (FE tests) · **Smart setup scripts** |
 
 ---
 
 ## Architecture
 
-```
-        ┌──────────────────────┐
-        │   Users / Clients    │
-        └─────────┬────────────┘
-                  │ HTTP / WebSocket
-                  │
-            ┌─────▼─────────────┐
-            │                   │
-      ┌─────▼─────┐       ┌─────▼─────┐
-      │ Frontend  │       │   Flower  │
-      │  (5173)   │       │  (5555)   │
-      │ React +   │       │ Dashboard │
-      │  Vite     │       └───────────┘
-      │ (Local)   │
-      └───────────┘
-            │
-            │ API calls
-            │
-      ┌─────▼─────────────┬────────────────────────┐
-      │                   │                        │
-┌─────▼────────────┐ ┌────▼──────────────┐ ┌──────▼──────────┐
-│ Django Backend   │ │ WebSocket Service │ │   NX Monorepo   │
-│ API (ASGI)       │ │ (Django mgmt cmd, │ │  Orchestration  │
-│ (Docker: 8000)   │ │  Docker container)│ │   (Local CLI)   │
-└─────┬────────────┘ └───────────────────┘ └─────────────────┘
-      │
-      │
-      │
-      ┌───────────────┼───────────────┐
-      │               │               │
-┌─────▼───────┐ ┌─────▼───────┐ ┌─────▼───────┐
-│ PostgreSQL  │ │   Redis     │ │   Celery    │
-│   DB        │ │   Broker    │ │ Workers +   │
-│ (Docker)    │ │  (Docker)   │ │   Beat      │
-│             │ │             │ │  (Docker)   │
-└─────────────┘ └─────────────┘ └─────────────┘
-      ▲                             │
-      │                             │
-      └──────────── Task Queue ─────┘
-```
+![Architecture Diagram](docs/architecture_diagram.svg)
 
 ### Service Breakdown
 
@@ -139,11 +101,11 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
 | **Redis**          | Cache + Message broker  | 6379 | Docker      | Celery task queue                     |
 | **Celery Workers** | Background tasks        | N/A  | Docker      | Async job processing                  |
 | **Celery Beat**    | Task scheduler          | N/A  | Docker      | Periodic task execution               |
-| **WebSocket**      | Real-time data stream   | 8001 | Docker      | Market data WebSocket service         |
+| **WebSocket**      | Real-time data stream   | N/A  | Docker      | Market data WebSocket service         |
 | **Flower**         | Task monitoring         | 5555 | Docker      | Celery dashboard                      |
 
 > **Infrastructure services** (backend, db, cache, broker, workers, beat, websocket, flower) are in **`docker-compose.yml`**.  
-> **Frontend runs locally** via NX for fast hot reload. **NX orchestrates** all tasks across the monorepo.
+> **Frontend runs locally** via NX for fast hot reload. **NX orchestrates** all tasks across the monorepo with **smart prerequisite checking**.
 
 ---
 
@@ -151,9 +113,11 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
 
 - **Node.js** (v18 or higher) & **npm** installed
 - **Docker** & **Docker Compose** installed
-- **Python 3.13** (for backend development)
-- An **ICICI Alpaca API** key & secret
-- Create a `.env` file from `.env.local` with your API credentials
+- **uv** (Python package installer) installed
+- An **Alpaca API** key & secret
+- Create a `.envs/.env` file with your API credentials
+
+> **Note:** The setup will automatically check for all prerequisites and guide you through any missing requirements.
 
 ---
 
@@ -163,23 +127,20 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
 git clone https://github.com/naveedkhan1998/alpaca-main.git
 cd alpaca-main
 
-# Option 1: Install everything (NX + Frontend + Backend)
-npm run install:all
-
-# Option 2: Install individually
-npm install              # Install NX only
-npm run install:frontend # Install frontend dependencies
-npm run install:backend  # Install backend dependencies
+# Install everything automatically (NX + Frontend + Backend)
+npm install
 ```
 
-**Installation Options:**
+**What happens during installation:**
 
-- **`npm run install:all`** - Installs NX, frontend dependencies (~768 packages), and backend dependencies (~72 Python packages)
-- **`npm run install:frontend`** - Installs only frontend dependencies (useful for production frontend builds)
-- **`npm run install:backend`** - Installs only backend dependencies (useful for backend-only deployments)
-- **`npm install`** - Installs only NX for monorepo orchestration
+- ✅ Checks for Node.js, Docker, and uv installation
+- ✅ Validates Alpaca API credentials in `.envs/.env`
+- ✅ Installs NX monorepo tooling
+- ✅ Installs frontend dependencies (~768 packages)
+- ✅ Installs and syncs backend dependencies (~72 Python packages)
+- ✅ Creates setup completion marker
 
-> **Production Note:** In production environments, you can run `cd frontend && npm install` directly in the frontend directory without triggering the entire monorepo setup.
+> **Note:** If any prerequisites are missing, the installation will stop and provide clear instructions on what to install.
 
 ---
 
@@ -188,6 +149,9 @@ npm run install:backend  # Install backend dependencies
 ### Quick Start (Recommended)
 
 ```bash
+# Install everything automatically
+npm install
+
 # Start all services (frontend + backend infrastructure)
 npm run dev
 ```
@@ -197,6 +161,8 @@ This single command will:
 - 🚀 Start the frontend Vite dev server (with hot reload)
 - 🐳 Start Docker infrastructure (PostgreSQL, Redis, Backend API, Celery, WebSocket, Flower)
 - ⚡ Run both in parallel automatically via NX
+
+> **Note:** `npm install` includes prerequisite checks and will guide you if anything is missing.
 
 ### Individual Services
 
@@ -219,7 +185,6 @@ Once everything is running, you can access:
 - **Backend API**: [http://localhost:8000](http://localhost:8000) — Django REST API
 - **Django Admin**: [http://localhost:8000/admin](http://localhost:8000/admin) — Admin interface
 - **Celery Flower**: [http://localhost:5555](http://localhost:5555) — Task monitoring dashboard
-- **WebSocket Service**: [ws://localhost:8001](ws://localhost:8001) — Real-time market data
 
 > **Note:** Frontend runs locally with Vite for fast hot reload. Backend services run in Docker for consistency.
 
@@ -239,22 +204,28 @@ npm run dev:backend      # Backend only
 
 # Code Quality
 npm run lint             # Lint both projects
-npm run lint:frontend    # Lint frontend only
-npm run lint:backend     # Lint backend only
+npm run lint:fix         # Lint and auto-fix both projects
 npm run format           # Format both projects
-npm run format:frontend  # Format frontend only
-npm run format:backend   # Format backend only
+npm run format:check     # Check formatting without changes
 
 # Testing
 npm run test             # Test both projects
-npm run test:frontend    # Test frontend only
-npm run test:backend     # Test backend only
+npm run test:coverage    # Test both with coverage reports
+
+# Database Management
+npm run makemigrations       # Make migrations in Docker container
+npm run makemigrations:local # Make migrations locally (faster for development)
+npm run migrate              # Apply migrations in Docker container
 
 # Docker Management
 npm run docker:up        # Start Docker services
 npm run docker:down      # Stop Docker services
 npm run docker:logs      # View Docker logs
 npm run docker:clean     # Clean Docker volumes
+npm run backend:shell    # Shell into backend Docker container
+
+# Build
+npm run build            # Build frontend for production
 ```
 
 ### Hot Reload
@@ -262,17 +233,28 @@ npm run docker:clean     # Clean Docker volumes
 - **Frontend**: Vite dev server with instant HMR (Hot Module Replacement)
 - **Backend**: Code mounted as Docker volume, auto-reloads on changes
 
+### Database Development
+
+For faster development iterations, use local migration commands:
+
+```bash
+# Make migrations locally (faster than Docker)
+npm run makemigrations:local
+
+# Apply migrations in container
+npm run migrate
+```
+
+> **Tip:** Use `makemigrations:local` during development for quicker feedback, then `migrate` to apply in the container.
+
 ### Running Tests
 
 ```bash
 # All tests with NX caching
 npm run test
 
-# Frontend tests (Vitest)
-npm run test:frontend
-
-# Backend tests (pytest)
-npm run test:backend
+# Tests with coverage reports
+npm run test:coverage
 ```
 
 > **Tip:** NX caches test results. Only changed projects and their dependents will re-run tests!

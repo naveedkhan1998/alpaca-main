@@ -220,10 +220,7 @@ const assetApi = baseApi.injectEndpoints({
     }),
 
     // Sync assets
-    syncAssets: builder.mutation<
-      { msg: string; data: string },
-      void
-    >({
+    syncAssets: builder.mutation<{ msg: string; data: string }, void>({
       query: () => ({
         url: 'core/alpaca/sync_assets/',
         method: 'POST',

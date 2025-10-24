@@ -4,11 +4,11 @@
   "private": true,
   "description": "Django + React monorepo managed with NX",
   "scripts": {
-    "install:all": "npm install && cd frontend && npm install && cd .. && cd backend && uv sync && cd ..",
+    "preinstall": "node scripts/preinstall-checks.js",
+    "install": "cd frontend && npm install && cd .. && cd backend && uv sync && cd .. && node -e \"const fs=require('fs');fs.mkdirSync('.nx',{recursive:true});fs.writeFileSync('.nx/bootstrap-complete',new Date().toISOString());\"",
     "install:frontend": "cd frontend && npm install && cd ..",
     "install:backend": "cd backend && uv sync && cd ..",
-    "dev:old": "node scripts/dev-bootstrap.js",
-    "dev": "nx run-many -t dev --parallel --color",
+    "dev": "node scripts/dev-check.js && nx run-many -t dev --parallel --color",
     "dev:frontend": "nx run frontend:dev",
     "dev:backend": "nx run backend:dev",
     "lint": "nx run-many -t lint --color",
@@ -24,6 +24,7 @@
     "docker:clean": "docker compose down -v",
     "migrate": "nx run backend:migrate",
     "makemigrations": "nx run backend:makemigrations",
+    "makemigrations:local": "cd backend && uv run python manage.py makemigrations",
     "backend:shell": "nx run backend:shell"
   },
   "devDependencies": {
