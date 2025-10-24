@@ -17,6 +17,12 @@ function hasAllDependencies() {
   return directoriesExist && fs.existsSync(markerFile);
 }
 
+// Skip checks in CI environment
+if (process.env.CI) {
+  console.log('✅ Running in CI environment - skipping dependency checks');
+  process.exit(0);
+}
+
 if (!hasAllDependencies()) {
   console.error('❌ Dependencies not installed. Please run `npm install` first.');
   process.exit(1);
