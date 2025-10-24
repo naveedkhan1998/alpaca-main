@@ -49,6 +49,13 @@ function checkEnvVars() {
 
 console.log('\n🔍 Checking prerequisites...\n');
 
+// Skip checks in CI environment
+if (process.env.CI) {
+  console.log('✅ Running in CI environment - skipping prerequisite checks');
+  console.log('\n✅ Prerequisites check skipped for CI...\n');
+  process.exit(0);
+}
+
 checkCommand('node', 'Node.js');
 checkCommand('docker', 'Docker');
 checkCommand('uv', 'uv');
