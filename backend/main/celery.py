@@ -24,10 +24,14 @@ app.conf.beat_schedule = {
     #     "schedule": 6000,
     #     "relative": True,
     # },
+    "check_watchlist_candles": {
+        "task": "check_watchlist_candles",
+        "schedule": 3600,  # Every 1 hour
+    },
 }
 
 
-CELERY_TIMEZONE = "Asia/Kolkata"
+CELERY_TIMEZONE = "America/New_York"
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.
 # - namespace='CELERY' means all celery-related configuration keys
