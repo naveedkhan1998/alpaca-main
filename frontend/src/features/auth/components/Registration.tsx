@@ -132,7 +132,7 @@ export default function Registration() {
     >
       <div className="space-y-3 text-center">
         <motion.h2
-          className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent"
+          className="text-3xl font-bold text-transparent bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -188,14 +188,14 @@ export default function Registration() {
             Full Name
           </Label>
           <div className="relative group">
-            <User className="absolute w-4 h-4 left-3 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <User className="absolute w-4 h-4 transition-colors left-3 top-3 text-muted-foreground group-focus-within:text-primary" />
             <Input
               id="registerName"
               placeholder="John Doe"
               value={registerName}
               onChange={e => setRegisterName(e.target.value)}
               required
-              className="pl-10 h-11 transition-all border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="pl-10 transition-all h-11 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>
@@ -205,7 +205,7 @@ export default function Registration() {
             Email Address
           </Label>
           <div className="relative group">
-            <Mail className="absolute w-4 h-4 left-3 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Mail className="absolute w-4 h-4 transition-colors left-3 top-3 text-muted-foreground group-focus-within:text-primary" />
             <Input
               id="registerEmail"
               type="email"
@@ -213,7 +213,7 @@ export default function Registration() {
               value={registerEmail}
               onChange={e => setRegisterEmail(e.target.value)}
               required
-              className="pl-10 h-11 transition-all border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="pl-10 transition-all h-11 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>
@@ -223,7 +223,7 @@ export default function Registration() {
             Password
           </Label>
           <div className="relative group">
-            <Lock className="absolute w-4 h-4 left-3 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Lock className="absolute w-4 h-4 transition-colors left-3 top-3 text-muted-foreground group-focus-within:text-primary" />
             <Input
               id="registerPassword"
               type={showPassword ? 'text' : 'password'}
@@ -231,12 +231,12 @@ export default function Registration() {
               value={registerPassword}
               onChange={e => setRegisterPassword(e.target.value)}
               required
-              className="pl-10 pr-10 h-11 transition-all border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="pl-10 pr-10 transition-all h-11 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute transition-colors right-3 top-3 text-muted-foreground hover:text-foreground"
             >
               {showPassword ? (
                 <EyeOff className="w-4 h-4" />
@@ -255,7 +255,7 @@ export default function Registration() {
             Confirm Password
           </Label>
           <div className="relative group">
-            <Lock className="absolute w-4 h-4 left-3 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Lock className="absolute w-4 h-4 transition-colors left-3 top-3 text-muted-foreground group-focus-within:text-primary" />
             <Input
               id="registerPassword2"
               type={showPassword2 ? 'text' : 'password'}
@@ -263,12 +263,12 @@ export default function Registration() {
               value={registerPassword2}
               onChange={e => setRegisterPassword2(e.target.value)}
               required
-              className="pl-10 pr-10 h-11 transition-all border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="pl-10 pr-10 transition-all h-11 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             <button
               type="button"
               onClick={() => setShowPassword2(!showPassword2)}
-              className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute transition-colors right-3 top-3 text-muted-foreground hover:text-foreground"
             >
               {showPassword2 ? (
                 <EyeOff className="w-4 h-4" />
@@ -279,7 +279,7 @@ export default function Registration() {
           </div>
         </div>
 
-        <div className="flex items-start space-x-3 p-4 rounded-lg bg-muted/30 border border-border/50">
+        <div className="flex items-start p-4 space-x-3 border rounded-lg bg-muted/30 border-border/50">
           <Checkbox
             id="terms"
             checked={acceptTerms}
@@ -289,19 +289,19 @@ export default function Registration() {
           />
           <Label
             htmlFor="terms"
-            className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
+            className="text-sm leading-relaxed cursor-pointer text-muted-foreground"
           >
             I agree to the{' '}
             <a
               href="/terms"
-              className="text-primary hover:underline font-medium"
+              className="font-medium text-primary hover:underline"
             >
               Terms of Service
             </a>{' '}
             and{' '}
             <a
               href="/privacy"
-              className="text-primary hover:underline font-medium"
+              className="font-medium text-primary hover:underline"
             >
               Privacy Policy
             </a>
@@ -310,7 +310,7 @@ export default function Registration() {
 
         <Button
           type="submit"
-          className="w-full h-11 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 text-base font-medium"
+          className="w-full text-base font-medium transition-all duration-300 shadow-lg h-11 bg-primary hover:bg-primary/90 hover:shadow-xl"
           disabled={isRegisterLoading}
         >
           {isRegisterLoading ? (
@@ -338,7 +338,7 @@ export default function Registration() {
           <span className="w-full border-t border-border/50" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="px-3 py-1 rounded-full bg-background text-muted-foreground font-medium">
+          <span className="px-3 py-1 font-medium rounded-full bg-background text-muted-foreground">
             Or continue with
           </span>
         </div>
@@ -346,7 +346,7 @@ export default function Registration() {
 
       <div className="w-full">
         {isGoogleLoginLoading ? (
-          <div className="flex items-center justify-center p-4 rounded-lg border border-border/50 bg-muted/50">
+          <div className="flex items-center justify-center p-4 border rounded-lg border-border/50 bg-muted/50">
             <Loader2 className="w-5 h-5 mr-2 animate-spin text-primary" />
             <span className="text-sm font-medium">Connecting to Google...</span>
           </div>

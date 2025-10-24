@@ -125,7 +125,7 @@ const Login: React.FC = () => {
     >
       <div className="space-y-3 text-center">
         <motion.h2
-          className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent"
+          className="text-3xl font-bold text-transparent bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -181,7 +181,7 @@ const Login: React.FC = () => {
             Email Address
           </Label>
           <div className="relative group">
-            <Mail className="absolute w-4 h-4 left-3 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Mail className="absolute w-4 h-4 transition-colors left-3 top-3 text-muted-foreground group-focus-within:text-primary" />
             <Input
               id="email"
               type="email"
@@ -189,7 +189,7 @@ const Login: React.FC = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="pl-10 h-11 transition-all border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="pl-10 transition-all h-11 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
               disabled={isLoginLoading}
             />
           </div>
@@ -205,7 +205,7 @@ const Login: React.FC = () => {
             </a>
           </div>
           <div className="relative group">
-            <Lock className="absolute w-4 h-4 left-3 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Lock className="absolute w-4 h-4 transition-colors left-3 top-3 text-muted-foreground group-focus-within:text-primary" />
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
@@ -213,13 +213,13 @@ const Login: React.FC = () => {
               value={formData.password}
               onChange={handleChange}
               required
-              className="pl-10 pr-10 h-11 transition-all border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="pl-10 pr-10 transition-all h-11 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
               disabled={isLoginLoading}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute transition-colors right-3 top-3 text-muted-foreground hover:text-foreground"
               disabled={isLoginLoading}
             >
               {showPassword ? (
@@ -233,7 +233,7 @@ const Login: React.FC = () => {
 
         <Button
           type="submit"
-          className="w-full h-11 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 text-base font-medium"
+          className="w-full text-base font-medium transition-all duration-300 shadow-lg h-11 bg-primary hover:bg-primary/90 hover:shadow-xl"
           disabled={isLoginLoading}
         >
           {isLoginLoading ? (
@@ -261,7 +261,7 @@ const Login: React.FC = () => {
           <span className="w-full border-t border-border/50" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="px-3 py-1 rounded-full bg-background text-muted-foreground font-medium">
+          <span className="px-3 py-1 font-medium rounded-full bg-background text-muted-foreground">
             Or continue with
           </span>
         </div>
@@ -269,7 +269,7 @@ const Login: React.FC = () => {
 
       <div className="w-full">
         {isGoogleLoginLoading ? (
-          <div className="flex items-center justify-center p-4 rounded-lg border border-border/50 bg-muted/50">
+          <div className="flex items-center justify-center p-4 border rounded-lg border-border/50 bg-muted/50">
             <Loader2 className="w-5 h-5 mr-2 animate-spin text-primary" />
             <span className="text-sm font-medium">Connecting to Google...</span>
           </div>

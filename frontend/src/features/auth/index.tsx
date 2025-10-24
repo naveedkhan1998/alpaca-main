@@ -1,3 +1,5 @@
+'use client';
+
 import type React from 'react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -117,17 +119,17 @@ const LoginRegPage: React.FC = () => {
         ))}
       </div>
 
-      <div className="relative flex items-center justify-center h-full px-4 py-8 mx-auto">
+      <div className="relative w-full h-full">
         <motion.div
-          className="w-full max-w-6xl"
+          className="w-full h-full"
           initial={{ opacity: 0, y: 30, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.6, type: 'spring' }}
         >
-          <Card className="grid grid-cols-1 overflow-hidden border-2 shadow-2xl lg:grid-cols-5 bg-card/95 backdrop-blur-xl border-border/50">
-            {/* Left Panel - Features */}
-            <div className="relative hidden col-span-2 p-10 md:block bg-gradient-to-br from-primary via-primary/90 to-accent overflow-y-auto max-h-[90dvh]">
-              <div className="space-y-8">
+          <Card className="grid w-full h-full grid-cols-1 overflow-hidden border-0 rounded-none shadow-none lg:grid-cols-3 bg-card/95 backdrop-blur-xl lg:border-0">
+            {/* Left Panel - Features - Now takes 2/3 of screen */}
+            <div className="relative hidden col-span-2 p-12 overflow-y-auto lg:block bg-gradient-to-br from-primary via-primary/90 to-accent">
+              <div className="max-w-xl space-y-8">
                 {/* Logo/Brand Section */}
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
@@ -193,7 +195,7 @@ const LoginRegPage: React.FC = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.4 }}
-                  className="space-y-4"
+                  className="space-y-4 "
                 >
                   {features.map((feature, index) => (
                     <motion.div
@@ -253,73 +255,75 @@ const LoginRegPage: React.FC = () => {
             </div>
 
             {/* Right Panel - Auth Forms */}
-            <div className="col-span-full p-8 md:p-10 max-h-[90dvh] overflow-y-auto md:col-span-3">
-              <Tabs
-                value={activeTab}
-                onValueChange={setActiveTab}
-                className="space-y-8"
-              >
-                <TabsList className="sticky top-0 z-10 grid w-full grid-cols-2 p-1 border bg-muted/50 backdrop-blur-sm border-border/50">
-                  <TabsTrigger
-                    value="login"
-                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300"
-                  >
-                    <LockIcon className="w-4 h-4 mr-2" />
-                    Login
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="registration"
-                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300"
-                  >
-                    <UserPlusIcon className="w-4 h-4 mr-2" />
-                    Register
-                  </TabsTrigger>
-                </TabsList>
-
-                <AnimatePresence mode="wait">
-                  <TabsContent value="login" className="mt-0">
-                    <motion.div
-                      key="login"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.3 }}
+            <div className="relative flex items-start justify-center px-4 py-6 overflow-y-auto col-span-full lg:col-span-1 lg:items-center lg:p-6 bg-background/50 backdrop-blur-sm safe-top safe-bottom">
+              <div className="w-full max-w-md space-y-6 lg:space-y-8">
+                <Tabs
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                  className="space-y-4 lg:space-y-6"
+                >
+                  <TabsList className="grid w-full grid-cols-2 p-1 border bg-muted/50 backdrop-blur-sm border-border/50">
+                    <TabsTrigger
+                      value="login"
+                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300"
                     >
-                      <Login />
-                    </motion.div>
-                  </TabsContent>
-
-                  <TabsContent value="registration" className="mt-0">
-                    <motion.div
-                      key="registration"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.3 }}
+                      <LockIcon className="w-4 h-4 mr-2" />
+                      Login
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="registration"
+                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300"
                     >
-                      <Registration />
-                    </motion.div>
-                  </TabsContent>
-                </AnimatePresence>
-              </Tabs>
+                      <UserPlusIcon className="w-4 h-4 mr-2" />
+                      Register
+                    </TabsTrigger>
+                  </TabsList>
 
-              <motion.div
-                className="pt-6 mt-6 text-center border-t border-border/50"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
-              >
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  By using this service, you agree to use it responsibly and in
-                  accordance with Alpaca's terms of service.
-                </p>
-                <div className="flex items-center justify-center gap-2 mt-3">
-                  <Shield className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">
-                    Secured connection
-                  </span>
-                </div>
-              </motion.div>
+                  <AnimatePresence mode="wait">
+                    <TabsContent value="login">
+                      <motion.div
+                        key="login"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <Login />
+                      </motion.div>
+                    </TabsContent>
+
+                    <TabsContent value="registration">
+                      <motion.div
+                        key="registration"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <Registration />
+                      </motion.div>
+                    </TabsContent>
+                  </AnimatePresence>
+                </Tabs>
+
+                <motion.div
+                  className="pt-4 mt-4 text-center border-t lg:pt-6 lg:mt-6 border-border/50"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    By using this service, you agree to use it responsibly and
+                    in accordance with Alpaca's terms of service.
+                  </p>
+                  <div className="flex items-center justify-center gap-2 mt-3">
+                    <Shield className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">
+                      Secured connection
+                    </span>
+                  </div>
+                </motion.div>
+              </div>
             </div>
           </Card>
         </motion.div>
