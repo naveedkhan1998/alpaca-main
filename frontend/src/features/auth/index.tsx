@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,7 +11,6 @@ import {
   Shield,
   BarChart4,
   Clock,
-  Smartphone,
   TrendingUp,
   Sparkles,
   ChevronRight,
@@ -25,27 +25,27 @@ const LoginRegPage: React.FC = () => {
     {
       icon: <LineChart className="w-5 h-5" />,
       title: 'Real-time Market Data',
-      description: 'Access live market insights instantly',
-    },
-    {
-      icon: <Shield className="w-5 h-5" />,
-      title: 'Secure Transactions',
-      description: 'Bank-grade security for your peace of mind',
+      description: 'WebSocket streaming for live market updates',
     },
     {
       icon: <BarChart4 className="w-5 h-5" />,
-      title: 'Advanced Analytics',
-      description: 'Comprehensive portfolio analysis tools',
+      title: 'TradingView Charts',
+      description: 'Professional charting with technical indicators',
+    },
+    {
+      icon: <Shield className="w-5 h-5" />,
+      title: 'Django REST API',
+      description: 'Robust backend with Python/Django',
     },
     {
       icon: <Clock className="w-5 h-5" />,
-      title: '24/7 Trading',
-      description: 'Trade anytime, anywhere',
+      title: 'Docker Ready',
+      description: 'Easy deployment with Docker orchestration',
     },
     {
-      icon: <Smartphone className="w-5 h-5" />,
-      title: 'Mobile Access',
-      description: 'Seamless mobile trading experience',
+      icon: <Sparkles className="w-5 h-5" />,
+      title: 'Free Tier Included',
+      description: 'Start with 30 assets at no cost',
     },
   ];
 
@@ -73,7 +73,7 @@ const LoginRegPage: React.FC = () => {
           }}
           transition={{
             duration: 20,
-            repeat: Infinity,
+            repeat: Number.POSITIVE_INFINITY,
             ease: 'easeInOut',
           }}
           style={{ top: '10%', left: '10%' }}
@@ -86,7 +86,7 @@ const LoginRegPage: React.FC = () => {
           }}
           transition={{
             duration: 25,
-            repeat: Infinity,
+            repeat: Number.POSITIVE_INFINITY,
             ease: 'easeInOut',
           }}
           style={{ bottom: '10%', right: '10%' }}
@@ -109,7 +109,7 @@ const LoginRegPage: React.FC = () => {
             }}
             transition={{
               duration: 3 + Math.random() * 2,
-              repeat: Infinity,
+              repeat: Number.POSITIVE_INFINITY,
               delay: Math.random() * 2,
               ease: 'easeInOut',
             }}
@@ -145,7 +145,10 @@ const LoginRegPage: React.FC = () => {
                       <motion.div
                         className="absolute -inset-1 bg-white/10 rounded-xl blur"
                         animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
+                        transition={{
+                          duration: 2,
+                          repeat: Number.POSITIVE_INFINITY,
+                        }}
                       />
                     </div>
                     <div>
@@ -157,7 +160,7 @@ const LoginRegPage: React.FC = () => {
                         className="mt-1 text-white border-0 bg-white/20"
                       >
                         <Sparkles className="w-3 h-3 mr-1" />
-                        Premium Platform
+                        Open Source
                       </Badge>
                     </div>
                   </div>
@@ -171,11 +174,11 @@ const LoginRegPage: React.FC = () => {
                   className="space-y-4"
                 >
                   <h1 className="text-3xl font-bold leading-tight text-white">
-                    Start Your Trading Journey
+                    Market Data Streaming Platform
                   </h1>
                   <p className="text-lg leading-relaxed text-white/80">
-                    Access real-time market data and trade with confidence using
-                    our advanced platform
+                    Full-stack starter kit for building real-time trading
+                    dashboards with Django, React, and TradingView
                   </p>
                   <div className="flex items-center gap-2 pt-2">
                     <TrendingUp className="w-5 h-5 text-white/80" />
@@ -216,7 +219,7 @@ const LoginRegPage: React.FC = () => {
                   ))}
                 </motion.div>
 
-                {/* Testimonial Card */}
+                {/* Info Card */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -228,7 +231,7 @@ const LoginRegPage: React.FC = () => {
                     animate={{ x: ['-100%', '100%'] }}
                     transition={{
                       duration: 3,
-                      repeat: Infinity,
+                      repeat: Number.POSITIVE_INFINITY,
                       ease: 'linear',
                     }}
                   />
@@ -236,13 +239,13 @@ const LoginRegPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-white/80" />
                       <span className="text-sm font-medium text-white/90">
-                        Why Choose Us
+                        Open Source Starter Kit
                       </span>
                     </div>
                     <p className="text-sm leading-relaxed text-white/70">
-                      "Experience the future of trading with our advanced
-                      platform, backed by real-time data and institutional-grade
-                      infrastructure."
+                      A production-ready foundation for building market data
+                      applications with real-time WebSocket streaming,
+                      professional charts, and Docker deployment.
                     </p>
                   </div>
                 </motion.div>
@@ -307,25 +310,13 @@ const LoginRegPage: React.FC = () => {
                 transition={{ delay: 0.6 }}
               >
                 <p className="text-xs leading-relaxed text-muted-foreground">
-                  By using this service, you agree to our{' '}
-                  <a
-                    href="/privacy"
-                    className="font-medium transition-colors text-primary hover:underline"
-                  >
-                    Terms of Service
-                  </a>{' '}
-                  and{' '}
-                  <a
-                    href="/terms"
-                    className="font-medium transition-colors text-primary hover:underline"
-                  >
-                    Privacy Policy
-                  </a>
+                  By using this service, you agree to use it responsibly and in
+                  accordance with Alpaca's terms of service.
                 </p>
                 <div className="flex items-center justify-center gap-2 mt-3">
                   <Shield className="w-3.5 h-3.5 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground">
-                    Secured by 256-bit encryption
+                    Secured connection
                   </span>
                 </div>
               </motion.div>

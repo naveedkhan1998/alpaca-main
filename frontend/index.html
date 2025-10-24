@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/src/index.css" />
@@ -48,7 +48,7 @@
       name="twitter:image"
       content="https://alpaca.mnaveedk.com/android-chrome-512x512.png"
     />
-    <meta name="theme-color" content="#020817" />
+    <meta name="theme-color" content="#0a0a0a" />
     <title>Alpaca API Wrapper - Real-time Alpaca developer starter</title>
     <script>
       (function () {
@@ -118,7 +118,7 @@
         min-height: 100%;
       }
       body {
-        background-color: hsl(var(--background, 222 47% 4%));
+        background-color: hsl(var(--background));
       }
       html.is-app-route #landing-root {
         display: none;
@@ -128,6 +128,102 @@
       }
       #app-root[hidden] {
         display: none !important;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-20px);
+        }
+      }
+
+      @keyframes pulse-glow {
+        0%,
+        100% {
+          opacity: 0.5;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
+      @keyframes slide-up {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .animate-float {
+        animation: float 6s ease-in-out infinite;
+      }
+
+      .animate-pulse-glow {
+        animation: pulse-glow 3s ease-in-out infinite;
+      }
+
+      .animate-slide-up {
+        animation: slide-up 0.8s ease-out forwards;
+      }
+
+      .grid-pattern {
+        background-image:
+          linear-gradient(
+            to right,
+            hsl(var(--border) / 0.1) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            to bottom,
+            hsl(var(--border) / 0.1) 1px,
+            transparent 1px
+          );
+        background-size: 40px 40px;
+      }
+
+      /* Mobile menu toggle */
+      .mobile-menu {
+        display: none;
+      }
+
+      .mobile-menu.active {
+        display: block;
+      }
+
+      /* Thick glassy border effect for hero image */
+      .hero-image-container {
+        position: relative;
+        padding: 8px;
+        background: linear-gradient(
+          135deg,
+          hsl(var(--accent) / 0.3) 0%,
+          hsl(var(--primary) / 0.2) 50%,
+          hsl(var(--accent) / 0.3) 100%
+        );
+        border-radius: 1.5rem;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+
+      .hero-image-inner {
+        position: relative;
+        background: hsl(var(--card) / 0.8);
+        backdrop-filter: saturate(140%) blur(16px);
+        -webkit-backdrop-filter: saturate(140%) blur(16px);
+        border: 3px solid hsl(var(--border) / 0.6);
+        border-radius: 1.25rem;
+        padding: 4px;
+        box-shadow:
+          0 0 0 1px hsl(var(--border) / 0.2),
+          inset 0 0 20px hsl(var(--accent) / 0.1),
+          0 20px 60px -10px hsl(var(--foreground) / 0.2);
       }
     </style>
     <script type="application/ld+json">
@@ -153,342 +249,1030 @@
       }
     </script>
   </head>
-  <body class="antialiased bg-background text-foreground">
-    <div
-      id="landing-root"
-      class="relative flex flex-col min-h-screen overflow-hidden"
-    >
+  <body class="font-sans antialiased bg-background text-foreground">
+    <div id="landing-root" class="relative min-h-screen overflow-hidden">
+      <!-- Grid Pattern Background -->
+      <div class="absolute inset-0 grid-pattern opacity-40"></div>
+
+      <!-- Gradient Orbs -->
       <div
-        class="absolute inset-0 pointer-events-none -z-20 bg-gradient-to-b from-primary/5 via-background to-background"
+        class="absolute top-0 left-1/4 w-[600px] h-[600px] bg-accent/20 rounded-full blur-[120px] animate-pulse-glow"
       ></div>
       <div
-        class="pointer-events-none absolute -top-64 left-1/2 -z-10 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-primary/30 blur-[160px]"
+        class="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-primary/15 rounded-full blur-[100px] animate-pulse-glow"
+        style="animation-delay: 1s"
       ></div>
-      <div
-        class="pointer-events-none absolute bottom-[-10rem] right-[-8rem] -z-10 h-[28rem] w-[28rem] rounded-full bg-accent/25 blur-[160px]"
-      ></div>
-      <div class="relative z-10 flex flex-col grow">
-        <header class="relative px-6 pt-20 pb-12 overflow-hidden sm:px-8 md:pt-28 md:pb-16">
-          <div
-            class="absolute inset-0 bg-top bg-cover rounded-3xl"
-            style="background-image: url('/alpaca-main-hero.png'); z-index: -1;"
-          ></div>
-          <div
-            class="relative z-10 flex flex-col w-full max-w-6xl gap-12 mx-auto md:flex-row md:items-center"
-          >
-            <div class="md:flex-1">
-              <div
-                class="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-primary"
+
+      <!-- Navigation -->
+      <nav
+        class="relative z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl"
+      >
+        <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+          <div class="flex items-center justify-between h-16">
+            <div class="flex items-center gap-2">
+              <img
+                src="/apple-touch-icon.png"
+                alt="Alpaca Logo"
+                class="w-8 h-8 sm:w-10 sm:h-10"
+              />
+              <span class="text-lg font-bold sm:text-xl">Alpaca Trading</span>
+            </div>
+            <!-- Desktop navigation with blog link -->
+            <div class="items-center hidden gap-6 md:flex lg:gap-8">
+              <a
+                href="#features"
+                class="text-sm transition text-muted-foreground hover:text-foreground"
+                >Features</a
               >
-                Open source
-                <span class="h-[3px] w-[3px] rounded-full bg-primary"></span>
-                Free real-time data tier
-              </div>
-              <h1
-                class="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl"
+              <a
+                href="#stack"
+                class="text-sm transition text-muted-foreground hover:text-foreground"
+                >Stack</a
               >
-                The missing-middle starter for Alpaca-powered market data apps.
-              </h1>
-              <p
-                class="max-w-2xl mt-6 text-base leading-relaxed text-muted-foreground md:text-lg"
+              <a
+                href="https://mnaveedk.com/blog/real-time-trading-infra"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-sm transition text-muted-foreground hover:text-foreground"
+                >Blog</a
               >
-                Alpaca API Wrapper spins up Django models that auto-sync market
-                candles, a TradingView-style React UI, and Dockerized services
-                for streaming, aggregation, and caching. Bring a free Alpaca key
-                (up to 30 assets) and start building research tools, dashboards,
-                or trading ideas today. Special thanks to Alpaca for their
-                generous free tier that powers this project!
-              </p>
-              <div class="flex flex-col gap-3 mt-8 sm:flex-row sm:items-center">
-                <a
-                  class="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-premium transition duration-200 hover:-translate-y-0.5 hover:shadow-premium-lg"
-                  href="/app"
+              <a
+                href="https://github.com/naveedkhan1998/alpaca-main"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-sm transition text-muted-foreground hover:text-foreground"
+                >Docs</a
+              >
+              <a
+                href="/app"
+                class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold transition rounded-lg bg-foreground text-background hover:opacity-90"
+              >
+                Launch App
+              </a>
+            </div>
+            <!-- Mobile menu button -->
+            <button
+              id="mobile-menu-btn"
+              class="p-2 transition rounded-lg md:hidden hover:bg-accent/10"
+              aria-label="Toggle menu"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+          </div>
+          <!-- Mobile menu -->
+          <div id="mobile-menu" class="pb-4 mobile-menu md:hidden">
+            <div class="flex flex-col gap-3">
+              <a
+                href="#features"
+                class="py-2 text-sm transition text-muted-foreground hover:text-foreground"
+                >Features</a
+              >
+              <a
+                href="#stack"
+                class="py-2 text-sm transition text-muted-foreground hover:text-foreground"
+                >Stack</a
+              >
+              <a
+                href="https://mnaveedk.com/blog/real-time-trading-infra"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="py-2 text-sm transition text-muted-foreground hover:text-foreground"
+                >Blog</a
+              >
+              <a
+                href="https://github.com/naveedkhan1998/alpaca-main"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="py-2 text-sm transition text-muted-foreground hover:text-foreground"
+                >Docs</a
+              >
+              <a
+                href="/app"
+                class="inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-foreground text-background hover:opacity-90 transition mt-2"
+              >
+                Launch App
+              </a>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Hero Section -->
+      <!-- Improved mobile spacing and typography -->
+      <section
+        class="relative z-10 px-4 pt-12 pb-16 sm:pt-16 lg:pt-20 sm:pb-24 lg:pb-32 sm:px-6 lg:px-8"
+      >
+        <div class="mx-auto max-w-7xl">
+          <div class="max-w-4xl mx-auto text-center animate-slide-up">
+            <!-- Badge -->
+            <div
+              class="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-accent/30 bg-accent/5 text-accent text-xs sm:text-sm font-medium mb-6 sm:mb-8"
+            >
+              <span class="relative flex w-2 h-2">
+                <span
+                  class="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-accent"
+                ></span>
+                <span
+                  class="relative inline-flex w-2 h-2 rounded-full bg-accent"
+                ></span>
+              </span>
+              Open Source • Free Tier • Production Ready
+            </div>
+
+            <!-- Main Headline -->
+            <h1
+              class="mb-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl lg:text-7xl sm:mb-6 text-balance"
+            >
+              The complete platform to build
+              <span class="text-accent"> market data apps</span>
+            </h1>
+
+            <!-- Subheadline -->
+            <p
+              class="px-4 mb-8 text-base leading-relaxed sm:text-lg md:text-xl lg:text-2xl text-muted-foreground sm:mb-12 text-balance"
+            >
+              Stream real-time market data with Django, React, and TradingView.
+              Deploy in minutes with Docker. Start building with a free Alpaca
+              API key.
+            </p>
+
+            <!-- CTA Buttons -->
+            <div
+              class="flex flex-col items-center justify-center gap-3 px-4 mb-12 sm:flex-row sm:gap-4 sm:mb-16"
+            >
+              <a
+                href="/app"
+                class="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl bg-foreground text-background hover:opacity-90 transition shadow-lg hover:shadow-xl hover:-translate-y-0.5 duration-200"
+              >
+                Get Started Free
+                <svg
+                  class="w-4 h-4 ml-2 sm:w-5 sm:h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  Launch the app
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
+                </svg>
+              </a>
+              <a
+                href="https://github.com/naveedkhan1998/alpaca-main"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl border-2 border-border hover:border-foreground/40 transition hover:-translate-y-0.5 duration-200"
+              >
+                <svg
+                  class="w-4 h-4 mr-2 sm:w-5 sm:h-5"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                  />
+                </svg>
+                View on GitHub
+              </a>
+            </div>
+
+            <!-- Stats -->
+            <div
+              class="grid max-w-3xl grid-cols-2 gap-4 px-4 mx-auto md:grid-cols-4 sm:gap-6 lg:gap-8"
+            >
+              <div class="text-center">
+                <div
+                  class="mb-1 text-2xl font-bold sm:text-3xl md:text-4xl text-accent sm:mb-2"
+                >
+                  30+
+                </div>
+                <div class="text-xs sm:text-sm text-muted-foreground">
+                  Assets Streaming
+                </div>
+              </div>
+              <div class="text-center">
+                <div
+                  class="mb-1 text-2xl font-bold sm:text-3xl md:text-4xl text-accent sm:mb-2"
+                >
+                  5
+                </div>
+                <div class="text-xs sm:text-sm text-muted-foreground">
+                  Timeframes
+                </div>
+              </div>
+              <div class="text-center">
+                <div
+                  class="mb-1 text-2xl font-bold sm:text-3xl md:text-4xl text-accent sm:mb-2"
+                >
+                  100%
+                </div>
+                <div class="text-xs sm:text-sm text-muted-foreground">
+                  Open Source
+                </div>
+              </div>
+              <div class="text-center">
+                <div
+                  class="mb-1 text-2xl font-bold sm:text-3xl md:text-4xl text-accent sm:mb-2"
+                >
+                  $0
+                </div>
+                <div class="text-xs sm:text-sm text-muted-foreground">
+                  To Start
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Visual Demo Section -->
+      <!-- Added thick glassy border to hero image and improved mobile spacing -->
+      <section
+        class="relative z-10 px-4 pb-16 sm:pb-24 lg:pb-32 sm:px-6 lg:px-8"
+      >
+        <div class="mx-auto max-w-7xl">
+          <div class="shadow-2xl hero-image-container animate-float">
+            <div class="hero-image-inner">
+              <img
+                src="/alpaca-main-hero.png"
+                alt="Alpaca API Wrapper Dashboard"
+                class="w-full rounded-lg"
+              />
+            </div>
+            <div
+              class="absolute w-24 h-24 rounded-full -bottom-4 sm:-bottom-6 -right-4 sm:-right-6 sm:w-32 sm:h-32 bg-accent/30 blur-3xl"
+            ></div>
+            <div
+              class="absolute w-24 h-24 rounded-full -top-4 sm:-top-6 -left-4 sm:-left-6 sm:w-32 sm:h-32 bg-primary/30 blur-3xl"
+            ></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- New blog section highlighting the implementation blog post -->
+      <section
+        class="relative z-10 px-4 py-12 sm:py-16 lg:py-20 sm:px-6 lg:px-8"
+      >
+        <div class="max-w-4xl mx-auto">
+          <div
+            class="relative p-6 overflow-hidden border rounded-2xl border-accent/30 bg-gradient-to-br from-accent/5 via-card/50 to-primary/5 backdrop-blur-sm sm:p-8 lg:p-10"
+          >
+            <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
+            <div
+              class="relative z-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6"
+            >
+              <div
+                class="flex items-center justify-center flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-accent/10"
+              >
+                <svg
+                  class="w-6 h-6 sm:w-7 sm:h-7 text-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                </svg>
+              </div>
+              <div class="flex-1">
+                <h3 class="mb-2 text-lg font-semibold sm:text-xl">
+                  Deep Dive: Implementation Guide
+                </h3>
+                <p
+                  class="mb-3 text-sm sm:text-base text-muted-foreground sm:mb-4"
+                >
+                  Learn how this real-time trading infrastructure was built from
+                  the ground up. Detailed walkthrough of architecture decisions,
+                  WebSocket streaming, and production deployment.
+                </p>
+                <a
+                  href="https://mnaveedk.com/blog/real-time-trading-infra"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center text-sm font-semibold transition sm:text-base text-accent hover:text-accent/80"
+                >
+                  Read the blog post
+                  <svg
+                    class="w-4 h-4 ml-2 sm:w-5 sm:h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
+                  </svg>
+                </a>
+                <p class="mt-2 text-xs italic sm:text-sm text-muted-foreground">
+                  More implementation guides and tutorials coming soon
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Features Section -->
+      <!-- Improved mobile grid layout and spacing -->
+      <section
+        id="features"
+        class="relative z-10 px-4 py-16 sm:py-24 lg:py-32 sm:px-6 lg:px-8"
+      >
+        <div class="mx-auto max-w-7xl">
+          <div class="mb-12 text-center sm:mb-16 lg:mb-20">
+            <h2 class="mb-4 text-3xl font-bold sm:text-4xl md:text-5xl sm:mb-6">
+              Everything you need to build
+            </h2>
+            <p
+              class="max-w-2xl px-4 mx-auto text-base sm:text-lg lg:text-xl text-muted-foreground"
+            >
+              A complete stack for streaming, storing, and visualizing market
+              data in real-time
+            </p>
+          </div>
+
+          <div
+            class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-6 lg:gap-8"
+          >
+            <!-- Feature 1 -->
+            <div
+              class="relative p-8 transition-all duration-300 border group rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm hover:border-accent/50 hover:-translate-y-1"
+            >
+              <div
+                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-accent/10 group-hover:bg-accent/20"
+              >
+                <svg
+                  class="w-6 h-6 text-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+              </div>
+              <h3 class="mb-3 text-xl font-semibold">Real-Time Streaming</h3>
+              <p class="leading-relaxed text-muted-foreground">
+                WebSocket ingestion builds 1-minute candles on the fly. Celery
+                workers resample into 5m, 15m, 1h, 4h, and daily intervals with
+                automatic reconnect logic.
+              </p>
+            </div>
+
+            <!-- Feature 2 -->
+            <div
+              class="relative p-8 transition-all duration-300 border group rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm hover:border-accent/50 hover:-translate-y-1"
+            >
+              <div
+                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-accent/10 group-hover:bg-accent/20"
+              >
+                <svg
+                  class="w-6 h-6 text-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
+                  />
+                </svg>
+              </div>
+              <h3 class="mb-3 text-xl font-semibold">Django Models</h3>
+              <p class="leading-relaxed text-muted-foreground">
+                Pre-built models for assets, candles, watchlists, and paper
+                trades. Query rich data with Django ORM and extend with custom
+                endpoints or notebooks.
+              </p>
+            </div>
+
+            <!-- Feature 3 -->
+            <div
+              class="relative p-8 transition-all duration-300 border group rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm hover:border-accent/50 hover:-translate-y-1"
+            >
+              <div
+                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-accent/10 group-hover:bg-accent/20"
+              >
+                <svg
+                  class="w-6 h-6 text-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+              </div>
+              <h3 class="mb-3 text-xl font-semibold">TradingView Charts</h3>
+              <p class="leading-relaxed text-muted-foreground">
+                Professional charting interface with real-time updates. Built
+                with React and TradingView components for a familiar trading
+                experience.
+              </p>
+            </div>
+
+            <!-- Feature 4 -->
+            <div
+              class="relative p-8 transition-all duration-300 border group rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm hover:border-accent/50 hover:-translate-y-1"
+            >
+              <div
+                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-accent/10 group-hover:bg-accent/20"
+              >
+                <svg
+                  class="w-6 h-6 text-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  />
+                </svg>
+              </div>
+              <h3 class="mb-3 text-xl font-semibold">Docker Orchestration</h3>
+              <p class="leading-relaxed text-muted-foreground">
+                Complete Docker Compose stack with Django, Postgres, Redis,
+                Celery, and Flower. Launch everything with one command and hot
+                reload everywhere.
+              </p>
+            </div>
+
+            <!-- Feature 5 -->
+            <div
+              class="relative p-8 transition-all duration-300 border group rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm hover:border-accent/50 hover:-translate-y-1"
+            >
+              <div
+                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-accent/10 group-hover:bg-accent/20"
+              >
+                <svg
+                  class="w-6 h-6 text-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3 class="mb-3 text-xl font-semibold">Watchlist Management</h3>
+              <p class="leading-relaxed text-muted-foreground">
+                Create and manage watchlists directly in the UI. Store them in
+                Django, sync with Alpaca, and keep everything ready for research
+                or automation.
+              </p>
+            </div>
+
+            <!-- Feature 6 -->
+            <div
+              class="relative p-8 transition-all duration-300 border group rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm hover:border-accent/50 hover:-translate-y-1"
+            >
+              <div
+                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-accent/10 group-hover:bg-accent/20"
+              >
+                <svg
+                  class="w-6 h-6 text-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                  />
+                </svg>
+              </div>
+              <h3 class="mb-3 text-xl font-semibold">Developer Experience</h3>
+              <p class="leading-relaxed text-muted-foreground">
+                NX monorepo with unified commands, Vite hot reload, purposeful
+                logging, and included tooling like Ruff, Black, Prettier,
+                Pytest, and Vitest.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stack Section -->
+      <!-- Improved mobile layout for stack section -->
+      <section
+        id="stack"
+        class="relative z-10 px-4 py-16 sm:py-24 lg:py-32 sm:px-6 lg:px-8 bg-card/30"
+      >
+        <div class="mx-auto max-w-7xl">
+          <div class="mb-12 text-center sm:mb-16 lg:mb-20">
+            <h2 class="mb-4 text-3xl font-bold sm:text-4xl md:text-5xl sm:mb-6">
+              Built with modern tools
+            </h2>
+            <p
+              class="max-w-2xl px-4 mx-auto text-base sm:text-lg lg:text-xl text-muted-foreground"
+            >
+              Production-grade stack that you can understand and extend
+            </p>
+          </div>
+
+          <div
+            class="grid items-center gap-8 md:grid-cols-2 sm:gap-10 lg:gap-12"
+          >
+            <div class="space-y-6 sm:space-y-8">
+              <div class="flex items-start gap-4">
+                <div
+                  class="flex items-center justify-center flex-shrink-0 w-10 h-10 mt-1 rounded-lg bg-accent/10"
+                >
+                  <svg
+                    class="w-5 h-5 text-accent"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="mb-2 text-lg font-semibold">
+                    Backend Infrastructure
+                  </h3>
+                  <p class="text-muted-foreground">
+                    Django REST API, Channels WebSocket, Celery workers, Redis
+                    cache, and PostgreSQL database behind Docker Compose.
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4">
+                <div
+                  class="flex items-center justify-center flex-shrink-0 w-10 h-10 mt-1 rounded-lg bg-accent/10"
+                >
+                  <svg
+                    class="w-5 h-5 text-accent"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="mb-2 text-lg font-semibold">
+                    Frontend Experience
+                  </h3>
+                  <p class="text-muted-foreground">
+                    Vite + React with TradingView charting, watchlists, and
+                    real-time visuals powered by RTK Query and WebSocket
+                    connections.
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4">
+                <div
+                  class="flex items-center justify-center flex-shrink-0 w-10 h-10 mt-1 rounded-lg bg-accent/10"
+                >
+                  <svg
+                    class="w-5 h-5 text-accent"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="mb-2 text-lg font-semibold">Free Tier Friendly</h3>
+                  <p class="text-muted-foreground">
+                    Streams up to 30 symbols on Alpaca's free API key with
+                    resilience, resubscribe logic, and cached aggregates for
+                    optimal performance.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="relative">
+              <div
+                class="p-6 border shadow-xl rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm sm:p-8"
+              >
+                <div class="space-y-6">
+                  <div>
+                    <div
+                      class="mb-3 text-sm font-semibold text-muted-foreground"
+                    >
+                      BACKEND
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <span
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        >Django</span
+                      >
+                      <span
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        >Celery</span
+                      >
+                      <span
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        >Redis</span
+                      >
+                      <span
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        >PostgreSQL</span
+                      >
+                      <span
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        >Channels</span
+                      >
+                    </div>
+                  </div>
+
+                  <div>
+                    <div
+                      class="mb-3 text-sm font-semibold text-muted-foreground"
+                    >
+                      FRONTEND
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <span
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        >React</span
+                      >
+                      <span
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        >Vite</span
+                      >
+                      <span
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        >TradingView</span
+                      >
+                      <span
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        >RTK Query</span
+                      >
+                    </div>
+                  </div>
+
+                  <div>
+                    <div
+                      class="mb-3 text-sm font-semibold text-muted-foreground"
+                    >
+                      DEVOPS
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <span
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        >Docker</span
+                      >
+                      <span
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        >NX</span
+                      >
+                      <span
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        >Pytest</span
+                      >
+                      <span
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        >Vitest</span
+                      >
+                    </div>
+                  </div>
+
+                  <div class="pt-6 border-t border-border/40">
+                    <div class="mb-2 text-sm font-semibold">Quick Start</div>
+                    <div
+                      class="p-4 font-mono text-sm rounded-lg bg-background/80 text-muted-foreground"
+                    >
+                      <div>$ npm install</div>
+                      <div>$ npm run dev</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screenshots Section -->
+      <!-- Improved mobile grid for screenshots -->
+      <section
+        class="relative z-10 px-4 py-16 sm:py-24 lg:py-32 sm:px-6 lg:px-8"
+      >
+        <div class="mx-auto max-w-7xl">
+          <div class="mb-12 text-center sm:mb-16 lg:mb-20">
+            <h2 class="mb-4 text-3xl font-bold sm:text-4xl md:text-5xl sm:mb-6">
+              See it in action
+            </h2>
+            <p
+              class="max-w-2xl px-4 mx-auto text-base sm:text-lg lg:text-xl text-muted-foreground"
+            >
+              Professional trading interface with real-time data and powerful
+              features
+            </p>
+          </div>
+
+          <div
+            class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-6 lg:gap-8"
+          >
+            <div
+              class="relative overflow-hidden transition-all duration-300 border group rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm hover:border-accent/50"
+            >
+              <img
+                src="/alpaca-main-watchlist.png"
+                alt="Watchlist Management"
+                class="object-cover w-full h-48"
+              />
+              <div class="p-6">
+                <h3 class="mb-2 text-lg font-semibold">Watchlist Management</h3>
+                <p class="text-sm text-muted-foreground">
+                  Create and organize watchlists with drag-and-drop interface
+                  and real-time price updates.
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="relative overflow-hidden transition-all duration-300 border group rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm hover:border-accent/50"
+            >
+              <img
+                src="/alpaca-main-hero.png"
+                alt="Real-Time Charts"
+                class="object-cover w-full h-48"
+              />
+              <div class="p-6">
+                <h3 class="mb-2 text-lg font-semibold">Real-Time Charts</h3>
+                <p class="text-sm text-muted-foreground">
+                  TradingView-powered charts with multiple timeframes and
+                  technical indicators.
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="relative overflow-hidden transition-all duration-300 border group rounded-2xl border-border/40 bg-card/50 backdrop-blur-sm hover:border-accent/50"
+            >
+              <img
+                src="/alpaca-main-asset.png"
+                alt="Asset Search"
+                class="object-cover w-full h-48"
+              />
+              <div class="p-6">
+                <h3 class="mb-2 text-lg font-semibold">Asset Discovery</h3>
+                <p class="text-sm text-muted-foreground">
+                  Search and filter thousands of assets with instant results and
+                  detailed information.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Section -->
+      <!-- Improved mobile spacing for CTA -->
+      <section
+        class="relative z-10 px-4 py-16 sm:py-24 lg:py-32 sm:px-6 lg:px-8"
+      >
+        <div class="max-w-4xl mx-auto">
+          <div
+            class="relative p-8 overflow-hidden text-center border rounded-2xl sm:rounded-3xl border-border/40 bg-gradient-to-br from-accent/10 via-card/50 to-primary/10 backdrop-blur-sm sm:p-12 md:p-16"
+          >
+            <div class="absolute inset-0 bg-grid-pattern opacity-20"></div>
+            <div class="relative z-10">
+              <h2
+                class="mb-4 text-3xl font-bold sm:text-4xl md:text-5xl sm:mb-6"
+              >
+                Ready to start building?
+              </h2>
+              <p
+                class="max-w-2xl px-4 mx-auto mb-8 text-base sm:text-lg lg:text-xl text-muted-foreground sm:mb-10"
+              >
+                Deploy in minutes with Docker Compose or Render. Shape it into
+                your research lab or trading cockpit.
+              </p>
+              <div
+                class="flex flex-col items-center justify-center gap-3 px-4 sm:flex-row sm:gap-4"
+              >
+                <a
+                  href="/app"
+                  class="inline-flex items-center justify-center w-full px-6 py-3 text-sm font-semibold transition shadow-lg sm:w-auto sm:px-8 sm:py-4 sm:text-base rounded-xl bg-foreground text-background hover:opacity-90"
+                >
+                  Launch the App
+                  <svg
+                    class="w-4 h-4 ml-2 sm:w-5 sm:h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
+                  </svg>
                 </a>
                 <a
-                  class="inline-flex items-center justify-center rounded-full border border-border px-6 py-3 text-sm font-semibold text-muted-foreground transition duration-200 hover:-translate-y-0.5 hover:border-primary/60 hover:text-foreground"
                   href="https://github.com/naveedkhan1998/alpaca-main"
                   target="_blank"
                   rel="noopener noreferrer"
+                  class="inline-flex items-center justify-center w-full px-6 py-3 text-sm font-semibold transition border-2 sm:w-auto sm:px-8 sm:py-4 sm:text-base rounded-xl border-border hover:border-foreground/40"
                 >
-                  View on GitHub
+                  <svg
+                    class="w-4 h-4 mr-2 sm:w-5 sm:h-5"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                    />
+                  </svg>
+                  Star on GitHub
                 </a>
               </div>
-              <div
-                class="grid gap-4 mt-10 text-sm text-muted-foreground sm:grid-cols-3"
-              >
-                <div
-                  class="flex items-center gap-3 px-4 py-3 border glass-effect rounded-2xl border-border/40 bg-card/80 shadow-premium"
-                >
-                  <span
-                    class="inline-flex w-2 h-2 rounded-full animate-pulse bg-success"
-                  ></span>
-                  Django models with live candle sync
-                </div>
-                <div
-                  class="flex items-center gap-3 px-4 py-3 border glass-effect rounded-2xl border-border/40 bg-card/80 shadow-premium"
-                >
-                  <span
-                    class="inline-flex w-2 h-2 rounded-full animate-pulse bg-accent"
-                  ></span>
-                  TradingView-style React dashboard
-                </div>
-                <div
-                  class="flex items-center gap-3 px-4 py-3 border glass-effect rounded-2xl border-border/40 bg-card/80 shadow-premium"
-                >
-                  <span
-                    class="inline-flex w-2 h-2 rounded-full animate-pulse bg-primary"
-                  ></span>
-                  Docker + NX orchestration in one command
-                </div>
-              </div>
             </div>
-            <div
-              class="relative w-full max-w-md p-6 border glass-effect rounded-3xl border-border/40 bg-card/80 shadow-premium"
-            >
-              <div
-                class="absolute w-12 h-12 rounded-full -top-6 right-8 bg-primary/15 blur-2xl"
-              ></div>
-              <span
-                class="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground"
-                >Stack snapshot</span
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <!-- Improved mobile footer layout and added blog link -->
+      <footer
+        class="relative z-10 border-t border-border/40 bg-background/80 backdrop-blur-xl"
+      >
+        <div class="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8 sm:py-12">
+          <div
+            class="grid gap-6 mb-6 sm:grid-cols-2 md:grid-cols-4 sm:gap-8 sm:mb-8"
+          >
+            <div class="sm:col-span-2">
+              <div class="flex items-center gap-2 mb-3 sm:mb-4">
+                <img
+                  src="/apple-touch-icon.png"
+                  alt="Alpaca Logo"
+                  class="w-8 h-8 sm:w-10 sm:h-10"
+                />
+                <span class="text-lg font-bold sm:text-xl">Alpaca Trading</span>
+              </div>
+              <p
+                class="max-w-md mb-3 text-sm sm:text-base text-muted-foreground sm:mb-4"
               >
-              <ul class="mt-6 space-y-4 text-sm text-muted-foreground">
-                <li class="flex items-start gap-3">
-                  <span
-                    class="inline-flex w-2 h-2 mt-1 rounded-full bg-primary"
-                  ></span>
-                  <div>
-                    <p class="font-semibold text-foreground">
-                      Self-contained backend
-                    </p>
-                    <p>
-                      Django REST API, Channels WebSocket ingestion, Celery
-                      workers, Redis, and PostgreSQL behind Docker Compose.
-                    </p>
-                  </div>
+                Open-source full-stack starter for building market data
+                applications with Django, React, and TradingView.
+              </p>
+              <p class="text-xs sm:text-sm text-muted-foreground">
+                Special thanks to Alpaca for their generous free tier that
+                powers this project.
+              </p>
+            </div>
+
+            <div>
+              <div class="mb-3 text-sm font-semibold sm:mb-4">Resources</div>
+              <ul class="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <a
+                    href="https://github.com/naveedkhan1998/alpaca-main"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="transition hover:text-foreground"
+                    >Documentation</a
+                  >
                 </li>
-                <li class="flex items-start gap-3">
-                  <span
-                    class="inline-flex w-2 h-2 mt-1 rounded-full bg-accent"
-                  ></span>
-                  <div>
-                    <p class="font-semibold text-foreground">
-                      Trading-ready frontend
-                    </p>
-                    <p>
-                      Vite + React with TradingView charting, watchlists, and
-                      real-time visuals powered by RTK Query.
-                    </p>
-                  </div>
+                <li>
+                  <a
+                    href="https://mnaveedk.com/blog/real-time-trading-infra"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="transition hover:text-foreground"
+                    >Blog</a
+                  >
                 </li>
-                <li class="flex items-start gap-3">
-                  <span
-                    class="inline-flex w-2 h-2 mt-1 rounded-full bg-success"
-                  ></span>
-                  <div>
-                    <p class="font-semibold text-foreground">
-                      Free-tier friendly
-                    </p>
-                    <p>
-                      Streams up to 30 symbols on Alpaca's free key, with
-                      resilience, resubscribe logic, and cached aggregates.
-                    </p>
-                  </div>
+                <li>
+                  <a
+                    href="https://github.com/naveedkhan1998/alpaca-main"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="transition hover:text-foreground"
+                    >GitHub</a
+                  >
+                </li>
+                <li>
+                  <a href="#features" class="transition hover:text-foreground"
+                    >Features</a
+                  >
+                </li>
+                <li>
+                  <a href="#stack" class="transition hover:text-foreground"
+                    >Tech Stack</a
+                  >
                 </li>
               </ul>
-              <div
-                class="p-4 mt-6 text-xs border rounded-2xl border-border/30 bg-background/70 text-muted-foreground"
-              >
-                <p class="font-semibold text-foreground">Quick start:</p>
-                <p class="mt-2">
-                  All you need is a free Alpaca API key. Clone the repo, cd into it, run <code class="font-mono text-[0.7rem]">npm i</code>, then <code class="font-mono text-[0.7rem]">npm run dev</code>.
-                </p>
-                <p class="mt-2">
-                  Launches React locally and Docker containers for Django,
-                  Postgres, Redis, WebSocket, Celery, and Flower.
-                </p>
-              </div>
+            </div>
+
+            <div>
+              <div class="mb-3 text-sm font-semibold sm:mb-4">Connect</div>
+              <ul class="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <a href="/app" class="transition hover:text-foreground"
+                    >Launch App</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/naveedkhan1998/alpaca-main/issues"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="transition hover:text-foreground"
+                    >Report Issue</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/naveedkhan1998/alpaca-main/discussions"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="transition hover:text-foreground"
+                    >Discussions</a
+                  >
+                </li>
+              </ul>
             </div>
           </div>
-        </header>
-        <main class="flex-1 px-6 pb-16 sm:px-8">
-          <div class="flex flex-col w-full max-w-6xl gap-10 mx-auto">
-            <section
-              class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
-            >
-              <article
-                class="p-8 border glass-effect rounded-3xl border-border/40 bg-card/85 shadow-premium-lg"
-              >
-                <h2 class="text-2xl font-semibold tracking-tight">
-                  Why we built it
-                </h2>
-                <p class="mt-4 text-base text-muted-foreground">
-                  Working with live markets usually means tiny tutorials that
-                  end at a single fetch, or massive frameworks that dictate how
-                  you trade. Alpaca API Wrapper sits in the missing middle-a
-                  production-grade foundation that you can understand in an
-                  afternoon and extend for research, analytics, or algorithmic
-                  experiments.
-                </p>
-                <ul class="mt-6 space-y-3 text-sm text-muted-foreground">
-                  <li>
-                    <strong class="text-foreground">Lower the barrier:</strong>
-                    plug in a free Alpaca API key, pick up to 30 symbols, and
-                    the stack handles streaming, storage, and aggregation.
-                  </li>
-                  <li>
-                    <strong class="text-foreground">Stay flexible:</strong>
-                    iterate on strategies, dashboards, or APIs without fighting
-                    rigid abstractions or paid platforms.
-                  </li>
-                  <li>
-                    <strong class="text-foreground">Own your data loop:</strong>
-                    query rich Django models, run Celery tasks, and ship
-                    features without reinventing infra.
-                  </li>
-                </ul>
-              </article>
-              <aside
-                class="p-8 border glass-effect rounded-3xl border-border/40 bg-card/85 shadow-premium-lg"
-              >
-                <h3 class="text-xl font-semibold tracking-tight">
-                  Developer experience
-                </h3>
-                <ul class="mt-6 space-y-4 text-sm text-muted-foreground">
-                  <li>
-                    <strong class="text-foreground">NX monorepo:</strong>
-                    unified commands, caching, and task orchestration across
-                    frontend and backend.
-                  </li>
-                  <li>
-                    <strong class="text-foreground"
-                      >Hot reload everywhere:</strong
-                    >
-                    Vite for the UI, Django auto reload via Docker volumes, and
-                    Flower dashboard for Celery.
-                  </li>
-                  <li>
-                    <strong class="text-foreground">Purposeful logging:</strong>
-                    Docker services surface stdout to your terminal, keeping
-                    ingestion and worker activity transparent.
-                  </li>
-                  <li>
-                    <strong class="text-foreground">Tooling included:</strong>
-                    Ruff, Black, Prettier, Pytest, Vitest, and uv ship with sane
-                    configs so you can focus on your ideas.
-                  </li>
-                </ul>
-              </aside>
-            </section>
-            <section class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              <div
-                class="p-6 border glass-effect rounded-3xl border-border/40 bg-card/85 shadow-premium"
-              >
-                <img
-                  class="object-cover w-full h-32 mb-4 rounded-lg"
-                  src="/alpaca-main-watchlist.png"
-                  alt="Watchlist management demo"
-                />
-                <h4 class="text-lg font-semibold">
-                  Watchlists & symbol control
-                </h4>
-                <p class="mt-3 text-sm text-muted-foreground">
-                  Create and manage watchlists without leaving the UI. Store
-                  them in Django, sync with Alpaca, and keep everything ready
-                  for research or automation.
-                </p>
-              </div>
-              <div
-                class="p-6 border glass-effect rounded-3xl border-border/40 bg-card/85 shadow-premium"
-              >
-                <img
-                  class="object-cover w-full h-32 mb-4 rounded-lg"
-                  src="/alpaca-main-hero.png"
-                  alt="Real-time candle pipeline demo"
-                />
-                <h4 class="text-lg font-semibold">Real-time candle pipeline</h4>
-                <p class="mt-3 text-sm text-muted-foreground">
-                  WebSocket ingestion builds 1-minute candles on the fly while
-                  Celery resamples into 5m, 15m, 1h, 4h, and daily intervals.
-                  Reconnect logic keeps feeds resilient.
-                </p>
-              </div>
-              <div
-                class="p-6 border glass-effect rounded-3xl border-border/40 bg-card/85 shadow-premium"
-              >
-                <img
-                  class="object-cover w-full h-32 mb-4 rounded-lg"
-                  src="/alpaca-main-asset.png"
-                  alt="Asset search demo"
-                />
-                <h4 class="text-lg font-semibold">Asset search</h4>
-                <p class="mt-3 text-sm text-muted-foreground">
-                  Search and discover assets with real-time data, filters, and
-                  instant access to market information for research and trading.
-                </p>
-              </div>
-            </section>
-            <section
-              class="p-8 border glass-effect rounded-3xl border-border/40 bg-card/85 shadow-premium-lg"
-            >
-              <h3 class="text-xl font-semibold tracking-tight">
-                Infrastructure highlights
-              </h3>
-              <div class="grid gap-6 mt-6 md:grid-cols-3">
-                <div>
-                  <p class="text-sm font-semibold text-foreground">
-                    Docker Compose stack
-                  </p>
-                  <p class="mt-2 text-sm text-muted-foreground">
-                    Backend ASGI app, Celery worker + beat, WebSocket service,
-                    Postgres, Redis, nginx-ready configs, and Flower monitoring.
-                  </p>
-                </div>
-                <div>
-                  <p class="text-sm font-semibold text-foreground">
-                    Extendable backend APIs
-                  </p>
-                  <p class="mt-2 text-sm text-muted-foreground">
-                    Prebuilt models for assets, candles, watchlists, and paper
-                    trades-ready for new endpoints, scripts, or notebooks.
-                  </p>
-                </div>
-                <div>
-                  <p class="text-sm font-semibold text-foreground">
-                    Ops-ready diagnostics
-                  </p>
-                  <p class="mt-2 text-sm text-muted-foreground">
-                    Health checks warm services in the background, and
-                    multitail-friendly logs keep ingestion, workers, and
-                    schedulers observable.
-                  </p>
-                </div>
-              </div>
-            </section>
-          </div>
-        </main>
-        <footer class="px-6 pb-10 mt-auto sm:px-8">
+
           <div
-            class="flex flex-col w-full max-w-6xl gap-4 px-6 py-6 mx-auto text-sm border rounded-3xl border-border/40 bg-background/80 text-muted-foreground shadow-premium sm:flex-row sm:items-center sm:justify-between"
+            class="flex flex-col items-center justify-between gap-4 pt-6 text-xs border-t sm:pt-8 border-border/40 md:flex-row sm:text-sm text-muted-foreground"
           >
-            <span
-              >Deploy in minutes with docker-compose or Render, then shape it
-              into your research lab or trading cockpit.</span
-            >
-            <a
-              class="inline-flex items-center gap-2 text-sm font-semibold transition text-primary hover:text-primary/80"
-              href="https://github.com/naveedkhan1998/alpaca-main"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Star the repository
-            </a>
+            <p>© 2025 Alpaca API Wrapper. Built by Naveed Khan.</p>
+            <div class="flex items-center gap-6">
+              <a
+                href="https://github.com/naveedkhan1998/alpaca-main"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="transition hover:text-foreground"
+              >
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                  />
+                </svg>
+              </a>
+            </div>
           </div>
-        </footer>
-      </div>
+        </div>
+      </footer>
     </div>
+
     <div id="app-root" hidden></div>
     <noscript>
       <style>
@@ -513,5 +1297,26 @@
       </div>
     </noscript>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Mobile menu toggle script -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (mobileMenuBtn && mobileMenu) {
+          mobileMenuBtn.addEventListener('click', function () {
+            mobileMenu.classList.toggle('active');
+          });
+
+          // Close menu when clicking on a link
+          const menuLinks = mobileMenu.querySelectorAll('a');
+          menuLinks.forEach(link => {
+            link.addEventListener('click', function () {
+              mobileMenu.classList.remove('active');
+            });
+          });
+        }
+      });
+    </script>
   </body>
 </html>
