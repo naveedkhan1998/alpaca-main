@@ -571,10 +571,11 @@ def check_watchlist_candles():
     logger.info("Starting watchlist candle check task")
 
     # Get all active watchlist assets
-    watchlist_assets = WatchListAsset.objects.filter(
-        is_active=True,
-        watchlist__is_active=True
-    ).select_related("asset", "watchlist").distinct("asset")
+    watchlist_assets = (
+        WatchListAsset.objects.filter(is_active=True, watchlist__is_active=True)
+        .select_related("asset", "watchlist")
+        .distinct("asset")
+    )
 
     end_date = timezone.now()
     start_date = end_date - timedelta(days=30)  # Last 1 month
@@ -621,7 +622,9 @@ def check_watchlist_candles():
 
         assets_processed += 1
 
-    logger.info(f"Watchlist candle check completed. Processed {assets_processed} assets, fetched {total_missing_found} missing candles")
+    logger.info(
+        f"Watchlist candle check completed. Processed {assets_processed} assets, fetched {total_missing_found} missing candles"
+    )
 
 
 def _find_missing_candle_periods(asset, start_date, end_date):
@@ -638,8 +641,10 @@ def _find_missing_candle_periods(asset, start_date, end_date):
             asset=asset,
             timeframe="1T",
             timestamp__gte=start_date,
-            timestamp__lt=end_date
-        ).order_by("timestamp").values_list("timestamp", flat=True)
+            timestamp__lt=end_date,
+        )
+        .order_by("timestamp")
+        .values_list("timestamp", flat=True)
     )
 
     if not existing_candles:
@@ -688,7 +693,9 @@ def _fetch_missing_candles(asset, missing_periods):
             chunk_days = 7  # Fetch 1 week at a time
 
             while current_end > start_period:
-                chunk_start = max(start_period, current_end - timedelta(days=chunk_days))
+                chunk_start = max(
+                    start_period, current_end - timedelta(days=chunk_days)
+                )
 
                 start_str = chunk_start.strftime("%Y-%m-%dT%H:%M:%SZ")
                 end_str = current_end.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -699,10 +706,12 @@ def _fetch_missing_candles(asset, missing_periods):
                         start=start_str,
                         end=end_str,
                         sort="desc",
-                        timeframe="1T"
+                        timeframe="1T",
                     )
                 except Exception as e:
-                    logger.error(f"API error fetching {symbol} {chunk_start}->{current_end}: {e}")
+                    logger.error(
+                        f"API error fetching {symbol} {chunk_start}->{current_end}: {e}"
+                    )
                     current_end = chunk_start
                     continue
 
@@ -732,12 +741,16 @@ def _fetch_missing_candles(asset, missing_periods):
                 if candles:
                     Candle.objects.bulk_create(candles, ignore_conflicts=True)
                     total_fetched += len(candles)
-                    logger.debug(f"Fetched {len(candles)} candles for {symbol} in {chunk_start}->{current_end}")
+                    logger.debug(
+                        f"Fetched {len(candles)} candles for {symbol} in {chunk_start}->{current_end}"
+                    )
 
                 current_end = chunk_start
 
         except Exception as e:
-            logger.error(f"Error fetching missing candles for {symbol}: {e}", exc_info=True)
+            logger.error(
+                f"Error fetching missing candles for {symbol}: {e}", exc_info=True
+            )
             continue
 
     return total_fetched
@@ -754,7 +767,9 @@ def _resample_higher_timeframes(asset, start_date, end_date):
     # Check if backfill is complete before resampling higher TFs
     # This follows the same logic as websocket_service._is_historical_backfill_complete
     if not _is_backfill_complete_for_asset(asset):
-        logger.info(f"Skipping higher TF resampling for {asset.symbol} - backfill not complete")
+        logger.info(
+            f"Skipping higher TF resampling for {asset.symbol} - backfill not complete"
+        )
         return
 
     for tf, delta in const.TF_LIST:
@@ -897,7 +912,9 @@ def _is_backfill_complete_for_asset(asset):
         if cache.get(completion_key):
             return True
     except Exception as e:
-        logger.warning(f"Failed to check cache for backfill completion {completion_key}: {e}")
+        logger.warning(
+            f"Failed to check cache for backfill completion {completion_key}: {e}"
+        )
         # Assume not complete if we can't check
         pass
 
@@ -907,9 +924,7 @@ def _is_backfill_complete_for_asset(asset):
     coverage_threshold = now_dt - timedelta(days=4)
 
     earliest_1t = (
-        Candle.objects.filter(asset=asset, timeframe="1T")
-        .order_by("timestamp")
-        .first()
+        Candle.objects.filter(asset=asset, timeframe="1T").order_by("timestamp").first()
     )
 
     if not earliest_1t or earliest_1t.timestamp > coverage_threshold:
@@ -921,8 +936,9 @@ def _is_backfill_complete_for_asset(asset):
         hour=0, minute=0, second=0, microsecond=0
     ) - timedelta(days=1)
     existing_historical_higher_tf = Candle.objects.filter(
-        asset=asset, timeframe__in=["5T", "15T", "30T", "1H", "4H", "1D"],
-        timestamp__lt=historical_threshold
+        asset=asset,
+        timeframe__in=["5T", "15T", "30T", "1H", "4H", "1D"],
+        timestamp__lt=historical_threshold,
     ).exists()
 
     return existing_historical_higher_tf
