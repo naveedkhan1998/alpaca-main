@@ -10,7 +10,7 @@
         "command": "docker compose up -d ",
         "cwd": "."
       },
-      "dependsOn": ["env-check"]
+      "dependsOn": ["build"]
     },
     "build": {
       "executor": "nx:run-commands",
@@ -79,13 +79,6 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "uv run pytest --cov",
-        "cwd": "backend"
-      }
-    },
-    "env-check": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": ["node ../scripts/check-env.js"],
         "cwd": "backend"
       }
     },

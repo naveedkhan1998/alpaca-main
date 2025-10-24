@@ -8,7 +8,7 @@ from pathlib import Path
 from google.oauth2 import service_account
 
 from .base import *  # noqa: F403, F401
-from .base import BASE_DIR, SIMPLE_JWT  # noqa: F401
+from .base import BASE_DIR, CACHES, SIMPLE_JWT  # noqa: F401
 
 # Security settings
 SECRET_KEY = os.environ.get("SECRET_KEY")
@@ -66,17 +66,19 @@ SIMPLE_JWT.update(
 # Production: Use GCS for static and media files
 
 # Redis cache configuration for production resilience we seem to be hitting connection limits on free tier
-CACHES["default"]["OPTIONS"].update({
-    "CONNECTION_POOL_KWARGS": {
-        "max_connections": 20,
-        "decode_responses": True,
-        "retry_on_timeout": True,
-        "socket_timeout": 5,
-        "socket_connect_timeout": 5,
-        "socket_keepalive": True,
-        "socket_keepalive_options": {1: 60, 4: 30},
-    },
-})
+CACHES["default"]["OPTIONS"].update(
+    {
+        "CONNECTION_POOL_KWARGS": {
+            "max_connections": 20,
+            "decode_responses": True,
+            "retry_on_timeout": True,
+            "socket_timeout": 5,
+            "socket_connect_timeout": 5,
+            "socket_keepalive": True,
+            "socket_keepalive_options": {1: 60, 4: 30},
+        },
+    }
+)
 
 # Common Settings
 GS_BUCKET_NAME = "realtime-app-bucket"

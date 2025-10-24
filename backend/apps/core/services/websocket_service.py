@@ -400,7 +400,9 @@ class WebsocketClient:
             if cache.get(running_key):
                 return False
         except Exception as e:
-            logger.warning(f"Failed to check cache for running backfill {running_key}: {e}")
+            logger.warning(
+                f"Failed to check cache for running backfill {running_key}: {e}"
+            )
             # Assume not running if we can't check
             pass
 
@@ -411,7 +413,9 @@ class WebsocketClient:
             if cache.get(completion_key):
                 return True
         except Exception as e:
-            logger.warning(f"Failed to check cache for backfill completion {completion_key}: {e}")
+            logger.warning(
+                f"Failed to check cache for backfill completion {completion_key}: {e}"
+            )
             # Assume not complete if we can't check
             pass
 

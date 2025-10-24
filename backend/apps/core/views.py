@@ -127,8 +127,7 @@ class AlpacaAccountViewSet(viewsets.ModelViewSet):
 
             # Get or create sync status for assets
             sync_status, created = SyncStatus.objects.get_or_create(
-                sync_type="assets",
-                defaults={"total_items": 0, "is_syncing": False}
+                sync_type="assets", defaults={"total_items": 0, "is_syncing": False}
             )
 
             # Check if already syncing
@@ -171,7 +170,7 @@ class AlpacaAccountViewSet(viewsets.ModelViewSet):
             # Get sync status
             sync_status, created = SyncStatus.objects.get_or_create(
                 sync_type="assets",
-                defaults={"total_items": total_assets, "is_syncing": False}
+                defaults={"total_items": total_assets, "is_syncing": False},
             )
 
             # Update total_items if it doesn't match

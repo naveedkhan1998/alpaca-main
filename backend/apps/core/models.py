@@ -15,10 +15,7 @@ class SyncStatus(models.Model):
     ]
 
     sync_type = models.CharField(
-        max_length=20,
-        choices=SYNC_TYPE_CHOICES,
-        default="assets",
-        unique=True
+        max_length=20, choices=SYNC_TYPE_CHOICES, default="assets", unique=True
     )
     last_sync_at = models.DateTimeField(blank=True, null=True)
     total_items = models.IntegerField(default=0)
