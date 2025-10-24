@@ -41,6 +41,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    entrypoint: ["bash", "./scripts/run_backend.sh"]
 
   celery-beat:
     image: naveedkhan1998/alpaca-backend
@@ -56,7 +57,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend/:/app/
-    entrypoint: ["./scripts/run_celery_beat.sh"]
+    entrypoint: ["bash", "./scripts/run_celery_beat.sh"]
     restart: always
 
   celery-worker:
@@ -73,7 +74,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend/:/app/
-    entrypoint: ["./scripts/run_celery_worker.sh"]
+    entrypoint: ["bash","./scripts/run_celery_worker.sh"]
     restart: always
 
   flower:
@@ -103,7 +104,7 @@ services:
         condition: service_started
       redis:
         condition: service_healthy
-    entrypoint: ["./scripts/run_websocket.sh"]
+    entrypoint: ["bash", "./scripts/run_websocket.sh"]
     restart: always
 
 volumes:
