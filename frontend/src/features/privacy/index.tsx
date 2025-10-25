@@ -5,89 +5,87 @@ import {
   PageContent,
 } from '@/components/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Lock, Eye, Database, UserCheck, FileText } from 'lucide-react';
+import {
+  Server,
+  KeyRound,
+  FileText,
+  BarChart3,
+  Globe2,
+  ShieldCheck,
+} from 'lucide-react';
 
 const PrivacyPage = () => {
   const sections = [
     {
-      icon: Database,
-      title: 'Information We Collect',
+      icon: Server,
+      title: 'Self-Hosted Scope',
       content: [
-        'Personal identification information (name, email address, phone number)',
-        'Trading account information and transaction history',
-        'Device information and usage data',
-        'Cookies and similar tracking technologies',
+        'Alpaca API Wrapper is distributed as open-source software; the maintainers do not run a hosted service',
+        'Any personal or financial data remains within the infrastructure you deploy (Docker, databases, cloud, etc.)',
+        'Default setup keeps services on your local machine or private network',
+        'Remove the project if you are unable to maintain the responsibilities that come with self-hosting',
       ],
     },
     {
-      icon: Lock,
-      title: 'How We Use Your Information',
+      icon: KeyRound,
+      title: 'Credentials & Session Data',
       content: [
-        'To provide and maintain our trading services',
-        'To process your transactions and manage your account',
-        'To send you important notifications and updates',
-        'To improve our services and user experience',
-        'To comply with legal obligations and prevent fraud',
-      ],
-    },
-    {
-      icon: Shield,
-      title: 'Data Security',
-      content: [
-        'We use industry-standard encryption to protect your data',
-        'Secure servers with regular security audits',
-        'Multi-factor authentication options',
-        'Regular backup and disaster recovery procedures',
-        'Strict access controls for employee data access',
-      ],
-    },
-    {
-      icon: Eye,
-      title: 'Information Sharing',
-      content: [
-        'We do not sell your personal information to third parties',
-        'Information may be shared with service providers who assist in operations',
-        'Data may be disclosed to comply with legal requirements',
-        'Anonymous, aggregated data may be used for analytics',
-      ],
-    },
-    {
-      icon: UserCheck,
-      title: 'Your Rights',
-      content: [
-        'Access and review your personal information',
-        'Request correction of inaccurate data',
-        'Request deletion of your data (subject to legal requirements)',
-        'Opt-out of marketing communications',
-        'Export your data in a portable format',
+        'API keys and secrets live in `.envs/.env` files or environment variables you control',
+        "Login tokens and feature flags may be stored in your browser's local storage to support the UI",
+        'Secrets are never transmitted to the maintainers or shared upstream by default',
+        'Scrub credentials before submitting bug reports, screenshots, or logs to the community',
       ],
     },
     {
       icon: FileText,
-      title: 'Data Retention',
+      title: 'Logs & Diagnostics',
       content: [
-        'Account information is retained while your account is active',
-        'Transaction records are kept for regulatory compliance (typically 7 years)',
-        'Marketing data is retained until you opt-out',
-        'Cookies and tracking data follow our cookie policy',
+        'Application logs, database dumps, and Celery task data stay on the hosts you operate',
+        'There is no built-in log shipping, cloud backup, or remote monitoring provided by the maintainers',
+        'Configure retention, masking, and rotation for any sensitive audit trails you create',
+        'Before sharing diagnostic bundles, review and redact personal or regulated information',
+      ],
+    },
+    {
+      icon: BarChart3,
+      title: 'Analytics & Telemetry',
+      content: [
+        'The project does not enable analytics by default; Google Analytics 4 activates only if you supply `VITE_GA4_MEASUREMENT_ID`',
+        'When enabled, usage data such as page views or feature events is sent directly from your deployment to Google',
+        "Review Google's terms and obtain any required consents before turning analytics on",
+        'Remove or replace the analytics integration if it conflicts with your compliance requirements',
+      ],
+    },
+    {
+      icon: Globe2,
+      title: 'Third-Party Services',
+      content: [
+        'Connecting to the Alpaca API or other brokerages sends data governed by their respective privacy policies',
+        'You are responsible for configuring webhook URLs, data feeds, and integrations that touch external systems',
+        'Monitor updates to third-party terms, rate limits, and retention policies that may affect your deployment',
+        'Ensure you have authority to process data retrieved from external APIs before storing or redistributing it',
+      ],
+    },
+    {
+      icon: ShieldCheck,
+      title: 'Your Privacy Responsibilities',
+      content: [
+        'If you host this project for others, publish your own privacy notice that reflects your deployment choices',
+        'Comply with regional data laws (GDPR, CCPA, etc.) that apply to your users and infrastructure',
+        'Regularly audit custom code, dependencies, and contributions for security and privacy implications',
+        'Document data flows and access controls so stakeholders know how information is handled',
       ],
     },
   ];
 
   return (
     <PageLayout
-      header={
-        <PageHeader>
-          <div className="flex items-center gap-3">
-            <Shield className="w-8 h-8 text-primary" />
-            <span>Privacy Policy</span>
-          </div>
-        </PageHeader>
-      }
+      header={<PageHeader>Privacy Policy</PageHeader>}
       subheader={
         <PageSubHeader>
-          Your privacy is important to us. This policy outlines how we collect,
-          use, and protect your personal information.
+          This policy describes how the open-source Alpaca API Wrapper handles
+          data by default and what changes when you self-host or extend the
+          project.
         </PageSubHeader>
       }
       variant="clean"
@@ -97,12 +95,13 @@ const PrivacyPage = () => {
         <Card className="mb-8 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
           <CardContent className="p-6">
             <p className="text-sm text-muted-foreground">
-              <strong>Last Updated:</strong> October 3, 2025
+              <strong>Last Updated:</strong> October 25, 2025
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              This Privacy Policy explains how Alpaca Trading ("we", "us", or
-              "our") collects, uses, and protects your personal information when
-              you use our platform.
+              This Privacy Policy outlines the information practices of the
+              Alpaca API Wrapper repository and sample applications. Because you
+              run the stack yourself, you control what data is collected,
+              transmitted, or retained.
             </p>
           </CardContent>
         </Card>
@@ -139,19 +138,23 @@ const PrivacyPage = () => {
         {/* Contact Section */}
         <Card className="mt-8 border-border/50 bg-gradient-to-br from-card/60 to-muted/30">
           <CardContent className="p-8">
-            <h3 className="text-xl font-bold mb-4">Questions About Privacy?</h3>
-            <p className="text-muted-foreground mb-4">
-              If you have any questions or concerns about our privacy practices,
-              please don't hesitate to contact us.
+            <h3 className="mb-4 text-xl font-bold">
+              Planning a Production Deployment?
+            </h3>
+            <p className="mb-4 text-muted-foreground">
+              Review the README and infrastructure docs for guidance on securing
+              Docker services, databases, and secrets management. Adapt this
+              policy to match your environment before onboarding teammates or
+              end users.
             </p>
             <div className="flex flex-col gap-2 text-sm">
               <p>
                 <strong>Email:</strong>{' '}
                 <a
-                  href="mailto:privacy@alpacatrading.com"
+                  href="mailto:contact@mnaveedk.com"
                   className="text-primary hover:underline"
                 >
-                  privacy@alpacatrading.com
+                  contact@mnaveedk.com
                 </a>
               </p>
               <p>

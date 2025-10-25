@@ -108,8 +108,8 @@ const ContactPage = () => {
       header={<PageHeader>Get in Touch</PageHeader>}
       subheader={
         <PageSubHeader>
-          Whether you’re looking to collaborate, hire, or just connect—drop a
-          message and I’ll respond shortly.
+          Whether you're looking to collaborate, hire, or just connect—drop a
+          message and I'll respond shortly.
         </PageSubHeader>
       }
     >
@@ -228,7 +228,7 @@ const ContactPage = () => {
             >
               <AlertDescription>
                 {submitStatus === 'success'
-                  ? 'Message sent successfully! I’ll get back to you soon.'
+                  ? 'Message sent successfully! I\'ll get back to you soon.'
                   : 'Failed to send message. Please try again later.'}
               </AlertDescription>
             </Alert>
