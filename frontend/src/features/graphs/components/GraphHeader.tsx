@@ -24,14 +24,12 @@ import {
   HiArrowLeft,
   HiArrowsExpand,
   HiChartBar,
-  HiCog,
   HiColorSwatch,
   HiDotsVertical,
   HiDownload,
   HiPause,
   HiPlay,
   HiRefresh,
-  HiTrendingUp,
   HiX,
 } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
@@ -39,10 +37,8 @@ import { useAppDispatch, useAppSelector } from 'src/app/hooks';
 import {
   selectAutoRefresh,
   selectIsFullscreen,
-  selectShowControls,
   selectShowVolume,
   setAutoRefresh,
-  setShowControls,
   setShowVolume,
 } from '../graphSlice';
 import { Asset } from '@/types/common-types';
@@ -86,7 +82,6 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
 
   const autoRefresh = useAppSelector(selectAutoRefresh);
   const showVolume = useAppSelector(selectShowVolume);
-  const showControls = useAppSelector(selectShowControls);
   const isFullscreen = useAppSelector(selectIsFullscreen);
   const isMobile = useIsMobile();
   const {
@@ -200,19 +195,6 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                 </p>
               )}
             </div>
-            {autoRefresh && (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20">
-                <div className="relative">
-                  <div className="absolute w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></div>
-                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
-                </div>
-                {!isMobile && (
-                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                    Live
-                  </span>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
@@ -321,26 +303,6 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
 
             <Separator orientation="vertical" className="h-6 mx-1" />
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={showControls ? 'secondary' : 'ghost'}
-                  size="icon"
-                  onClick={() => dispatch(setShowControls(!showControls))}
-                  className={`rounded-lg transition-all ${
-                    showControls
-                      ? 'bg-primary/15 text-primary hover:bg-primary/20'
-                      : 'hover:bg-muted/80'
-                  }`}
-                >
-                  <HiCog className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="text-xs">
-                {showControls ? 'Hide Controls' : 'Show Controls'}
-              </TooltipContent>
-            </Tooltip>
-
             {!isMobile && (
               <>
                 <Tooltip>
@@ -392,19 +354,6 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                 <span>Export as CSV</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuItem onSelect={e => e.preventDefault()}>
-                      <HiTrendingUp className="w-4 h-4 mr-2" />
-                      <span>Add Indicator</span>
-                    </DropdownMenuItem>
-                  </TooltipTrigger>
-                  <TooltipContent side="left">
-                    <p>Coming soon!</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
               <DropdownMenuItem>
                 <HiColorSwatch className="w-4 h-4 mr-2" />
                 <span>Customize Theme</span>
