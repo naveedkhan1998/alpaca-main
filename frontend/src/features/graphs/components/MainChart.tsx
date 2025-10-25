@@ -14,21 +14,16 @@ import {
   LineSeries,
 } from 'lightweight-charts';
 
-import type { Asset } from '@/types/common-types';
 import { useAppSelector } from 'src/app/hooks';
-import {
-  selectAutoRefresh,
-  selectChartType,
-  selectTimeframe,
-} from '../graphSlice';
+import { selectAutoRefresh, selectChartType } from '../graphSlice';
 import { getBaseChartOptions } from '../lib/chartOptions';
 import { createSeriesForType } from '../lib/createSeries';
 import { useResizeObserver } from '../hooks/useResizeObserver';
+import { useIsMobile } from '@/hooks/useMobile';
 
 interface MainChartProps {
   seriesData: (BarData | LineData | HistogramData)[];
   mode: boolean;
-  obj: Asset;
   setTimeScale: (timeScale: ITimeScaleApi<Time>) => void;
   emaData: LineData[];
   bollingerBandsData: {
@@ -45,7 +40,6 @@ interface MainChartProps {
 const MainChart: React.FC<MainChartProps> = ({
   seriesData,
   mode,
-  obj,
   setTimeScale,
   emaData,
   bollingerBandsData,
@@ -54,8 +48,8 @@ const MainChart: React.FC<MainChartProps> = ({
   hasMoreData,
 }) => {
   const chartType = useAppSelector(selectChartType);
-  const timeframe = useAppSelector(selectTimeframe);
   const autoRefresh = useAppSelector(selectAutoRefresh);
+  const isMobile = useIsMobile();
   const mainChartContainerRef = useRef<HTMLDivElement | null>(null);
   const mainChartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<SeriesType> | null>(null);
@@ -70,7 +64,6 @@ const MainChart: React.FC<MainChartProps> = ({
     lower: null,
   });
   const prevChartTypeRef = useRef<SeriesType>(chartType);
-  const timeframeBadgeRef = useRef<HTMLSpanElement | null>(null);
   const legendContainerRef = useRef<HTMLDivElement | null>(null);
   // Resize handled via shared hook
   const loadingIndicatorRef = useRef<HTMLDivElement | null>(null);
@@ -107,42 +100,19 @@ const MainChart: React.FC<MainChartProps> = ({
     // Create legend with modern styling
     const legendContainer = document.createElement('div');
     legendContainer.className =
-      'absolute flex flex-wrap items-center px-4 py-2.5 rounded-xl top-3 left-3 bg-card/95 backdrop-blur-xl border border-border/40 shadow-lg gap-x-4 gap-y-2';
+      'absolute px-2 py-1 border rounded-lg shadow-lg top-2 left-2 bg-card/95 backdrop-blur-xl border-border/40';
 
     mainChartContainerRef.current.appendChild(legendContainer);
     legendContainerRef.current = legendContainer;
 
-    // Left section: Company name and exchange
-    const infoSection = document.createElement('div');
-    infoSection.className = 'flex items-center gap-2.5';
-
-    const companyName = document.createElement('span');
-    companyName.className =
-      'hidden text-sm font-bold tracking-tight text-foreground';
-    companyName.textContent = obj?.name || '';
-
-    const exchangeBadge = document.createElement('span');
-    exchangeBadge.className =
-      'px-2 py-1 text-xs font-semibold border rounded-lg shadow-sm bg-primary/15 text-primary border-primary/30';
-    exchangeBadge.textContent = obj?.symbol || '';
-
-    const timeframeBadge = document.createElement('span');
-    timeframeBadge.className =
-      'px-2 py-1 text-xs font-semibold border rounded-lg bg-muted/80 text-muted-foreground border-border/50';
-    timeframeBadge.textContent = `${timeframe}m`;
-    timeframeBadgeRef.current = timeframeBadge;
-
-    infoSection.appendChild(companyName);
-    infoSection.appendChild(exchangeBadge);
-    infoSection.appendChild(timeframeBadge);
-    legendContainer.appendChild(infoSection);
-
-    // Right section: OHLC values
+    // Compact OHLC display for both mobile and desktop
     const priceSection = document.createElement('div');
-    priceSection.className = 'flex items-center gap-3 text-xs font-semibold';
+    priceSection.className = 'flex items-center gap-2 text-xs font-bold';
     legendContainer.appendChild(priceSection);
 
     const updateLegend = (data: any | null) => {
+      if (!priceSection) return;
+
       if (data) {
         priceSection.innerHTML = '';
         if (
@@ -150,42 +120,76 @@ const MainChart: React.FC<MainChartProps> = ({
           'open' in data
         ) {
           const { open, high, low, close } = data as BarData;
-          const priceItems = [
-            { label: 'O', value: open.toFixed(2) },
-            { label: 'H', value: high.toFixed(2) },
-            { label: 'L', value: low.toFixed(2) },
-            { label: 'C', value: close.toFixed(2) },
-          ];
 
-          priceItems.forEach(({ label, value }) => {
-            const item = document.createElement('div');
-            item.className = 'flex items-center gap-1';
+          if (isMobile) {
+            // Mobile: Compact OHLC with different colors
+            const priceItems = [
+              { label: 'O', value: open.toFixed(2), color: '#3B82F6' }, // Blue for Open
+              { label: 'H', value: high.toFixed(2), color: '#10B981' }, // Green for High
+              { label: 'L', value: low.toFixed(2), color: '#EF4444' }, // Red for Low
+              { label: 'C', value: close.toFixed(2), color: '#F59E0B' }, // Orange for Close
+            ];
 
-            const labelSpan = document.createElement('span');
-            labelSpan.className =
-              'font-bold tracking-wide uppercase text-muted-foreground';
-            labelSpan.textContent = label;
+            priceItems.forEach(({ label, value, color }) => {
+              const item = document.createElement('div');
+              item.className = 'flex items-center gap-0.5';
 
-            const valueSpan = document.createElement('span');
-            valueSpan.className = 'font-bold text-foreground';
-            valueSpan.textContent = value;
+              const labelSpan = document.createElement('span');
+              labelSpan.className = 'text-xs font-bold tracking-wide uppercase';
+              labelSpan.style.color = color;
+              labelSpan.textContent = label;
 
-            item.appendChild(labelSpan);
-            item.appendChild(valueSpan);
-            priceSection.appendChild(item);
-          });
+              const valueSpan = document.createElement('span');
+              valueSpan.className = 'text-xs font-bold';
+              valueSpan.style.color = color;
+              valueSpan.textContent = value;
+
+              item.appendChild(labelSpan);
+              item.appendChild(valueSpan);
+              priceSection.appendChild(item);
+            });
+          } else {
+            // Desktop: Standard OHLC display
+            const priceItems = [
+              { label: 'O', value: open.toFixed(2) },
+              { label: 'H', value: high.toFixed(2) },
+              { label: 'L', value: low.toFixed(2) },
+              { label: 'C', value: close.toFixed(2) },
+            ];
+
+            priceItems.forEach(({ label, value }) => {
+              const item = document.createElement('div');
+              item.className = 'flex items-center gap-1';
+
+              const labelSpan = document.createElement('span');
+              labelSpan.className =
+                'font-bold tracking-wide uppercase text-muted-foreground';
+              labelSpan.textContent = label;
+
+              const valueSpan = document.createElement('span');
+              valueSpan.className = 'font-bold text-foreground';
+              valueSpan.textContent = value;
+
+              item.appendChild(labelSpan);
+              item.appendChild(valueSpan);
+              priceSection.appendChild(item);
+            });
+          }
         } else if ('value' in data) {
           const { value } = data as LineData;
           const item = document.createElement('div');
           item.className = 'flex items-center gap-1';
 
           const labelSpan = document.createElement('span');
-          labelSpan.className =
-            'font-bold tracking-wide uppercase text-muted-foreground';
+          labelSpan.className = isMobile
+            ? 'font-bold tracking-wide uppercase text-xs text-primary'
+            : 'font-bold tracking-wide uppercase text-muted-foreground';
           labelSpan.textContent = 'Price';
 
           const valueSpan = document.createElement('span');
-          valueSpan.className = 'font-bold text-foreground';
+          valueSpan.className = isMobile
+            ? 'font-bold text-xs text-primary'
+            : 'font-bold text-foreground';
           valueSpan.textContent = (value as number).toFixed(2);
 
           item.appendChild(labelSpan);
@@ -246,9 +250,7 @@ const MainChart: React.FC<MainChartProps> = ({
       }
     });
   }, [
-    obj?.name,
-    obj?.symbol,
-    timeframe,
+    isMobile,
     setTimeScale,
     chartType,
     mode,
@@ -307,13 +309,6 @@ const MainChart: React.FC<MainChartProps> = ({
       }
     }
   }, [seriesData, chartType, createSeries]);
-
-  // Update timeframe badge
-  useEffect(() => {
-    if (timeframeBadgeRef.current) {
-      timeframeBadgeRef.current.textContent = `${timeframe}m`;
-    }
-  }, [timeframe]);
 
   // Add/Remove EMA series
   useEffect(() => {
@@ -415,6 +410,7 @@ const MainChart: React.FC<MainChartProps> = ({
 
   // Cleanup effect for component unmount
   useEffect(() => {
+    const currentBollingerRefs = bollingerBandsSeriesRefs.current;
     return () => {
       if (mainChartRef.current) {
         mainChartRef.current.remove();
@@ -423,9 +419,9 @@ const MainChart: React.FC<MainChartProps> = ({
       legendContainerRef.current = null;
       seriesRef.current = null;
       emaSeriesRef.current = null;
-      bollingerBandsSeriesRefs.current.upper = null;
-      bollingerBandsSeriesRefs.current.middle = null;
-      bollingerBandsSeriesRefs.current.lower = null;
+      currentBollingerRefs.upper = null;
+      currentBollingerRefs.middle = null;
+      currentBollingerRefs.lower = null;
     };
   }, []);
 
