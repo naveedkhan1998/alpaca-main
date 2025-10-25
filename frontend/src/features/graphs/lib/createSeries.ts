@@ -23,22 +23,24 @@ export function createSeriesForType(
   switch (type) {
     case 'Candlestick':
       return chart.addSeries(CandlestickSeries, {
-        upColor: mode ? '#10B981' : '#059669',
-        downColor: mode ? '#EF4444' : '#DC2626',
+        upColor: mode ? 'hsl(142, 76%, 48%)' : 'hsl(142, 71%, 45%)',
+        downColor: mode ? 'hsl(0, 84%, 65%)' : 'hsl(0, 84%, 60%)',
         borderVisible: false,
-        wickUpColor: mode ? '#10B981' : '#059669',
-        wickDownColor: mode ? '#EF4444' : '#DC2626',
+        wickUpColor: mode ? 'hsl(142, 76%, 48%)' : 'hsl(142, 71%, 45%)',
+        wickDownColor: mode ? 'hsl(0, 84%, 65%)' : 'hsl(0, 84%, 60%)',
       });
     case 'Bar':
       return chart.addSeries(BarSeries, {
-        upColor: mode ? '#10B981' : '#059669',
-        downColor: mode ? '#EF4444' : '#DC2626',
+        upColor: mode ? 'hsl(142, 76%, 48%)' : 'hsl(142, 71%, 45%)',
+        downColor: mode ? 'hsl(0, 84%, 65%)' : 'hsl(0, 84%, 60%)',
       });
     case 'Area':
       return chart.addSeries(AreaSeries, {
-        lineColor: mode ? '#3B82F6' : '#2563EB',
-        topColor: mode ? 'rgba(59, 130, 246, 0.4)' : 'rgba(37, 99, 235, 0.4)',
-        bottomColor: mode ? 'rgba(59, 130, 246, 0)' : 'rgba(37, 99, 235, 0)',
+        lineColor: mode ? 'hsl(217, 91%, 60%)' : 'hsl(221, 83%, 53%)',
+        topColor: mode
+          ? 'hsla(217, 91%, 60%, 0.4)'
+          : 'hsla(221, 83%, 53%, 0.4)',
+        bottomColor: mode ? 'hsla(217, 91%, 60%, 0)' : 'hsla(221, 83%, 53%, 0)',
         lineWidth: 2,
       });
     case 'Baseline':
@@ -52,17 +54,25 @@ export function createSeriesForType(
                 ? (sample[0] as LineData<Time>).value
                 : 0,
         },
-        topLineColor: mode ? '#10B981' : '#059669',
-        bottomLineColor: mode ? '#EF4444' : '#DC2626',
-        topFillColor1: 'rgba(38, 166, 154, 0.28)',
-        topFillColor2: 'rgba(38, 166, 154, 0.05)',
-        bottomFillColor1: 'rgba(239, 83, 80, 0.05)',
-        bottomFillColor2: 'rgba(239, 83, 80, 0.28)',
+        topLineColor: mode ? 'hsl(142, 76%, 48%)' : 'hsl(142, 71%, 45%)',
+        bottomLineColor: mode ? 'hsl(0, 84%, 65%)' : 'hsl(0, 84%, 60%)',
+        topFillColor1: mode
+          ? 'hsla(142, 76%, 48%, 0.28)'
+          : 'hsla(142, 71%, 45%, 0.28)',
+        topFillColor2: mode
+          ? 'hsla(142, 76%, 48%, 0.05)'
+          : 'hsla(142, 71%, 45%, 0.05)',
+        bottomFillColor1: mode
+          ? 'hsla(0, 84%, 65%, 0.05)'
+          : 'hsla(0, 84%, 60%, 0.05)',
+        bottomFillColor2: mode
+          ? 'hsla(0, 84%, 65%, 0.28)'
+          : 'hsla(0, 84%, 60%, 0.28)',
       });
     case 'Line':
     default:
       return chart.addSeries(LineSeries, {
-        color: mode ? '#3B82F6' : '#2563EB',
+        color: mode ? 'hsl(217, 91%, 60%)' : 'hsl(221, 83%, 53%)',
         lineWidth: 2,
         crosshairMarkerVisible: true,
         crosshairMarkerRadius: 4,

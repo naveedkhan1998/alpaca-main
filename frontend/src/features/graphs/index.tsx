@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect, useMemo } from 'react';
 import type { ITimeScaleApi, Time } from 'lightweight-charts';
 import { useLocation } from 'react-router-dom';
 import {
@@ -7,10 +7,10 @@ import {
   ResizablePanelGroup,
 } from '@/components/ui/resizable';
 //
-import { HiChartBar, HiCog, HiLightningBolt } from 'react-icons/hi';
+import { HiChartBar, HiCog } from 'react-icons/hi';
 import type { Asset } from '@/types/common-types';
 import { useTheme } from '@/components/ThemeProvider';
-import { Button } from '@/components/ui/button';
+//import { Button } from '@/components/ui/button';
 import ChartControls from './components/ChartControls';
 import MainChart from './components/MainChart';
 import VolumeChart from './components/VolumeChart';
@@ -20,20 +20,24 @@ import ErrorScreen from './components/ErrorScreen';
 import NotFoundScreen from './components/NotFoundScreen';
 import GraphHeader from './components/GraphHeader';
 import IndicatorChart from './components/IndicatorChart';
+import ReplayControls from './components/ReplayControls';
 import { useIsMobile } from '@/hooks/useMobile';
+import { formatDate } from '@/lib/functions';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Drawer, DrawerContent } from '@/components/ui/drawer';
+//import { Dialog, DialogContent } from '@/components/ui/dialog';
+//import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import PanelHeader from './components/PanelHeader';
-import PaperTradingPanel from './components/controls/PaperTradingPanel';
+//import PaperTradingPanel from './components/controls/PaperTradingPanel';
 import { useCandles } from './hooks/useCandles';
 import { useDerivedSeries } from './hooks/useDerivedSeries';
 import { useChartSync } from './hooks/useChartSync';
 import { useFullscreen } from './hooks/useFullscreen';
 import { useGraphShortcuts } from './hooks/useGraphShortcuts';
+import { useReplayController } from './hooks/useReplayController';
 import ChartToolbar from './components/ChartToolbar';
 import {
   setShowVolume,
+  setAutoRefresh,
   selectTimeframe,
   selectShowVolume,
   selectAutoRefresh,
@@ -43,11 +47,45 @@ import {
   selectActiveIndicators,
   selectIndicatorConfigs,
   removeIndicator,
+  setReplayStep,
+  setReplayTotalSteps,
+  setReplayPlaying,
 } from './graphSlice';
 
 interface LocationState {
   obj: Asset;
 }
+
+const formatReplayTimeLabel = (timeValue?: Time) => {
+  if (typeof timeValue === 'number') {
+    const date = new Date(timeValue * 1000);
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZone: 'UTC',
+    };
+    return date.toLocaleString(undefined, options);
+  }
+  if (typeof timeValue === 'string') {
+    const timestamp = formatDate(timeValue);
+    const date = new Date(timestamp * 1000);
+    return date.toLocaleString();
+  }
+  if (timeValue && typeof timeValue === 'object' && 'year' in timeValue) {
+    const { year, month, day } = timeValue as {
+      year: number;
+      month: number;
+      day: number;
+    };
+    const date = new Date(year, (month ?? 1) - 1, day ?? 1);
+    return Number.isNaN(date.getTime()) ? undefined : date.toLocaleDateString();
+  }
+  return undefined;
+};
 
 const GraphsPage: React.FC = () => {
   const location = useLocation();
@@ -66,7 +104,18 @@ const GraphsPage: React.FC = () => {
   const showControls = useAppSelector(selectShowControls);
   const activeIndicators = useAppSelector(selectActiveIndicators);
   const indicatorConfigs = useAppSelector(selectIndicatorConfigs);
-  const [isPaperTradingOpen, setIsPaperTradingOpen] = React.useState(false);
+  const {
+    enabled: isReplayEnabled,
+    playing: isReplayPlaying,
+    speed: replaySpeed,
+    currentStep: replayStep,
+    totalSteps: replayTotalSteps,
+    handleReplayToggle,
+    handleReplayPlayPause,
+    handleReplayRestart,
+    handleReplaySeek,
+    handleReplaySpeedChange,
+  } = useReplayController();
 
   // Refs
   const mainChartRef = useRef<ITimeScaleApi<Time> | null>(null);
@@ -102,9 +151,124 @@ const GraphsPage: React.FC = () => {
     activeIndicators,
     indicatorConfigs,
   });
+  const prevSeriesLengthRef = useRef(seriesData.length);
+  const prevReplayEnabledRef = useRef(isReplayEnabled);
+
+  const totalSeriesCount = seriesData.length;
+
+  const effectiveReplayIndex = useMemo(() => {
+    if (!isReplayEnabled) return totalSeriesCount;
+    if (totalSeriesCount === 0) return 0;
+    return Math.min(Math.max(replayStep, 1), totalSeriesCount);
+  }, [isReplayEnabled, replayStep, totalSeriesCount]);
+
+  const displayedSeriesData = useMemo(
+    () =>
+      isReplayEnabled ? seriesData.slice(0, effectiveReplayIndex) : seriesData,
+    [isReplayEnabled, seriesData, effectiveReplayIndex]
+  );
+
+  const displayedVolumeData = useMemo(
+    () =>
+      isReplayEnabled ? volumeData.slice(0, effectiveReplayIndex) : volumeData,
+    [isReplayEnabled, volumeData, effectiveReplayIndex]
+  );
+
+  const displayedRsiData = useMemo(
+    () => (isReplayEnabled ? rsiData.slice(0, effectiveReplayIndex) : rsiData),
+    [isReplayEnabled, rsiData, effectiveReplayIndex]
+  );
+
+  const displayedAtrData = useMemo(
+    () => (isReplayEnabled ? atrData.slice(0, effectiveReplayIndex) : atrData),
+    [isReplayEnabled, atrData, effectiveReplayIndex]
+  );
+
+  const displayedEmaData = useMemo(
+    () => (isReplayEnabled ? emaData.slice(0, effectiveReplayIndex) : emaData),
+    [isReplayEnabled, emaData, effectiveReplayIndex]
+  );
+
+  const displayedBollingerBandsData = useMemo(
+    () =>
+      isReplayEnabled
+        ? bollingerBandsData.slice(0, effectiveReplayIndex)
+        : bollingerBandsData,
+    [isReplayEnabled, bollingerBandsData, effectiveReplayIndex]
+  );
+
+  const currentReplayLabel = useMemo(() => {
+    if (!isReplayEnabled || displayedSeriesData.length === 0) return undefined;
+    const lastPoint = displayedSeriesData[displayedSeriesData.length - 1] as {
+      time?: Time;
+    };
+    return formatReplayTimeLabel(lastPoint?.time);
+  }, [displayedSeriesData, isReplayEnabled]);
 
   const shouldShowVolume = showVolume && hasValidVolume;
-  const latestPrice = candles.length > 0 ? candles[0]?.close : undefined;
+  const shouldRenderReplayControls = isReplayEnabled && totalSeriesCount > 0;
+  const headerReplayControls = useMemo(
+    () => ({
+      enabled: isReplayEnabled,
+      playing: isReplayPlaying,
+      currentStep: effectiveReplayIndex,
+      totalSteps: totalSeriesCount,
+      onToggle: handleReplayToggle,
+      onPlayPause: handleReplayPlayPause,
+      onRestart: handleReplayRestart,
+      onSeek: handleReplaySeek,
+      speed: replaySpeed,
+      onSpeedChange: handleReplaySpeedChange,
+      currentLabel: currentReplayLabel,
+      isLoadingMore: isLoadingMore || isFetching,
+      hasMoreHistorical: hasMore,
+      onLoadMoreHistorical: hasMore ? loadMoreHistoricalData : undefined,
+    }),
+    [
+      currentReplayLabel,
+      effectiveReplayIndex,
+      handleReplayPlayPause,
+      handleReplayRestart,
+      handleReplaySeek,
+      handleReplaySpeedChange,
+      handleReplayToggle,
+      hasMore,
+      isFetching,
+      isLoadingMore,
+      isReplayEnabled,
+      isReplayPlaying,
+      loadMoreHistoricalData,
+      replaySpeed,
+      totalSeriesCount,
+    ]
+  );
+  const mobileReplayControls =
+    shouldRenderReplayControls && isMobile ? (
+      <Sheet open={isReplayEnabled} onOpenChange={handleReplayToggle}>
+        <SheetContent
+          side="bottom"
+          className="h-auto max-h-[80vh] rounded-t-2xl border-t border-border/60 bg-card backdrop-blur-xl p-0 mx-0"
+        >
+          <ReplayControls
+            variant="overlay"
+            enabled={isReplayEnabled}
+            playing={isReplayPlaying}
+            currentStep={effectiveReplayIndex}
+            totalSteps={totalSeriesCount}
+            onToggle={handleReplayToggle}
+            onPlayPause={handleReplayPlayPause}
+            onRestart={handleReplayRestart}
+            onSeek={handleReplaySeek}
+            speed={replaySpeed}
+            onSpeedChange={handleReplaySpeedChange}
+            currentLabel={currentReplayLabel}
+            isLoadingMore={isLoadingMore || isFetching}
+            hasMoreHistorical={hasMore}
+            onLoadMoreHistorical={hasMore ? loadMoreHistoricalData : undefined}
+          />
+        </SheetContent>
+      </Sheet>
+    ) : null;
 
   // TimeScale refs setters
   const setMainChartTimeScale = (timeScale: ITimeScaleApi<Time>) => {
@@ -135,8 +299,113 @@ const GraphsPage: React.FC = () => {
   // Keyboard shortcuts
   useGraphShortcuts({ showVolume, showControls, toggleFullscreen });
 
+  useEffect(() => {
+    if (replayTotalSteps !== totalSeriesCount) {
+      dispatch(setReplayTotalSteps(totalSeriesCount));
+    }
+  }, [dispatch, replayTotalSteps, totalSeriesCount]);
+
+  useEffect(() => {
+    if (prevReplayEnabledRef.current !== isReplayEnabled) {
+      if (isReplayEnabled) {
+        // When enabling replay, start from beginning if we were at the end, otherwise continue
+        if (replayStep >= totalSeriesCount) {
+          dispatch(setReplayStep(totalSeriesCount > 1 ? 1 : totalSeriesCount));
+        }
+        dispatch(setReplayPlaying(false));
+      } else {
+        // When disabling replay, show all data
+        dispatch(setReplayStep(totalSeriesCount));
+        dispatch(setReplayPlaying(false));
+      }
+    }
+    prevReplayEnabledRef.current = isReplayEnabled;
+  }, [dispatch, isReplayEnabled, totalSeriesCount, replayStep]);
+
+  useEffect(() => {
+    const previousLength = prevSeriesLengthRef.current;
+    if (previousLength === totalSeriesCount) return;
+
+    if (isReplayEnabled) {
+      const delta = totalSeriesCount - previousLength;
+      if (totalSeriesCount === 0) {
+        dispatch(setReplayStep(0));
+      } else if (delta > 0) {
+        dispatch(setReplayStep(Math.min(replayStep + delta, totalSeriesCount)));
+      } else {
+        dispatch(setReplayStep(Math.min(replayStep, totalSeriesCount)));
+      }
+    } else {
+      dispatch(setReplayStep(totalSeriesCount));
+    }
+
+    prevSeriesLengthRef.current = totalSeriesCount;
+  }, [dispatch, totalSeriesCount, isReplayEnabled, replayStep]);
+
+  useEffect(() => {
+    if (!isReplayEnabled || !isReplayPlaying) return;
+    if (totalSeriesCount <= 1) {
+      dispatch(setReplayPlaying(false));
+      return;
+    }
+    if (replayStep >= totalSeriesCount) {
+      dispatch(setReplayPlaying(false));
+      return;
+    }
+
+    const intervalMs = Math.max(120, Math.round(800 / replaySpeed));
+    const timer = window.setInterval(() => {
+      const next = replayStep + 1;
+      if (next >= totalSeriesCount) {
+        window.clearInterval(timer);
+        dispatch(setReplayStep(totalSeriesCount));
+        dispatch(setReplayPlaying(false));
+      } else {
+        dispatch(setReplayStep(next));
+      }
+    }, intervalMs);
+
+    return () => window.clearInterval(timer);
+  }, [
+    dispatch,
+    isReplayEnabled,
+    isReplayPlaying,
+    replaySpeed,
+    replayStep,
+    totalSeriesCount,
+  ]);
+
+  useEffect(() => {
+    if (isReplayPlaying && autoRefresh) {
+      dispatch(setAutoRefresh(false));
+    }
+  }, [autoRefresh, dispatch, isReplayPlaying]);
+
+  useEffect(() => {
+    if (!isReplayEnabled || !hasMore) return;
+    if (isLoadingMore || isFetching) return;
+    if (totalSeriesCount === 0) return;
+    if (effectiveReplayIndex <= 2) {
+      loadMoreHistoricalData();
+    }
+  }, [
+    effectiveReplayIndex,
+    hasMore,
+    isFetching,
+    isLoadingMore,
+    isReplayEnabled,
+    loadMoreHistoricalData,
+    totalSeriesCount,
+  ]);
+
+  useEffect(() => {
+    if (totalSeriesCount <= 1 && isReplayPlaying) {
+      dispatch(setReplayPlaying(false));
+    }
+  }, [dispatch, totalSeriesCount, isReplayPlaying]);
+
   // Keep charts in sync on mount/update
-  React.useEffect(() => {
+  useEffect(() => {
     const cleanup = syncCharts();
     return () => {
       if (cleanup) cleanup();
@@ -174,6 +443,7 @@ const GraphsPage: React.FC = () => {
         handleDownload={handleDownload}
         toggleFullscreen={toggleFullscreen}
         refetch={handleRefetch}
+        replayControls={headerReplayControls}
       />
 
       {/* Main Content */}
@@ -213,12 +483,12 @@ const GraphsPage: React.FC = () => {
               <ResizablePanel defaultSize={shouldShowVolume ? 75 : 100}>
                 <div className="relative h-full">
                   <MainChart
-                    seriesData={seriesData}
+                    seriesData={displayedSeriesData}
                     mode={isDarkMode}
                     obj={obj}
                     setTimeScale={setMainChartTimeScale}
-                    emaData={emaData}
-                    bollingerBandsData={bollingerBandsData}
+                    emaData={displayedEmaData}
+                    bollingerBandsData={displayedBollingerBandsData}
                     onLoadMoreData={loadMoreHistoricalData}
                     isLoadingMore={isLoadingMore || isFetching}
                     hasMoreData={hasMore}
@@ -227,6 +497,7 @@ const GraphsPage: React.FC = () => {
                   <div className="pointer-events-auto">
                     <ChartToolbar compact />
                   </div>
+                  {mobileReplayControls}
                 </div>
                 {(isLoadingMore || isFetching) && (
                   <div className="flex items-center justify-center py-2 text-xs text-muted-foreground animate-pulse">
@@ -247,7 +518,7 @@ const GraphsPage: React.FC = () => {
                       dense
                     />
                     <VolumeChart
-                      volumeData={volumeData}
+                      volumeData={displayedVolumeData}
                       mode={isDarkMode}
                       setTimeScale={setVolumeChartTimeScale}
                     />
@@ -267,7 +538,7 @@ const GraphsPage: React.FC = () => {
                       dense
                     />
                     <IndicatorChart
-                      rsiData={rsiData}
+                      rsiData={displayedRsiData}
                       atrData={[]}
                       mode={isDarkMode}
                       setTimeScale={setRSIChartTimeScale}
@@ -289,7 +560,7 @@ const GraphsPage: React.FC = () => {
                     />
                     <IndicatorChart
                       rsiData={[]}
-                      atrData={atrData}
+                      atrData={displayedAtrData}
                       mode={isDarkMode}
                       setTimeScale={setATRChartTimeScale}
                     />
@@ -335,12 +606,12 @@ const GraphsPage: React.FC = () => {
                   <ResizablePanel defaultSize={shouldShowVolume ? 75 : 100}>
                     <div className="relative h-full">
                       <MainChart
-                        seriesData={seriesData}
+                        seriesData={displayedSeriesData}
                         mode={isDarkMode}
                         obj={obj}
                         setTimeScale={setMainChartTimeScale}
-                        emaData={emaData}
-                        bollingerBandsData={bollingerBandsData}
+                        emaData={displayedEmaData}
+                        bollingerBandsData={displayedBollingerBandsData}
                         onLoadMoreData={loadMoreHistoricalData}
                         isLoadingMore={isLoadingMore || isFetching}
                         hasMoreData={hasMore}
@@ -348,6 +619,7 @@ const GraphsPage: React.FC = () => {
                       <div className="pointer-events-auto">
                         <ChartToolbar compact />
                       </div>
+                      {mobileReplayControls}
                     </div>
                     {(isLoadingMore || isFetching) && (
                       <div className="flex items-center justify-center py-2 text-xs text-muted-foreground animate-pulse">
@@ -367,7 +639,7 @@ const GraphsPage: React.FC = () => {
                           onClose={() => dispatch(setShowVolume(false))}
                         />
                         <VolumeChart
-                          volumeData={volumeData}
+                          volumeData={displayedVolumeData}
                           mode={isDarkMode}
                           setTimeScale={setVolumeChartTimeScale}
                         />
@@ -388,7 +660,7 @@ const GraphsPage: React.FC = () => {
                           onClose={() => dispatch(removeIndicator('RSI'))}
                         />
                         <IndicatorChart
-                          rsiData={rsiData}
+                          rsiData={displayedRsiData}
                           atrData={[]}
                           mode={isDarkMode}
                           setTimeScale={setRSIChartTimeScale}
@@ -411,7 +683,7 @@ const GraphsPage: React.FC = () => {
                         />
                         <IndicatorChart
                           rsiData={[]}
-                          atrData={atrData}
+                          atrData={displayedAtrData}
                           mode={isDarkMode}
                           setTimeScale={setATRChartTimeScale}
                         />
@@ -424,45 +696,6 @@ const GraphsPage: React.FC = () => {
           </ResizablePanelGroup>
         )}
       </div>
-
-      {isMobile ? (
-        <Drawer open={isPaperTradingOpen} onOpenChange={setIsPaperTradingOpen}>
-          <DrawerContent className="h-[90dvh]  p-0 ">
-            <PaperTradingPanel
-              asset={obj}
-              currentPrice={latestPrice}
-              enabled={isPaperTradingOpen}
-              isInDrawer={true}
-            />
-          </DrawerContent>
-        </Drawer>
-      ) : (
-        <Dialog open={isPaperTradingOpen} onOpenChange={setIsPaperTradingOpen}>
-          <DialogContent className="max-w-7xl w-full max-h-[90dvh] p-0 sm:rounded-xl m-auto">
-            <PaperTradingPanel
-              asset={obj}
-              currentPrice={latestPrice}
-              enabled={isPaperTradingOpen}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
-
-      <Button
-        type="button"
-        size="lg"
-        className={`fixed bottom-6 right-6 z-50 shadow-2xl transition-all duration-300 bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary text-primary-foreground font-bold rounded-xl ${
-          isPaperTradingOpen
-            ? 'pointer-events-none opacity-0 scale-90'
-            : 'opacity-95 scale-75 hover:scale-105'
-        }`}
-        onClick={() => setIsPaperTradingOpen(true)}
-        aria-label="Open paper trading"
-      >
-        <HiLightningBolt className="w-5 h-5 mr-2" />
-        <span className="hidden tracking-wide sm:inline">Start Trading</span>
-        <span className="sm:hidden">Trade</span>
-      </Button>
     </div>
   );
 };

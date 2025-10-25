@@ -78,6 +78,14 @@ export const defaultIndicatorConfigs: IndicatorConfig = {
   },
 };
 
+interface ReplayState {
+  enabled: boolean;
+  playing: boolean;
+  speed: number;
+  currentStep: number;
+  totalSteps: number;
+}
+
 interface GraphState {
   timeframe: number;
   chartType: SeriesType;
@@ -88,6 +96,7 @@ interface GraphState {
   isFullscreen: boolean;
   activeIndicators: string[];
   indicatorConfigs: IndicatorConfig;
+  replay: ReplayState;
 }
 
 const initialState: GraphState = {
@@ -100,6 +109,13 @@ const initialState: GraphState = {
   isFullscreen: false,
   activeIndicators: [],
   indicatorConfigs: defaultIndicatorConfigs,
+  replay: {
+    enabled: false,
+    playing: false,
+    speed: 1,
+    currentStep: 0,
+    totalSteps: 0,
+  },
 };
 
 export const graphSlice = createSlice({
@@ -159,6 +175,33 @@ export const graphSlice = createSlice({
       state.indicatorConfigs[action.payload] =
         defaultIndicatorConfigs[action.payload];
     },
+    setReplayEnabled: (state, action: PayloadAction<boolean>) => {
+      state.replay.enabled = action.payload;
+      if (!action.payload) {
+        state.replay.playing = false;
+        state.replay.currentStep = state.replay.totalSteps;
+      }
+    },
+    setReplayPlaying: (state, action: PayloadAction<boolean>) => {
+      state.replay.playing = action.payload;
+    },
+    setReplaySpeed: (state, action: PayloadAction<number>) => {
+      state.replay.speed = action.payload;
+    },
+    setReplayStep: (state, action: PayloadAction<number>) => {
+      state.replay.currentStep = action.payload;
+    },
+    setReplayTotalSteps: (state, action: PayloadAction<number>) => {
+      state.replay.totalSteps = action.payload;
+      if (!state.replay.enabled) {
+        state.replay.currentStep = action.payload;
+      } else {
+        state.replay.currentStep = Math.min(
+          state.replay.currentStep,
+          action.payload
+        );
+      }
+    },
   },
 });
 
@@ -173,6 +216,11 @@ export const {
   removeIndicator,
   updateIndicatorConfig,
   resetIndicatorConfig,
+  setReplayEnabled,
+  setReplayPlaying,
+  setReplaySpeed,
+  setReplayStep,
+  setReplayTotalSteps,
 } = graphSlice.actions;
 
 export const selectTimeframe = (state: RootState) => state.graph.timeframe;
@@ -188,6 +236,15 @@ export const selectActiveIndicators = (state: RootState) =>
   state.graph.activeIndicators;
 export const selectIndicatorConfigs = (state: RootState) =>
   state.graph.indicatorConfigs;
+export const selectReplayEnabled = (state: RootState) =>
+  state.graph.replay.enabled;
+export const selectReplayPlaying = (state: RootState) =>
+  state.graph.replay.playing;
+export const selectReplaySpeed = (state: RootState) => state.graph.replay.speed;
+export const selectReplayStep = (state: RootState) =>
+  state.graph.replay.currentStep;
+export const selectReplayTotalSteps = (state: RootState) =>
+  state.graph.replay.totalSteps;
 export const selectIndicatorConfig =
   <K extends keyof IndicatorConfig>(indicator: K) =>
   (state: RootState) =>
