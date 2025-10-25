@@ -3,7 +3,7 @@ import type { DeepPartial, ChartOptions } from 'lightweight-charts';
 export function getBaseChartOptions(mode: boolean): DeepPartial<ChartOptions> {
   return {
     layout: {
-      textColor: mode ? '#E2E8F0' : '#475569',
+      textColor: mode ? 'hsl(220, 20%, 96%)' : 'hsl(222, 50%, 10%)',
       background: { color: 'transparent' },
       fontSize: 12,
       fontFamily: 'Inter, -apple-system, sans-serif',
@@ -11,26 +11,36 @@ export function getBaseChartOptions(mode: boolean): DeepPartial<ChartOptions> {
     timeScale: {
       timeVisible: true,
       secondsVisible: false,
-      borderColor: mode ? '#334155' : '#CBD5E1',
+      borderColor: mode ? 'hsl(222, 47%, 18%)' : 'hsl(220, 15%, 86%)',
     },
     rightPriceScale: {
-      borderColor: mode ? '#334155' : '#CBD5E1',
+      borderColor: mode ? 'hsl(222, 47%, 18%)' : 'hsl(220, 15%, 86%)',
       scaleMargins: { top: 0.05, bottom: 0.05 },
     },
     crosshair: {
       mode: 1,
-      vertLine: { width: 1, color: mode ? '#64748B' : '#94A3B8', style: 2 },
+      vertLine: {
+        width: 1,
+        color: mode ? 'hsl(220, 20%, 65%)' : 'hsl(220, 12%, 42%)',
+        style: 2,
+      },
       horzLine: {
         visible: true,
         labelVisible: true,
-        color: mode ? '#64748B' : '#94A3B8',
+        color: mode ? 'hsl(220, 20%, 65%)' : 'hsl(220, 12%, 42%)',
         width: 1,
         style: 2,
       },
     },
     grid: {
-      vertLines: { color: mode ? '#1E293B' : '#F1F5F9', style: 1 },
-      horzLines: { color: mode ? '#1E293B' : '#F1F5F9', style: 1 },
+      vertLines: {
+        color: mode ? 'hsl(222, 47%, 15%)' : 'hsl(220, 18%, 88%)',
+        style: 1,
+      },
+      horzLines: {
+        color: mode ? 'hsl(222, 47%, 15%)' : 'hsl(220, 18%, 88%)',
+        style: 1,
+      },
     },
     handleScroll: true,
     handleScale: true,

@@ -11,6 +11,8 @@ import {
   addIndicator,
   removeIndicator,
   selectActiveIndicators,
+  selectReplayEnabled,
+  setReplayEnabled,
 } from '../graphSlice';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +31,7 @@ export default function ChartControls() {
   const showVolume = useAppSelector(selectShowVolume);
   const autoRefresh = useAppSelector(selectAutoRefresh);
   const activeIndicators = useAppSelector(selectActiveIndicators);
+  const replayEnabled = useAppSelector(selectReplayEnabled);
 
   const timeframeOptions = [
     { value: 1, label: '1m' },
@@ -153,6 +156,8 @@ export default function ChartControls() {
         onShowVolumeChange={show => dispatch(setShowVolume(show))}
         autoRefresh={autoRefresh}
         onAutoRefreshChange={auto => dispatch(setAutoRefresh(auto))}
+        replayEnabled={replayEnabled}
+        onReplayToggle={value => dispatch(setReplayEnabled(value))}
       />
     </div>
   );

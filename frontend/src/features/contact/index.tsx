@@ -228,7 +228,7 @@ const ContactPage = () => {
             >
               <AlertDescription>
                 {submitStatus === 'success'
-                  ? 'Message sent successfully! I\'ll get back to you soon.'
+                  ? "Message sent successfully! I'll get back to you soon."
                   : 'Failed to send message. Please try again later.'}
               </AlertDescription>
             </Alert>

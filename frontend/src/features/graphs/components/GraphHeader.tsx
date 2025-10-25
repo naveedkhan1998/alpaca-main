@@ -8,6 +8,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -28,7 +33,6 @@ import {
   HiRefresh,
   HiTrendingUp,
   HiX,
-  HiInformationCircle,
 } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
@@ -44,12 +48,30 @@ import {
 import { Asset } from '@/types/common-types';
 import { ModeToggle } from '@/components/ModeToggle';
 import { useIsMobile } from '@/hooks/useMobile';
+import ReplayControls from './ReplayControls';
+import { useMemo } from 'react';
 
 interface GraphHeaderProps {
   obj: Asset;
   handleDownload: () => void;
   refetch: () => void;
   toggleFullscreen: () => void;
+  replayControls: {
+    enabled: boolean;
+    playing: boolean;
+    currentStep: number;
+    totalSteps: number;
+    onToggle: (value: boolean) => void;
+    onPlayPause: () => void;
+    onRestart: () => void;
+    onSeek: (value: number) => void;
+    speed: number;
+    onSpeedChange: (value: number) => void;
+    currentLabel?: string;
+    isLoadingMore?: boolean;
+    hasMoreHistorical?: boolean;
+    onLoadMoreHistorical?: () => void;
+  };
 }
 
 const GraphHeader: React.FC<GraphHeaderProps> = ({
@@ -57,6 +79,7 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
   handleDownload,
   refetch,
   toggleFullscreen,
+  replayControls,
 }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -66,6 +89,73 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
   const showControls = useAppSelector(selectShowControls);
   const isFullscreen = useAppSelector(selectIsFullscreen);
   const isMobile = useIsMobile();
+  const {
+    enabled: replayEnabled,
+    playing: replayPlaying,
+    currentStep: replayCurrentStep,
+    totalSteps: replayTotalSteps,
+    onToggle: toggleReplay,
+    onPlayPause: playPauseReplay,
+    onRestart: restartReplay,
+    onSeek: seekReplay,
+    speed: replaySpeed,
+    onSpeedChange: changeReplaySpeed,
+    currentLabel: replayCurrentLabel,
+    isLoadingMore: replayIsLoadingMore,
+    hasMoreHistorical: replayHasMoreHistorical,
+    onLoadMoreHistorical: replayLoadMoreHistorical,
+  } = replayControls;
+
+  const replayTriggerButton = useMemo(() => {
+    const commonClasses = `relative h-9 w-9 rounded-full border transition-all ${
+      replayEnabled
+        ? 'border-primary/40 bg-primary/10 text-primary shadow-sm'
+        : 'border-border/40 bg-card/95 text-muted-foreground hover:text-foreground'
+    }`;
+
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={
+          replayEnabled ? 'Disable candle replay' : 'Enable candle replay'
+        }
+        className={commonClasses}
+        onClick={() => toggleReplay(!replayEnabled)}
+      >
+        <HiPlay
+          className={`w-4 h-4 ${
+            replayPlaying ? 'text-primary animate-pulse' : ''
+          }`}
+        />
+        {replayPlaying ? (
+          <span className="absolute top-1 right-1 inline-flex h-2.5 w-2.5 rounded-full bg-primary/80 animate-ping" />
+        ) : replayEnabled ? (
+          <span className="absolute top-1 right-1 inline-flex h-1.5 w-1.5 rounded-full bg-primary/70" />
+        ) : null}
+      </Button>
+    );
+  }, [replayEnabled, replayPlaying, toggleReplay]);
+
+  const replayControlsContent = (
+    <ReplayControls
+      variant="popover"
+      enabled={replayEnabled}
+      playing={replayPlaying}
+      currentStep={replayCurrentStep}
+      totalSteps={replayTotalSteps}
+      onToggle={toggleReplay}
+      onPlayPause={playPauseReplay}
+      onRestart={restartReplay}
+      onSeek={seekReplay}
+      speed={replaySpeed}
+      onSpeedChange={changeReplaySpeed}
+      currentLabel={replayCurrentLabel}
+      isLoadingMore={replayIsLoadingMore}
+      hasMoreHistorical={replayHasMoreHistorical}
+      onLoadMoreHistorical={replayLoadMoreHistorical}
+    />
+  );
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/40 bg-card/95 backdrop-blur-xl supports-[backdrop-filter]:bg-card/90 shadow-sm">
@@ -73,10 +163,10 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
         <title>{obj?.name} - Alpaca</title>
       </Helmet>
       <div
-        className={`flex items-center justify-between ${isMobile ? 'h-16 px-3' : 'h-16 px-4'} mx-auto sm:px-6 lg:px-8`}
+        className={`flex items-center ${isMobile ? 'h-16 px-3' : 'h-16 px-4'} mx-auto sm:px-6 lg:px-8`}
       >
         {/* Left Section - Navigation & Title */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center flex-1 gap-3">
           <TooltipProvider>
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
@@ -126,8 +216,65 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
           </div>
         </div>
 
-        {/* Right Section - Controls */}
-        <div className="flex items-center gap-1">
+        {/* Center Section - Replay Controls */}
+        <div className="flex items-center justify-center flex-1">
+          {isMobile ? (
+            // Mobile: Just toggle replay, overlay shows at bottom
+            replayTriggerButton
+          ) : (
+            // Desktop: Show replay controls with hover card
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                {replayEnabled ? (
+                  <div className="flex items-center gap-2 px-3 py-2 transition-colors border rounded-lg cursor-pointer bg-primary/10 border-primary/20 hover:bg-primary/15">
+                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                    <span className="text-sm font-medium text-primary">
+                      {replayCurrentStep}/{replayTotalSteps}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={e => {
+                        e.stopPropagation();
+                        playPauseReplay();
+                      }}
+                      className="w-6 h-6 p-0 hover:bg-primary/20 text-primary"
+                    >
+                      {replayPlaying ? (
+                        <HiPause className="w-3 h-3" />
+                      ) : (
+                        <HiPlay className="w-3 h-3" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={e => {
+                        e.stopPropagation();
+                        toggleReplay(false);
+                      }}
+                      className="w-6 h-6 p-0 ml-1 hover:bg-primary/20 text-primary"
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                ) : (
+                  replayTriggerButton
+                )}
+              </HoverCardTrigger>
+              <HoverCardContent
+                side="bottom"
+                align="center"
+                className="p-0 border rounded-xl shadow-2xl backdrop-blur w-[min(420px,calc(100vw-2rem))]"
+              >
+                {replayControlsContent}
+              </HoverCardContent>
+            </HoverCard>
+          )}
+        </div>
+
+        {/* Right Section - Other Controls */}
+        <div className="flex items-center justify-end flex-1 gap-1">
           <TooltipProvider>
             {!isMobile && (
               <div className="flex items-center gap-1 mr-1">
@@ -217,51 +364,6 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                 </Tooltip>
 
                 <Separator orientation="vertical" className="h-6 mx-1" />
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-lg hover:bg-muted/80"
-                    >
-                      <HiInformationCircle className="w-4 h-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-xs">
-                    <div className="space-y-2 text-xs">
-                      <div className="font-semibold text-foreground">
-                        Keyboard Shortcuts
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="text-muted-foreground">
-                            Fullscreen
-                          </span>
-                          <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">
-                            F
-                          </kbd>
-                        </div>
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="text-muted-foreground">
-                            Toggle Volume
-                          </span>
-                          <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">
-                            V
-                          </kbd>
-                        </div>
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="text-muted-foreground">
-                            Toggle Controls
-                          </span>
-                          <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">
-                            C
-                          </kbd>
-                        </div>
-                      </div>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
               </>
             )}
           </TooltipProvider>
