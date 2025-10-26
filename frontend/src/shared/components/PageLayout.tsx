@@ -125,7 +125,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       case 'full-width':
         return `${contentClassName}`;
       default:
-        return `rounded-2xl bg-gradient-to-br from-card/50 to-card/30 border border-border/50 backdrop-blur-sm ${contentClassName}`;
+        return `rounded-2xl bg-gradient-to-br min-h-[calc(100dvh-22rem)] from-card/50 to-card/30 border border-border/50 backdrop-blur-sm ${contentClassName}`;
     }
   };
 
@@ -191,7 +191,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset
-          className={`md:rounded-md overflow-auto shadow border m-auto h-screen md:max-h-[calc(100dvh-1rem)]  ${className}`}
+          className={`md:rounded-md shadow border m-auto h-[100dvh] md:max-h-[calc(100dvh-1rem)] flex flex-col ${className}`}
         >
           {/* Header with sidebar trigger */}
           <header className="sticky top-0 z-10 flex items-center h-16 gap-2 px-4 transition-[width,height] ease-linear shrink-0 border-b bg-background/95 backdrop-blur-[0.099rem] supports-[backdrop-filter]:bg-background/60">
@@ -221,43 +221,46 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             isMobile={isMobile}
           />
 
-          <div className="flex-1 w-full bg-background">
-            <div className={getContainerClasses()}>
-              {/* Header Section */}
-              {(header || subheader || actions) && (
-                <div className="mb-8 sm:mb-10">
-                  <div className="p-6 border rounded-2xl border-border/50 bg-gradient-to-br from-card/60 to-muted/30 backdrop-blur-sm shadow-premium sm:p-8">
-                    <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="flex-1 space-y-3">
-                        {header}
-                        {subheader}
-                      </div>
-                      {actions && (
-                        <div className="flex-shrink-0">
-                          <div className="flex flex-wrap items-center gap-3">
-                            {actions}
-                          </div>
+          {/* Scrollable content area */}
+          <div className="flex-1 overflow-auto scrollbar-hidden">
+            <div className="flex-1 w-full bg-background">
+              <div className={getContainerClasses()}>
+                {/* Header Section */}
+                {(header || subheader || actions) && (
+                  <div className="mb-8 sm:mb-10">
+                    <div className="p-6 border rounded-2xl border-border/50 bg-gradient-to-br from-card/60 to-muted/30 backdrop-blur-sm shadow-premium sm:p-8">
+                      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="flex-1 space-y-3">
+                          {header}
+                          {subheader}
                         </div>
-                      )}
+                        {actions && (
+                          <div className="flex-shrink-0">
+                            <div className="flex flex-wrap items-center gap-3">
+                              {actions}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Content Section */}
-              {effectiveVariant === 'default' ? (
-                <Card className={getContentClasses()}>
-                  <CardContent className="p-6 sm:p-8">{children}</CardContent>
-                </Card>
-              ) : (
-                <div className={getContentClasses()}>
-                  {effectiveVariant === 'clean' ? (
-                    <div className="space-y-6 sm:space-y-8">{children}</div>
-                  ) : (
-                    children
-                  )}
-                </div>
-              )}
+                {/* Content Section */}
+                {effectiveVariant === 'default' ? (
+                  <Card className={getContentClasses()}>
+                    <CardContent className="p-6 sm:p-8">{children}</CardContent>
+                  </Card>
+                ) : (
+                  <div className={getContentClasses()}>
+                    {effectiveVariant === 'clean' ? (
+                      <div className="space-y-6 sm:space-y-8">{children}</div>
+                    ) : (
+                      children
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </SidebarInset>
