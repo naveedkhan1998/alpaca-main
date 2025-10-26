@@ -280,7 +280,10 @@ class WebsocketClient:
                                     ).values_list("id", flat=True)
                                 )
                                 for wla_id in wla_ids:
-                                    task_fetch_historical_data.delay(wla_id)
+                                    #TODO: fix this later
+                                    # we need to pass the asset id instead of the wla_id
+                                    task_fetch_historical_data.delay(asset_id)
+                                    # task_fetch_historical_data.delay(wla_id)
                                 if wla_ids:
                                     self._last_backfill_request[asset_id] = now_s
                                     # Clear any higher TF accumulators to avoid conflicts with backfill
