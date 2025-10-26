@@ -25,6 +25,7 @@ const LoginRegPage = lazy(() => import('./features/auth'));
 const NotFoundPage = lazy(() => import('./features/notFound'));
 const ProfilePage = lazy(() => import('./features/profile'));
 const AssetsPage = lazy(() => import('./features/assets'));
+const AssetDetailPage = lazy(() => import('./features/assets/AssetDetailPage'));
 const WatchlistsPage = lazy(() => import('./features/watchlists'));
 const PrivacyPage = lazy(() => import('./features/privacy'));
 const TermsPage = lazy(() => import('./features/terms'));
@@ -174,6 +175,7 @@ export default function App() {
     { path: '/', element: <WatchlistsPage />, private: true },
     { path: '/profile', element: <ProfilePage />, private: true },
     { path: '/instruments', element: <AssetsPage />, private: true },
+    { path: '/instruments/:id', element: <AssetDetailPage />, private: true },
     { path: '/graphs/:id', element: <GraphsPage />, private: true },
     { path: '/accounts', element: <AccountsPage />, private: true },
     { path: '/contact', element: <ContactPage />, private: true },
