@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import {
@@ -12,41 +12,61 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RefreshCcw, AlertTriangle } from 'lucide-react';
 
-import { ArrowLeft } from 'lucide-react';
-
 import { AssetTable } from './components/AssetTable';
-import { AssetDetails } from './components/AssetDetails';
 
 import {
-  setSelectedAsset,
-  setCurrentPage,
-  setPageSize,
-  setSort,
   setAssetClassFilter,
-  setTradableFilter,
-  setQuickFilterText,
-  setViewMode,
+  setCurrentPage,
   setDensity,
+  setPageSize,
+  setQuickFilterText,
+  setSort,
+  setTradableFilter,
+  setViewMode,
 } from './assetSlice';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
 import {
   useGetSyncStatusQuery,
   useSyncAssetsMutation,
 } from '@/api/assetService';
+import { useToast } from '@/hooks/useToast';
 
-const AssetsPage: React.FC = () => {
+export const AssetsPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const assetState = useAppSelector(state => state.asset);
-  const selectedAsset = assetState.selectedAsset;
   const [searchParams, setSearchParams] = useSearchParams();
+  const { toast } = useToast();
 
-  // Sync status
-  const { data: syncStatus } = useGetSyncStatusQuery();
+  // Sync status with frequent polling to catch sync completion
+  const { data: syncStatus } = useGetSyncStatusQuery(undefined, {
+    pollingInterval: 5000, // Poll every 5 seconds
+  });
   const [syncAssets, { isLoading: isSyncing }] = useSyncAssetsMutation();
 
-  const handleBack = useCallback(() => {
-    dispatch(setSelectedAsset(null));
-  }, [dispatch]);
+  // Track previous sync status to detect completion
+  const prevSyncStatusRef = useRef(syncStatus);
+  // Trigger for manual refetch when sync completes
+  const [refetchTrigger, setRefetchTrigger] = useState<number>(0);
+
+  // Handle sync completion
+  useEffect(() => {
+    const prevStatus = prevSyncStatusRef.current;
+    const currentStatus = syncStatus;
+
+    // Check if sync just completed (was syncing, now not syncing)
+    if (prevStatus?.is_syncing && currentStatus && !currentStatus.is_syncing && currentStatus.total_assets > 0) {
+      // Sync completed successfully, show success message
+      toast({
+        title: "Sync Complete",
+        description: `Successfully synced ${currentStatus.total_assets} assets from Alpaca.`,
+      });
+      
+      // Trigger manual refetch of assets
+      setRefetchTrigger((prev: number) => prev + 1);
+    }
+
+    prevSyncStatusRef.current = syncStatus;
+  }, [syncStatus, toast]);
 
   const handleSyncAssets = useCallback(async () => {
     try {
@@ -138,64 +158,80 @@ const AssetsPage: React.FC = () => {
 
   return (
     <PageLayout
-      header={
-        <PageHeader>
-          <div className="flex items-center gap-3">Assets</div>
-        </PageHeader>
-      }
+      header={<PageHeader>Trading Assets</PageHeader>}
       subheader={
         <PageSubHeader>
-          Browse and search through available trading assets with advanced
-          filtering and sorting capabilities.
+          Discover and analyze trading instruments across multiple asset classes.
+          Filter, sort, and explore market data with advanced search capabilities.
         </PageSubHeader>
       }
       actions={
         <PageActions>
-          {selectedAsset && (
-            <Button variant="outline" onClick={handleBack}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleSyncAssets}
+              disabled={isSyncing || syncStatus?.is_syncing}
+              className="gap-2"
+            >
+              <RefreshCcw className={`w-4 h-4 ${(isSyncing || syncStatus?.is_syncing) ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">
+                {(isSyncing || syncStatus?.is_syncing) ? 'Syncing...' : 'Sync Assets'}
+              </span>
             </Button>
-          )}
+          </div>
         </PageActions>
       }
     >
       {/* Sync Banner */}
       {syncStatus?.needs_sync && (
-        <Alert className="mb-6 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
-          <AlertTriangle className="w-4 h-4" />
+        <Alert className="mb-6 border-amber-200/50 bg-amber-50/50 dark:border-amber-800/50 dark:bg-amber-950/50 backdrop-blur-sm">
+          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
           <AlertDescription className="flex items-center justify-between">
-            <span>
-              {syncStatus.is_syncing
-                ? 'Assets are currently being synced...'
-                : syncStatus.total_assets === 0
-                  ? 'No assets found in your database. Sync assets to get started.'
-                  : 'Your asset data is outdated. Consider syncing to get the latest information.'}
-            </span>
+            <div className="flex-1">
+              <p className="mb-1 font-medium text-amber-800 dark:text-amber-200">
+                Asset Data Sync Required
+              </p>
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                {syncStatus.is_syncing
+                  ? 'Assets are currently being synced from Alpaca...'
+                  : syncStatus.total_assets === 0
+                    ? 'No assets found in your database. Sync assets to get started.'
+                    : 'Your asset data is outdated. Consider syncing to get the latest information.'}
+              </p>
+            </div>
             {!syncStatus.is_syncing && (
               <Button
                 onClick={handleSyncAssets}
                 disabled={isSyncing}
                 size="sm"
-                className="ml-4"
+                className="ml-4 text-white bg-amber-600 hover:bg-amber-700 border-amber-600"
               >
-                <RefreshCcw
-                  className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`}
-                />
-                {isSyncing ? 'Syncing...' : 'Sync Assets'}
+                <RefreshCcw className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+                Sync Now
               </Button>
             )}
           </AlertDescription>
         </Alert>
       )}
 
+      {/* Syncing Banner */}
+      {syncStatus?.is_syncing && (
+        <Alert className="mb-6 border-blue-200/50 bg-blue-50/50 dark:border-blue-800/50 dark:bg-blue-950/50 backdrop-blur-sm">
+          <RefreshCcw className="w-4 h-4 text-blue-600 animate-spin dark:text-blue-400" />
+          <AlertDescription>
+            <p className="font-medium text-blue-800 dark:text-blue-200">
+              Syncing Assets from Alpaca
+            </p>
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              This may take 30-40 seconds. Please wait while we fetch the latest asset data...
+            </p>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <PageContent>
-        <div className="space-y-8">
-          {selectedAsset ? (
-            <AssetDetails assetId={selectedAsset.id} />
-          ) : (
-            <AssetTable />
-          )}
+        <div className="space-y-6">
+          <AssetTable refetchTrigger={refetchTrigger} />
         </div>
       </PageContent>
     </PageLayout>

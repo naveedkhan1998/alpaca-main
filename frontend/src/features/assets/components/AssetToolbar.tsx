@@ -31,9 +31,9 @@ import {
   Grid3X3,
   Rows,
   SlidersHorizontal,
-  MonitorSmartphone,
   Filter,
   X,
+  BarChart3,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
 import {
@@ -81,19 +81,20 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
   };
 
   return (
-    <Card className="p-3 sm:p-4">
-      <div className="flex flex-col gap-3">
-        {/* Search and View Controls */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative flex-1 max-w-xl">
-            <Search className="absolute w-4 h-4 left-3 top-3 text-muted-foreground" />
+    <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
+      <div className="p-4 space-y-4">
+        {/* Search and Primary Controls */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute w-4 h-4 left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by symbol or name..."
+              placeholder="Search symbols or names..."
               value={quickFilterText}
               onChange={e => dispatch(setQuickFilterText(e.target.value))}
-              className="pl-10"
+              className="pl-10 h-10 bg-background/50 border-input/50 focus:border-primary/50"
             />
           </div>
+
           <div className="flex items-center gap-2">
             {/* Mobile Filter Button */}
             <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
@@ -101,12 +102,12 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="relative lg:hidden"
+                  className="relative lg:hidden h-10 gap-2 border-input/50 hover:bg-accent/50"
                 >
-                  <Filter className="w-4 h-4 mr-2" />
+                  <Filter className="w-4 h-4" />
                   Filters
                   {activeFilterCount > 0 && (
-                    <Badge className="flex items-center justify-center h-5 p-1 ml-2 min-w-5 bg-primary text-primary-foreground">
+                    <Badge className="flex items-center justify-center h-5 px-1.5 min-w-5 bg-primary text-primary-foreground text-xs font-medium">
                       {activeFilterCount}
                     </Badge>
                   )}
@@ -114,22 +115,25 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
               </SheetTrigger>
               <SheetContent side="bottom" className="h-[80dvh]">
                 <SheetHeader>
-                  <SheetTitle>Filter Assets</SheetTitle>
+                  <SheetTitle className="flex items-center gap-2">
+                    <SlidersHorizontal className="w-5 h-5" />
+                    Filter Assets
+                  </SheetTitle>
                   <SheetDescription>
                     Refine your asset search with these filters
                   </SheetDescription>
                 </SheetHeader>
-                <div className="mt-6 space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Asset Class</label>
+                <div className="mt-6 space-y-6">
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-foreground">Asset Class</label>
                     <Select
                       value={assetClassFilter || 'all'}
                       onValueChange={v =>
                         dispatch(setAssetClassFilter(v === 'all' ? '' : v))
                       }
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Asset Class" />
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="All Asset Classes" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Asset Classes</SelectItem>
@@ -141,9 +145,9 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      Tradable Status
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-foreground">
+                      Trading Status
                     </label>
                     <Select
                       value={tradableFilter || 'all'}
@@ -151,20 +155,20 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
                         dispatch(setTradableFilter(v === 'all' ? '' : v))
                       }
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Tradable" />
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="All Assets" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All</SelectItem>
-                        <SelectItem value="true">Tradable</SelectItem>
-                        <SelectItem value="false">Non-tradable</SelectItem>
+                        <SelectItem value="all">All Assets</SelectItem>
+                        <SelectItem value="true">Tradable Only</SelectItem>
+                        <SelectItem value="false">Non-tradable Only</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="pt-4">
+                  <div className="pt-4 border-t">
                     <Button
                       variant="outline"
-                      className="w-full"
+                      className="w-full h-10"
                       onClick={() => {
                         dispatch(clearFilters());
                         setFilterSheetOpen(false);
@@ -178,36 +182,42 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
             </Sheet>
 
             <TooltipProvider>
+              <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-lg">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={viewMode === 'table' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => dispatch(setViewMode('table'))}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Rows className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Table view</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => dispatch(setViewMode('grid'))}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Grid3X3 className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Grid view</TooltipContent>
+                </Tooltip>
+              </div>
+
+              <Separator orientation="vertical" className="h-6 mx-2" />
+
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    variant={viewMode === 'table' ? 'default' : 'outline'}
-                    size="icon"
-                    onClick={() => dispatch(setViewMode('table'))}
-                  >
-                    <Rows className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Table view</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'outline'}
-                    size="icon"
-                    onClick={() => dispatch(setViewMode('grid'))}
-                  >
-                    <Grid3X3 className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Grid view</TooltipContent>
-              </Tooltip>
-              <Separator orientation="vertical" className="h-6" />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
+                    variant="ghost"
+                    size="sm"
                     onClick={() =>
                       dispatch(
                         setDensity(
@@ -215,21 +225,24 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
                         )
                       )
                     }
+                    className="h-8 w-8 p-0"
                   >
-                    <MonitorSmartphone className="w-4 h-4" />
+                    <BarChart3 className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
                   {density === 'comfortable'
-                    ? 'Compact rows'
-                    : 'Comfortable rows'}
+                    ? 'Compact view'
+                    : 'Comfortable view'}
                 </TooltipContent>
               </Tooltip>
+
               <Button
-                variant="outline"
-                size="icon"
+                variant="ghost"
+                size="sm"
                 onClick={onRefresh}
                 disabled={refreshing}
+                className="h-8 w-8 p-0"
               >
                 <RefreshCw
                   className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
@@ -240,7 +253,7 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
         </div>
 
         {/* Desktop Filters */}
-        <div className="flex-wrap items-center hidden gap-2 lg:flex">
+        <div className="flex-wrap items-center hidden gap-3 lg:flex">
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
             <Select
@@ -249,8 +262,8 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
                 dispatch(setAssetClassFilter(v === 'all' ? '' : v))
               }
             >
-              <SelectTrigger className="w-44">
-                <SelectValue placeholder="Asset Class" />
+              <SelectTrigger className="w-48 h-9">
+                <SelectValue placeholder="All Asset Classes" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Asset Classes</SelectItem>
@@ -267,27 +280,34 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
                 dispatch(setTradableFilter(v === 'all' ? '' : v))
               }
             >
-              <SelectTrigger className="w-36">
-                <SelectValue placeholder="Tradable" />
+              <SelectTrigger className="w-40 h-9">
+                <SelectValue placeholder="All Assets" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="true">Tradable</SelectItem>
-                <SelectItem value="false">Non-tradable</SelectItem>
+                <SelectItem value="all">All Assets</SelectItem>
+                <SelectItem value="true">Tradable Only</SelectItem>
+                <SelectItem value="false">Non-tradable Only</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => dispatch(clearFilters())}
-          >
-            Clear filters
-          </Button>
 
-          <div className="flex items-center gap-2 ml-auto text-xs">
+          {activeFilterCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => dispatch(clearFilters())}
+              className="h-9 px-3 text-muted-foreground hover:text-foreground"
+            >
+              Clear filters
+            </Button>
+          )}
+
+          <div className="flex items-center gap-2 ml-auto">
             {typeof stats?.total_count === 'number' && (
-              <Badge variant="secondary">Total: {stats.total_count}</Badge>
+              <Badge variant="secondary" className="bg-muted/50 text-muted-foreground border-0">
+                <BarChart3 className="w-3 h-3 mr-1" />
+                {stats.total_count.toLocaleString()} assets
+              </Badge>
             )}
           </div>
         </div>
@@ -299,22 +319,24 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
               Active filters:
             </span>
             {assetClassFilter && (
-              <Badge variant="secondary" className="gap-1">
-                {getAssetClassName(assetClassFilter)}
+              <Badge variant="secondary" className="gap-1.5 h-7 px-3 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
+                <span className="font-medium">{getAssetClassName(assetClassFilter)}</span>
                 <button
                   onClick={() => dispatch(setAssetClassFilter(''))}
-                  className="ml-1 rounded-full hover:bg-muted-foreground/20"
+                  className="ml-1 rounded-full hover:bg-primary/20 p-0.5"
                 >
                   <X className="w-3 h-3" />
                 </button>
               </Badge>
             )}
             {tradableFilter && (
-              <Badge variant="secondary" className="gap-1">
-                {tradableFilter === 'true' ? 'Tradable' : 'Non-tradable'}
+              <Badge variant="secondary" className="gap-1.5 h-7 px-3 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
+                <span className="font-medium">
+                  {tradableFilter === 'true' ? 'Tradable' : 'Non-tradable'}
+                </span>
                 <button
                   onClick={() => dispatch(setTradableFilter(''))}
-                  className="ml-1 rounded-full hover:bg-muted-foreground/20"
+                  className="ml-1 rounded-full hover:bg-primary/20 p-0.5"
                 >
                   <X className="w-3 h-3" />
                 </button>
