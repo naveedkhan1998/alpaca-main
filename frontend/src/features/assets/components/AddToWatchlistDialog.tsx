@@ -11,6 +11,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -24,6 +32,7 @@ import {
   useAddAssetToWatchListMutation,
 } from '@/api/watchlistService';
 import { Asset } from '@/types/common-types';
+import { useIsMobile } from '@/hooks/useMobile';
 
 interface AddToWatchlistDialogProps {
   asset: Asset | null;
@@ -36,6 +45,7 @@ export const AddToWatchlistDialog: React.FC<AddToWatchlistDialogProps> = ({
   open,
   onOpenChange,
 }) => {
+  const isMobile = useIsMobile();
   const [selectedWatchlistId, setSelectedWatchlistId] = useState<number | null>(
     null
   );
@@ -75,6 +85,145 @@ export const AddToWatchlistDialog: React.FC<AddToWatchlistDialogProps> = ({
     }
   };
 
+  const AssetInfo = () => (
+    asset && (
+      <div className={isMobile ? "px-4 pb-4" : "px-6 pb-4"}>
+        <div className="flex items-center gap-3 p-4 border rounded-lg bg-muted/30 border-border/50">
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-background">
+            <Building2 className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg font-bold">{asset.symbol}</span>
+              <Badge className={`${getAssetClassColor(asset.asset_class)} border text-xs px-2 py-0.5`}>
+                {asset.asset_class.replace('_', ' ').toUpperCase()}
+              </Badge>
+            </div>
+            <p className="text-sm truncate text-muted-foreground">{asset.name}</p>
+            <p className="text-xs text-muted-foreground">{asset.exchange}</p>
+          </div>
+        </div>
+      </div>
+    )
+  );
+
+  const WatchlistSelector = () => (
+    <div className={isMobile ? "px-4 py-4" : "px-6 py-4"}>
+      {loadingWatchlists ? (
+        <div className="space-y-3">
+          <Skeleton className="w-24 h-4" />
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="w-full h-12" />
+          ))}
+        </div>
+      ) : watchlists.length === 0 ? (
+        <div className="py-8 text-center">
+          <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50">
+            <Heart className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h3 className="mb-2 text-lg font-semibold">No watchlists yet</h3>
+          <p className="max-w-sm mx-auto text-sm text-muted-foreground">
+            Create your first watchlist to start tracking your favorite assets.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <label className="text-sm font-semibold text-foreground">Select Watchlist</label>
+          <Select
+            value={selectedWatchlistId?.toString() || ''}
+            onValueChange={value => setSelectedWatchlistId(parseInt(value))}
+          >
+            <SelectTrigger className="h-12">
+              <SelectValue placeholder="Choose a watchlist..." />
+            </SelectTrigger>
+            <SelectContent>
+              {watchlists.map(watchlist => (
+                <SelectItem
+                  key={watchlist.id}
+                  value={watchlist.id.toString()}
+                  className="py-3"
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+                        <Heart className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <span className="font-medium">{watchlist.name}</span>
+                        <p className="text-xs text-muted-foreground">
+                          {watchlist.asset_count} asset{watchlist.asset_count !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+    </div>
+  );
+
+  const ActionButtons = () => (
+    <div className={isMobile ? "flex gap-3 px-4 pb-4" : "flex gap-3"}>
+      <Button
+        variant="outline"
+        onClick={() => onOpenChange(false)}
+        disabled={isAdding}
+        className={isMobile ? "flex-1 h-10" : "flex-1 h-10"}
+      >
+        Cancel
+      </Button>
+      <Button
+        onClick={handleAddToWatchlist}
+        disabled={!selectedWatchlistId || isAdding || watchlists.length === 0}
+        className={isMobile ? "flex-1 h-10 gap-2" : "flex-1 h-10 gap-2"}
+      >
+        {isAdding ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <Plus className="w-4 h-4" />
+        )}
+        Add to Watchlist
+      </Button>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent>
+          <DrawerHeader className="px-4 pt-6 pb-4 text-left">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
+                <Heart className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <DrawerTitle className="text-xl font-bold">Add to Watchlist</DrawerTitle>
+                <DrawerDescription className="text-muted-foreground">
+                  Choose a watchlist to add this asset to
+                </DrawerDescription>
+              </div>
+            </div>
+          </DrawerHeader>
+
+          <AssetInfo />
+
+          <Separator />
+
+          <WatchlistSelector />
+
+          <Separator />
+
+          <DrawerFooter className="pt-2">
+            <ActionButtons />
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] p-0 gap-0">
@@ -92,108 +241,16 @@ export const AddToWatchlistDialog: React.FC<AddToWatchlistDialogProps> = ({
           </div>
         </DialogHeader>
 
-        {/* Asset Info */}
-        {asset && (
-          <div className="px-6 pb-4">
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/30 border border-border/50">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-background">
-                <Building2 className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-bold text-lg">{asset.symbol}</span>
-                  <Badge className={`${getAssetClassColor(asset.asset_class)} border text-xs px-2 py-0.5`}>
-                    {asset.asset_class.replace('_', ' ').toUpperCase()}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground truncate">{asset.name}</p>
-                <p className="text-xs text-muted-foreground">{asset.exchange}</p>
-              </div>
-            </div>
-          </div>
-        )}
+        <AssetInfo />
 
         <Separator />
 
-        <div className="px-6 py-4">
-          {loadingWatchlists ? (
-            <div className="space-y-3">
-              <Skeleton className="w-24 h-4" />
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="w-full h-12" />
-              ))}
-            </div>
-          ) : watchlists.length === 0 ? (
-            <div className="py-8 text-center">
-              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted/50 mb-4 mx-auto">
-                <Heart className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">No watchlists yet</h3>
-              <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                Create your first watchlist to start tracking your favorite assets.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <label className="text-sm font-semibold text-foreground">Select Watchlist</label>
-              <Select
-                value={selectedWatchlistId?.toString() || ''}
-                onValueChange={value => setSelectedWatchlistId(parseInt(value))}
-              >
-                <SelectTrigger className="h-12">
-                  <SelectValue placeholder="Choose a watchlist..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {watchlists.map(watchlist => (
-                    <SelectItem
-                      key={watchlist.id}
-                      value={watchlist.id.toString()}
-                      className="py-3"
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
-                            <Heart className="w-4 h-4 text-primary" />
-                          </div>
-                          <div>
-                            <span className="font-medium">{watchlist.name}</span>
-                            <p className="text-xs text-muted-foreground">
-                              {watchlist.asset_count} asset{watchlist.asset_count !== 1 ? 's' : ''}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </div>
+        <WatchlistSelector />
 
         <Separator />
 
-        <DialogFooter className="px-6 py-4 gap-3">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isAdding}
-            className="flex-1 h-10"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleAddToWatchlist}
-            disabled={!selectedWatchlistId || isAdding || watchlists.length === 0}
-            className="flex-1 h-10 gap-2"
-          >
-            {isAdding ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Plus className="w-4 h-4" />
-            )}
-            Add to Watchlist
-          </Button>
+        <DialogFooter className="gap-3 px-6 py-4">
+          <ActionButtons />
         </DialogFooter>
       </DialogContent>
     </Dialog>

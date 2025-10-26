@@ -162,7 +162,7 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigg
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <Skeleton className="w-10 h-10 rounded-lg" />
-                      <div className="space-y-2 flex-1">
+                      <div className="flex-1 space-y-2">
                         <Skeleton className="w-16 h-5" />
                         <Skeleton className="w-24 h-4" />
                       </div>
@@ -188,13 +188,13 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigg
               />
             ))
           ) : (
-            <Card className="col-span-full border-dashed">
+            <Card className="border-dashed col-span-full">
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted/50 mb-4">
+                <div className="flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-muted/50">
                   <Search className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">No assets found</h3>
-                <p className="text-muted-foreground text-center max-w-sm">
+                <h3 className="mb-2 text-lg font-semibold">No assets found</h3>
+                <p className="max-w-sm text-center text-muted-foreground">
                   {quickFilterText
                     ? 'Try adjusting your search terms or filters to find what you\'re looking for.'
                     : 'No assets match your current filters. Try broadening your search criteria.'}
@@ -207,7 +207,7 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigg
         <Card className="overflow-hidden border-0 shadow-sm">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b">
+              <TableHeader className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur-sm">
                 <TableRow className="border-b bg-muted/30 hover:bg-muted/30">
                   <SortableHeader
                     className={`${headerCellClass} font-semibold`}
@@ -296,7 +296,7 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigg
                   assets.map(asset => (
                     <TableRow
                       key={asset.id}
-                      className="cursor-pointer hover:bg-muted/50 transition-colors group"
+                      className="transition-colors cursor-pointer hover:bg-muted/50 group"
                       onClick={() => navigate(`/instruments/${asset.id}`)}
                     >
                       <TableCell className={`${bodyCellClass} font-medium`}>
@@ -308,7 +308,7 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigg
                         </div>
                       </TableCell>
                       <TableCell className={`${bodyCellClass} max-w-xs`}>
-                        <div className="truncate font-medium" title={asset.name}>
+                        <div className="font-medium truncate" title={asset.name}>
                           {asset.name}
                         </div>
                       </TableCell>
@@ -336,12 +336,12 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigg
                         </div>
                       </TableCell>
                       <TableCell className={bodyCellClass}>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className={`flex items-center gap-1 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={e => handleAddToWatchlist(asset, e)}
-                            className="h-8 w-8 p-0 hover:text-red-500"
+                            className="w-8 h-8 p-0 hover:text-red-500"
                             title="Add to Watchlist"
                           >
                             <Heart className="w-4 h-4" />
@@ -353,7 +353,7 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigg
                               e.stopPropagation();
                               navigate(`/instruments/${asset.id}`);
                             }}
-                            className="h-8 w-8 p-0"
+                            className="w-8 h-8 p-0"
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
@@ -370,8 +370,8 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigg
                           <Search className="w-8 h-8 text-muted-foreground" />
                         </div>
                         <div className="text-center">
-                          <h3 className="text-lg font-semibold mb-2">No assets found</h3>
-                          <p className="text-muted-foreground max-w-sm">
+                          <h3 className="mb-2 text-lg font-semibold">No assets found</h3>
+                          <p className="max-w-sm text-muted-foreground">
                             {quickFilterText
                               ? 'Try adjusting your search terms or filters to find what you\'re looking for.'
                               : 'No assets match your current filters. Try broadening your search criteria.'}
@@ -433,7 +433,7 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigg
                     size="sm"
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 0}
-                    className="h-9 gap-1"
+                    className="gap-1 h-9"
                   >
                     <ChevronLeft className="w-4 h-4" />
                     <span className="hidden sm:inline">Previous</span>
@@ -466,7 +466,7 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigg
                     size="sm"
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage >= totalPages - 1}
-                    className="h-9 gap-1"
+                    className="gap-1 h-9"
                   >
                     <span className="hidden sm:inline">Next</span>
                     <ChevronRight className="w-4 h-4" />

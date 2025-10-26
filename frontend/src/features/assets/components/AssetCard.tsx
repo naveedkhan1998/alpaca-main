@@ -1,4 +1,4 @@
-import React from 'react';
+import { useIsMobile } from '@/hooks/useMobile';
 import {
   Card,
   CardContent,
@@ -58,6 +58,7 @@ export const AssetCard: React.FC<Props> = ({
   onSelect,
   onWatchlist,
 }) => {
+  const isMobile = useIsMobile();
   const config = getAssetClassColor(asset.asset_class);
 
   return (
@@ -75,7 +76,7 @@ export const AssetCard: React.FC<Props> = ({
               variant="ghost"
               size="sm"
               onClick={e => onWatchlist(asset, e)}
-              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20"
+              className={`h-8 w-8 p-0 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}
               title="Add to Watchlist"
             >
               <Heart className="w-4 h-4" />
