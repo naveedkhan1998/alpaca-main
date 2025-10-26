@@ -34,18 +34,16 @@ import { Asset, GetAssetsParams } from '@/types/common-types';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useIsMobile } from '@/hooks/useMobile';
 
-import {
-  setCurrentPage,
-  setPageSize,
-  setSort,
-} from '../assetSlice';
+import { setCurrentPage, setPageSize, setSort } from '../assetSlice';
 import { SortableHeader } from './SortableHeader';
 import { AddToWatchlistDialog } from './AddToWatchlistDialog';
 import { AssetToolbar } from './AssetToolbar';
 import { AssetCard } from './AssetCard';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
 
-export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigger }) => {
+export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
+  refetchTrigger,
+}) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -196,7 +194,7 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigg
                 <h3 className="mb-2 text-lg font-semibold">No assets found</h3>
                 <p className="max-w-sm text-center text-muted-foreground">
                   {quickFilterText
-                    ? 'Try adjusting your search terms or filters to find what you\'re looking for.'
+                    ? "Try adjusting your search terms or filters to find what you're looking for."
                     : 'No assets match your current filters. Try broadening your search criteria.'}
                 </p>
               </CardContent>
@@ -257,7 +255,9 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigg
                   >
                     Status
                   </SortableHeader>
-                  <TableHead className={`${headerCellClass} font-semibold w-24`}>
+                  <TableHead
+                    className={`${headerCellClass} font-semibold w-24`}
+                  >
                     Actions
                   </TableHead>
                 </TableRow>
@@ -304,20 +304,29 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigg
                           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
                             <Building2 className="w-4 h-4 text-primary" />
                           </div>
-                          <span className="font-mono text-sm">{asset.symbol}</span>
+                          <span className="font-mono text-sm">
+                            {asset.symbol}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell className={`${bodyCellClass} max-w-xs`}>
-                        <div className="font-medium truncate" title={asset.name}>
+                        <div
+                          className="font-medium truncate"
+                          title={asset.name}
+                        >
                           {asset.name}
                         </div>
                       </TableCell>
                       <TableCell className={bodyCellClass}>
-                        <Badge className={`${getAssetClassColor(asset.asset_class)} border shadow-sm`}>
+                        <Badge
+                          className={`${getAssetClassColor(asset.asset_class)} border shadow-sm`}
+                        >
                           {asset.asset_class.replace('_', ' ').toUpperCase()}
                         </Badge>
                       </TableCell>
-                      <TableCell className={`${bodyCellClass} text-muted-foreground`}>
+                      <TableCell
+                        className={`${bodyCellClass} text-muted-foreground`}
+                      >
                         {asset.exchange}
                       </TableCell>
                       <TableCell className={bodyCellClass}>
@@ -329,14 +338,19 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigg
                             {asset.tradable ? 'Tradable' : 'No Trade'}
                           </Badge>
                           {asset.marginable && (
-                            <Badge variant="outline" className="text-xs px-2 py-0.5">
+                            <Badge
+                              variant="outline"
+                              className="text-xs px-2 py-0.5"
+                            >
                               Margin
                             </Badge>
                           )}
                         </div>
                       </TableCell>
                       <TableCell className={bodyCellClass}>
-                        <div className={`flex items-center gap-1 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
+                        <div
+                          className={`flex items-center gap-1 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}
+                        >
                           <Button
                             variant="ghost"
                             size="sm"
@@ -370,10 +384,12 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigg
                           <Search className="w-8 h-8 text-muted-foreground" />
                         </div>
                         <div className="text-center">
-                          <h3 className="mb-2 text-lg font-semibold">No assets found</h3>
+                          <h3 className="mb-2 text-lg font-semibold">
+                            No assets found
+                          </h3>
                           <p className="max-w-sm text-muted-foreground">
                             {quickFilterText
-                              ? 'Try adjusting your search terms or filters to find what you\'re looking for.'
+                              ? "Try adjusting your search terms or filters to find what you're looking for."
                               : 'No assets match your current filters. Try broadening your search criteria.'}
                           </p>
                         </div>
@@ -450,7 +466,9 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({ refetchTrigg
                       return (
                         <Button
                           key={pageNum}
-                          variant={pageNum === currentPage ? 'default' : 'outline'}
+                          variant={
+                            pageNum === currentPage ? 'default' : 'outline'
+                          }
                           size="sm"
                           onClick={() => handlePageChange(pageNum)}
                           className="w-9 h-9"

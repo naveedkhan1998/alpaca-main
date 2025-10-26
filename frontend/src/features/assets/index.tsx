@@ -54,13 +54,18 @@ export const AssetsPage: React.FC = () => {
     const currentStatus = syncStatus;
 
     // Check if sync just completed (was syncing, now not syncing)
-    if (prevStatus?.is_syncing && currentStatus && !currentStatus.is_syncing && currentStatus.total_assets > 0) {
+    if (
+      prevStatus?.is_syncing &&
+      currentStatus &&
+      !currentStatus.is_syncing &&
+      currentStatus.total_assets > 0
+    ) {
       // Sync completed successfully, show success message
       toast({
-        title: "Sync Complete",
+        title: 'Sync Complete',
         description: `Successfully synced ${currentStatus.total_assets} assets from Alpaca.`,
       });
-      
+
       // Trigger manual refetch of assets
       setRefetchTrigger((prev: number) => prev + 1);
     }
@@ -161,8 +166,9 @@ export const AssetsPage: React.FC = () => {
       header={<PageHeader>Trading Assets</PageHeader>}
       subheader={
         <PageSubHeader>
-          Discover and analyze trading instruments across multiple asset classes.
-          Filter, sort, and explore market data with advanced search capabilities.
+          Discover and analyze trading instruments across multiple asset
+          classes. Filter, sort, and explore market data with advanced search
+          capabilities.
         </PageSubHeader>
       }
       actions={
@@ -173,9 +179,13 @@ export const AssetsPage: React.FC = () => {
               disabled={isSyncing || syncStatus?.is_syncing}
               className="gap-2"
             >
-              <RefreshCcw className={`w-4 h-4 ${(isSyncing || syncStatus?.is_syncing) ? 'animate-spin' : ''}`} />
+              <RefreshCcw
+                className={`w-4 h-4 ${isSyncing || syncStatus?.is_syncing ? 'animate-spin' : ''}`}
+              />
               <span className="hidden sm:inline">
-                {(isSyncing || syncStatus?.is_syncing) ? 'Syncing...' : 'Sync Assets'}
+                {isSyncing || syncStatus?.is_syncing
+                  ? 'Syncing...'
+                  : 'Sync Assets'}
               </span>
             </Button>
           </div>
@@ -206,7 +216,9 @@ export const AssetsPage: React.FC = () => {
                 size="sm"
                 className="ml-4 text-white bg-amber-600 hover:bg-amber-700 border-amber-600"
               >
-                <RefreshCcw className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+                <RefreshCcw
+                  className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`}
+                />
                 Sync Now
               </Button>
             )}
@@ -223,7 +235,8 @@ export const AssetsPage: React.FC = () => {
               Syncing Assets from Alpaca
             </p>
             <p className="text-sm text-blue-700 dark:text-blue-300">
-              This may take 30-40 seconds. Please wait while we fetch the latest asset data...
+              This may take 30-40 seconds. Please wait while we fetch the latest
+              asset data...
             </p>
           </AlertDescription>
         </Alert>

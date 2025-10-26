@@ -22,25 +22,29 @@ const getAssetClassColor = (assetClass: string) => {
   switch (assetClass) {
     case 'us_equity':
       return {
-        badge: 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 dark:from-blue-900/20 dark:to-blue-800/20 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+        badge:
+          'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 dark:from-blue-900/20 dark:to-blue-800/20 dark:text-blue-300 border-blue-200 dark:border-blue-800',
         icon: 'text-blue-600 dark:text-blue-400',
         accent: 'border-blue-200/50 dark:border-blue-800/30',
       };
     case 'us_option':
       return {
-        badge: 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 dark:from-purple-900/20 dark:to-purple-800/20 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+        badge:
+          'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 dark:from-purple-900/20 dark:to-purple-800/20 dark:text-purple-300 border-purple-200 dark:border-purple-800',
         icon: 'text-purple-600 dark:text-purple-400',
         accent: 'border-purple-200/50 dark:border-purple-800/30',
       };
     case 'crypto':
       return {
-        badge: 'bg-gradient-to-r from-orange-50 to-orange-100 text-orange-800 dark:from-orange-900/20 dark:to-orange-800/20 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+        badge:
+          'bg-gradient-to-r from-orange-50 to-orange-100 text-orange-800 dark:from-orange-900/20 dark:to-orange-800/20 dark:text-orange-300 border-orange-200 dark:border-orange-800',
         icon: 'text-orange-600 dark:text-orange-400',
         accent: 'border-orange-200/50 dark:border-orange-800/30',
       };
     default:
       return {
-        badge: 'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 dark:from-gray-900/20 dark:to-gray-800/20 dark:text-gray-300 border-gray-200 dark:border-gray-800',
+        badge:
+          'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 dark:from-gray-900/20 dark:to-gray-800/20 dark:text-gray-300 border-gray-200 dark:border-gray-800',
         icon: 'text-gray-600 dark:text-gray-400',
         accent: 'border-gray-200/50 dark:border-gray-800/30',
       };
@@ -69,7 +73,9 @@ export const AssetCard: React.FC<Props> = ({
       >
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between mb-3">
-            <Badge className={`${config.badge} border shadow-sm font-medium text-xs px-2.5 py-1`}>
+            <Badge
+              className={`${config.badge} border shadow-sm font-medium text-xs px-2.5 py-1`}
+            >
               {asset.asset_class.replace('_', ' ').toUpperCase()}
             </Badge>
             <Button
@@ -84,7 +90,9 @@ export const AssetCard: React.FC<Props> = ({
           </div>
 
           <div className="flex items-center gap-3 mb-2">
-            <div className={`flex items-center justify-center w-10 h-10 rounded-xl bg-muted/50 ${config.icon}`}>
+            <div
+              className={`flex items-center justify-center w-10 h-10 rounded-xl bg-muted/50 ${config.icon}`}
+            >
               <Building2 className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
@@ -113,13 +121,19 @@ export const AssetCard: React.FC<Props> = ({
                 {asset.tradable ? 'Tradable' : 'No Trade'}
               </Badge>
               {asset.marginable && (
-                <Badge variant="outline" className="text-xs px-2.5 py-1 border-dashed">
+                <Badge
+                  variant="outline"
+                  className="text-xs px-2.5 py-1 border-dashed"
+                >
                   <Shield className="w-3 h-3 mr-1" />
                   Margin
                 </Badge>
               )}
               {asset.shortable && (
-                <Badge variant="outline" className="text-xs px-2.5 py-1 border-dashed">
+                <Badge
+                  variant="outline"
+                  className="text-xs px-2.5 py-1 border-dashed"
+                >
                   <TrendingUp className="w-3 h-3 mr-1" />
                   Short
                 </Badge>

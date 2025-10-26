@@ -125,7 +125,9 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
                 </SheetHeader>
                 <div className="mt-6 space-y-6">
                   <div className="space-y-3">
-                    <label className="text-sm font-semibold text-foreground">Asset Class</label>
+                    <label className="text-sm font-semibold text-foreground">
+                      Asset Class
+                    </label>
                     <Select
                       value={assetClassFilter || 'all'}
                       onValueChange={v =>
@@ -304,7 +306,10 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
 
           <div className="flex items-center gap-2 ml-auto">
             {typeof stats?.total_count === 'number' && (
-              <Badge variant="secondary" className="bg-muted/50 text-muted-foreground border-0">
+              <Badge
+                variant="secondary"
+                className="bg-muted/50 text-muted-foreground border-0"
+              >
                 <BarChart3 className="w-3 h-3 mr-1" />
                 {stats.total_count.toLocaleString()} assets
               </Badge>
@@ -319,8 +324,13 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
               Active filters:
             </span>
             {assetClassFilter && (
-              <Badge variant="secondary" className="gap-1.5 h-7 px-3 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
-                <span className="font-medium">{getAssetClassName(assetClassFilter)}</span>
+              <Badge
+                variant="secondary"
+                className="gap-1.5 h-7 px-3 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
+              >
+                <span className="font-medium">
+                  {getAssetClassName(assetClassFilter)}
+                </span>
                 <button
                   onClick={() => dispatch(setAssetClassFilter(''))}
                   className="ml-1 rounded-full hover:bg-primary/20 p-0.5"
@@ -330,7 +340,10 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
               </Badge>
             )}
             {tradableFilter && (
-              <Badge variant="secondary" className="gap-1.5 h-7 px-3 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
+              <Badge
+                variant="secondary"
+                className="gap-1.5 h-7 px-3 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
+              >
                 <span className="font-medium">
                   {tradableFilter === 'true' ? 'Tradable' : 'Non-tradable'}
                 </span>

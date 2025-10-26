@@ -85,9 +85,9 @@ export const AddToWatchlistDialog: React.FC<AddToWatchlistDialogProps> = ({
     }
   };
 
-  const AssetInfo = () => (
+  const AssetInfo = () =>
     asset && (
-      <div className={isMobile ? "px-4 pb-4" : "px-6 pb-4"}>
+      <div className={isMobile ? 'px-4 pb-4' : 'px-6 pb-4'}>
         <div className="flex items-center gap-3 p-4 border rounded-lg bg-muted/30 border-border/50">
           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-background">
             <Building2 className="w-5 h-5 text-primary" />
@@ -95,20 +95,23 @@ export const AddToWatchlistDialog: React.FC<AddToWatchlistDialogProps> = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg font-bold">{asset.symbol}</span>
-              <Badge className={`${getAssetClassColor(asset.asset_class)} border text-xs px-2 py-0.5`}>
+              <Badge
+                className={`${getAssetClassColor(asset.asset_class)} border text-xs px-2 py-0.5`}
+              >
                 {asset.asset_class.replace('_', ' ').toUpperCase()}
               </Badge>
             </div>
-            <p className="text-sm truncate text-muted-foreground">{asset.name}</p>
+            <p className="text-sm truncate text-muted-foreground">
+              {asset.name}
+            </p>
             <p className="text-xs text-muted-foreground">{asset.exchange}</p>
           </div>
         </div>
       </div>
-    )
-  );
+    );
 
   const WatchlistSelector = () => (
-    <div className={isMobile ? "px-4 py-4" : "px-6 py-4"}>
+    <div className={isMobile ? 'px-4 py-4' : 'px-6 py-4'}>
       {loadingWatchlists ? (
         <div className="space-y-3">
           <Skeleton className="w-24 h-4" />
@@ -128,7 +131,9 @@ export const AddToWatchlistDialog: React.FC<AddToWatchlistDialogProps> = ({
         </div>
       ) : (
         <div className="space-y-3">
-          <label className="text-sm font-semibold text-foreground">Select Watchlist</label>
+          <label className="text-sm font-semibold text-foreground">
+            Select Watchlist
+          </label>
           <Select
             value={selectedWatchlistId?.toString() || ''}
             onValueChange={value => setSelectedWatchlistId(parseInt(value))}
@@ -151,7 +156,8 @@ export const AddToWatchlistDialog: React.FC<AddToWatchlistDialogProps> = ({
                       <div>
                         <span className="font-medium">{watchlist.name}</span>
                         <p className="text-xs text-muted-foreground">
-                          {watchlist.asset_count} asset{watchlist.asset_count !== 1 ? 's' : ''}
+                          {watchlist.asset_count} asset
+                          {watchlist.asset_count !== 1 ? 's' : ''}
                         </p>
                       </div>
                     </div>
@@ -166,19 +172,19 @@ export const AddToWatchlistDialog: React.FC<AddToWatchlistDialogProps> = ({
   );
 
   const ActionButtons = () => (
-    <div className={isMobile ? "flex gap-3 px-4 pb-4" : "flex gap-3"}>
+    <div className={isMobile ? 'flex gap-3 px-4 pb-4' : 'flex gap-3'}>
       <Button
         variant="outline"
         onClick={() => onOpenChange(false)}
         disabled={isAdding}
-        className={isMobile ? "flex-1 h-10" : "flex-1 h-10"}
+        className={isMobile ? 'flex-1 h-10' : 'flex-1 h-10'}
       >
         Cancel
       </Button>
       <Button
         onClick={handleAddToWatchlist}
         disabled={!selectedWatchlistId || isAdding || watchlists.length === 0}
-        className={isMobile ? "flex-1 h-10 gap-2" : "flex-1 h-10 gap-2"}
+        className={isMobile ? 'flex-1 h-10 gap-2' : 'flex-1 h-10 gap-2'}
       >
         {isAdding ? (
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -200,7 +206,9 @@ export const AddToWatchlistDialog: React.FC<AddToWatchlistDialogProps> = ({
                 <Heart className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <DrawerTitle className="text-xl font-bold">Add to Watchlist</DrawerTitle>
+                <DrawerTitle className="text-xl font-bold">
+                  Add to Watchlist
+                </DrawerTitle>
                 <DrawerDescription className="text-muted-foreground">
                   Choose a watchlist to add this asset to
                 </DrawerDescription>
@@ -233,7 +241,9 @@ export const AddToWatchlistDialog: React.FC<AddToWatchlistDialogProps> = ({
               <Heart className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold">Add to Watchlist</DialogTitle>
+              <DialogTitle className="text-xl font-bold">
+                Add to Watchlist
+              </DialogTitle>
               <DialogDescription className="text-muted-foreground">
                 Choose a watchlist to add this asset to
               </DialogDescription>

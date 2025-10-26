@@ -5,7 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { Building2, Heart, Calendar, Shield, TrendingUp, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import {
+  Building2,
+  Heart,
+  Calendar,
+  Shield,
+  TrendingUp,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+} from 'lucide-react';
 import { useGetAssetByIdQuery } from '@/api/assetService';
 import { AddToWatchlistDialog } from './AddToWatchlistDialog';
 
@@ -95,12 +104,18 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
                   <CardTitle className="text-2xl font-bold tracking-tight">
                     {asset.symbol}
                   </CardTitle>
-                  <Badge className={`${getAssetClassColor(asset.asset_class)} border shadow-sm font-medium px-3 py-1`}>
+                  <Badge
+                    className={`${getAssetClassColor(asset.asset_class)} border shadow-sm font-medium px-3 py-1`}
+                  >
                     {asset.asset_class.replace('_', ' ').toUpperCase()}
                   </Badge>
                 </div>
-                <p className="text-muted-foreground font-medium">{asset.name}</p>
-                <p className="text-sm text-muted-foreground">{asset.exchange}</p>
+                <p className="text-muted-foreground font-medium">
+                  {asset.name}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {asset.exchange}
+                </p>
               </div>
             </div>
             <Button
@@ -126,7 +141,10 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
               <StatusBadge value={asset.tradable} label="Tradable" />
               <StatusBadge value={asset.marginable} label="Marginable" />
               <StatusBadge value={asset.shortable} label="Shortable" />
-              <StatusBadge value={asset.easy_to_borrow} label="Easy to Borrow" />
+              <StatusBadge
+                value={asset.easy_to_borrow}
+                label="Easy to Borrow"
+              />
               <StatusBadge value={asset.fractionable} label="Fractionable" />
             </div>
           </div>
@@ -138,17 +156,28 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
             <h3 className="text-lg font-semibold">Asset Information</h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">Status</p>
-                <Badge variant={asset.status === 'active' ? 'default' : 'secondary'} className="w-fit">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Status
+                </p>
+                <Badge
+                  variant={asset.status === 'active' ? 'default' : 'secondary'}
+                  className="w-fit"
+                >
                   {asset.status.toUpperCase()}
                 </Badge>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">Asset Class</p>
-                <p className="text-sm font-medium">{asset.asset_class.replace('_', ' ').toUpperCase()}</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Asset Class
+                </p>
+                <p className="text-sm font-medium">
+                  {asset.asset_class.replace('_', ' ').toUpperCase()}
+                </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">Exchange</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Exchange
+                </p>
                 <p className="text-sm font-medium">{asset.exchange}</p>
               </div>
             </div>
@@ -165,21 +194,31 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
                 </h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Maintenance Margin</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                      Maintenance Margin
+                    </p>
                     <p className="text-lg font-bold">
                       {(asset.maintenance_margin_requirement * 100).toFixed(2)}%
                     </p>
                   </div>
                   {asset.margin_requirement_long && (
                     <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Long Margin</p>
-                      <p className="text-lg font-bold">{asset.margin_requirement_long}</p>
+                      <p className="text-sm font-medium text-muted-foreground mb-1">
+                        Long Margin
+                      </p>
+                      <p className="text-lg font-bold">
+                        {asset.margin_requirement_long}
+                      </p>
                     </div>
                   )}
                   {asset.margin_requirement_short && (
                     <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Short Margin</p>
-                      <p className="text-lg font-bold">{asset.margin_requirement_short}</p>
+                      <p className="text-sm font-medium text-muted-foreground mb-1">
+                        Short Margin
+                      </p>
+                      <p className="text-lg font-bold">
+                        {asset.margin_requirement_short}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -193,11 +232,15 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
           <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              <span>Created: {new Date(asset.created_at).toLocaleDateString()}</span>
+              <span>
+                Created: {new Date(asset.created_at).toLocaleDateString()}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              <span>Updated: {new Date(asset.updated_at).toLocaleDateString()}</span>
+              <span>
+                Updated: {new Date(asset.updated_at).toLocaleDateString()}
+              </span>
             </div>
           </div>
         </CardContent>
