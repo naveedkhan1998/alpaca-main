@@ -487,8 +487,8 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
         cache.set(cache_key, stats, 1800)
         return Response(stats)
 
-    @action(detail=True, methods=["get"], url_path="candles")
-    def candles(self, request, pk=None):
+    @action(detail=True, methods=["get"], url_path="candles_v2")
+    def candles_v2(self, request, pk=None):
         asset = self.get_object()
         tf_minutes = get_timeframe(request)
         offset = int(request.query_params.get("offset", 0))
