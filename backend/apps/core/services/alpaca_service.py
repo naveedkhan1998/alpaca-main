@@ -116,6 +116,7 @@ class AlpacaService:
         currency: str = "USD",
         page_token: str | None = None,
         sort: Literal["asc", "desc"] = "asc",
+        asset_class: Literal["us_equity", "us_option", "crypto"] = "us_equity",
     ) -> dict:
         """Fetch historical bar data."""
         if not (1 <= limit <= 10000):
@@ -138,8 +139,25 @@ class AlpacaService:
         if page_token:
             params["page_token"] = page_token
 
-        url = f"{self.data_base_url}/v2/stocks/{symbol}/bars"
-        return self._make_request("GET", url, params=params)
+        if asset_class == "crypto":
+            # For crypto, use v1beta3 endpoint
+            symbol_formatted = symbol
+            url = f"{self.data_base_url}/v1beta3/crypto/us/bars"
+            params["symbols"] = symbol_formatted
+            # Remove params not used in crypto API
+            params.pop("feed", None)
+            params.pop("adjustment", None)
+            params.pop("currency", None)
+            resp = self._make_request("GET", url, params=params)
+            # Normalize response to match stocks format
+            bars = resp.get("bars", {}).get(symbol_formatted, [])
+            resp["bars"] = bars
+            resp["symbol"] = symbol_formatted
+            return resp
+        else:
+            # For stocks/options
+            url = f"{self.data_base_url}/v2/stocks/{symbol}/bars"
+            return self._make_request("GET", url, params=params)
 
 
 alpaca_service = AlpacaService()

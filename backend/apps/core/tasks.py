@@ -349,6 +349,7 @@ def fetch_historical_data(asset_id: int):
                             start=start_str,
                             end=end_str,
                             sort="desc",  # fetch latest first
+                            asset_class=asset.asset_class,
                         )
                     except Exception as e:
                         logger.error(
@@ -711,6 +712,7 @@ def _fetch_missing_candles(asset, missing_periods):
                         end=end_str,
                         sort="desc",
                         timeframe=const.TF_1T,
+                        asset_class=asset.asset_class,
                     )
                 except Exception as e:
                     logger.error(
@@ -735,7 +737,7 @@ def _fetch_missing_candles(asset, missing_periods):
                             high=float(bar["h"]),
                             low=float(bar["l"]),
                             close=float(bar["c"]),
-                            volume=int(bar.get("v", 0)),
+                            volume=float(bar.get("v", 0)),
                             trade_count=bar.get("n"),
                             vwap=bar.get("vw"),
                             timeframe=const.TF_1T,

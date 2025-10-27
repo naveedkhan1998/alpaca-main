@@ -198,7 +198,8 @@ class Candle(models.Model):
     high = models.FloatField()
     low = models.FloatField()
     close = models.FloatField()
-    volume = models.BigIntegerField()
+    # for crypto, volume can be fractional
+    volume = models.FloatField()
 
     # Additional Alpaca fields
     trade_count = models.IntegerField(blank=True, null=True)  # 'n' field
