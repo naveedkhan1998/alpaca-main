@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Literal
 from celery.utils.log import get_task_logger
 import requests
 
+from main import const
 from main.settings.base import APCA_API_KEY, APCA_API_SECRET_KEY
 
 if TYPE_CHECKING:
@@ -105,7 +106,7 @@ class AlpacaService:
     def get_historic_bars(
         self,
         symbol: str,
-        timeframe: str = "1T",
+        timeframe: str = const.TF_1T,
         start: str | None = None,
         end: str | None = None,
         limit: int = 10000,

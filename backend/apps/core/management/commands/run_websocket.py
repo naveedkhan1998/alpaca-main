@@ -44,7 +44,8 @@ class Command(BaseCommand):
         """Handles the command execution."""
         try:
             # Initialize and run the WebSocket client
-            client = WebsocketClient()
+            sandbox = bool(options.get("sandbox"))
+            client = WebsocketClient(sandbox=sandbox)
             client.run()
 
         except Exception as e:

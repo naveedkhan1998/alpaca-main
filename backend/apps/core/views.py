@@ -494,15 +494,17 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
         offset = int(request.query_params.get("offset", 0))
         limit = int(request.query_params.get("limit", 1000))
 
-        # Map minutes to stored timeframe labels
+        # Map minutes to stored timeframe labels using shared const
+        from main import const as _const
+
         minutes_to_tf = {
-            1: "1T",
-            5: "5T",
-            15: "15T",
-            30: "30T",
-            60: "1H",
-            240: "4H",
-            1440: "1D",
+            1: _const.TF_1T,
+            5: _const.TF_5T,
+            15: _const.TF_15T,
+            30: _const.TF_30T,
+            60: _const.TF_1H,
+            240: _const.TF_4H,
+            1440: _const.TF_1D,
         }
         tf_label = minutes_to_tf.get(tf_minutes)
         if not tf_label:
@@ -712,7 +714,9 @@ class CandleViewSet(viewsets.ReadOnlyModelViewSet):
         Get chart data for a specific asset.
         """
         symbol = request.query_params.get("symbol")
-        timeframe = request.query_params.get("timeframe", "1D")
+        from main import const as _const
+
+        timeframe = request.query_params.get("timeframe", _const.TF_1D)
         days = int(request.query_params.get("days", 30))
 
         if not symbol:

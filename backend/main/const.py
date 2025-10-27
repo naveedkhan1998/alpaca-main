@@ -1,8 +1,7 @@
 """
-Deprecated: Use main.cache_keys instead.
+Shared constants for the backend.
 
-This module is maintained for backwards compatibility.
-New code should use the cache_keys module directly:
+Note: For cache key helpers, import from `main.cache_keys` directly:
     from main.cache_keys import cache_keys
 """
 
@@ -12,68 +11,51 @@ from main.cache_keys import (
     AUTH_PROVIDERS,
     WEBSOCKET_HEARTBEAT_KEY,
     WEBSOCKET_HEARTBEAT_TTL,
-    cache_keys,
 )
 
 __all__ = [
     "AUTH_PROVIDERS",
     "WEBSOCKET_HEARTBEAT_KEY",
     "WEBSOCKET_HEARTBEAT_TTL",
-    "websocket_user_lock",
-    "websocket_subscription_queue",
-    "websocket_unsubscription_queue",
-    "backfill_queue_lock_key",
-    "backfill_running_lock_key",
-    "backfill_completed_key",
+    # Timeframe labels
+    "TF_1T",
+    "TF_5T",
+    "TF_15T",
+    "TF_30T",
+    "TF_1H",
+    "TF_4H",
+    "TF_1D",
 ]
 
 
-def websocket_user_lock(user_id: int) -> str:
-    """Deprecated: Use cache_keys.websocket(user_id).lock()"""
-    return cache_keys.websocket(user_id).lock()
+# Deprecated cache key wrappers removed; use `cache_keys` directly
 
 
-def websocket_subscription_queue(user_id: int) -> str:
-    """Deprecated: Use cache_keys.websocket(user_id).subscriptions()"""
-    return cache_keys.websocket(user_id).subscriptions()
-
-
-def websocket_unsubscription_queue(user_id: int) -> str:
-    """Deprecated: Use cache_keys.websocket(user_id).unsubscriptions()"""
-    return cache_keys.websocket(user_id).unsubscriptions()
-
-
-def backfill_queue_lock_key(asset_id: int) -> str:
-    """Deprecated: Use cache_keys.backfill(asset_id).queued()"""
-    return cache_keys.backfill(asset_id).queued()
-
-
-def backfill_running_lock_key(asset_id: int) -> str:
-    """Deprecated: Use cache_keys.backfill(asset_id).running()"""
-    return cache_keys.backfill(asset_id).running()
-
-
-def backfill_completed_key(asset_id: int) -> str:
-    """Deprecated: Use cache_keys.backfill(asset_id).completed()"""
-    return cache_keys.backfill(asset_id).completed()
-
+# Named timeframe constants for consistency across services
+TF_1T = "1T"
+TF_5T = "5T"
+TF_15T = "15T"
+TF_30T = "30T"
+TF_1H = "1H"
+TF_4H = "4H"
+TF_1D = "1D"
 
 TF_LIST = [
-    ("1T", timedelta(minutes=1)),
-    ("5T", timedelta(minutes=5)),
-    ("15T", timedelta(minutes=15)),
-    ("30T", timedelta(minutes=30)),
-    ("1H", timedelta(hours=1)),
-    ("4H", timedelta(hours=4)),
-    ("1D", timedelta(days=1)),
+    (TF_1T, timedelta(minutes=1)),
+    (TF_5T, timedelta(minutes=5)),
+    (TF_15T, timedelta(minutes=15)),
+    (TF_30T, timedelta(minutes=30)),
+    (TF_1H, timedelta(hours=1)),
+    (TF_4H, timedelta(hours=4)),
+    (TF_1D, timedelta(days=1)),
 ]
 
 TF_CFG = {
-    "1T": timedelta(minutes=1),
-    "5T": timedelta(minutes=5),
-    "15T": timedelta(minutes=15),
-    "30T": timedelta(minutes=30),
-    "1H": timedelta(hours=1),
-    "4H": timedelta(hours=4),
-    "1D": timedelta(days=1),
+    TF_1T: timedelta(minutes=1),
+    TF_5T: timedelta(minutes=5),
+    TF_15T: timedelta(minutes=15),
+    TF_30T: timedelta(minutes=30),
+    TF_1H: timedelta(hours=1),
+    TF_4H: timedelta(hours=4),
+    TF_1D: timedelta(days=1),
 }

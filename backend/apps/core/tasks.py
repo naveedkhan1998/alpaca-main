@@ -326,7 +326,7 @@ def fetch_historical_data(asset_id: int):
         # Step 1: Fetch 1T only
         try:
             last_1t = (
-                Candle.objects.filter(asset=asset, timeframe="1T")
+                Candle.objects.filter(asset=asset, timeframe=const.TF_1T)
                 .order_by("-timestamp")
                 .first()
             )
@@ -377,7 +377,7 @@ def fetch_historical_data(asset_id: int):
                                 volume=int(bar.get("v", 0)),
                                 trade_count=bar.get("n"),
                                 vwap=bar.get("vw"),
-                                timeframe="1T",
+                                timeframe=const.TF_1T,
                             )
                         )
                     if candles:
@@ -386,8 +386,9 @@ def fetch_historical_data(asset_id: int):
                         created_total += len(candles)
                     current_end = r_start
                 logger.info(
-                    "Backfilled %d 1T candles for %s (newest first)",
+                    "Backfilled %d %s candles for %s (newest first)",
                     created_total,
+                    const.TF_1T,
                     symbol,
                 )
         except Exception as e:
@@ -395,7 +396,7 @@ def fetch_historical_data(asset_id: int):
 
         # Step 2: Resample from 1T to higher TFs and persist with linkage
         for tf, delta in const.TF_LIST:
-            if tf == "1T":
+            if tf == const.TF_1T:
                 continue
             try:
                 last_tf = None
@@ -432,7 +433,7 @@ def fetch_historical_data(asset_id: int):
                         WITH m1 AS (
                             SELECT id, timestamp, open, high, low, close, volume
                             FROM core_candle
-                            WHERE asset_id = %s AND timeframe = '1T' AND timestamp >= %s AND timestamp < %s
+                            WHERE asset_id = %s AND timeframe = %s AND timestamp >= %s AND timestamp < %s
                         ),
                         binned AS (
                             SELECT
@@ -456,12 +457,13 @@ def fetch_historical_data(asset_id: int):
                             GROUP BY bucket
                         )
                         SELECT bucket, o, h, l, c, v, ids
-                FROM agg
-                ORDER BY bucket DESC
+                        FROM agg
+                        ORDER BY bucket DESC
                         ;
                         """,
                         [
                             asset.id,
+                            const.TF_1T,
                             start_ts,
                             end_date,
                             delta,
@@ -528,10 +530,11 @@ def fetch_historical_data(asset_id: int):
                         ],
                     )
                 logger.info(
-                    "Built %d %s candles for %s from 1T (newest first); updated %d",
+                    "Built %d %s candles for %s from %s (newest first); updated %d",
                     len(to_create),
                     tf,
                     symbol,
+                    const.TF_1T,
                     len(to_update),
                 )
             except Exception as e:
@@ -636,10 +639,11 @@ def _find_missing_candle_periods(asset, start_date, end_date):
     missing_periods = []
 
     # Get all existing 1T candles in the period, ordered by timestamp
+
     existing_candles = list(
         Candle.objects.filter(
             asset=asset,
-            timeframe="1T",
+            timeframe=const.TF_1T,
             timestamp__gte=start_date,
             timestamp__lt=end_date,
         )
@@ -706,7 +710,7 @@ def _fetch_missing_candles(asset, missing_periods):
                         start=start_str,
                         end=end_str,
                         sort="desc",
-                        timeframe="1T",
+                        timeframe=const.TF_1T,
                     )
                 except Exception as e:
                     logger.error(
@@ -734,7 +738,7 @@ def _fetch_missing_candles(asset, missing_periods):
                             volume=int(bar.get("v", 0)),
                             trade_count=bar.get("n"),
                             vwap=bar.get("vw"),
-                            timeframe="1T",
+                            timeframe=const.TF_1T,
                         )
                     )
 
@@ -773,7 +777,7 @@ def _resample_higher_timeframes(asset, start_date, end_date):
         return
 
     for tf, delta in const.TF_LIST:
-        if tf == "1T":
+        if tf == const.TF_1T:
             continue
 
         try:
@@ -786,7 +790,7 @@ def _resample_higher_timeframes(asset, start_date, end_date):
                     WITH m1 AS (
                         SELECT id, timestamp, open, high, low, close, volume
                         FROM core_candle
-                        WHERE asset_id = %s AND timeframe = '1T' AND timestamp >= %s AND timestamp < %s
+                        WHERE asset_id = %s AND timeframe = %s AND timestamp >= %s AND timestamp < %s
                     ),
                     binned AS (
                         SELECT
@@ -816,6 +820,7 @@ def _resample_higher_timeframes(asset, start_date, end_date):
                     """,
                     [
                         asset.id,
+                        const.TF_1T,
                         start_date,
                         end_date,
                         delta,
@@ -924,7 +929,9 @@ def _is_backfill_complete_for_asset(asset):
     coverage_threshold = now_dt - timedelta(days=4)
 
     earliest_1t = (
-        Candle.objects.filter(asset=asset, timeframe="1T").order_by("timestamp").first()
+        Candle.objects.filter(asset=asset, timeframe=const.TF_1T)
+        .order_by("timestamp")
+        .first()
     )
 
     if not earliest_1t or earliest_1t.timestamp > coverage_threshold:
@@ -937,7 +944,7 @@ def _is_backfill_complete_for_asset(asset):
     ) - timedelta(days=1)
     existing_historical_higher_tf = Candle.objects.filter(
         asset=asset,
-        timeframe__in=["5T", "15T", "30T", "1H", "4H", "1D"],
+        timeframe__in=[tf for tf in const.TF_CFG.keys() if tf != const.TF_1T],
         timestamp__lt=historical_threshold,
     ).exists()
 
