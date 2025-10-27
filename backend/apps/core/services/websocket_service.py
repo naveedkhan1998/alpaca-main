@@ -41,6 +41,7 @@ import websocket
 from apps.core.models import Asset, Candle, WatchListAsset
 from apps.core.tasks import fetch_historical_data as task_fetch_historical_data
 from main import const
+from main.cache_keys import cache_keys
 from main.settings.base import APCA_API_KEY, APCA_API_SECRET_KEY
 
 # --------------------------------------------------------------------------- #
@@ -223,9 +224,12 @@ class WebsocketClient:
     # --------------------------------------------------------------------- #
     def get_watchlist_symbols(self) -> set[str]:
         """Return the current set of active symbols from all active watchlists."""
+        # only sub to equities for now
         symbols = set(
             WatchListAsset.objects.filter(
-                watchlist__is_active=True, is_active=True
+                watchlist__is_active=True,
+                is_active=True,
+                asset__asset_class="us_equity",
             ).values_list("asset__symbol", flat=True)
         )
         return symbols
@@ -277,10 +281,11 @@ class WebsocketClient:
                                         watchlist__is_active=True,
                                         is_active=True,
                                         asset_id=asset_id,
+                                        asset__asset_class="us_equity",
                                     ).values_list("id", flat=True)
                                 )
                                 for wla_id in wla_ids:
-                                    #TODO: fix this later
+                                    # TODO: fix this later
                                     # we need to pass the asset id instead of the wla_id
                                     task_fetch_historical_data.delay(asset_id)
                                     # task_fetch_historical_data.delay(wla_id)
@@ -397,7 +402,7 @@ class WebsocketClient:
         from django.core.cache import cache
 
         # Check if backfill is currently running
-        running_key = f"backfill:running:{asset_id}"
+        running_key = cache_keys.backfill(asset_id).running()
         # To avoid crashes on free tier Redis in prod, wrap in try/except
         try:
             if cache.get(running_key):
@@ -410,7 +415,7 @@ class WebsocketClient:
             pass
 
         # Check if backfill has been explicitly marked as complete
-        completion_key = f"backfill:complete:{asset_id}"
+        completion_key = cache_keys.backfill(asset_id).completed()
         # To avoid crashes on free tier Redis in prod, wrap in try/except
         try:
             if cache.get(completion_key):

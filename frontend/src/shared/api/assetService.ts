@@ -177,7 +177,7 @@ const assetApi = baseApi.injectEndpoints({
         if (offset) searchParams.append('offset', offset.toString());
 
         return {
-          url: `core/assets/${id}/candles/?${searchParams.toString()}`,
+          url: `core/assets/${id}/candles_v2/?${searchParams.toString()}`,
           method: 'GET',
           headers: {
             'Content-type': 'application/json',

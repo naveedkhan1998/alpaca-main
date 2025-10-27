@@ -105,7 +105,7 @@ export function useCandles({
       const res = await getCandles({
         id: Number(assetId),
         tf: timeframe,
-        limit: initialLimit,
+        limit: 1, // Use limit=1 for realtime to ensure fresh data
         offset: 0,
       }).unwrap();
       const results: Candle[] = res?.results ?? [];
@@ -123,7 +123,7 @@ export function useCandles({
     } catch {
       // silent: periodic fetches may fail transiently
     }
-  }, [assetId, timeframe, initialLimit, getCandles, sortDescByDate]);
+  }, [assetId, timeframe, getCandles, sortDescByDate]);
 
   // Reset and load when deps change
   useEffect(() => {
