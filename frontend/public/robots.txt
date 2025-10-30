@@ -1,0 +1,17 @@
+User-agent: *
+# Allow the public landing page and key public routes
+Allow: /
+Allow: /app/login
+Allow: /app/privacy
+Allow: /app/terms
+Allow: /app/contact
+
+# Disallow private/authenticated app areas
+Disallow: /app/accounts
+Disallow: /app/profile
+Disallow: /app/instruments/
+Disallow: /app/graphs/
+Disallow: /app/watchlists/
+
+# Update this if you deploy to a different domain
+Sitemap: https://alpaca.mnaveedk.com/sitemap.xml

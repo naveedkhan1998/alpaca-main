@@ -37,6 +37,8 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useGetLoggedUserQuery } from '@/api/userAuthService';
 import { useAlpacaAccount } from './features/auth/hooks';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
+import { DefaultSEO } from '@/components/DefaultSEO';
+import { RouteSEO } from '@/components/RouteSEO';
 
 // Subtle page transition loading component
 const PageLoadingFallback = () => (
@@ -188,6 +190,8 @@ export default function App() {
   return (
     <HelmetProvider>
       <BrowserRouter basename="/app">
+        <DefaultSEO />
+        <RouteSEO />
         <PageTracker />
         <AnnouncementBanner />
         <GoogleOAuthProvider clientId={clientId}>

@@ -284,7 +284,7 @@ class WebsocketClient:
                                         asset__asset_class="us_equity",
                                     ).values_list("id", flat=True)
                                 )
-                                for wla_id in wla_ids:
+                                for _ in wla_ids:
                                     # TODO: fix this later
                                     # we need to pass the asset id instead of the wla_id
                                     task_fetch_historical_data.delay(asset_id)
