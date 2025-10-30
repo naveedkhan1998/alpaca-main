@@ -28,7 +28,13 @@ class TimeframeAggregator:
     _last_open_flush: dict[str, float] = field(
         default_factory=lambda: {tf: 0.0 for tf in const.TF_CFG if tf != const.TF_1T}
     )
-    _open_flush_secs: float = 2.0
+    # Throttle for persisting open buckets; configurable
+    open_flush_secs: float = 0.25
+    _open_flush_secs: float = field(init=False)
+
+    def __post_init__(self):
+        # Mirror configurable open flush throttle into internal field
+        self._open_flush_secs = self.open_flush_secs
 
     def reset_for_asset(self, asset_id: int) -> None:
         """Clear accumulators for an asset (e.g., after scheduling backfill)."""
