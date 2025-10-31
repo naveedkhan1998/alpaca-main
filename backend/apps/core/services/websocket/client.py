@@ -19,7 +19,7 @@ from .aggregator import TimeframeAggregator
 from .backfill import BackfillGuard
 from .persistence import CandleRepository
 from .subscriptions import SubscriptionManager
-from .utils import is_regular_trading_hours, parse_tick_timestamp, floor_to_bucket
+from .utils import floor_to_bucket, is_regular_trading_hours, parse_tick_timestamp
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)  # Switch to INFO in production
@@ -55,12 +55,16 @@ class WebsocketClient:
             schedule_backfill=self._schedule_backfill_for_asset
         )
         import os as _os
+
         try:
             _flush_secs = float(_os.getenv("WS_OPEN_FLUSH_SECS", "0.25"))
         except Exception:
             _flush_secs = 0.25
         self.aggregator = TimeframeAggregator(
-            repo=self.repo, backfill=self.backfill_guard, logger=logger, open_flush_secs=_flush_secs
+            repo=self.repo,
+            backfill=self.backfill_guard,
+            logger=logger,
+            open_flush_secs=_flush_secs,
         )
 
         # Subscriptions
