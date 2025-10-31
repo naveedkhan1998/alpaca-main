@@ -70,6 +70,9 @@ jobs:
         run: |
           set -euo pipefail
 
+          passed_hooks=""
+          failed_hooks=""
+
           trigger() {
             local name="$1"; shift
             local url="$1"; shift
@@ -81,12 +84,13 @@ jobs:
 
             echo "Triggering ${name}…"
             # Do not echo the URL to avoid leaking secrets.
-            http_code=$(curl -sS -X POST -o /dev/null -w "%{http_code}" "$url")
+            http_code=$(curl -sS --max-time 30 -X POST -o /dev/null -w "%{http_code}" "$url")
             if [[ "$http_code" =~ ^2[0-9][0-9]$ ]]; then
               echo "${name} -> HTTP ${http_code}"
+              passed_hooks="${passed_hooks} ${name}"
             else
               echo "::error::${name} failed with HTTP ${http_code}"
-              exit 1
+              failed_hooks="${failed_hooks} ${name}"
             fi
           }
 
@@ -98,3 +102,12 @@ jobs:
           [ "${{ inputs.worker_2 }}" = 'true' ] && trigger worker_2   "${WORKER_2_HOOK}"
           [ "${{ inputs.worker_3 }}" = 'true' ] && trigger worker_3   "${WORKER_3_HOOK}"
           [ "${{ inputs.flower }}" = 'true' ] && trigger flower      "${FLOWER_HOOK}"
+
+          echo "Summary:"
+          if [ -n "$passed_hooks" ]; then
+            echo "Passed: $passed_hooks"
+          fi
+          if [ -n "$failed_hooks" ]; then
+            echo "Failed: $failed_hooks"
+            exit 1
+          fi
