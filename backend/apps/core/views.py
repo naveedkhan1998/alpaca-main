@@ -557,9 +557,14 @@ class WatchListViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Include both default watchlists and user-specific watchlists
-        return WatchList.objects.filter(
-            Q(user=self.request.user) | Q(user=None),
-            is_active=True,
+        # Optimize with select_related to avoid N+1 queries on user
+        return (
+            WatchList.objects.filter(
+                Q(user=self.request.user) | Q(user=None),
+                is_active=True,
+            )
+            .select_related("user")
+            .prefetch_related("watchlistasset_set__asset")
         )
 
     def get_serializer_class(self):
@@ -706,6 +711,11 @@ class CandleViewSet(viewsets.ReadOnlyModelViewSet):
             except ValueError:
                 pass
 
+        # Optimize with select_related to avoid N+1 queries
+        # Only select asset when filtering by symbol (already have asset_id otherwise)
+        if symbol or not asset_id:
+            queryset = queryset.select_related("asset")
+
         return queryset.order_by("-timestamp")
 
     @action(detail=False, methods=["get"], url_path="chart")
@@ -774,5 +784,10 @@ class TickViewSet(viewsets.ReadOnlyModelViewSet):
         symbol = self.request.query_params.get("symbol")
         if symbol:
             queryset = queryset.filter(asset__symbol=symbol)
+
+        # Optimize with select_related to avoid N+1 queries
+        # Only select asset when filtering by symbol (already have asset_id otherwise)
+        if symbol or not asset_id:
+            queryset = queryset.select_related("asset")
 
         return queryset.order_by("-timestamp")

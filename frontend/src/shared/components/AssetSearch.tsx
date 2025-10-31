@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Search, Heart, TrendingUp, Loader2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -28,39 +28,38 @@ interface AssetSearchProps {
   isMobile?: boolean;
 }
 
+// Memoize the asset class color mapping to avoid recreation on each render
+const ASSET_CLASS_COLORS = {
+  us_equity: {
+    badge:
+      'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+    gradient: 'from-blue-500 to-indigo-500',
+  },
+  us_option: {
+    badge:
+      'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+    gradient: 'from-purple-500 to-fuchsia-500',
+  },
+  crypto: {
+    badge:
+      'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+    gradient: 'from-orange-500 to-amber-500',
+  },
+  default: {
+    badge:
+      'bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-300 border-gray-200 dark:border-gray-800',
+    gradient: 'from-gray-500 to-slate-500',
+  },
+} as const;
+
 const getAssetClassColor = (assetClass: string) => {
-  switch (assetClass) {
-    case 'us_equity':
-      return {
-        badge:
-          'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-        gradient: 'from-blue-500 to-indigo-500',
-      };
-    case 'us_option':
-      return {
-        badge:
-          'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 border-purple-200 dark:border-purple-800',
-        gradient: 'from-purple-500 to-fuchsia-500',
-      };
-    case 'crypto':
-      return {
-        badge:
-          'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300 border-orange-200 dark:border-orange-800',
-        gradient: 'from-orange-500 to-amber-500',
-      };
-    default:
-      return {
-        badge:
-          'bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-300 border-gray-200 dark:border-gray-800',
-        gradient: 'from-gray-500 to-slate-500',
-      };
-  }
+  return ASSET_CLASS_COLORS[assetClass as keyof typeof ASSET_CLASS_COLORS] || ASSET_CLASS_COLORS.default;
 };
 
 const AssetSearchItem: React.FC<{
   asset: Asset;
   onAddToWatchlist: (asset: Asset) => void;
-}> = ({ asset, onAddToWatchlist }) => {
+}> = React.memo(({ asset, onAddToWatchlist }) => {
   const config = getAssetClassColor(asset.asset_class);
 
   return (
@@ -113,7 +112,9 @@ const AssetSearchItem: React.FC<{
       </div>
     </motion.div>
   );
-};
+});
+
+AssetSearchItem.displayName = 'AssetSearchItem';
 
 export const AssetSearch: React.FC<AssetSearchProps> = ({
   open,

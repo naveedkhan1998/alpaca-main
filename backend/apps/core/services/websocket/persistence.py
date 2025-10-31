@@ -30,18 +30,21 @@ class CandleRepository:
         write_mode:
           - "delta": volumes are added to existing (used for 1T from live trades)
           - "snapshot": volumes replace existing (used for higher TF open-bucket snapshots)
+        
+        Optimized to use only() for fetching only necessary fields.
         """
         if not updates:
             return
 
         keys = list(updates.keys())
+        # Optimize query to fetch only needed fields
         existing = {
             (c.asset_id, c.timestamp): c
             for c in Candle.objects.filter(
                 asset_id__in=[k[0] for k in keys],
                 timestamp__in=[k[1] for k in keys],
                 timeframe=timeframe,
-            )
+            ).only("id", "asset_id", "timestamp", "open", "high", "low", "close", "volume", "minute_candle_ids", "timeframe")
         }
 
         snapshot = write_mode == "snapshot"
@@ -117,11 +120,13 @@ class CandleRepository:
     def fetch_minute_ids(
         self, recent_minute_keys: list[tuple[int, datetime]]
     ) -> dict[tuple[int, datetime], int]:
-        """Return mapping of (asset_id, minute_ts) -> Candle.id for 1T candles."""
+        """Return mapping of (asset_id, minute_ts) -> Candle.id for 1T candles.
+        Optimized to use values_list for better performance."""
         if not recent_minute_keys:
             return {}
         asset_ids = list({k[0] for k in recent_minute_keys})
         minutes = [k[1] for k in recent_minute_keys]
+        # Use values_list which is more efficient than fetching full objects
         existing = Candle.objects.filter(
             asset_id__in=asset_ids, timestamp__in=minutes, timeframe=const.TF_1T
         ).values_list("asset_id", "timestamp", "id")

