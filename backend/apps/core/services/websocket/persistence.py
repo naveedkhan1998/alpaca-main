@@ -98,7 +98,7 @@ class CandleRepository:
                 if to_create:
                     Candle.objects.bulk_create(to_create, ignore_conflicts=True)
                     if logger:
-                        logger.info(
+                        logger.debug(
                             "upsert: created %d %s candles", len(to_create), timeframe
                         )
                 if to_update:
@@ -107,7 +107,7 @@ class CandleRepository:
                         ["open", "high", "low", "close", "volume", "minute_candle_ids"],
                     )
                     if logger:
-                        logger.info(
+                        logger.debug(
                             "upsert: updated %d %s candles", len(to_update), timeframe
                         )
         except Exception:  # noqa: BLE001
@@ -129,4 +129,3 @@ class CandleRepository:
         for aid, ts, cid in existing:
             out[(aid, ts)] = cid
         return out
-
