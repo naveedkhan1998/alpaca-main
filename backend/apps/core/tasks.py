@@ -649,13 +649,13 @@ def _find_missing_candle_periods(asset, start_date, end_date):
     """
     Find periods where 1T candles are missing during market hours.
     Returns list of (start, end) tuples for missing periods.
-    Optimized to use only_fields to reduce memory usage.
+    Optimized to use values_list() to reduce memory usage.
     """
 
     missing_periods = []
 
     # Get all existing 1T candles in the period, ordered by timestamp
-    # Use only() to reduce memory footprint by fetching only timestamp field
+    # Use values_list() to reduce memory footprint by fetching only timestamp field
     existing_candles = list(
         Candle.objects.filter(
             asset=asset,

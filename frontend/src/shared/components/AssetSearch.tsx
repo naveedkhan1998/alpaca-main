@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Heart, TrendingUp, Loader2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
