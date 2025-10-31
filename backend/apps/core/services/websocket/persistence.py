@@ -98,14 +98,18 @@ class CandleRepository:
                 if to_create:
                     Candle.objects.bulk_create(to_create, ignore_conflicts=True)
                     if logger:
-                        logger.info("🆕 %d %s candles", len(to_create), timeframe)
+                        logger.debug(
+                            "upsert: created %d %s candles", len(to_create), timeframe
+                        )
                 if to_update:
                     Candle.objects.bulk_update(
                         to_update,
                         ["open", "high", "low", "close", "volume", "minute_candle_ids"],
                     )
                     if logger:
-                        logger.info("🔄 %d %s candles", len(to_update), timeframe)
+                        logger.debug(
+                            "upsert: updated %d %s candles", len(to_update), timeframe
+                        )
         except Exception:  # noqa: BLE001
             if logger:
                 logger.exception("bulk save failed for timeframe %s", timeframe)

@@ -58,9 +58,10 @@ class SubscriptionManager:
             gone = self.subscribed_symbols - current
 
             if new:
+                # Ensure asset cache is populated before routing to stocks/crypto
+                self.update_asset_cache(new)
                 self.send("subscribe", list(new))
                 self.subscribed_symbols.update(new)
-                self.update_asset_cache(new)
 
             if gone:
                 self.send("unsubscribe", list(gone))

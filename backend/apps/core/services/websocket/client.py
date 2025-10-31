@@ -19,7 +19,7 @@ from .aggregator import TimeframeAggregator
 from .backfill import BackfillGuard
 from .persistence import CandleRepository
 from .subscriptions import SubscriptionManager
-from .utils import is_regular_trading_hours, parse_tick_timestamp
+from .utils import is_regular_trading_hours, parse_tick_timestamp, floor_to_bucket
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)  # Switch to INFO in production
@@ -54,8 +54,13 @@ class WebsocketClient:
         self.backfill_guard = BackfillGuard(
             schedule_backfill=self._schedule_backfill_for_asset
         )
+        import os as _os
+        try:
+            _flush_secs = float(_os.getenv("WS_OPEN_FLUSH_SECS", "0.25"))
+        except Exception:
+            _flush_secs = 0.25
         self.aggregator = TimeframeAggregator(
-            repo=self.repo, backfill=self.backfill_guard, logger=logger
+            repo=self.repo, backfill=self.backfill_guard, logger=logger, open_flush_secs=_flush_secs
         )
 
         # Subscriptions
@@ -338,7 +343,12 @@ class WebsocketClient:
             messages: list[dict] = []
             start_ns = time.time_ns()
             MAX_MSGS = 2000
-            MAX_NS = 250_000_000  # ~250ms budget
+            # Tunable batch budget (ms) to reduce latency; default 150ms
+            try:
+                _batch_ms = float(__import__("os").getenv("WS_BATCH_MS", "150"))
+            except Exception:
+                _batch_ms = 150.0
+            MAX_NS = int(_batch_ms * 1_000_000)
             while not self.message_buffer.empty() and len(messages) < MAX_MSGS:
                 messages.append(self.message_buffer.get())
                 if time.time_ns() - start_ns > MAX_NS:
@@ -358,8 +368,8 @@ class WebsocketClient:
             id_to_class = self.subscriptions.asset_class_cache.copy()
 
         # Process bars directly as 1T candles
+        bar_candles: dict[tuple[int, datetime], dict[str, Any]] = {}
         if bars:
-            bar_candles = {}
             for b in bars:
                 sym = b.get("S")
                 aid = sym_to_id.get(sym)
@@ -446,9 +456,17 @@ class WebsocketClient:
         all_m1_keys = list(m1_map.keys()) + list(bar_candles.keys())
         minute_ids_by_key = self.repo.fetch_minute_ids(all_m1_keys)
 
+        # Merge bar-based minutes into trade-based minutes for rollup authority
+        # Prefer bar values when present as authoritative 1T OHLCV
+        if bar_candles:
+            for k, v in bar_candles.items():
+                m1_map[k] = v
+
         # Update higher timeframes and attach minute IDs
         if latest_ts:
             touched_by_tf = self.aggregator.rollup_from_minutes(m1_map)
+            # Persist open buckets immediately for lower latency updates
+            self.aggregator.persist_open(touched_by_tf, latest_ts)
             # Attach minute ids to accumulators
             from main import const as _const
 
@@ -458,9 +476,7 @@ class WebsocketClient:
                 acc = self.aggregator._tf_acc[tf]
                 for (aid, m1_ts), _ in m1_map.items():
                     # derive bucket from incoming minute timestamps
-                    from .utils import floor_to_bucket as _floor
-
-                    bucket = _floor(m1_ts, delta)
+                    bucket = floor_to_bucket(m1_ts, delta)
                     key = (aid, bucket)
                     acc.setdefault(key, {})
                     ids_list = acc[key].setdefault("minute_candle_ids", [])
@@ -469,14 +485,14 @@ class WebsocketClient:
                         ids_list.append(mid)
                 # Also for bars
                 for (aid, m1_ts), _ in bar_candles.items():
-                    bucket = _floor(m1_ts, delta)
+                    bucket = floor_to_bucket(m1_ts, delta)
                     key = (aid, bucket)
                     acc.setdefault(key, {})
                     ids_list = acc[key].setdefault("minute_candle_ids", [])
                     mid = minute_ids_by_key.get((aid, m1_ts))
                     if mid is not None and mid not in ids_list:
                         ids_list.append(mid)
-            # Persist open buckets and flush closed
+            # Persist open buckets again (may be throttled) and flush closed
             self.aggregator.persist_open(touched_by_tf, latest_ts)
             self.aggregator.flush_closed(latest_ts)
 
