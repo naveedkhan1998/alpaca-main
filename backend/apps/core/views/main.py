@@ -14,19 +14,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.core.models import (
+    AggregatedCandle,
     AlpacaAccount,
     Asset,
     Candle,
     MinuteCandle,
-    AggregatedCandle,
     Tick,
     WatchList,
     WatchListAsset,
-)
-from apps.core.views.candle_views import (
-    get_candles_v3,
-    get_estimated_count,
-    CandleViewMixin,
 )
 from apps.core.pagination import CandleBucketPagination, OffsetPagination
 from apps.core.serializers import (
@@ -44,6 +39,10 @@ from apps.core.services.alpaca_service import alpaca_service
 from apps.core.services.backfill_coordinator import request_backfill
 from apps.core.tasks import alpaca_sync_task
 from apps.core.utils import get_timeframe
+from apps.core.views.candle_views import (
+    get_candles_v3,
+    get_estimated_count,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -537,7 +536,6 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
             )
 
         # Use estimated count to avoid COUNT(*) overhead
-        from apps.core.views.candle_views import get_estimated_count
 
         total = get_estimated_count(asset.id, tf_label)
 

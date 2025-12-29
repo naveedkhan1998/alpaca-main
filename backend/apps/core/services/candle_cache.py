@@ -33,14 +33,14 @@ Usage:
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from dataclasses import dataclass, field
+from datetime import datetime
+from decimal import Decimal
 import json
 import logging
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Sequence
+from typing import Any
 
-from django.conf import settings
 from django.core.cache import cache
 
 logger = logging.getLogger(__name__)

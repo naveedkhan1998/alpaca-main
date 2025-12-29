@@ -25,15 +25,14 @@ Usage:
 
 from __future__ import annotations
 
-import logging
 from datetime import datetime
-from typing import Any
+import logging
 
 from django.db import connection
 from rest_framework import status
 from rest_framework.response import Response
 
-from apps.core.models import MinuteCandle, AggregatedCandle, Asset
+from apps.core.models import AggregatedCandle, Asset, MinuteCandle
 from main import const
 
 logger = logging.getLogger(__name__)

@@ -3,11 +3,11 @@
 from rest_framework import serializers
 
 from apps.core.models import (
+    AggregatedCandle,
     AlpacaAccount,
     Asset,
     Candle,
     MinuteCandle,
-    AggregatedCandle,
     Tick,
     WatchList,
     WatchListAsset,

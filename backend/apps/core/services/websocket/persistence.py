@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Sequence, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apps.core.services.candle_cache import candle_cache
 from main import const
@@ -33,10 +33,10 @@ class CandlePersistence:
         ... ])
     """
 
-    _repo: "CandleRepoType | None" = field(default=None, repr=False)
+    _repo: CandleRepoType | None = field(default=None, repr=False)
 
     @property
-    def repo(self) -> "CandleRepoType":
+    def repo(self) -> CandleRepoType:
         """Lazy-initialize the repository."""
         if self._repo is None:
             from apps.core.services.candle_repository import CandleRepository

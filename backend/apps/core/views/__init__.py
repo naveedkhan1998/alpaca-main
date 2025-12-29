@@ -5,18 +5,17 @@ This package contains all API view classes and helper functions.
 """
 
 from apps.core.views.candle_views import (
+    MINUTES_TO_TF,
     CandleViewMixin,
     get_candles_v3,
     get_estimated_count,
-    MINUTES_TO_TF,
 )
-
 from apps.core.views.main import (
     AlpacaAccountViewSet,
     AssetViewSet,
-    WatchListViewSet,
     CandleViewSet,
     TickViewSet,
+    WatchListViewSet,
 )
 
 __all__ = [

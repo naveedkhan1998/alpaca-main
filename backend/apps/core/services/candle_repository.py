@@ -30,13 +30,14 @@ Usage:
 
 from __future__ import annotations
 
-import logging
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Sequence
+import logging
+from typing import Any
 
-from django.db import connection, transaction
+from django.db import connection
 
 from main import const
 

@@ -12,14 +12,13 @@ from typing import Any
 from django.db import close_old_connections
 import websocket
 
-from main import const
 from main.settings.base import APCA_API_KEY, APCA_API_SECRET_KEY
 
 from .aggregator import TimeframeAggregator
 from .backfill import BackfillGuard
 from .persistence import CandlePersistence
 from .subscriptions import SubscriptionManager
-from .utils import floor_to_bucket, is_regular_trading_hours, parse_tick_timestamp
+from .utils import is_regular_trading_hours, parse_tick_timestamp
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)  # Switch to INFO in production

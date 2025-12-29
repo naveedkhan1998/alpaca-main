@@ -1,11 +1,11 @@
 from django.contrib import admin
 
 from apps.core.models import (
+    AggregatedCandle,
     AlpacaAccount,
     Asset,
     Candle,
     MinuteCandle,
-    AggregatedCandle,
     Tick,
     WatchList,
     WatchListAsset,

@@ -28,10 +28,11 @@ Design Rationale:
 """
 
 from decimal import Decimal
+
 from django.contrib.postgres.indexes import BrinIndex
 from django.db import models
 
-from main.const import AGGREGATED_TIMEFRAME_CHOICES, TIMEFRAME_CHOICES
+from main.const import AGGREGATED_TIMEFRAME_CHOICES
 
 
 class BaseCandleMixin(models.Model):

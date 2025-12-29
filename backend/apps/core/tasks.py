@@ -8,10 +8,10 @@ from django.utils import timezone
 import pytz
 
 from apps.core.models import (
+    AggregatedCandle,
     Asset,
     Candle,
     MinuteCandle,
-    AggregatedCandle,
     WatchListAsset,
 )
 from apps.core.services.candle_repository import CandleRepository

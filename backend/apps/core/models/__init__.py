@@ -9,16 +9,16 @@ The candle storage is optimized for high-frequency writes and fast reads with:
 - Proper indexing strategies (BRIN for time-series, composite for queries)
 """
 
-from apps.core.models.base import SyncStatus, AlpacaAccount
 from apps.core.models.assets import Asset, WatchList, WatchListAsset
-from apps.core.models.ticks import Tick
+from apps.core.models.base import AlpacaAccount, SyncStatus
 from apps.core.models.candles import (
-    BaseCandleMixin,
-    MinuteCandle,
     AggregatedCandle,
+    BaseCandleMixin,
     Candle,  # Legacy model for backward compatibility
+    MinuteCandle,
 )
-from main.const import TIMEFRAME_CHOICES, AGGREGATED_TIMEFRAME_CHOICES
+from apps.core.models.ticks import Tick
+from main.const import AGGREGATED_TIMEFRAME_CHOICES, TIMEFRAME_CHOICES
 
 __all__ = [
     # Base models
