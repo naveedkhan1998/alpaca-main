@@ -17,10 +17,13 @@ from apps.core.models import (
     AlpacaAccount,
     Asset,
     Candle,
+    MinuteCandle,
+    AggregatedCandle,
     Tick,
     WatchList,
     WatchListAsset,
 )
+from apps.core.views.candle_views import get_candles_v3, get_estimated_count, CandleViewMixin
 from apps.core.pagination import CandleBucketPagination, OffsetPagination
 from apps.core.serializers import (
     AggregatedCandleSerializer,
@@ -489,6 +492,11 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=True, methods=["get"], url_path="candles_v2")
     def candles_v2(self, request, pk=None):
+        """
+        Legacy candle endpoint with offset pagination.
+        
+        Deprecated: Use candles_v3 for better performance with cursor pagination.
+        """
         asset = self.get_object()
         tf_minutes = get_timeframe(request)
         offset = int(request.query_params.get("offset", 0))
@@ -516,18 +524,25 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        base_qs = Candle.objects.filter(asset_id=asset.id, timeframe=tf_label)
-        total = base_qs.count()
+        # Use new models with fallback to legacy
+        if tf_label == _const.TF_1T:
+            base_qs = MinuteCandle.objects.filter(asset_id=asset.id)
+        else:
+            base_qs = AggregatedCandle.objects.filter(asset_id=asset.id, timeframe=tf_label)
+        
+        # Use estimated count to avoid COUNT(*) overhead
+        from apps.core.views.candle_views import get_estimated_count
+        total = get_estimated_count(asset.id, tf_label)
 
         candles_qs = base_qs.order_by("-timestamp")[offset : offset + limit]
         rows = [
             {
                 "bucket": c.timestamp,
-                "o": c.open,
-                "h_": c.high,
-                "l_": c.low,
-                "c": c.close,
-                "v_": c.volume,
+                "o": float(c.open),
+                "h_": float(c.high),
+                "l_": float(c.low),
+                "c": float(c.close),
+                "v_": float(c.volume),
             }
             for c in candles_qs
         ]
@@ -544,6 +559,28 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
             },
             status=status.HTTP_200_OK,
         )
+
+    @action(detail=True, methods=["get"], url_path="candles_v3")
+    def candles_v3(self, request, pk=None):
+        """
+        Optimized candle endpoint with Redis caching and cursor pagination.
+        
+        Query Parameters:
+            timeframe: Candle timeframe in minutes (1, 5, 15, 30, 60, 240, 1440).
+            limit: Maximum candles to return (default 1000, max 5000).
+            cursor: ISO 8601 timestamp for pagination.
+            cache: Whether to use cache (default "true").
+        
+        Returns:
+            {
+                "results": [...],
+                "next_cursor": "2024-01-15T09:00:00+00:00",
+                "has_next": true,
+                "cached": false
+            }
+        """
+        return get_candles_v3(self, request, pk)
+
 
 
 class WatchListViewSet(viewsets.ModelViewSet):

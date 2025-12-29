@@ -4,6 +4,8 @@ import {
   GetAssetsParams,
   SearchAssetsParams,
   Candle,
+  CompactCandlesResponse,
+  GetCandlesV3Params,
 } from '@/types/common-types';
 import { baseApi } from './baseApi';
 
@@ -190,6 +192,41 @@ const assetApi = baseApi.injectEndpoints({
       ],
     }),
 
+    /**
+     * V3 Candle endpoint with cursor-based pagination and compact format.
+     * 
+     * Uses compact array format by default (~60% smaller payload):
+     * - Backend returns: { columns: [...], results: [[...], [...]] }
+     * - GZip compressed via middleware
+     * 
+     * Optimized for high-performance reads with no COUNT(*) overhead.
+     */
+    getAssetCandlesV3: builder.query<
+      CompactCandlesResponse,
+      GetCandlesV3Params
+    >({
+      query: ({ id, timeframe = 1, limit = 1000, cursor }) => {
+        const searchParams = new URLSearchParams();
+        searchParams.append('timeframe', timeframe.toString());
+        searchParams.append('limit', limit.toString());
+        // format=compact is default, no need to specify
+        if (cursor) searchParams.append('cursor', cursor);
+
+        return {
+          url: `core/assets/${id}/candles_v3/?${searchParams.toString()}`,
+          method: 'GET',
+          headers: {
+            'Content-type': 'application/json',
+            'Accept-Encoding': 'gzip, deflate, br',
+          },
+        };
+      },
+      providesTags: (_result, _error, { id }) => [
+        { type: 'Asset', id: id },
+        'Candle',
+      ],
+    }),
+
     // Get sync status
     getSyncStatus: builder.query<
       {
@@ -241,6 +278,8 @@ export const {
   useGetAssetByIdQuery,
   useGetAssetCandlesQuery,
   useLazyGetAssetCandlesQuery,
+  useGetAssetCandlesV3Query,
+  useLazyGetAssetCandlesV3Query,
   useGetSyncStatusQuery,
   useSyncAssetsMutation,
 } = assetApi;

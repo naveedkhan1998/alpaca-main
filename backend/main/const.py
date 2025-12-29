@@ -25,6 +25,11 @@ __all__ = [
     "TF_1H",
     "TF_4H",
     "TF_1D",
+    # Timeframe collections
+    "TF_LIST",
+    "TF_CFG",
+    "TIMEFRAME_CHOICES",
+    "AGGREGATED_TIMEFRAME_CHOICES",
 ]
 
 
@@ -59,3 +64,24 @@ TF_CFG = {
     TF_4H: timedelta(hours=4),
     TF_1D: timedelta(days=1),
 }
+
+# Timeframe choices for Django model fields (all timeframes)
+TIMEFRAME_CHOICES = [
+    (TF_1T, "1 Minute"),
+    (TF_5T, "5 Minutes"),
+    (TF_15T, "15 Minutes"),
+    (TF_30T, "30 Minutes"),
+    (TF_1H, "1 Hour"),
+    (TF_4H, "4 Hours"),
+    (TF_1D, "1 Day"),
+]
+
+# Aggregated timeframes only (excludes 1T which has its own table)
+AGGREGATED_TIMEFRAME_CHOICES = [
+    (TF_5T, "5 Minutes"),
+    (TF_15T, "15 Minutes"),
+    (TF_30T, "30 Minutes"),
+    (TF_1H, "1 Hour"),
+    (TF_4H, "4 Hours"),
+    (TF_1D, "1 Day"),
+]

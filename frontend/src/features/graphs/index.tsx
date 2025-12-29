@@ -26,7 +26,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 //import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import PanelHeader from './components/PanelHeader';
 //import PaperTradingPanel from './components/controls/PaperTradingPanel';
-import { useCandles } from './hooks/useCandles';
+import { useCandlesV3 } from './hooks/useCandlesV3';
 import { useDerivedSeries } from './hooks/useDerivedSeries';
 import { useChartSync } from './hooks/useChartSync';
 import { useFullscreen } from './hooks/useFullscreen';
@@ -121,7 +121,7 @@ const GraphsPage: React.FC = () => {
   const atrChartRef = useRef<ITimeScaleApi<Time> | null>(null);
   const chartSectionRef = useRef<HTMLDivElement>(null);
 
-  // Data & derived series
+  // Data & derived series (using v3 API with cursor pagination)
   const {
     candles,
     isFetching,
@@ -131,7 +131,7 @@ const GraphsPage: React.FC = () => {
     hasMore,
     handleRefetch,
     loadMoreHistoricalData,
-  } = useCandles({ assetId: obj?.id, timeframe, autoRefresh });
+  } = useCandlesV3({ assetId: obj?.id, timeframe, autoRefresh });
 
   const {
     seriesData,

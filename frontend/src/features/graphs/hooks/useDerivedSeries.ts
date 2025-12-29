@@ -23,6 +23,35 @@ interface UseDerivedSeriesParams {
   indicatorConfigs: IndicatorConfig;
 }
 
+// Cache for formatted timestamps to avoid redundant calculations
+const timestampCache = new Map<string, number>();
+
+/**
+ * Cached formatDate to avoid redundant timestamp conversions.
+ * Uses a Map cache since the same timestamps repeat across renders.
+ */
+function cachedFormatDate(dateStr: string): number {
+  let cached = timestampCache.get(dateStr);
+  if (cached === undefined) {
+    cached = formatDate(dateStr);
+    timestampCache.set(dateStr, cached);
+    // Limit cache size to prevent memory leaks
+    if (timestampCache.size > 50000) {
+      // Clear oldest entries (first 10000)
+      const keys = Array.from(timestampCache.keys()).slice(0, 10000);
+      keys.forEach(k => timestampCache.delete(k));
+    }
+  }
+  return cached;
+}
+
+/**
+ * Pre-processed candle with cached timestamp for efficient reuse.
+ */
+interface ProcessedCandle extends Candle {
+  time: Time;
+}
+
 export function useDerivedSeries({
   candles,
   seriesType,
@@ -30,92 +59,97 @@ export function useDerivedSeries({
   activeIndicators,
   indicatorConfigs,
 }: UseDerivedSeriesParams) {
+  // Pre-process candles with cached timestamps (computed once)
+  const processedCandles = useMemo<ProcessedCandle[]>(() => {
+    return candles.map(candle => ({
+      ...candle,
+      time: cachedFormatDate(candle.date) as Time,
+    }));
+  }, [candles]);
+
+  // Reversed array for chart display (oldest first)
+  const reversedCandles = useMemo(
+    () => [...processedCandles].reverse(),
+    [processedCandles]
+  );
+
   const data = useMemo(
     () => ({ results: candles, count: candles.length }),
     [candles]
   );
 
+  // Series data using pre-processed timestamps
   const seriesData = useMemo(() => {
-    if (!data) return [] as unknown[];
+    if (reversedCandles.length === 0) return [] as unknown[];
     if (seriesType === 'ohlc') {
-      return data.results
-        .map(({ date, open, high, low, close }) => ({
-          time: formatDate(date) as Time,
-          open,
-          high,
-          low,
-          close,
-        }))
-        .reverse();
+      return reversedCandles.map(({ time, open, high, low, close }) => ({
+        time,
+        open,
+        high,
+        low,
+        close,
+      }));
     }
     if (seriesType === 'price') {
-      return data.results
-        .map(({ date, close }) => ({
-          time: formatDate(date) as Time,
-          value: close,
-        }))
-        .reverse();
+      return reversedCandles.map(({ time, close }) => ({
+        time,
+        value: close,
+      }));
     }
     return [] as unknown[];
-  }, [data, seriesType]) as BarData<Time>[] | LineData<Time>[];
+  }, [reversedCandles, seriesType]) as BarData<Time>[] | LineData<Time>[];
 
+  // Volume data using pre-processed timestamps
   const volumeData = useMemo<HistogramData<Time>[]>(() => {
-    if (!data) return [] as HistogramData<Time>[];
-    return data.results
-      .map(({ date, close, volume = 0 }, index, array) => {
-        const previousClose = index > 0 ? array[index - 1].close : close;
-        const green = isDarkMode
-          ? 'rgba(34, 197, 94, 0.8)'
-          : 'rgba(16, 185, 129, 0.8)';
-        const red = isDarkMode
-          ? 'rgba(239, 68, 68, 0.8)'
-          : 'rgba(244, 63, 94, 0.85)';
-        const color = close >= previousClose ? green : red;
-        return { time: formatDate(date) as Time, value: volume, color };
-      })
-      .reverse();
-  }, [data, isDarkMode]);
+    if (reversedCandles.length === 0) return [];
+    const green = isDarkMode
+      ? 'rgba(34, 197, 94, 0.8)'
+      : 'rgba(16, 185, 129, 0.8)';
+    const red = isDarkMode
+      ? 'rgba(239, 68, 68, 0.8)'
+      : 'rgba(244, 63, 94, 0.85)';
+
+    return reversedCandles.map(({ time, close, volume = 0 }, index, array) => {
+      const previousClose = index > 0 ? array[index - 1].close : close;
+      const color = close >= previousClose ? green : red;
+      return { time, value: volume, color };
+    });
+  }, [reversedCandles, isDarkMode]);
 
   const hasValidVolume = useMemo(() => {
-    if (!data) return false;
-    return data.results.some(({ volume = 0 }) => volume > 0);
-  }, [data]);
+    return reversedCandles.some(({ volume = 0 }) => volume > 0);
+  }, [reversedCandles]);
 
+  // RSI using pre-processed data
   const rsiData = useMemo<LineData<Time>[]>(() => {
-    if (!data || !activeIndicators.includes('RSI'))
-      return [] as LineData<Time>[];
+    if (reversedCandles.length === 0 || !activeIndicators.includes('RSI'))
+      return [];
     const config = indicatorConfigs.RSI;
-    return calculateRSI(
-      data.results.map(d => ({ ...d, time: formatDate(d.date) })),
-      config.period
-    )
+    return calculateRSI(reversedCandles, config.period)
       .filter(item => item.time !== undefined)
-      .map(item => ({ ...item, time: item.time as Time }))
-      .reverse();
-  }, [data, activeIndicators, indicatorConfigs.RSI]);
+      .map(item => ({ ...item, time: item.time as Time }));
+  }, [reversedCandles, activeIndicators, indicatorConfigs.RSI]);
 
+  // ATR using pre-processed data
   const atrData = useMemo<LineData<Time>[]>(() => {
-    if (!data || !activeIndicators.includes('ATR'))
-      return [] as LineData<Time>[];
+    if (reversedCandles.length === 0 || !activeIndicators.includes('ATR'))
+      return [];
     const config = indicatorConfigs.ATR;
-    return calculateATR(
-      data.results.map(d => ({ ...d, time: formatDate(d.date) })),
-      config.period
-    )
-      .map(item => ({ ...item, time: item.time as Time }))
-      .reverse();
-  }, [data, activeIndicators, indicatorConfigs.ATR]);
+    return calculateATR(reversedCandles, config.period).map(item => ({
+      ...item,
+      time: item.time as Time,
+    }));
+  }, [reversedCandles, activeIndicators, indicatorConfigs.ATR]);
 
+  // EMA using pre-processed data
   const emaData = useMemo<LineData<Time>[]>(() => {
-    if (!data || !activeIndicators.includes('EMA'))
-      return [] as LineData<Time>[];
+    if (reversedCandles.length === 0 || !activeIndicators.includes('EMA'))
+      return [];
     const config = indicatorConfigs.EMA;
-    return calculateMA(
-      data.results.map(d => ({ ...d, time: formatDate(d.date) as Time })),
-      config.period
-    ).reverse();
-  }, [data, activeIndicators, indicatorConfigs.EMA]);
+    return calculateMA(reversedCandles, config.period);
+  }, [reversedCandles, activeIndicators, indicatorConfigs.EMA]);
 
+  // Bollinger Bands using pre-processed data
   type BollingerPoint = {
     time: Time;
     upper: number;
@@ -123,11 +157,14 @@ export function useDerivedSeries({
     lower: number;
   };
   const bollingerBandsData = useMemo<BollingerPoint[]>(() => {
-    if (!data || !activeIndicators.includes('BollingerBands'))
-      return [] as BollingerPoint[];
+    if (
+      reversedCandles.length === 0 ||
+      !activeIndicators.includes('BollingerBands')
+    )
+      return [];
     const config = indicatorConfigs.BollingerBands;
     const bands = calculateBollingerBands(
-      data.results.map(d => ({ ...d, time: formatDate(d.date) })).reverse(),
+      reversedCandles,
       config.period,
       config.stdDev
     );
@@ -139,7 +176,7 @@ export function useDerivedSeries({
         middle: band.middle,
         lower: band.lower,
       }));
-  }, [data, activeIndicators, indicatorConfigs.BollingerBands]);
+  }, [reversedCandles, activeIndicators, indicatorConfigs.BollingerBands]);
 
   return {
     data,
