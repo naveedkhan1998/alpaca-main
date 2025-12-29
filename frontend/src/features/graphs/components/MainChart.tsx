@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, memo } from 'react';
 import {
   createChart,
   IChartApi,
@@ -12,6 +12,7 @@ import {
   HistogramData,
   MouseEventParams,
   LineSeries,
+  HistogramSeries,
 } from 'lightweight-charts';
 
 import { useAppSelector } from 'src/app/hooks';
@@ -20,416 +21,923 @@ import { getBaseChartOptions } from '../lib/chartOptions';
 import { createSeriesForType } from '../lib/createSeries';
 import { useResizeObserver } from '../hooks/useResizeObserver';
 import { useIsMobile } from '@/hooks/useMobile';
+import { useIndicatorUI } from '../context';
+import type { CalculatedIndicator } from '../lib/indicators';
 
 interface MainChartProps {
   seriesData: (BarData | LineData | HistogramData)[];
+  volumeData?: HistogramData<Time>[];
+  showVolume?: boolean;
   mode: boolean;
   setTimeScale: (timeScale: ITimeScaleApi<Time>) => void;
-  emaData: LineData[];
-  bollingerBandsData: {
-    time: Time;
-    upper: number;
-    middle: number;
-    lower: number;
-  }[];
+  overlayIndicators: CalculatedIndicator[];
   onLoadMoreData: () => void;
   isLoadingMore: boolean;
   hasMoreData: boolean;
+  // Replay state for legend filtering
+  isReplayEnabled?: boolean;
+  replayStep?: number;
 }
 
-const MainChart: React.FC<MainChartProps> = ({
-  seriesData,
-  mode,
-  setTimeScale,
-  emaData,
-  bollingerBandsData,
-  onLoadMoreData,
-  isLoadingMore,
-  hasMoreData,
-}) => {
-  const chartType = useAppSelector(selectChartType);
-  const autoRefresh = useAppSelector(selectAutoRefresh);
-  const isMobile = useIsMobile();
-  const mainChartContainerRef = useRef<HTMLDivElement | null>(null);
-  const mainChartRef = useRef<IChartApi | null>(null);
-  const seriesRef = useRef<ISeriesApi<SeriesType> | null>(null);
-  const emaSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
-  const bollingerBandsSeriesRefs = useRef<{
-    upper: ISeriesApi<'Line'> | null;
-    middle: ISeriesApi<'Line'> | null;
-    lower: ISeriesApi<'Line'> | null;
-  }>({
-    upper: null,
-    middle: null,
-    lower: null,
-  });
-  const prevChartTypeRef = useRef<SeriesType>(chartType);
-  const legendContainerRef = useRef<HTMLDivElement | null>(null);
-  // Resize handled via shared hook
-  const loadingIndicatorRef = useRef<HTMLDivElement | null>(null);
-  const onLoadMoreDataRef = useRef(onLoadMoreData);
+// Memoized chart options to avoid recreation
+const getChartOptionsForMode = (() => {
+  const cache = new Map<boolean, ReturnType<typeof getBaseChartOptions>>();
+  return (mode: boolean) => {
+    if (!cache.has(mode)) {
+      cache.set(mode, getBaseChartOptions(mode));
+    }
+    return cache.get(mode)!;
+  };
+})();
 
-  useEffect(() => {
-    onLoadMoreDataRef.current = onLoadMoreData;
-  }, [onLoadMoreData]);
+// Helper to compare data points for realtime updates
+// Returns true if points are equal (no update needed)
+const areDataPointsEqual = (
+  a: BarData | LineData | HistogramData,
+  b: BarData | LineData | HistogramData
+): boolean => {
+  // Check OHLC data (candlestick/bar)
+  if ('open' in a && 'open' in b) {
+    const barA = a as BarData;
+    const barB = b as BarData;
+    return (
+      barA.open === barB.open &&
+      barA.high === barB.high &&
+      barA.low === barB.low &&
+      barA.close === barB.close
+    );
+  }
+  // Check line/histogram data
+  if ('value' in a && 'value' in b) {
+    return (a as LineData).value === (b as LineData).value;
+  }
+  return false;
+};
 
-  const createSeries = useCallback(
-    (chart: IChartApi, type: SeriesType): ISeriesApi<SeriesType> =>
-      createSeriesForType(chart, type, mode, seriesData as any),
-    [mode, seriesData]
-  );
+const MainChart: React.FC<MainChartProps> = memo(
+  ({
+    seriesData,
+    volumeData,
+    showVolume = false,
+    mode,
+    setTimeScale,
+    overlayIndicators,
+    onLoadMoreData,
+    isLoadingMore,
+    hasMoreData,
+    isReplayEnabled = false,
+    replayStep = 0,
+  }) => {
+    const chartType = useAppSelector(selectChartType);
+    const autoRefresh = useAppSelector(selectAutoRefresh);
+    const isMobile = useIsMobile();
+    const { openConfig, removeIndicator } = useIndicatorUI();
+    const mainChartContainerRef = useRef<HTMLDivElement | null>(null);
+    const mainChartRef = useRef<IChartApi | null>(null);
+    const seriesRef = useRef<ISeriesApi<SeriesType> | null>(null);
+    const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
 
-  // Initialize chart only once
-  const initializeChart = useCallback(() => {
-    if (!mainChartContainerRef.current || mainChartRef.current) return;
+    // Store refs for overlay indicator series - keyed by instanceId
+    const overlaySeriesRefs = useRef<Map<string, ISeriesApi<'Line'>[]>>(
+      new Map()
+    );
+    
+    // Keep volumeData in ref for chart initialization
+    const volumeDataRef = useRef(volumeData);
+    const showVolumeRef = useRef(showVolume);
 
-    mainChartContainerRef.current.innerHTML = '';
+    const prevChartTypeRef = useRef<SeriesType>(chartType);
+    const prevSeriesDataLengthRef = useRef<number>(0);
+    const legendContainerRef = useRef<HTMLDivElement | null>(null);
+    const priceSectionRef = useRef<HTMLDivElement | null>(null);
+    const overlaySectionRef = useRef<HTMLDivElement | null>(null);
+    const loadingIndicatorRef = useRef<HTMLDivElement | null>(null);
+    const onLoadMoreDataRef = useRef(onLoadMoreData);
+    const isLoadingMoreRef = useRef(isLoadingMore);
+    // Keep seriesData in ref for crosshair callback to avoid stale closure
+    const seriesDataRef = useRef(seriesData);
+    // Keep overlay indicators in ref for crosshair callback
+    const overlayIndicatorsRef = useRef(overlayIndicators);
+    // Keep openConfig and removeIndicator in refs for event handlers
+    const openConfigRef = useRef(openConfig);
+    const removeIndicatorRef = useRef(removeIndicator);
+    // Keep replay state in refs for crosshair callback
+    const isReplayEnabledRef = useRef(isReplayEnabled);
+    const replayStepRef = useRef(replayStep);
 
-    const chart = createChart(
-      mainChartContainerRef.current,
-      getBaseChartOptions(mode)
+    // Track last data point to optimize setData calls - includes time and values for realtime updates
+    const lastDataTimeRef = useRef<Time | null>(null);
+    const lastDataPointRef = useRef<
+      (BarData | LineData | HistogramData) | null
+    >(null);
+
+    useEffect(() => {
+      onLoadMoreDataRef.current = onLoadMoreData;
+    }, [onLoadMoreData]);
+
+    useEffect(() => {
+      isLoadingMoreRef.current = isLoadingMore;
+    }, [isLoadingMore]);
+
+    // Keep seriesData ref updated
+    useEffect(() => {
+      seriesDataRef.current = seriesData;
+    }, [seriesData]);
+
+    // Keep overlay indicators ref updated
+    useEffect(() => {
+      overlayIndicatorsRef.current = overlayIndicators;
+    }, [overlayIndicators]);
+
+    // Keep openConfig and removeIndicator refs updated
+    useEffect(() => {
+      openConfigRef.current = openConfig;
+    }, [openConfig]);
+
+    useEffect(() => {
+      removeIndicatorRef.current = removeIndicator;
+    }, [removeIndicator]);
+
+    // Keep replay state refs updated
+    useEffect(() => {
+      isReplayEnabledRef.current = isReplayEnabled;
+    }, [isReplayEnabled]);
+
+    useEffect(() => {
+      replayStepRef.current = replayStep;
+    }, [replayStep]);
+
+    // Keep volume refs updated
+    useEffect(() => {
+      volumeDataRef.current = volumeData;
+    }, [volumeData]);
+
+    useEffect(() => {
+      showVolumeRef.current = showVolume;
+    }, [showVolume]);
+
+    // Memoize series creation to prevent recreation
+    const createSeries = useCallback(
+      (chart: IChartApi, type: SeriesType): ISeriesApi<SeriesType> =>
+        createSeriesForType(chart, type, mode, seriesData as any),
+      [mode, seriesData]
     );
 
-    mainChartRef.current = chart;
-    setTimeScale(chart.timeScale());
+    // Optimized legend update function - reuses DOM elements
+    const updateLegend = useCallback(
+      (data: any | null, _time?: Time, volume?: number) => {
+        const priceSection = priceSectionRef.current;
+        if (!priceSection) return;
 
-    // Set initial size
-    const rect = mainChartContainerRef.current.getBoundingClientRect();
-    chart.applyOptions({ width: rect.width, height: rect.height });
+        if (!data) return;
 
-    // Create legend with modern styling
-    const legendContainer = document.createElement('div');
-    legendContainer.className =
-      'absolute px-2 py-1 border rounded-lg shadow-lg top-2 left-2 bg-card/95 backdrop-blur-xl border-border/40';
+        // Helper to format volume with K/M/B suffixes
+        const formatVolume = (vol: number): string => {
+          if (vol >= 1_000_000_000) return (vol / 1_000_000_000).toFixed(2) + 'B';
+          if (vol >= 1_000_000) return (vol / 1_000_000).toFixed(2) + 'M';
+          if (vol >= 1_000) return (vol / 1_000).toFixed(2) + 'K';
+          return vol.toFixed(0);
+        };
 
-    mainChartContainerRef.current.appendChild(legendContainer);
-    legendContainerRef.current = legendContainer;
+        // Determine chart display type
+        const isOHLC = chartType === 'Candlestick' || chartType === 'Bar';
 
-    // Compact OHLC display for both mobile and desktop
-    const priceSection = document.createElement('div');
-    priceSection.className = 'flex items-center gap-2 text-xs font-bold';
-    legendContainer.appendChild(priceSection);
-
-    const updateLegend = (data: any | null) => {
-      if (!priceSection) return;
-
-      if (data) {
-        priceSection.innerHTML = '';
-        if (
-          (chartType === 'Candlestick' || chartType === 'Bar') &&
-          'open' in data
-        ) {
+        if (isOHLC && 'open' in data) {
           const { open, high, low, close } = data as BarData;
+          const priceItems = isMobile
+            ? [
+                { label: 'O', value: open.toFixed(2), color: '#3B82F6' },
+                { label: 'H', value: high.toFixed(2), color: '#26a69a' },
+                { label: 'L', value: low.toFixed(2), color: '#ef5350' },
+                { label: 'C', value: close.toFixed(2), color: '#F59E0B' },
+                ...(showVolumeRef.current && volume !== undefined ? [{ label: 'V', value: formatVolume(volume), color: '#7c3aed' }] : []),
+              ]
+            : [
+                { label: 'Open', value: open.toFixed(2), color: '#3B82F6' },
+                { label: 'High', value: high.toFixed(2), color: '#26a69a' },
+                { label: 'Low', value: low.toFixed(2), color: '#ef5350' },
+                { label: 'Close', value: close.toFixed(2), color: '#F59E0B' },
+                ...(showVolumeRef.current && volume !== undefined ? [{ label: 'Vol', value: formatVolume(volume), color: '#7c3aed' }] : []),
+              ];
 
-          if (isMobile) {
-            // Mobile: Compact OHLC with different colors
-            const priceItems = [
-              { label: 'O', value: open.toFixed(2), color: '#3B82F6' }, // Blue for Open
-              { label: 'H', value: high.toFixed(2), color: '#10B981' }, // Green for High
-              { label: 'L', value: low.toFixed(2), color: '#EF4444' }, // Red for Low
-              { label: 'C', value: close.toFixed(2), color: '#F59E0B' }, // Orange for Close
-            ];
+          // Build HTML string instead of creating elements
+          const html = priceItems
+            .map(({ label, value, color }) =>
+              isMobile
+                ? `<div class="flex items-center gap-0.5"><span class="text-xs font-bold tracking-wide uppercase" style="color: ${color}">${label}</span><span class="text-xs font-bold text-foreground">${value}</span></div>`
+                : `<div class="flex items-center gap-1"><span class="text-xs font-medium tracking-wide uppercase text-muted-foreground">${label}</span><span class="text-sm font-bold" style="color: ${color}">${value}</span></div>`
+            )
+            .join('');
 
-            priceItems.forEach(({ label, value, color }) => {
-              const item = document.createElement('div');
-              item.className = 'flex items-center gap-0.5';
-
-              const labelSpan = document.createElement('span');
-              labelSpan.className = 'text-xs font-bold tracking-wide uppercase';
-              labelSpan.style.color = color;
-              labelSpan.textContent = label;
-
-              const valueSpan = document.createElement('span');
-              valueSpan.className = 'text-xs font-bold';
-              valueSpan.style.color = color;
-              valueSpan.textContent = value;
-
-              item.appendChild(labelSpan);
-              item.appendChild(valueSpan);
-              priceSection.appendChild(item);
-            });
-          } else {
-            // Desktop: Standard OHLC display
-            const priceItems = [
-              { label: 'O', value: open.toFixed(2) },
-              { label: 'H', value: high.toFixed(2) },
-              { label: 'L', value: low.toFixed(2) },
-              { label: 'C', value: close.toFixed(2) },
-            ];
-
-            priceItems.forEach(({ label, value }) => {
-              const item = document.createElement('div');
-              item.className = 'flex items-center gap-1';
-
-              const labelSpan = document.createElement('span');
-              labelSpan.className =
-                'font-bold tracking-wide uppercase text-muted-foreground';
-              labelSpan.textContent = label;
-
-              const valueSpan = document.createElement('span');
-              valueSpan.className = 'font-bold text-foreground';
-              valueSpan.textContent = value;
-
-              item.appendChild(labelSpan);
-              item.appendChild(valueSpan);
-              priceSection.appendChild(item);
-            });
+          if (priceSection.innerHTML !== html) {
+            priceSection.innerHTML = html;
           }
         } else if ('value' in data) {
-          const { value } = data as LineData;
-          const item = document.createElement('div');
-          item.className = 'flex items-center gap-1';
-
-          const labelSpan = document.createElement('span');
-          labelSpan.className = isMobile
-            ? 'font-bold tracking-wide uppercase text-xs text-primary'
-            : 'font-bold tracking-wide uppercase text-muted-foreground';
-          labelSpan.textContent = 'Price';
-
-          const valueSpan = document.createElement('span');
-          valueSpan.className = isMobile
-            ? 'font-bold text-xs text-primary'
-            : 'font-bold text-foreground';
-          valueSpan.textContent = (value as number).toFixed(2);
-
-          item.appendChild(labelSpan);
-          item.appendChild(valueSpan);
-          priceSection.appendChild(item);
+          const value = (data as LineData).value;
+          const html = `<span class="text-sm font-bold text-foreground">${value.toFixed(2)}</span>`;
+          if (priceSection.innerHTML !== html) {
+            priceSection.innerHTML = html;
+          }
         }
-      }
-    };
+      },
+      [chartType, isMobile]
+    );
 
-    chart.subscribeCrosshairMove((param: MouseEventParams<Time>) => {
-      if (param.time && seriesRef.current) {
-        const data = param.seriesData.get(seriesRef.current);
-        if (data && ('open' in data || 'value' in data)) {
-          updateLegend(data as any);
-        } else {
-          updateLegend(null);
+    // Keep updateLegend in ref for crosshair callback
+    const updateLegendRef = useRef(updateLegend);
+    useEffect(() => {
+      updateLegendRef.current = updateLegend;
+    }, [updateLegend]);
+
+    // Update overlay indicators legend
+    const updateOverlayLegend = useCallback(
+      (param: MouseEventParams<Time>) => {
+        const overlaySection = overlaySectionRef.current;
+        if (!overlaySection) return;
+
+        const indicators = overlayIndicatorsRef.current;
+        if (!indicators || indicators.length === 0) {
+          overlaySection.style.display = 'none';
+          return;
         }
-      } else {
-        if (seriesData.length > 0) {
-          updateLegend(seriesData[seriesData.length - 1]);
+
+        overlaySection.style.display = 'flex';
+
+        // Build HTML for each overlay indicator with settings icon
+        const overlayItems: string[] = [];
+
+        indicators.forEach((indicator) => {
+          const { instance, definition, output } = indicator;
+          if (!output) return;
+
+          const displayLabel =
+            instance.label ||
+            `${definition.shortName}(${instance.config.period || ''})`;
+
+          // Get values based on output type
+          let valueHtml = '';
+
+          if (output.type === 'line' && output.data.length > 0) {
+            // Single line indicator
+            const color =
+              (instance.config.color as string) ||
+              definition.outputs[0]?.defaultColor ||
+              '#FBBF24';
+
+            // Try to get value at crosshair time, fallback to last value
+            const seriesArr = overlaySeriesRefs.current.get(instance.instanceId);
+            let value: number | undefined;
+            if (seriesArr && seriesArr[0] && param.seriesData) {
+              const seriesData = param.seriesData.get(seriesArr[0]) as LineData | undefined;
+              value = seriesData?.value;
+            }
+            if (value === undefined) {
+              value = output.data[output.data.length - 1]?.value;
+            }
+            if (value !== undefined) {
+              valueHtml = `<span style="color: ${color}" class="font-medium">${value.toFixed(2)}</span>`;
+            }
+          } else if (output.type === 'band') {
+            // Band indicator
+            const upperColor = (instance.config.upperColor as string) || definition.outputs.find(o => o.key === 'upper')?.defaultColor || '#FBBF24';
+            const middleColor = (instance.config.middleColor as string) || definition.outputs.find(o => o.key === 'middle')?.defaultColor || '#60A5FA';
+            const lowerColor = (instance.config.lowerColor as string) || definition.outputs.find(o => o.key === 'lower')?.defaultColor || '#EF4444';
+
+            const seriesArr = overlaySeriesRefs.current.get(instance.instanceId);
+            let upperVal: number | undefined;
+            let middleVal: number | undefined;
+            let lowerVal: number | undefined;
+
+            if (seriesArr && seriesArr.length >= 3 && param.seriesData) {
+              const upperData = param.seriesData.get(seriesArr[0]) as LineData | undefined;
+              const middleData = param.seriesData.get(seriesArr[1]) as LineData | undefined;
+              const lowerData = param.seriesData.get(seriesArr[2]) as LineData | undefined;
+              upperVal = upperData?.value;
+              middleVal = middleData?.value;
+              lowerVal = lowerData?.value;
+            }
+
+            // Fallback to last values
+            if (upperVal === undefined && output.upper.length > 0) {
+              upperVal = output.upper[output.upper.length - 1]?.value;
+            }
+            if (middleVal === undefined && output.middle.length > 0) {
+              middleVal = output.middle[output.middle.length - 1]?.value;
+            }
+            if (lowerVal === undefined && output.lower.length > 0) {
+              lowerVal = output.lower[output.lower.length - 1]?.value;
+            }
+
+            if (upperVal !== undefined && middleVal !== undefined && lowerVal !== undefined) {
+              valueHtml = `<span style="color: ${upperColor}" class="font-medium">${upperVal.toFixed(2)}</span> <span style="color: ${middleColor}" class="font-medium">${middleVal.toFixed(2)}</span> <span style="color: ${lowerColor}" class="font-medium">${lowerVal.toFixed(2)}</span>`;
+            }
+          } else if (output.type === 'multi-line') {
+            // Multi-line indicator
+            const parts: string[] = [];
+            const seriesArr = overlaySeriesRefs.current.get(instance.instanceId);
+            
+            definition.outputs.forEach((outputDef, idx) => {
+              const colorKey = outputDef.key + 'Color';
+              const color =
+                (instance.config[colorKey] as string) ||
+                (instance.config[outputDef.key] as string) ||
+                outputDef.defaultColor || '#888';
+
+              let value: number | undefined;
+              if (seriesArr && seriesArr[idx] && param.seriesData) {
+                const seriesData = param.seriesData.get(seriesArr[idx]) as LineData | undefined;
+                value = seriesData?.value;
+              }
+              if (value === undefined) {
+                const data = output.series[outputDef.key];
+                if (data && data.length > 0) {
+                  const lastPoint = data[data.length - 1];
+                  if ('value' in lastPoint) {
+                    value = lastPoint.value;
+                  }
+                }
+              }
+              if (value !== undefined) {
+                parts.push(`<span style="color: ${color}" class="font-medium">${value.toFixed(2)}</span>`);
+              }
+            });
+            valueHtml = parts.join(' ');
+          }
+
+          // Build the indicator item - compact inline style with settings and remove icons on right
+          const settingsIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path fill-rule="evenodd" d="M8.34 1.804A1 1 0 019.32 1h1.36a1 1 0 01.98.804l.21 1.042a5.5 5.5 0 011.46.843l1.01-.344a1 1 0 011.19.447l.68 1.178a1 1 0 01-.21 1.25l-.8.703a5.5 5.5 0 010 1.686l.8.704a1 1 0 01.21 1.25l-.68 1.177a1 1 0 01-1.19.448l-1.01-.345a5.5 5.5 0 01-1.46.844l-.21 1.041a1 1 0 01-.98.804H9.32a1 1 0 01-.98-.804l-.21-1.041a5.5 5.5 0 01-1.46-.844l-1.01.345a1 1 0 01-1.19-.448l-.68-1.177a1 1 0 01.21-1.25l.8-.704a5.5 5.5 0 010-1.686l-.8-.703a1 1 0 01-.21-1.25l.68-1.178a1 1 0 011.19-.447l1.01.344a5.5 5.5 0 011.46-.843l.21-1.042zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>`;
+          const removeIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>`;
+
+          overlayItems.push(`
+            <div class="inline-flex items-center gap-1 group/ind">
+              <span class="font-semibold text-muted-foreground">${displayLabel}</span>
+              ${valueHtml}
+              <button 
+                class="p-0.5 rounded hover:bg-primary/20 text-muted-foreground hover:text-primary transition-all cursor-pointer" 
+                data-config-id="${instance.instanceId}"
+                title="Configure ${displayLabel}"
+              >${settingsIconSvg}</button>
+              <button 
+                class="p-0.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-all cursor-pointer" 
+                data-remove-id="${instance.instanceId}"
+                title="Remove ${displayLabel}"
+              >${removeIconSvg}</button>
+            </div>
+          `);
+        });
+
+        const html = overlayItems.join('');
+        if (overlaySection.innerHTML !== html) {
+          overlaySection.innerHTML = html;
+
+          // Add click handlers for settings buttons
+          overlaySection.querySelectorAll('[data-config-id]').forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const instanceId = (btn as HTMLElement).dataset.configId;
+              if (instanceId) {
+                openConfigRef.current(instanceId);
+              }
+            });
+          });
+
+          // Add click handlers for remove buttons
+          overlaySection.querySelectorAll('[data-remove-id]').forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const instanceId = (btn as HTMLElement).dataset.removeId;
+              if (instanceId) {
+                removeIndicatorRef.current(instanceId);
+              }
+            });
+          });
         }
-      }
-    });
+      },
+      []
+    );
 
-    // Create initial series if data exists
-    if (seriesData.length > 0) {
-      const mainSeries = createSeries(chart, chartType);
-      mainSeries.setData(seriesData as any);
-      seriesRef.current = mainSeries;
-      prevChartTypeRef.current = chartType;
+    // Keep updateOverlayLegend in ref for crosshair callback
+    const updateOverlayLegendRef = useRef(updateOverlayLegend);
+    useEffect(() => {
+      updateOverlayLegendRef.current = updateOverlayLegend;
+    }, [updateOverlayLegend]);
 
-      // Set initial legend
-      updateLegend(seriesData[seriesData.length - 1]);
-    }
+    // Store mode in ref to avoid stale closure in initialization
+    const modeRef = useRef(mode);
+    useEffect(() => {
+      modeRef.current = mode;
+    }, [mode]);
 
-    // Create loading indicator with modern styling
-    const loadingIndicator = document.createElement('div');
-    loadingIndicator.className =
-      'absolute hidden px-4 py-2.5 rounded-xl shadow-lg top-16 left-3 bg-card/95 backdrop-blur-xl border border-border/40';
-    loadingIndicator.innerHTML = `
-      <div class="flex items-center gap-2.5 text-sm">
-        <div class="animate-spin rounded-full h-4 w-4 border-2 border-primary/30 border-t-primary"></div>
-        <span class="text-foreground font-semibold">Loading historical data...</span>
-      </div>
-    `;
-    mainChartContainerRef.current.appendChild(loadingIndicator);
-    loadingIndicatorRef.current = loadingIndicator;
+    // Initialize chart only once - no dependencies to prevent recreation
+    useEffect(() => {
+      const containerEl = mainChartContainerRef.current;
+      if (!containerEl) return;
 
-    // Subscribe to visible logical range changes for infinite loading
-    chart.timeScale().subscribeVisibleLogicalRangeChange(logicalRange => {
-      if (!logicalRange) return;
+      // Don't re-create if chart already exists
+      if (mainChartRef.current) return;
 
-      // Check if we need to load more data (when user scrolls to the left/beginning)
-      const threshold = 10; // Load more data when less than 10 bars are visible on the left
+      // Capture ref for cleanup
+      const currentOverlaySeriesRefs = overlaySeriesRefs.current;
 
-      if (logicalRange.from < threshold && hasMoreData && !isLoadingMore) {
-        onLoadMoreDataRef.current();
-      }
-    });
-  }, [
-    isMobile,
-    setTimeScale,
-    chartType,
-    mode,
-    seriesData,
-    createSeries,
-    hasMoreData,
-    isLoadingMore,
-  ]);
+      containerEl.innerHTML = '';
 
-  // Initialize chart on mount
-  useEffect(() => {
-    initializeChart();
-  }, [initializeChart]);
+      const chart = createChart(
+        containerEl,
+        getChartOptionsForMode(modeRef.current)
+      );
 
-  // Keep chart sized to container
-  useResizeObserver(mainChartContainerRef, rect => {
-    if (mainChartRef.current) {
-      mainChartRef.current.applyOptions({
-        width: rect.width,
-        height: rect.height,
+      mainChartRef.current = chart;
+      setTimeScale(chart.timeScale());
+
+      // Set initial size - use container dimensions or fallback to reasonable defaults
+      const rect = containerEl.getBoundingClientRect();
+      const width =
+        rect.width > 0 ? rect.width : containerEl.clientWidth || 800;
+      const height =
+        rect.height > 0 ? rect.height : containerEl.clientHeight || 400;
+      chart.applyOptions({ width, height });
+
+      // Create legend with reusable DOM structure
+      const legendContainer = document.createElement('div');
+      legendContainer.className =
+        'absolute px-3 py-2 border rounded-lg top-2 left-2 bg-card/95 border-border/50';
+      legendContainer.style.zIndex = '20';
+
+      // OHLC section - reuse element
+      const priceSection = document.createElement('div');
+      priceSection.className = 'flex items-center gap-3 text-sm font-bold';
+      legendContainer.appendChild(priceSection);
+      priceSectionRef.current = priceSection;
+
+      // Overlay indicators section - inside the legend but as a separate row
+      const overlaySection = document.createElement('div');
+      overlaySection.className = 'flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs';
+      overlaySection.style.display = 'none';
+      legendContainer.appendChild(overlaySection);
+      overlaySectionRef.current = overlaySection;
+
+      containerEl.appendChild(legendContainer);
+      legendContainerRef.current = legendContainer;
+
+      // Subscribe to crosshair - debounced via RAF
+      let rafId: number | null = null;
+      chart.subscribeCrosshairMove((param: MouseEventParams<Time>) => {
+        if (rafId !== null) return; // Skip if already scheduled
+
+        rafId = requestAnimationFrame(() => {
+          const data = param.seriesData.get(seriesRef.current!);
+          // Get volume data if available
+          const volumeData = volumeSeriesRef.current 
+            ? param.seriesData.get(volumeSeriesRef.current) as HistogramData<Time> | undefined
+            : undefined;
+          const volume = volumeData?.value;
+          
+          if (data) {
+            updateLegendRef.current(data, param.time, volume);
+          } else if (seriesDataRef.current.length > 0) {
+            const lastCandle = seriesDataRef.current[seriesDataRef.current.length - 1];
+            // Get last volume from volumeDataRef
+            const lastVolume = volumeDataRef.current && volumeDataRef.current.length > 0 
+              ? volumeDataRef.current[volumeDataRef.current.length - 1]?.value 
+              : undefined;
+            updateLegendRef.current(lastCandle, lastCandle.time, lastVolume);
+          }
+          
+          // Update overlay indicators legend
+          updateOverlayLegendRef.current(param);
+          
+          rafId = null;
+        });
       });
-    }
-  });
 
-  // Update chart styling when mode changes
-  useEffect(() => {
-    if (!mainChartRef.current) return;
-    mainChartRef.current.applyOptions(getBaseChartOptions(mode));
+      // Add loading indicator
+      const loadingIndicator = document.createElement('div');
+      loadingIndicator.className =
+        'absolute px-3 py-2 text-xs font-medium border rounded-lg shadow-lg bottom-2 right-2 text-primary bg-card/95 border-border/50';
+      loadingIndicator.textContent = 'Loading history...';
+      loadingIndicator.style.display = 'none';
+      loadingIndicator.style.zIndex = '10';
+      containerEl.appendChild(loadingIndicator);
+      loadingIndicatorRef.current = loadingIndicator;
 
-    // Update series styling for mode change
-    if (seriesRef.current && mainChartRef.current) {
-      mainChartRef.current.removeSeries(seriesRef.current);
-      const newSeries = createSeries(mainChartRef.current, chartType);
-      newSeries.setData(seriesData as any);
-      seriesRef.current = newSeries;
-    }
-  }, [mode, createSeries, chartType, seriesData]);
-
-  // Handle series creation/update and data changes
-  useEffect(() => {
-    if (!mainChartRef.current || !seriesData.length) return;
-
-    // Handle chart type change
-    if (prevChartTypeRef.current !== chartType) {
-      if (seriesRef.current) {
-        mainChartRef.current.removeSeries(seriesRef.current);
+      // Create initial series and set data if available
+      // This ensures data is displayed even if it arrived before chart initialization
+      if (seriesDataRef.current.length > 0) {
+        const series = createSeriesForType(chart, prevChartTypeRef.current, modeRef.current, seriesDataRef.current as any);
+        seriesRef.current = series;
+        series.setData(seriesDataRef.current as any);
+        prevSeriesDataLengthRef.current = seriesDataRef.current.length;
+        
+        const lastPoint = seriesDataRef.current[seriesDataRef.current.length - 1];
+        lastDataTimeRef.current = lastPoint.time;
+        lastDataPointRef.current = { ...lastPoint };
       }
-      const mainSeries = createSeries(mainChartRef.current, chartType);
-      mainSeries.setData(seriesData as any);
-      seriesRef.current = mainSeries;
-      prevChartTypeRef.current = chartType;
-    } else {
-      // Just update data without recreating series
-      if (seriesRef.current) {
-        seriesRef.current.setData(seriesData as any);
-      }
-    }
-  }, [seriesData, chartType, createSeries]);
 
-  // Add/Remove EMA series
-  useEffect(() => {
-    if (!mainChartRef.current) return;
-
-    if (emaData && emaData.length > 0) {
-      if (!emaSeriesRef.current) {
-        emaSeriesRef.current = mainChartRef.current.addSeries(LineSeries, {
-          color: mode ? '#FBBF24' : '#F59E0B', // Yellow/Orange color for EMA
-          lineWidth: 1,
-          lineStyle: 0, // Solid line
-          crosshairMarkerVisible: false,
+      // Create volume series overlay if data is available (TradingView style)
+      if (showVolumeRef.current && volumeDataRef.current && volumeDataRef.current.length > 0) {
+        const volumeSeries = chart.addSeries(HistogramSeries, {
+          priceFormat: { type: 'volume' },
+          priceScaleId: 'volume',
+          base: 0,
           lastValueVisible: false,
+          priceLineVisible: false,
+        });
+        chart.priceScale('volume').applyOptions({
+          scaleMargins: { top: 0.85, bottom: 0 },
+          borderVisible: false,
+          visible: false,
+        });
+        volumeSeriesRef.current = volumeSeries;
+        volumeSeries.setData(volumeDataRef.current);
+      }
+
+      // Cleanup function
+      return () => {
+        // Clean up volume series
+        if (volumeSeriesRef.current) {
+          try {
+            chart.removeSeries(volumeSeriesRef.current);
+          } catch {
+            // Series already removed
+          }
+          volumeSeriesRef.current = null;
+        }
+
+        // Clean up overlay series
+        currentOverlaySeriesRefs.forEach(seriesArr => {
+          seriesArr.forEach(s => {
+            try {
+              chart.removeSeries(s);
+            } catch {
+              // Series already removed
+            }
+          });
+        });
+        currentOverlaySeriesRefs.clear();
+
+        chart.remove();
+        mainChartRef.current = null;
+        legendContainerRef.current = null;
+        priceSectionRef.current = null;
+        overlaySectionRef.current = null;
+        seriesRef.current = null;
+      };
+    }, [setTimeScale]);
+
+    // Handle resize - memoized callback
+    const handleResize = useCallback((rect: DOMRectReadOnly) => {
+      if (mainChartRef.current) {
+        mainChartRef.current.applyOptions({
+          width: rect.width,
+          height: rect.height,
         });
       }
-      emaSeriesRef.current.setData(emaData);
-    } else {
-      if (emaSeriesRef.current) {
-        mainChartRef.current.removeSeries(emaSeriesRef.current);
-        emaSeriesRef.current = null;
+    }, []);
+
+    // Use shared resize hook
+    useResizeObserver(mainChartContainerRef, handleResize);
+
+    // Handle chart type changes - optimized to avoid unnecessary series recreation
+    useEffect(() => {
+      if (!mainChartRef.current) return;
+
+      const chartTypeChanged = prevChartTypeRef.current !== chartType;
+
+      if (chartTypeChanged) {
+        if (seriesRef.current) {
+          mainChartRef.current.removeSeries(seriesRef.current);
+          seriesRef.current = null;
+        }
+        prevChartTypeRef.current = chartType;
       }
-    }
-  }, [emaData, mode]);
 
-  // Add/Remove Bollinger Bands series
-  useEffect(() => {
-    if (!mainChartRef.current) return;
+      if (!seriesRef.current) {
+        seriesRef.current = createSeries(mainChartRef.current, chartType);
+      }
 
-    if (bollingerBandsData && bollingerBandsData.length > 0) {
-      if (!bollingerBandsSeriesRefs.current.upper) {
-        bollingerBandsSeriesRefs.current.upper = mainChartRef.current.addSeries(
-          LineSeries,
-          {
-            color: mode ? '#FBBF24' : '#F59E0B', // Yellow/Orange color for Upper Bollinger Band
-            lineWidth: 1,
-            lineStyle: 2, // Dashed line
-            crosshairMarkerVisible: false,
-            lastValueVisible: false,
+      // Optimize data updates for realtime - use update() when only the last candle changes
+      const dataLength = seriesData.length;
+      const prevLength = prevSeriesDataLengthRef.current;
+
+      if (dataLength > 0) {
+        const lastPoint = seriesData[dataLength - 1];
+        const lastTime = lastPoint.time;
+        const prevPoint = lastDataPointRef.current;
+
+        // Check if this is a realtime update to the latest candle
+        const isSameLength = prevLength > 0 && dataLength === prevLength;
+        const isSameTime = lastTime === lastDataTimeRef.current;
+
+        // For realtime updates: same length, same time, but values may have changed
+        if (isSameLength && isSameTime) {
+          // Check if values actually changed (for OHLC candles or line data)
+          const hasValuesChanged =
+            !prevPoint || !areDataPointsEqual(prevPoint, lastPoint);
+
+          if (hasValuesChanged) {
+            // Use update() for efficient realtime candle updates
+            try {
+              seriesRef.current.update(lastPoint as any);
+            } catch {
+              // Fallback to setData if update fails
+              seriesRef.current.setData(seriesData as any);
+            }
           }
-        );
-        bollingerBandsSeriesRefs.current.middle =
-          mainChartRef.current.addSeries(LineSeries, {
-            color: mode ? '#60A5FA' : '#3B82F6', // Blue color for Middle Bollinger Band
-            lineWidth: 1,
-            lineStyle: 1, // Dotted line
-            crosshairMarkerVisible: false,
-            lastValueVisible: false,
-          });
-        bollingerBandsSeriesRefs.current.lower = mainChartRef.current.addSeries(
-          LineSeries,
-          {
-            color: mode ? '#EF4444' : '#DC2626', // Red color for Lower Bollinger Band
-            lineWidth: 1,
-            lineStyle: 2, // Dashed line
-            crosshairMarkerVisible: false,
-            lastValueVisible: false,
-          }
-        );
-      }
-      bollingerBandsSeriesRefs.current.upper?.setData(
-        bollingerBandsData.map(d => ({ time: d.time, value: d.upper }))
-      );
-      bollingerBandsSeriesRefs.current.middle?.setData(
-        bollingerBandsData.map(d => ({ time: d.time, value: d.middle }))
-      );
-      bollingerBandsSeriesRefs.current.lower?.setData(
-        bollingerBandsData.map(d => ({ time: d.time, value: d.lower }))
-      );
-    } else {
-      if (bollingerBandsSeriesRefs.current.upper) {
-        mainChartRef.current.removeSeries(
-          bollingerBandsSeriesRefs.current.upper
-        );
-        bollingerBandsSeriesRefs.current.upper = null;
-      }
-      if (bollingerBandsSeriesRefs.current.middle) {
-        mainChartRef.current.removeSeries(
-          bollingerBandsSeriesRefs.current.middle
-        );
-        bollingerBandsSeriesRefs.current.middle = null;
-      }
-      if (bollingerBandsSeriesRefs.current.lower) {
-        mainChartRef.current.removeSeries(
-          bollingerBandsSeriesRefs.current.lower
-        );
-        bollingerBandsSeriesRefs.current.lower = null;
-      }
-    }
-  }, [bollingerBandsData, mode]);
+          // If values haven't changed, skip the update entirely
+        } else {
+          // Full data update needed (new candles added, historical data loaded, etc.)
+          seriesRef.current.setData(seriesData as any);
+        }
 
-  // Show/hide loading indicator
-  useEffect(() => {
-    if (loadingIndicatorRef.current && !autoRefresh) {
-      loadingIndicatorRef.current.style.display = isLoadingMore
-        ? 'block'
-        : 'none';
-    }
-  }, [isLoadingMore, autoRefresh]);
+        lastDataTimeRef.current = lastTime;
+        // Store a shallow copy of the last point for comparison
+        lastDataPointRef.current = { ...lastPoint };
+      }
 
-  // Cleanup effect for component unmount
-  useEffect(() => {
-    const currentBollingerRefs = bollingerBandsSeriesRefs.current;
-    return () => {
+      prevSeriesDataLengthRef.current = dataLength;
+    }, [chartType, createSeries, seriesData]);
+
+    // Handle theme changes - use cached options
+    useEffect(() => {
       if (mainChartRef.current) {
-        mainChartRef.current.remove();
-        mainChartRef.current = null;
+        mainChartRef.current.applyOptions(getChartOptionsForMode(mode));
       }
-      legendContainerRef.current = null;
-      seriesRef.current = null;
-      emaSeriesRef.current = null;
-      currentBollingerRefs.upper = null;
-      currentBollingerRefs.middle = null;
-      currentBollingerRefs.lower = null;
-    };
-  }, []);
+    }, [mode]);
 
-  return (
-    <div ref={mainChartContainerRef} className="relative w-full h-full">
-      {/* Chart will be rendered here */}
-    </div>
-  );
-};
+    // Handle volume overlay series - create/remove/update based on showVolume and volumeData
+    useEffect(() => {
+      if (!mainChartRef.current) return;
+
+      if (showVolume && volumeData && volumeData.length > 0) {
+        // Create volume series if it doesn't exist (TradingView style)
+        if (!volumeSeriesRef.current) {
+          const volumeSeries = mainChartRef.current.addSeries(HistogramSeries, {
+            priceFormat: { type: 'volume' },
+            priceScaleId: 'volume',
+            base: 0,
+            lastValueVisible: false,
+            priceLineVisible: false,
+          });
+          mainChartRef.current.priceScale('volume').applyOptions({
+            scaleMargins: { top: 0.85, bottom: 0 },
+            borderVisible: false,
+            visible: false,
+          });
+          volumeSeriesRef.current = volumeSeries;
+        }
+        volumeSeriesRef.current.setData(volumeData);
+      } else {
+        // Remove volume series if showVolume is disabled
+        if (volumeSeriesRef.current && mainChartRef.current) {
+          try {
+            mainChartRef.current.removeSeries(volumeSeriesRef.current);
+          } catch {
+            // Series already removed
+          }
+          volumeSeriesRef.current = null;
+        }
+      }
+    }, [showVolume, volumeData]);
+
+    // Handle visible range scroll - load more data when needed (throttled)
+    useEffect(() => {
+      if (!mainChartRef.current || !seriesRef.current) return;
+
+      let throttleTimeout: ReturnType<typeof setTimeout> | null = null;
+      const THROTTLE_MS = 100;
+
+      const handleVisibleLogicalRangeChange = () => {
+        if (!hasMoreData || !seriesRef.current || isLoadingMoreRef.current)
+          return;
+        if (throttleTimeout) return; // Already scheduled
+
+        throttleTimeout = setTimeout(() => {
+          throttleTimeout = null;
+
+          const logicalRange = mainChartRef.current
+            ?.timeScale()
+            .getVisibleLogicalRange();
+          if (!logicalRange) return;
+
+          const barsInfo = seriesRef.current?.barsInLogicalRange(logicalRange);
+          if (barsInfo && barsInfo.barsBefore < 10) {
+            onLoadMoreDataRef.current();
+          }
+        }, THROTTLE_MS);
+      };
+
+      const timeScale = mainChartRef.current.timeScale();
+      timeScale.subscribeVisibleLogicalRangeChange(
+        handleVisibleLogicalRangeChange
+      );
+
+      return () => {
+        if (throttleTimeout) {
+          clearTimeout(throttleTimeout);
+        }
+        if (mainChartRef.current) {
+          mainChartRef.current
+            .timeScale()
+            .unsubscribeVisibleLogicalRangeChange(
+              handleVisibleLogicalRangeChange
+            );
+        }
+      };
+    }, [hasMoreData]);
+
+    // Handle overlay indicators rendering - optimized to minimize series recreation
+    useEffect(() => {
+      if (!mainChartRef.current) return;
+
+      // Get current active instance IDs
+      const activeInstanceIds = new Set(
+        overlayIndicators.map(ind => ind.instance.instanceId)
+      );
+
+      // Remove series for indicators that are no longer active
+      overlaySeriesRefs.current.forEach((seriesArr, instanceId) => {
+        if (!activeInstanceIds.has(instanceId)) {
+          seriesArr.forEach(series => {
+            try {
+              mainChartRef.current?.removeSeries(series);
+            } catch {
+              // Series may already be removed
+            }
+          });
+          overlaySeriesRefs.current.delete(instanceId);
+        }
+      });
+
+      // Add/update series for active overlay indicators
+      overlayIndicators.forEach(indicator => {
+        const { instance, output, definition } = indicator;
+        if (!output) return;
+
+        const instanceId = instance.instanceId;
+        let seriesArr = overlaySeriesRefs.current.get(instanceId);
+
+        // Determine the series needed based on output type
+        if (output.type === 'line' && output.data.length > 0) {
+          // Single line indicator (SMA, EMA, WMA, VWMA)
+          const color =
+            (instance.config.color as string) ||
+            definition.outputs[0]?.defaultColor ||
+            '#FBBF24';
+            
+          if (!seriesArr || seriesArr.length === 0) {
+            const series = mainChartRef.current!.addSeries(LineSeries, {
+              color: color,
+              lineWidth: 2,
+              lineStyle: 0, // Solid
+              crosshairMarkerVisible: false,
+              lastValueVisible: false,
+            });
+            seriesArr = [series];
+            overlaySeriesRefs.current.set(instanceId, seriesArr);
+          } else {
+            // Update existing series color
+            seriesArr[0].applyOptions({ color: color });
+          }
+          seriesArr[0].setData(output.data);
+        } else if (output.type === 'band') {
+          // Band indicator (Bollinger Bands, Keltner Channel)
+          // Read user-configured colors from instance config
+          const upperColor =
+            (instance.config.upperColor as string) ||
+            definition.outputs.find(o => o.key === 'upper')?.defaultColor ||
+            '#FBBF24';
+          const middleColor =
+            (instance.config.middleColor as string) ||
+            definition.outputs.find(o => o.key === 'middle')?.defaultColor ||
+            '#60A5FA';
+          const lowerColor =
+            (instance.config.lowerColor as string) ||
+            definition.outputs.find(o => o.key === 'lower')?.defaultColor ||
+            '#EF4444';
+
+          if (!seriesArr || seriesArr.length < 3) {
+            // Clean up existing series
+            seriesArr?.forEach(s => {
+              try {
+                mainChartRef.current?.removeSeries(s);
+              } catch {
+                // Series already removed
+              }
+            });
+
+            // Create upper, middle, lower bands
+            const upperSeries = mainChartRef.current!.addSeries(LineSeries, {
+              color: upperColor,
+              lineWidth: 1,
+              lineStyle: 2, // Dashed
+              crosshairMarkerVisible: false,
+              lastValueVisible: false,
+            });
+            const middleSeries = mainChartRef.current!.addSeries(LineSeries, {
+              color: middleColor,
+              lineWidth: 1,
+              lineStyle: 1, // Dotted
+              crosshairMarkerVisible: false,
+              lastValueVisible: false,
+            });
+            const lowerSeries = mainChartRef.current!.addSeries(LineSeries, {
+              color: lowerColor,
+              lineWidth: 1,
+              lineStyle: 2, // Dashed
+              crosshairMarkerVisible: false,
+              lastValueVisible: false,
+            });
+
+            seriesArr = [upperSeries, middleSeries, lowerSeries];
+            overlaySeriesRefs.current.set(instanceId, seriesArr);
+          } else {
+            // Update existing series colors
+            seriesArr[0].applyOptions({ color: upperColor });
+            seriesArr[1].applyOptions({ color: middleColor });
+            seriesArr[2].applyOptions({ color: lowerColor });
+          }
+
+          if (output.upper.length > 0) {
+            seriesArr[0].setData(output.upper);
+            seriesArr[1].setData(output.middle);
+            seriesArr[2].setData(output.lower);
+          }
+        } else if (output.type === 'multi-line') {
+          // Multi-line overlay (Ichimoku)
+          const seriesKeys = Object.keys(output.series);
+          if (!seriesArr || seriesArr.length !== seriesKeys.length) {
+            // Clean up existing series
+            seriesArr?.forEach(s => {
+              try {
+                mainChartRef.current?.removeSeries(s);
+              } catch {
+                // Series already removed
+              }
+            });
+
+            // Create series for each output
+            seriesArr = definition.outputs.map(outputDef => {
+              // Check if user has configured a color for this output
+              const colorKey = outputDef.key + 'Color'; // e.g., 'tenkanColor', 'kijunColor'
+              const color =
+                (instance.config[colorKey] as string) ||
+                (instance.config[outputDef.key] as string) ||
+                outputDef.defaultColor;
+
+              return mainChartRef.current!.addSeries(LineSeries, {
+                color: color,
+                lineWidth: (outputDef.lineWidth ?? 1) as 1 | 2 | 3 | 4,
+                lineStyle: outputDef.lineStyle ?? 0,
+                crosshairMarkerVisible: false,
+                lastValueVisible: false,
+              });
+            });
+            overlaySeriesRefs.current.set(instanceId, seriesArr);
+          } else {
+            // Update existing series colors
+            definition.outputs.forEach((outputDef, idx) => {
+              const colorKey = outputDef.key + 'Color';
+              const color =
+                (instance.config[colorKey] as string) ||
+                (instance.config[outputDef.key] as string) ||
+                outputDef.defaultColor;
+              seriesArr![idx].applyOptions({ color: color });
+            });
+          }
+
+          // Set data for each series
+          seriesKeys.forEach((key, idx) => {
+            if (seriesArr && seriesArr[idx]) {
+              const data = output.series[key];
+              if (data && data.length > 0) {
+                seriesArr[idx].setData(data as LineData<Time>[]);
+              }
+            }
+          });
+        }
+      });
+
+      // Update overlay legend with current values (no crosshair param)
+      updateOverlayLegendRef.current({} as MouseEventParams<Time>);
+    }, [overlayIndicators, mode]);
+
+    // Show/hide loading indicator
+    useEffect(() => {
+      if (loadingIndicatorRef.current && !autoRefresh) {
+        loadingIndicatorRef.current.style.display = isLoadingMore
+          ? 'block'
+          : 'none';
+      }
+    }, [isLoadingMore, autoRefresh]);
+
+    return (
+      <div ref={mainChartContainerRef} className="relative w-full h-full">
+        {/* Chart will be rendered here */}
+      </div>
+    );
+  }
+);
+
+MainChart.displayName = 'MainChart';
 
 export default MainChart;

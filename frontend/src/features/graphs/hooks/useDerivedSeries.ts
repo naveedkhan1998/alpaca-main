@@ -1,191 +1,272 @@
-import { useMemo } from 'react';
-import type {
-  Time,
-  LineData,
-  BarData,
-  HistogramData,
-} from 'lightweight-charts';
+/**
+ * useDerivedSeries Hook
+ *
+ * Transforms candle data into chart-ready series data with optimized caching.
+ * Handles deduplication, chronological ordering, and series type conversion.
+ *
+ * Performance Optimizations:
+ * - Ref-based caching to avoid recomputation on each render
+ * - Incremental updates for historical data loads (append only)
+ * - Fingerprint-based cache invalidation for realtime updates
+ * - Single-pass transformation for deduplication + series building
+ */
+
+import { useMemo, useRef } from 'react';
+import type { Time, LineData, BarData, HistogramData } from 'lightweight-charts';
 import type { Candle } from '@/types/common-types';
-import type { IndicatorConfig } from '../graphSlice';
-import {
-  formatDate,
-  calculateRSI,
-  calculateBollingerBands,
-  calculateATR,
-  calculateMA,
-} from '@/lib/functions';
+import { formatDate } from '@/lib/functions';
 
 interface UseDerivedSeriesParams {
   candles: Candle[];
   seriesType: 'ohlc' | 'price' | 'volume';
   isDarkMode: boolean;
-  activeIndicators: string[];
-  indicatorConfigs: IndicatorConfig;
 }
 
-// Cache for formatted timestamps to avoid redundant calculations
-const timestampCache = new Map<string, number>();
+// Color constants - TradingView-style transparent volume bars
+const VOLUME_COLORS = {
+  dark: { green: 'rgba(38, 166, 154, 0.3)', red: 'rgba(239, 83, 80, 0.3)' },
+  light: { green: 'rgba(38, 166, 154, 0.35)', red: 'rgba(239, 83, 80, 0.35)' },
+} as const;
 
-/**
- * Cached formatDate to avoid redundant timestamp conversions.
- * Uses a Map cache since the same timestamps repeat across renders.
- */
-function cachedFormatDate(dateStr: string): number {
-  let cached = timestampCache.get(dateStr);
-  if (cached === undefined) {
-    cached = formatDate(dateStr);
-    timestampCache.set(dateStr, cached);
-    // Limit cache size to prevent memory leaks
-    if (timestampCache.size > 50000) {
-      // Clear oldest entries (first 10000)
-      const keys = Array.from(timestampCache.keys()).slice(0, 10000);
-      keys.forEach(k => timestampCache.delete(k));
-    }
-  }
-  return cached;
+// Cache structure for memoization across renders
+interface DerivedCache {
+  candlesLength: number;
+  firstTimestamp: string | null;
+  lastTimestamp: string | null;
+  latestFingerprint: string | null;
+  seriesType: string;
+  isDarkMode: boolean;
+  seriesData: (BarData<Time> | LineData<Time>)[];
+  volumeData: HistogramData<Time>[];
+  hasValidVolume: boolean;
+  // Track seen timestamps for incremental updates
+  seenTimestamps: Set<number>;
 }
 
-/**
- * Pre-processed candle with cached timestamp for efficient reuse.
- */
-interface ProcessedCandle extends Candle {
-  time: Time;
-}
+// Create a fingerprint of a candle's OHLCV values for comparison
+const getCandleFingerprint = (candle: Candle | undefined): string | null => {
+  if (!candle) return null;
+  return `${candle.open}-${candle.high}-${candle.low}-${candle.close}-${candle.volume ?? 0}`;
+};
 
 export function useDerivedSeries({
   candles,
   seriesType,
   isDarkMode,
-  activeIndicators,
-  indicatorConfigs,
 }: UseDerivedSeriesParams) {
-  // Pre-process candles with cached timestamps (computed once)
-  const processedCandles = useMemo<ProcessedCandle[]>(() => {
-    return candles.map(candle => ({
-      ...candle,
-      time: cachedFormatDate(candle.date) as Time,
-    }));
-  }, [candles]);
+  const cacheRef = useRef<DerivedCache | null>(null);
 
-  // Reversed array for chart display (oldest first)
-  const reversedCandles = useMemo(
-    () => [...processedCandles].reverse(),
-    [processedCandles]
-  );
+  // Compute cache keys
+  const candlesLength = candles.length;
+  // Candles are in descending order (newest first)
+  const lastTimestamp = candlesLength > 0 ? candles[0].timestamp : null; // Newest
+  const firstTimestamp = candlesLength > 0 ? candles[candlesLength - 1].timestamp : null; // Oldest
+  const latestFingerprint = getCandleFingerprint(candles[0]);
 
-  const data = useMemo(
-    () => ({ results: candles, count: candles.length }),
-    [candles]
-  );
+  // Compute derived data with incremental updates support
+  const derivedData = useMemo(() => {
+    const cache = cacheRef.current;
+    const colors = isDarkMode ? VOLUME_COLORS.dark : VOLUME_COLORS.light;
+    
+    // Check if this is a pure historical append (only added older candles)
+    // This happens when: lastTimestamp (newest) is same, firstTimestamp (oldest) changed
+    const isHistoricalAppend =
+      cache !== null &&
+      cache.lastTimestamp === lastTimestamp &&
+      cache.latestFingerprint === latestFingerprint &&
+      cache.firstTimestamp !== firstTimestamp &&
+      cache.seriesType === seriesType &&
+      cache.isDarkMode === isDarkMode;
 
-  // Series data using pre-processed timestamps
-  const seriesData = useMemo(() => {
-    if (reversedCandles.length === 0) return [] as unknown[];
-    if (seriesType === 'ohlc') {
-      return reversedCandles.map(({ time, open, high, low, close }) => ({
-        time,
-        open,
-        high,
-        low,
-        close,
-      }));
+    if (isHistoricalAppend && cache) {
+      // Incremental update: only process new older candles
+      // These candles are at the end of the array (older than existing)
+      const existingLength = cache.candlesLength;
+      const newSeriesData = [...cache.seriesData];
+      const newVolumeData = [...cache.volumeData];
+      const seenTimes = new Set(cache.seenTimestamps);
+      let hasVolume = cache.hasValidVolume;
+      
+      // Get the prev close from the first (oldest) existing candle for volume color
+      let prevClose = cache.seriesData.length > 0 
+        ? ('close' in cache.seriesData[0] ? (cache.seriesData[0] as BarData<Time>).close : 0)
+        : 0;
+
+      // Process only the new candles (which are older, at end of array)
+      // Insert at the beginning of series data since they are chronologically earlier
+      const newItems: { series: BarData<Time> | LineData<Time>; volume: HistogramData<Time> }[] = [];
+      
+      for (let i = candles.length - 1; i >= existingLength; i--) {
+        const candle = candles[i];
+        const time = formatDate(candle.timestamp) as Time;
+        const timeNum = time as number;
+
+        if (seenTimes.has(timeNum)) continue;
+        seenTimes.add(timeNum);
+
+        const volume = candle.volume ?? 0;
+        if (volume > 0) hasVolume = true;
+
+        // Build series data
+        let seriesItem: BarData<Time> | LineData<Time>;
+        if (seriesType === 'ohlc') {
+          seriesItem = {
+            time,
+            open: candle.open,
+            high: candle.high,
+            low: candle.low,
+            close: candle.close,
+          } as BarData<Time>;
+        } else {
+          seriesItem = {
+            time,
+            value: candle.close,
+          } as LineData<Time>;
+        }
+
+        // Build volume data
+        const volumeItem: HistogramData<Time> = {
+          time,
+          value: volume,
+          color: candle.close >= prevClose ? colors.green : colors.red,
+        };
+
+        newItems.push({ series: seriesItem, volume: volumeItem });
+        prevClose = candle.close;
+      }
+
+      // Prepend new items (they go at the beginning since they're older)
+      const finalSeriesData = [...newItems.map(i => i.series), ...newSeriesData];
+      const finalVolumeData = [...newItems.map(i => i.volume), ...newVolumeData];
+
+      // Update cache
+      cacheRef.current = {
+        candlesLength,
+        firstTimestamp,
+        lastTimestamp,
+        latestFingerprint,
+        seriesType,
+        isDarkMode,
+        seriesData: finalSeriesData,
+        volumeData: finalVolumeData,
+        hasValidVolume: hasVolume,
+        seenTimestamps: seenTimes,
+      };
+
+      return {
+        seriesData: finalSeriesData,
+        volumeData: finalVolumeData,
+        hasValidVolume: hasVolume,
+      };
     }
-    if (seriesType === 'price') {
-      return reversedCandles.map(({ time, close }) => ({
-        time,
-        value: close,
-      }));
+
+    // Check full cache validity (everything matches)
+    const isCacheValid =
+      cache !== null &&
+      cache.candlesLength === candlesLength &&
+      cache.firstTimestamp === firstTimestamp &&
+      cache.lastTimestamp === lastTimestamp &&
+      cache.latestFingerprint === latestFingerprint &&
+      cache.seriesType === seriesType &&
+      cache.isDarkMode === isDarkMode;
+
+    if (isCacheValid && cache) {
+      return {
+        seriesData: cache.seriesData,
+        volumeData: cache.volumeData,
+        hasValidVolume: cache.hasValidVolume,
+      };
     }
-    return [] as unknown[];
-  }, [reversedCandles, seriesType]) as BarData<Time>[] | LineData<Time>[];
 
-  // Volume data using pre-processed timestamps
-  const volumeData = useMemo<HistogramData<Time>[]>(() => {
-    if (reversedCandles.length === 0) return [];
-    const green = isDarkMode
-      ? 'rgba(34, 197, 94, 0.8)'
-      : 'rgba(16, 185, 129, 0.8)';
-    const red = isDarkMode
-      ? 'rgba(239, 68, 68, 0.8)'
-      : 'rgba(244, 63, 94, 0.85)';
+    // Full rebuild needed
+    if (candlesLength === 0) {
+      const emptyResult = {
+        seriesData: [] as (BarData<Time> | LineData<Time>)[],
+        volumeData: [] as HistogramData<Time>[],
+        hasValidVolume: false,
+      };
+      cacheRef.current = {
+        candlesLength: 0,
+        firstTimestamp: null,
+        lastTimestamp: null,
+        latestFingerprint: null,
+        seriesType,
+        isDarkMode,
+        ...emptyResult,
+        seenTimestamps: new Set(),
+      };
+      return emptyResult;
+    }
 
-    return reversedCandles.map(({ time, close, volume = 0 }, index, array) => {
-      const previousClose = index > 0 ? array[index - 1].close : close;
-      const color = close >= previousClose ? green : red;
-      return { time, value: volume, color };
-    });
-  }, [reversedCandles, isDarkMode]);
+    // Deduplicate and build series in single pass
+    // Candles arrive in descending order (newest first), we need chronological
+    const seenTimes = new Set<number>();
 
-  const hasValidVolume = useMemo(() => {
-    return reversedCandles.some(({ volume = 0 }) => volume > 0);
-  }, [reversedCandles]);
+    // Pre-allocate arrays for better performance
+    const seriesData: (BarData<Time> | LineData<Time>)[] = [];
+    const volumeData: HistogramData<Time>[] = [];
+    let hasVolume = false;
+    let prevClose = 0;
 
-  // RSI using pre-processed data
-  const rsiData = useMemo<LineData<Time>[]>(() => {
-    if (reversedCandles.length === 0 || !activeIndicators.includes('RSI'))
-      return [];
-    const config = indicatorConfigs.RSI;
-    return calculateRSI(reversedCandles, config.period)
-      .filter(item => item.time !== undefined)
-      .map(item => ({ ...item, time: item.time as Time }));
-  }, [reversedCandles, activeIndicators, indicatorConfigs.RSI]);
+    // Iterate in reverse (oldest to newest) for chronological order
+    for (let i = candles.length - 1; i >= 0; i--) {
+      const candle = candles[i];
+      const time = formatDate(candle.timestamp) as Time;
+      const timeNum = time as number;
 
-  // ATR using pre-processed data
-  const atrData = useMemo<LineData<Time>[]>(() => {
-    if (reversedCandles.length === 0 || !activeIndicators.includes('ATR'))
-      return [];
-    const config = indicatorConfigs.ATR;
-    return calculateATR(reversedCandles, config.period).map(item => ({
-      ...item,
-      time: item.time as Time,
-    }));
-  }, [reversedCandles, activeIndicators, indicatorConfigs.ATR]);
+      // Skip duplicates
+      if (seenTimes.has(timeNum)) continue;
+      seenTimes.add(timeNum);
 
-  // EMA using pre-processed data
-  const emaData = useMemo<LineData<Time>[]>(() => {
-    if (reversedCandles.length === 0 || !activeIndicators.includes('EMA'))
-      return [];
-    const config = indicatorConfigs.EMA;
-    return calculateMA(reversedCandles, config.period);
-  }, [reversedCandles, activeIndicators, indicatorConfigs.EMA]);
+      const volume = candle.volume ?? 0;
+      if (volume > 0) hasVolume = true;
 
-  // Bollinger Bands using pre-processed data
-  type BollingerPoint = {
-    time: Time;
-    upper: number;
-    middle: number;
-    lower: number;
-  };
-  const bollingerBandsData = useMemo<BollingerPoint[]>(() => {
-    if (
-      reversedCandles.length === 0 ||
-      !activeIndicators.includes('BollingerBands')
-    )
-      return [];
-    const config = indicatorConfigs.BollingerBands;
-    const bands = calculateBollingerBands(
-      reversedCandles,
-      config.period,
-      config.stdDev
-    );
-    return bands
-      .filter(band => band.time !== undefined)
-      .map(band => ({
-        time: band.time as Time,
-        upper: band.upper,
-        middle: band.middle,
-        lower: band.lower,
-      }));
-  }, [reversedCandles, activeIndicators, indicatorConfigs.BollingerBands]);
+      // Build series data
+      if (seriesType === 'ohlc') {
+        seriesData.push({
+          time,
+          open: candle.open,
+          high: candle.high,
+          low: candle.low,
+          close: candle.close,
+        } as BarData<Time>);
+      } else if (seriesType === 'price') {
+        seriesData.push({
+          time,
+          value: candle.close,
+        } as LineData<Time>);
+      }
+
+      // Build volume data
+      volumeData.push({
+        time,
+        value: volume,
+        color: candle.close >= prevClose ? colors.green : colors.red,
+      });
+
+      prevClose = candle.close;
+    }
+
+    const result = { seriesData, volumeData, hasValidVolume: hasVolume };
+
+    // Update cache
+    cacheRef.current = {
+      candlesLength,
+      firstTimestamp,
+      lastTimestamp,
+      latestFingerprint,
+      seriesType,
+      isDarkMode,
+      ...result,
+      seenTimestamps: seenTimes,
+    };
+
+    return result;
+  }, [candles, candlesLength, firstTimestamp, lastTimestamp, latestFingerprint, seriesType, isDarkMode]);
 
   return {
-    data,
-    seriesData,
-    volumeData,
-    hasValidVolume,
-    rsiData,
-    atrData,
-    emaData,
-    bollingerBandsData,
+    seriesData: derivedData.seriesData,
+    volumeData: derivedData.volumeData,
+    hasValidVolume: derivedData.hasValidVolume,
   } as const;
 }

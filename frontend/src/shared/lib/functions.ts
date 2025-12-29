@@ -2,7 +2,29 @@ import { Candle } from '@/types/common-types';
 import { CandlestickData, LineData } from 'lightweight-charts';
 
 /**
+ * Cache for formatDate to avoid expensive timezone conversions.
+ * Key: ISO timestamp string, Value: Unix timestamp
+ */
+const formatDateCache = new Map<string, number>();
+
+/**
+ * Cached DateTimeFormat for extracting Eastern time components.
+ * Much faster than creating new formatters for each call.
+ */
+const easternFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/New_York',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false,
+});
+
+/**
  * Convert ISO timestamp to Unix timestamp in US Eastern Time.
+ * Uses caching for repeated calls with the same timestamp.
  *
  * Lightweight-charts expects Unix timestamps (seconds since epoch).
  * For financial data, we want to display times in US market time (Eastern).
@@ -13,8 +35,13 @@ import { CandlestickData, LineData } from 'lightweight-charts';
 export function formatDate(originalDate: string): number {
   // Handle null, undefined, or empty strings
   if (!originalDate || typeof originalDate !== 'string') {
-    console.warn('Invalid date string provided to formatDate:', originalDate);
     return Math.floor(Date.now() / 1000);
+  }
+
+  // Check cache first - this is the fast path for most calls
+  const cached = formatDateCache.get(originalDate);
+  if (cached !== undefined) {
+    return cached;
   }
 
   try {
@@ -22,33 +49,49 @@ export function formatDate(originalDate: string): number {
 
     // Check if the parsed date is valid
     if (isNaN(parsedDate.getTime())) {
-      console.warn('Failed to parse date string:', originalDate);
       return Math.floor(Date.now() / 1000);
     }
 
-    // Convert to US Eastern Time for display
-    // Get the time in Eastern timezone
-    const easternTime = new Date(
-      parsedDate.toLocaleString('en-US', { timeZone: 'America/New_York' })
-    );
+    // Use Intl.DateTimeFormat.formatToParts for accurate timezone conversion
+    // This correctly handles DST transitions for each specific date
+    const parts = easternFormatter.formatToParts(parsedDate);
+    
+    // Extract components from the formatted parts
+    let year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0;
+    for (const part of parts) {
+      switch (part.type) {
+        case 'year': year = parseInt(part.value, 10); break;
+        case 'month': month = parseInt(part.value, 10) - 1; break; // 0-indexed
+        case 'day': day = parseInt(part.value, 10); break;
+        case 'hour': hour = parseInt(part.value, 10); break;
+        case 'minute': minute = parseInt(part.value, 10); break;
+        case 'second': second = parseInt(part.value, 10); break;
+      }
+    }
 
-    // Return Unix timestamp (seconds)
-    // We use the Eastern time's local components but treat them as UTC
-    // This makes the chart display Eastern time correctly
-    const year = easternTime.getFullYear();
-    const month = easternTime.getMonth();
-    const day = easternTime.getDate();
-    const hours = easternTime.getHours();
-    const minutes = easternTime.getMinutes();
-    const seconds = easternTime.getSeconds();
-
-    // Create a UTC date with Eastern time components
-    // This "tricks" the chart into showing Eastern time
-    return Date.UTC(year, month, day, hours, minutes, seconds) / 1000;
-  } catch (error) {
-    console.warn('Error parsing date:', originalDate, error);
+    // Create a UTC timestamp using Eastern time components
+    // This "tricks" the chart into displaying Eastern time
+    const result = Date.UTC(year, month, day, hour, minute, second) / 1000;
+    
+    // Cache the result (limit cache size to prevent memory issues)
+    if (formatDateCache.size > 50000) {
+      // Clear oldest entries when cache gets too large
+      const keysToDelete = Array.from(formatDateCache.keys()).slice(0, 10000);
+      keysToDelete.forEach(k => formatDateCache.delete(k));
+    }
+    formatDateCache.set(originalDate, result);
+    
+    return result;
+  } catch {
     return Math.floor(Date.now() / 1000);
   }
+}
+
+/**
+ * Clear the formatDate cache. Useful when timezone handling needs to be reset.
+ */
+export function clearFormatDateCache(): void {
+  formatDateCache.clear();
 }
 
 export const calculateMA = (

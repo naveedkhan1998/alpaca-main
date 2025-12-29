@@ -13,13 +13,13 @@ describe('Button Component', () => {
   it('applies correct variant classes', () => {
     const { rerender } = render(<Button variant="destructive">Delete</Button>);
     const button = screen.getByRole('button');
-    expect(button).toHaveClass('bg-red-500');
+    expect(button).toHaveClass('bg-destructive');
 
     rerender(<Button variant="outline">Outline</Button>);
-    expect(button).toHaveClass('border', 'border-zinc-200');
+    expect(button).toHaveClass('border', 'border-input');
 
     rerender(<Button variant="ghost">Ghost</Button>);
-    expect(button).toHaveClass('hover:bg-zinc-100');
+    expect(button).toHaveClass('hover:bg-accent');
   });
 
   it('applies correct size classes', () => {

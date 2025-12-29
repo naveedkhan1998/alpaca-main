@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect, useMemo } from 'react';
+import React, { useRef, useCallback, useEffect, useMemo, useState } from 'react';
 import type { ITimeScaleApi, Time } from 'lightweight-charts';
 import { useLocation } from 'react-router-dom';
 import {
@@ -6,47 +6,40 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '@/components/ui/resizable';
-//
-import { HiChartBar } from 'react-icons/hi';
 import type { Asset } from '@/types/common-types';
 import { useTheme } from '@/components/ThemeProvider';
 import MainChart from './components/MainChart';
-import VolumeChart from './components/VolumeChart';
+import IndicatorPanel from './components/IndicatorPanel';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
 import LoadingScreen from './components/LoadingScreen';
 import ErrorScreen from './components/ErrorScreen';
 import NotFoundScreen from './components/NotFoundScreen';
 import GraphHeader from './components/GraphHeader';
-import IndicatorChart from './components/IndicatorChart';
 import ReplayControls from './components/ReplayControls';
 import { useIsMobile } from '@/hooks/useMobile';
 import { formatDate } from '@/lib/functions';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
-//import { Dialog, DialogContent } from '@/components/ui/dialog';
-//import { Drawer, DrawerContent } from '@/components/ui/drawer';
-import PanelHeader from './components/PanelHeader';
-//import PaperTradingPanel from './components/controls/PaperTradingPanel';
 import { useCandlesV3 } from './hooks/useCandlesV3';
 import { useDerivedSeries } from './hooks/useDerivedSeries';
 import { useChartSync } from './hooks/useChartSync';
 import { useFullscreen } from './hooks/useFullscreen';
 import { useGraphShortcuts } from './hooks/useGraphShortcuts';
 import { useReplayController } from './hooks/useReplayController';
+import { useIndicators } from './hooks/useIndicators';
 import ChartToolbar from './components/ChartToolbar';
+import { IndicatorProvider } from './context';
 import {
-  setShowVolume,
   setAutoRefresh,
   selectTimeframe,
   selectShowVolume,
   selectAutoRefresh,
   selectShowControls,
   selectSeriesType,
-  selectActiveIndicators,
-  selectIndicatorConfigs,
-  removeIndicator,
+  removeIndicatorInstance,
+  toggleIndicatorVisibility,
   setReplayStep,
   setReplayTotalSteps,
   setReplayPlaying,
+  setReplayAnimationProgress,
 } from './graphSlice';
 
 interface LocationState {
@@ -99,29 +92,32 @@ const GraphsPage: React.FC = () => {
   const autoRefresh = useAppSelector(selectAutoRefresh);
   const seriesType = useAppSelector(selectSeriesType);
   const showControls = useAppSelector(selectShowControls);
-  const activeIndicators = useAppSelector(selectActiveIndicators);
-  const indicatorConfigs = useAppSelector(selectIndicatorConfigs);
+
   const {
     enabled: isReplayEnabled,
     playing: isReplayPlaying,
     speed: replaySpeed,
     currentStep: replayStep,
     totalSteps: replayTotalSteps,
+    animate: isReplayAnimate,
+    animationProgress,
     handleReplayToggle,
     handleReplayPlayPause,
     handleReplayRestart,
     handleReplaySeek,
     handleReplaySpeedChange,
+    handleReplayAnimateToggle,
   } = useReplayController();
 
   // Refs
   const mainChartRef = useRef<ITimeScaleApi<Time> | null>(null);
-  const volumeChartRef = useRef<ITimeScaleApi<Time> | null>(null);
-  const rsiChartRef = useRef<ITimeScaleApi<Time> | null>(null);
-  const atrChartRef = useRef<ITimeScaleApi<Time> | null>(null);
+  const [mainTimeScale, setMainTimeScaleState] = useState<ITimeScaleApi<Time> | null>(null);
+  const indicatorChartsRef = useRef<Map<string, ITimeScaleApi<Time>>>(
+    new Map()
+  );
   const chartSectionRef = useRef<HTMLDivElement>(null);
 
-  // Data & derived series (using v3 API with cursor pagination)
+  // Data & derived series
   const {
     candles,
     isFetching,
@@ -133,21 +129,13 @@ const GraphsPage: React.FC = () => {
     loadMoreHistoricalData,
   } = useCandlesV3({ assetId: obj?.id, timeframe, autoRefresh });
 
-  const {
-    seriesData,
-    volumeData,
-    hasValidVolume,
-    rsiData,
-    atrData,
-    emaData,
-    bollingerBandsData,
-  } = useDerivedSeries({
-    candles,
-    seriesType,
-    isDarkMode,
-    activeIndicators,
-    indicatorConfigs,
-  });
+  const { seriesData, volumeData, hasValidVolume } =
+    useDerivedSeries({
+      candles,
+      seriesType,
+      isDarkMode,
+    });
+
   const prevSeriesLengthRef = useRef(seriesData.length);
   const prevReplayEnabledRef = useRef(isReplayEnabled);
 
@@ -156,8 +144,30 @@ const GraphsPage: React.FC = () => {
   const effectiveReplayIndex = useMemo(() => {
     if (!isReplayEnabled) return totalSeriesCount;
     if (totalSeriesCount === 0) return 0;
-    return Math.min(Math.max(replayStep, 1), totalSeriesCount);
+    // When replay is first enabled, replayStep might still be at totalSeriesCount
+    // Force it to 1 in this case to prevent showing all data on first render
+    const step = replayStep >= totalSeriesCount ? 1 : replayStep;
+    return Math.min(Math.max(step, 1), totalSeriesCount);
   }, [isReplayEnabled, replayStep, totalSeriesCount]);
+
+  // Calculate display index for indicators - only update on completed candles
+  // During animation, we use the previous completed candle index
+  const indicatorDisplayIndex = useMemo(() => {
+    if (!isReplayEnabled) return undefined;
+    // During animation (animationProgress > 0 but < 1), show indicators for the previous completed candle
+    // This prevents indicators from updating mid-candle during animated replay
+    if (isReplayAnimate && animationProgress > 0 && animationProgress < 1) {
+      return Math.max(1, effectiveReplayIndex - 1);
+    }
+    return effectiveReplayIndex;
+  }, [isReplayEnabled, isReplayAnimate, animationProgress, effectiveReplayIndex]);
+
+  // New indicator system - with replay support
+  const { panelIndicators, overlayIndicators } = useIndicators({
+    candles,
+    replayDisplayIndex: indicatorDisplayIndex,
+    isReplayEnabled,
+  });
 
   const displayedSeriesData = useMemo(
     () =>
@@ -165,45 +175,135 @@ const GraphsPage: React.FC = () => {
     [isReplayEnabled, seriesData, effectiveReplayIndex]
   );
 
+  // Animate the current candle formation when animate mode is enabled
+  const animatedSeriesData = useMemo(() => {
+    if (!isReplayEnabled || !isReplayAnimate || animationProgress >= 1) {
+      return displayedSeriesData;
+    }
+    
+    if (displayedSeriesData.length === 0) {
+      return displayedSeriesData;
+    }
+    
+    // Get the last candle to animate
+    const lastCandle = displayedSeriesData[displayedSeriesData.length - 1];
+    
+    // Check if it's an OHLC candle (has open, high, low, close)
+    if (!('open' in lastCandle)) {
+      return displayedSeriesData;
+    }
+    
+    const { open, high, low, close, time } = lastCandle as { open: number; high: number; low: number; close: number; time: Time };
+    
+    // Determine if it's a bullish (green) or bearish (red) candle
+    const isBullish = close >= open;
+    const progress = animationProgress;
+    
+    // Animation phases:
+    // Phase 1 (0-0.3): Start at open, move toward first extreme
+    // Phase 2 (0.3-0.7): Move toward second extreme  
+    // Phase 3 (0.7-1.0): Move toward close
+    
+    let animatedHigh = open;
+    let animatedLow = open;
+    let animatedClose = open;
+    
+    if (isBullish) {
+      // Bullish candle: typically goes down first (wick), then up to high, then settles at close
+      if (progress < 0.3) {
+        // Phase 1: Move down to low
+        const phaseProgress = progress / 0.3;
+        animatedLow = open + (low - open) * phaseProgress;
+        animatedHigh = open;
+        animatedClose = open + (low - open) * phaseProgress * 0.5;
+      } else if (progress < 0.7) {
+        // Phase 2: Move up to high
+        const phaseProgress = (progress - 0.3) / 0.4;
+        animatedLow = low;
+        animatedHigh = open + (high - open) * phaseProgress;
+        animatedClose = low + (high - low) * phaseProgress;
+      } else {
+        // Phase 3: Settle to close
+        const phaseProgress = (progress - 0.7) / 0.3;
+        animatedLow = low;
+        animatedHigh = high;
+        animatedClose = high + (close - high) * phaseProgress;
+      }
+    } else {
+      // Bearish candle: typically goes up first (wick), then down to low, then settles at close
+      if (progress < 0.3) {
+        // Phase 1: Move up to high
+        const phaseProgress = progress / 0.3;
+        animatedHigh = open + (high - open) * phaseProgress;
+        animatedLow = open;
+        animatedClose = open + (high - open) * phaseProgress * 0.5;
+      } else if (progress < 0.7) {
+        // Phase 2: Move down to low
+        const phaseProgress = (progress - 0.3) / 0.4;
+        animatedHigh = high;
+        animatedLow = open + (low - open) * phaseProgress;
+        animatedClose = high + (low - high) * phaseProgress;
+      } else {
+        // Phase 3: Settle to close
+        const phaseProgress = (progress - 0.7) / 0.3;
+        animatedHigh = high;
+        animatedLow = low;
+        animatedClose = low + (close - low) * phaseProgress;
+      }
+    }
+    
+    const animatedCandle = {
+      time,
+      open,
+      high: animatedHigh,
+      low: animatedLow,
+      close: animatedClose,
+    };
+    
+    return [...displayedSeriesData.slice(0, -1), animatedCandle];
+  }, [displayedSeriesData, isReplayEnabled, isReplayAnimate, animationProgress]);
+
   const displayedVolumeData = useMemo(
     () =>
       isReplayEnabled ? volumeData.slice(0, effectiveReplayIndex) : volumeData,
     [isReplayEnabled, volumeData, effectiveReplayIndex]
   );
 
-  const displayedRsiData = useMemo(
-    () => (isReplayEnabled ? rsiData.slice(0, effectiveReplayIndex) : rsiData),
-    [isReplayEnabled, rsiData, effectiveReplayIndex]
-  );
-
-  const displayedAtrData = useMemo(
-    () => (isReplayEnabled ? atrData.slice(0, effectiveReplayIndex) : atrData),
-    [isReplayEnabled, atrData, effectiveReplayIndex]
-  );
-
-  const displayedEmaData = useMemo(
-    () => (isReplayEnabled ? emaData.slice(0, effectiveReplayIndex) : emaData),
-    [isReplayEnabled, emaData, effectiveReplayIndex]
-  );
-
-  const displayedBollingerBandsData = useMemo(
-    () =>
-      isReplayEnabled
-        ? bollingerBandsData.slice(0, effectiveReplayIndex)
-        : bollingerBandsData,
-    [isReplayEnabled, bollingerBandsData, effectiveReplayIndex]
-  );
-
   const currentReplayLabel = useMemo(() => {
-    if (!isReplayEnabled || displayedSeriesData.length === 0) return undefined;
-    const lastPoint = displayedSeriesData[displayedSeriesData.length - 1] as {
+    if (!isReplayEnabled || animatedSeriesData.length === 0) return undefined;
+    const lastPoint = animatedSeriesData[animatedSeriesData.length - 1] as {
       time?: Time;
     };
     return formatReplayTimeLabel(lastPoint?.time);
-  }, [displayedSeriesData, isReplayEnabled]);
+  }, [animatedSeriesData, isReplayEnabled]);
 
   const shouldShowVolume = showVolume && hasValidVolume;
   const shouldRenderReplayControls = isReplayEnabled && totalSeriesCount > 0;
+
+  // Desktop inline replay controls - shown below toolbar when replay is active
+  const desktopReplayControls =
+    shouldRenderReplayControls && !isMobile ? (
+      <ReplayControls
+        variant="inline"
+        enabled={isReplayEnabled}
+        playing={isReplayPlaying}
+        currentStep={effectiveReplayIndex}
+        totalSteps={totalSeriesCount}
+        onToggle={handleReplayToggle}
+        onPlayPause={handleReplayPlayPause}
+        onRestart={handleReplayRestart}
+        onSeek={handleReplaySeek}
+        speed={replaySpeed}
+        onSpeedChange={handleReplaySpeedChange}
+        animate={isReplayAnimate}
+        onAnimateToggle={handleReplayAnimateToggle}
+        currentLabel={currentReplayLabel}
+        isLoadingMore={isLoadingMore || isFetching}
+        hasMoreHistorical={hasMore}
+        onLoadMoreHistorical={hasMore ? loadMoreHistoricalData : undefined}
+      />
+    ) : null;
+
   const headerReplayControls = useMemo(
     () => ({
       enabled: isReplayEnabled,
@@ -216,6 +316,8 @@ const GraphsPage: React.FC = () => {
       onSeek: handleReplaySeek,
       speed: replaySpeed,
       onSpeedChange: handleReplaySpeedChange,
+      animate: isReplayAnimate,
+      onAnimateToggle: handleReplayAnimateToggle,
       currentLabel: currentReplayLabel,
       isLoadingMore: isLoadingMore || isFetching,
       hasMoreHistorical: hasMore,
@@ -229,73 +331,89 @@ const GraphsPage: React.FC = () => {
       handleReplaySeek,
       handleReplaySpeedChange,
       handleReplayToggle,
+      handleReplayAnimateToggle,
       hasMore,
       isFetching,
       isLoadingMore,
       isReplayEnabled,
       isReplayPlaying,
+      isReplayAnimate,
       loadMoreHistoricalData,
       replaySpeed,
       totalSeriesCount,
     ]
   );
+
+  // Mobile replay controls - inline at bottom of chart area (not a modal)
   const mobileReplayControls =
     shouldRenderReplayControls && isMobile ? (
-      <Sheet open={isReplayEnabled} onOpenChange={handleReplayToggle}>
-        <SheetContent
-          side="bottom"
-          className="h-auto max-h-[80vh] rounded-t-2xl border-t border-border/60 bg-card backdrop-blur-xl p-0 mx-0"
-        >
-          <ReplayControls
-            variant="overlay"
-            enabled={isReplayEnabled}
-            playing={isReplayPlaying}
-            currentStep={effectiveReplayIndex}
-            totalSteps={totalSeriesCount}
-            onToggle={handleReplayToggle}
-            onPlayPause={handleReplayPlayPause}
-            onRestart={handleReplayRestart}
-            onSeek={handleReplaySeek}
-            speed={replaySpeed}
-            onSpeedChange={handleReplaySpeedChange}
-            currentLabel={currentReplayLabel}
-            isLoadingMore={isLoadingMore || isFetching}
-            hasMoreHistorical={hasMore}
-            onLoadMoreHistorical={hasMore ? loadMoreHistoricalData : undefined}
-          />
-        </SheetContent>
-      </Sheet>
+      <ReplayControls
+        variant="mobile"
+        enabled={isReplayEnabled}
+        playing={isReplayPlaying}
+        currentStep={effectiveReplayIndex}
+        totalSteps={totalSeriesCount}
+        onToggle={handleReplayToggle}
+        onPlayPause={handleReplayPlayPause}
+        onRestart={handleReplayRestart}
+        onSeek={handleReplaySeek}
+        speed={replaySpeed}
+        onSpeedChange={handleReplaySpeedChange}
+        animate={isReplayAnimate}
+        onAnimateToggle={handleReplayAnimateToggle}
+        currentLabel={currentReplayLabel}
+        isLoadingMore={isLoadingMore || isFetching}
+        hasMoreHistorical={hasMore}
+        onLoadMoreHistorical={hasMore ? loadMoreHistoricalData : undefined}
+      />
     ) : null;
 
   // TimeScale refs setters
-  const setMainChartTimeScale = (timeScale: ITimeScaleApi<Time>) => {
-    mainChartRef.current = timeScale;
-  };
-  const setVolumeChartTimeScale = (timeScale: ITimeScaleApi<Time>) => {
-    volumeChartRef.current = timeScale;
-  };
-  const setRSIChartTimeScale = (timeScale: ITimeScaleApi<Time>) => {
-    rsiChartRef.current = timeScale;
-  };
-  const setATRChartTimeScale = (timeScale: ITimeScaleApi<Time>) => {
-    atrChartRef.current = timeScale;
-  };
+  const setMainChartTimeScale = useCallback(
+    (timeScale: ITimeScaleApi<Time>) => {
+      mainChartRef.current = timeScale;
+      setMainTimeScaleState(timeScale);
+    },
+    []
+  );
 
   // Sync charts & fullscreen
-  const { syncCharts } = useChartSync({
+  const { syncCharts, triggerSync } = useChartSync({
     mainChartRef,
-    volumeChartRef,
-    rsiChartRef,
-    atrChartRef,
-    shouldShowVolume,
-    activeIndicators,
+    indicatorTimeScaleRefs: indicatorChartsRef,
   });
 
-  const { isFullscreenView, toggleFullscreen } = useFullscreen(chartSectionRef);
+  const setIndicatorTimeScale = useCallback(
+    (instanceId: string) => (timeScale: ITimeScaleApi<Time>) => {
+      indicatorChartsRef.current.set(instanceId, timeScale);
+      // Trigger sync after new indicator panel is registered
+      setTimeout(triggerSync, 50);
+    },
+    [triggerSync]
+  );
+
+  const { toggleFullscreen } = useFullscreen(chartSectionRef);
 
   // Keyboard shortcuts
   useGraphShortcuts({ showVolume, showControls, toggleFullscreen });
 
+  // Indicator handlers
+  const handleRemoveIndicator = useCallback(
+    (instanceId: string) => {
+      dispatch(removeIndicatorInstance(instanceId));
+      indicatorChartsRef.current.delete(instanceId);
+    },
+    [dispatch]
+  );
+
+  const handleToggleVisibility = useCallback(
+    (instanceId: string) => {
+      dispatch(toggleIndicatorVisibility(instanceId));
+    },
+    [dispatch]
+  );
+
+  // Replay effects
   useEffect(() => {
     if (replayTotalSteps !== totalSeriesCount) {
       dispatch(setReplayTotalSteps(totalSeriesCount));
@@ -305,13 +423,11 @@ const GraphsPage: React.FC = () => {
   useEffect(() => {
     if (prevReplayEnabledRef.current !== isReplayEnabled) {
       if (isReplayEnabled) {
-        // When enabling replay, start from beginning if we were at the end, otherwise continue
         if (replayStep >= totalSeriesCount) {
           dispatch(setReplayStep(totalSeriesCount > 1 ? 1 : totalSeriesCount));
         }
         dispatch(setReplayPlaying(false));
       } else {
-        // When disabling replay, show all data
         dispatch(setReplayStep(totalSeriesCount));
         dispatch(setReplayPlaying(false));
       }
@@ -350,6 +466,39 @@ const GraphsPage: React.FC = () => {
       return;
     }
 
+    // If animation is enabled, animate the current candle formation
+    if (isReplayAnimate) {
+      // Animation runs at 60fps-ish, completing one candle animation in the interval time
+      const baseIntervalMs = Math.max(120, Math.round(800 / replaySpeed));
+      const animationFrameMs = 16; // ~60fps
+      const totalFrames = Math.max(1, Math.floor(baseIntervalMs / animationFrameMs));
+      let currentFrame = Math.floor(animationProgress * totalFrames);
+      
+      const animationTimer = window.setInterval(() => {
+        currentFrame++;
+        const newProgress = Math.min(1, currentFrame / totalFrames);
+        
+        if (newProgress >= 1) {
+          // Animation complete, move to next candle
+          window.clearInterval(animationTimer);
+          const next = replayStep + 1;
+          if (next >= totalSeriesCount) {
+            dispatch(setReplayStep(totalSeriesCount));
+            dispatch(setReplayPlaying(false));
+            dispatch(setReplayAnimationProgress(1));
+          } else {
+            dispatch(setReplayStep(next));
+            dispatch(setReplayAnimationProgress(0)); // Reset for next candle
+          }
+        } else {
+          dispatch(setReplayAnimationProgress(newProgress));
+        }
+      }, animationFrameMs);
+
+      return () => window.clearInterval(animationTimer);
+    }
+
+    // Non-animated mode - original behavior
     const intervalMs = Math.max(120, Math.round(800 / replaySpeed));
     const timer = window.setInterval(() => {
       const next = replayStep + 1;
@@ -367,6 +516,8 @@ const GraphsPage: React.FC = () => {
     dispatch,
     isReplayEnabled,
     isReplayPlaying,
+    isReplayAnimate,
+    animationProgress,
     replaySpeed,
     replayStep,
     totalSeriesCount,
@@ -401,7 +552,6 @@ const GraphsPage: React.FC = () => {
     }
   }, [dispatch, totalSeriesCount, isReplayPlaying]);
 
-  // Keep charts in sync on mount/update
   useEffect(() => {
     const cleanup = syncCharts();
     return () => {
@@ -409,7 +559,7 @@ const GraphsPage: React.FC = () => {
     };
   }, [syncCharts]);
 
-  // CSV download: use canonical candles
+  // CSV download
   const handleDownload = useCallback(() => {
     const headers = 'Date,Open,High,Low,Close,Volume';
     const csvData = candles.map(
@@ -432,206 +582,88 @@ const GraphsPage: React.FC = () => {
   if (loadingInitial && mainChartRef.current === null) return <LoadingScreen />;
   if (errorInitial) return <ErrorScreen />;
 
+  // Calculate panel sizes
+  const hasPanelIndicators = panelIndicators.length > 0;
+  const mainChartSize = hasPanelIndicators ? 70 : 100;
+  const indicatorSize = hasPanelIndicators
+    ? Math.floor((100 - mainChartSize) / panelIndicators.length)
+    : 0;
+
   return (
-    <div className="flex flex-col h-[100dvh] text-foreground bg-gradient-to-br from-background via-muted/5 to-background">
-      {/* Header */}
-      <GraphHeader
-        obj={obj}
-        handleDownload={handleDownload}
-        toggleFullscreen={toggleFullscreen}
-        refetch={handleRefetch}
-        replayControls={headerReplayControls}
-      />
+    <IndicatorProvider>
+      <div className="flex flex-col h-[100dvh] bg-background">
+        {/* Header */}
+        <GraphHeader
+          obj={obj}
+          handleDownload={handleDownload}
+          toggleFullscreen={toggleFullscreen}
+          refetch={handleRefetch}
+          replayControls={headerReplayControls}
+        />
 
       {/* Main Content */}
       <div
         ref={chartSectionRef}
-        className={
-          `flex flex-col h-full overflow-hidden ` +
-          (isFullscreenView
-            ? 'bg-background'
-            : 'bg-gradient-to-br from-muted/10 via-background to-muted/5')
-        }
+        className="flex flex-col h-full overflow-hidden bg-background"
       >
         {/* Chart Toolbar */}
         <ChartToolbar />
 
-        {isMobile ? (
-          <div className="flex-1">
-            <ResizablePanelGroup direction="vertical">
-              {/* Main Chart */}
-              <ResizablePanel defaultSize={shouldShowVolume ? 75 : 100}>
-                <div className="relative h-full">
-                  <MainChart
-                    seriesData={displayedSeriesData}
-                    mode={isDarkMode}
-                    setTimeScale={setMainChartTimeScale}
-                    emaData={displayedEmaData}
-                    bollingerBandsData={displayedBollingerBandsData}
-                    onLoadMoreData={loadMoreHistoricalData}
-                    isLoadingMore={isLoadingMore || isFetching}
-                    hasMoreData={hasMore}
-                  />
-                  {mobileReplayControls}
+        {/* Desktop Replay Controls - Inline bar below toolbar */}
+        {desktopReplayControls}
+
+        <div className="flex-1 min-h-0">
+          <ResizablePanelGroup direction="vertical">
+            {/* Main Chart with Volume Overlay */}
+            <ResizablePanel defaultSize={mainChartSize} minSize={30}>
+              <div className="relative h-full">
+                <MainChart
+                  seriesData={animatedSeriesData}
+                  volumeData={displayedVolumeData}
+                  showVolume={shouldShowVolume}
+                  mode={isDarkMode}
+                  setTimeScale={setMainChartTimeScale}
+                  overlayIndicators={overlayIndicators}
+                  onLoadMoreData={loadMoreHistoricalData}
+                  isLoadingMore={isLoadingMore || isFetching}
+                  hasMoreData={hasMore}
+                  isReplayEnabled={isReplayEnabled}
+                  replayStep={effectiveReplayIndex}
+                />
+              </div>
+              {(isLoadingMore || isFetching) && (
+                <div className="flex items-center justify-center py-2 text-xs text-muted-foreground animate-pulse">
+                  Loading more…
                 </div>
-                {(isLoadingMore || isFetching) && (
-                  <div className="flex items-center justify-center py-2 text-xs text-muted-foreground animate-pulse">
-                    Loading more…
-                  </div>
-                )}
-              </ResizablePanel>
-
-              {/* Volume Chart */}
-              {shouldShowVolume && (
-                <>
-                  <ResizableHandle withHandle />
-                  <ResizablePanel defaultSize={25} minSize={15}>
-                    <PanelHeader
-                      title="Volume"
-                      icon={<HiChartBar className="w-4 h-4 text-chart-1" />}
-                      onClose={() => dispatch(setShowVolume(false))}
-                      dense
-                    />
-                    <VolumeChart
-                      volumeData={displayedVolumeData}
-                      mode={isDarkMode}
-                      setTimeScale={setVolumeChartTimeScale}
-                    />
-                  </ResizablePanel>
-                </>
               )}
+            </ResizablePanel>
 
-              {/* RSI Chart */}
-              {activeIndicators.includes('RSI') && (
-                <>
-                  <ResizableHandle withHandle />
-                  <ResizablePanel defaultSize={20} minSize={15}>
-                    <PanelHeader
-                      title="RSI"
-                      icon={<HiChartBar className="w-4 h-4 text-amber-500" />}
-                      onClose={() => dispatch(removeIndicator('RSI'))}
-                      dense
-                    />
-                    <IndicatorChart
-                      rsiData={displayedRsiData}
-                      atrData={[]}
-                      mode={isDarkMode}
-                      setTimeScale={setRSIChartTimeScale}
-                    />
-                  </ResizablePanel>
-                </>
-              )}
-
-              {/* ATR Chart */}
-              {activeIndicators.includes('ATR') && (
-                <>
-                  <ResizableHandle withHandle />
-                  <ResizablePanel defaultSize={20} minSize={15}>
-                    <PanelHeader
-                      title="ATR"
-                      icon={<HiChartBar className="w-4 h-4 text-blue-500" />}
-                      onClose={() => dispatch(removeIndicator('ATR'))}
-                      dense
-                    />
-                    <IndicatorChart
-                      rsiData={[]}
-                      atrData={displayedAtrData}
-                      mode={isDarkMode}
-                      setTimeScale={setATRChartTimeScale}
-                    />
-                  </ResizablePanel>
-                </>
-              )}
-            </ResizablePanelGroup>
-          </div>
-        ) : (
-          <div className="flex-1">
-            <ResizablePanelGroup direction="vertical">
-              {/* Main Chart */}
-              <ResizablePanel defaultSize={shouldShowVolume ? 75 : 100}>
-                <div className="relative h-full">
-                  <MainChart
-                    seriesData={displayedSeriesData}
-                    mode={isDarkMode}
-                    setTimeScale={setMainChartTimeScale}
-                    emaData={displayedEmaData}
-                    bollingerBandsData={displayedBollingerBandsData}
-                    onLoadMoreData={loadMoreHistoricalData}
-                    isLoadingMore={isLoadingMore || isFetching}
-                    hasMoreData={hasMore}
+            {/* Dynamic Indicator Panels */}
+            {panelIndicators.map(indicator => (
+              <React.Fragment key={indicator.instance.instanceId}>
+                <ResizableHandle className="p-0" withHandle />
+                <ResizablePanel defaultSize={indicatorSize} minSize={10}>
+                  <IndicatorPanel
+                    indicator={indicator}
+                    isDarkMode={isDarkMode}
+                    setTimeScale={setIndicatorTimeScale(
+                      indicator.instance.instanceId
+                    )}
+                    mainTimeScale={mainTimeScale}
+                    onRemove={handleRemoveIndicator}
+                    onToggleVisibility={handleToggleVisibility}
                   />
-                  {mobileReplayControls}
-                </div>
-                {(isLoadingMore || isFetching) && (
-                  <div className="flex items-center justify-center py-2 text-xs text-muted-foreground animate-pulse">
-                    Loading more…
-                  </div>
-                )}
-              </ResizablePanel>
+                </ResizablePanel>
+              </React.Fragment>
+            ))}
+          </ResizablePanelGroup>
+        </div>
 
-              {/* Volume Chart */}
-              {shouldShowVolume && (
-                <>
-                  <ResizableHandle className="p-0" withHandle />
-                  <ResizablePanel defaultSize={25} minSize={15}>
-                    <PanelHeader
-                      title="Volume"
-                      icon={<HiChartBar className="w-4 h-4 text-chart-1" />}
-                      onClose={() => dispatch(setShowVolume(false))}
-                    />
-                    <VolumeChart
-                      volumeData={displayedVolumeData}
-                      mode={isDarkMode}
-                      setTimeScale={setVolumeChartTimeScale}
-                    />
-                  </ResizablePanel>
-                </>
-              )}
-
-              {/* RSI Chart */}
-              {activeIndicators.includes('RSI') && (
-                <>
-                  <ResizableHandle className="p-0" withHandle />
-                  <ResizablePanel defaultSize={20} minSize={15}>
-                    <PanelHeader
-                      title="RSI"
-                      icon={<HiChartBar className="w-4 h-4 text-amber-500" />}
-                      onClose={() => dispatch(removeIndicator('RSI'))}
-                    />
-                    <IndicatorChart
-                      rsiData={displayedRsiData}
-                      atrData={[]}
-                      mode={isDarkMode}
-                      setTimeScale={setRSIChartTimeScale}
-                    />
-                  </ResizablePanel>
-                </>
-              )}
-
-              {/* ATR Chart */}
-              {activeIndicators.includes('ATR') && (
-                <>
-                  <ResizableHandle className="p-0" withHandle />
-                  <ResizablePanel defaultSize={20} minSize={15}>
-                    <PanelHeader
-                      title="ATR"
-                      icon={<HiChartBar className="w-4 h-4 text-blue-500" />}
-                      onClose={() => dispatch(removeIndicator('ATR'))}
-                    />
-                    <IndicatorChart
-                      rsiData={[]}
-                      atrData={displayedAtrData}
-                      mode={isDarkMode}
-                      setTimeScale={setATRChartTimeScale}
-                    />
-                  </ResizablePanel>
-                </>
-              )}
-            </ResizablePanelGroup>
-          </div>
-        )}
+        {/* Mobile Replay Controls - Fixed at bottom */}
+        {mobileReplayControls}
       </div>
     </div>
+    </IndicatorProvider>
   );
 };
 

@@ -44,19 +44,18 @@ function makeTimeScale() {
 describe('useChartSync', () => {
   it('syncs visible ranges across charts when called', () => {
     const main = makeTimeScale();
-    const vol = makeTimeScale();
-    const rsi = makeTimeScale();
-    const atr = makeTimeScale();
+    const indicator1 = makeTimeScale();
+    const indicator2 = makeTimeScale();
+    
+    const indicatorTimeScaleRefs = new Map<string, ITimeScaleApi<Time>>();
+    indicatorTimeScaleRefs.set('rsi-1', indicator1);
+    indicatorTimeScaleRefs.set('macd-1', indicator2);
 
     vi.useFakeTimers();
     const { result } = renderHook(() =>
       useChartSync({
         mainChartRef: { current: main },
-        volumeChartRef: { current: vol },
-        rsiChartRef: { current: rsi },
-        atrChartRef: { current: atr },
-        shouldShowVolume: true,
-        activeIndicators: ['RSI'],
+        indicatorTimeScaleRefs: { current: indicatorTimeScaleRefs },
       })
     );
 
@@ -64,8 +63,8 @@ describe('useChartSync', () => {
       result.current.syncCharts();
     });
 
-    expect(vol.setVisibleRange).toHaveBeenCalledWith(main.getVisibleRange());
-    expect(rsi.setVisibleRange).toHaveBeenCalledWith(main.getVisibleRange());
+    expect(indicator1.setVisibleRange).toHaveBeenCalledWith(main.getVisibleRange());
+    expect(indicator2.setVisibleRange).toHaveBeenCalledWith(main.getVisibleRange());
 
     // Simulate visible range change on main timescale
     main._visibleRange = {
@@ -77,7 +76,28 @@ describe('useChartSync', () => {
       vi.runOnlyPendingTimers();
       main._handler?.(main.getVisibleRange()!);
     });
-    expect(vol.setVisibleRange).toHaveBeenLastCalledWith({ from: 5, to: 10 });
-    expect(rsi.setVisibleRange).toHaveBeenLastCalledWith({ from: 5, to: 10 });
+    expect(indicator1.setVisibleRange).toHaveBeenLastCalledWith({ from: 5, to: 10 });
+    expect(indicator2.setVisibleRange).toHaveBeenLastCalledWith({ from: 5, to: 10 });
+  });
+  
+  it('works with empty indicator refs', () => {
+    const main = makeTimeScale();
+    
+    const indicatorTimeScaleRefs = new Map<string, ITimeScaleApi<Time>>();
+
+    vi.useFakeTimers();
+    const { result } = renderHook(() =>
+      useChartSync({
+        mainChartRef: { current: main },
+        indicatorTimeScaleRefs: { current: indicatorTimeScaleRefs },
+      })
+    );
+
+    act(() => {
+      result.current.syncCharts();
+    });
+
+    // Should not throw even with empty indicator refs
+    expect(main.getVisibleRange).toHaveBeenCalled();
   });
 });
