@@ -103,7 +103,7 @@ class TickSerializer(serializers.ModelSerializer):
 
 class CandleSerializer(serializers.ModelSerializer):
     """Serializer for legacy Candle model."""
-    
+
     asset_symbol = serializers.CharField(source="asset.symbol", read_only=True)
 
     class Meta:
@@ -129,7 +129,7 @@ class CandleSerializer(serializers.ModelSerializer):
 
 class MinuteCandleSerializer(serializers.ModelSerializer):
     """Serializer for 1-minute candle data."""
-    
+
     asset_symbol = serializers.CharField(source="asset.symbol", read_only=True)
 
     class Meta:
@@ -153,7 +153,7 @@ class MinuteCandleSerializer(serializers.ModelSerializer):
 
 class AggregatedCandleModelSerializer(serializers.ModelSerializer):
     """Serializer for aggregated candle model data."""
-    
+
     asset_symbol = serializers.CharField(source="asset.symbol", read_only=True)
 
     class Meta:
@@ -194,11 +194,11 @@ class CandleChartSerializer(serializers.ModelSerializer):
 class CandleV3Serializer(serializers.Serializer):
     """
     Lightweight serializer for new candle API (v3).
-    
+
     Uses Serializer instead of ModelSerializer for performance
     when working with pre-computed dictionaries.
     """
-    
+
     timestamp = serializers.CharField()
     open = serializers.CharField()
     high = serializers.CharField()

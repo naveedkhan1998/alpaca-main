@@ -10,10 +10,10 @@ from apps.account.models import User
 class SyncStatus(models.Model):
     """
     Global sync status for asset synchronization.
-    
+
     Tracks the last synchronization time, total items synced, and whether
     a sync operation is currently in progress.
-    
+
     Attributes:
         sync_type: Type of sync operation (currently only 'assets' is supported).
         last_sync_at: Timestamp of the last successful sync.
@@ -61,10 +61,10 @@ class SyncStatus(models.Model):
 class AlpacaAccount(models.Model):
     """
     Alpaca API account credentials for a user.
-    
+
     Stores the API key and secret for authenticating with Alpaca's trading API.
     Each user can have multiple accounts (e.g., paper vs live trading).
-    
+
     Attributes:
         user: The user who owns this account (optional for admin accounts).
         name: Display name for the account.

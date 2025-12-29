@@ -364,12 +364,12 @@ class WebsocketClient:
     def _process_batch(self, messages: list[dict]):
         """
         Process a batch of WebSocket messages (trades and bars).
-        
+
         Aggregates trade ticks into 1-minute candles and persists them,
         then rolls up to higher timeframes.
         """
         from decimal import Decimal
-        
+
         # Separate trades and bars
         trades = [m for m in messages if m.get("T") == "t"]
         bars = [m for m in messages if m.get("T") == "b"]
@@ -382,7 +382,7 @@ class WebsocketClient:
         # Process bars directly as 1T candles
         bar_candles_list: list[dict[str, Any]] = []
         bar_candles_map: dict[tuple[int, datetime], dict[str, Any]] = {}
-        
+
         if bars:
             for b in bars:
                 sym = b.get("S")
@@ -415,7 +415,7 @@ class WebsocketClient:
                 }
                 bar_candles_list.append(candle)
                 bar_candles_map[(aid, ts)] = candle
-                
+
             if bar_candles_list:
                 self.repo.upsert_minutes(bar_candles_list, mode="snapshot")
 
@@ -454,7 +454,7 @@ class WebsocketClient:
             c = m1_map[key]
             price_dec = Decimal(str(price))
             vol_dec = Decimal(str(vol))
-            
+
             if c["open"] is None:
                 c["open"] = c["close"] = price_dec
                 c["high"] = c["low"] = price_dec

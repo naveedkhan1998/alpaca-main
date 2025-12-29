@@ -12,11 +12,11 @@ from apps.account.models import User
 class Asset(models.Model):
     """
     Alpaca tradable asset (stock, option, or crypto).
-    
+
     Represents an instrument that can be traded through the Alpaca API.
     Supports US equities, options, and cryptocurrencies with their respective
     trading properties and margin requirements.
-    
+
     Attributes:
         alpaca_id: Unique identifier from Alpaca's system.
         symbol: Ticker symbol (e.g., 'AAPL', 'BTC/USD').
@@ -29,7 +29,7 @@ class Asset(models.Model):
         shortable: Whether short selling is allowed.
         easy_to_borrow: Whether shares are readily available for shorting.
         fractionable: Whether fractional shares are supported.
-    
+
     Indexes:
         - Composite on (symbol, asset_class) for filtered queries
         - GIN trigram indexes on symbol and name for fuzzy search
@@ -141,10 +141,10 @@ class Asset(models.Model):
 class WatchList(models.Model):
     """
     User-defined watchlist for organizing assets.
-    
+
     Allows users to create custom lists of assets they want to monitor.
     Supports both user-specific and global (admin) watchlists.
-    
+
     Attributes:
         user: Owner of the watchlist (null for global lists).
         name: Display name for the watchlist.
@@ -179,7 +179,7 @@ class WatchList(models.Model):
 class WatchListAsset(models.Model):
     """
     Many-to-many relationship between watchlists and assets.
-    
+
     Tracks which assets are in which watchlists, with metadata
     about when they were added and their active status.
     """

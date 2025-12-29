@@ -11,10 +11,10 @@ Response Format (Compact):
 -------------------------
 Instead of verbose object format:
     {"timestamp": "...", "open": "1.23", "high": "1.24", ...}
-    
+
 Uses compact array format:
     ["timestamp", "open", "high", "low", "close", "volume", "trade_count", "vwap"]
-    
+
 This reduces JSON payload by ~60%.
 
 Usage:
@@ -50,13 +50,22 @@ MINUTES_TO_TF = {
 }
 
 # Fields to fetch from DB - only what we need
-CANDLE_FIELDS = ("timestamp", "open", "high", "low", "close", "volume", "trade_count", "vwap")
+CANDLE_FIELDS = (
+    "timestamp",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "trade_count",
+    "vwap",
+)
 
 
 class CandleViewMixin:
     """
     Mixin providing optimized candle retrieval methods.
-    
+
     Add this to any ViewSet that needs candle data access.
     Provides cursor pagination, compact format, and efficient queries.
     """
@@ -72,17 +81,17 @@ class CandleViewMixin:
     ) -> Response:
         """
         Get candles with cursor-based pagination and optional compact format.
-        
+
         Args:
             asset: The Asset model instance.
             timeframe: Candle timeframe (1T, 5T, 15T, 30T, 1H, 4H, 1D).
             limit: Maximum number of candles to return.
             cursor: ISO timestamp cursor for pagination.
             compact: If True, returns array format. If False, object format.
-        
+
         Returns:
             Response with candle data and pagination info.
-        
+
         Compact Format:
             When compact=True (default), returns candles as arrays:
             {
@@ -124,26 +133,32 @@ class CandleViewMixin:
         next_cursor = None
         if has_next and candles:
             last_ts = candles[-1]["timestamp"]
-            next_cursor = last_ts.isoformat() if hasattr(last_ts, "isoformat") else str(last_ts)
+            next_cursor = (
+                last_ts.isoformat() if hasattr(last_ts, "isoformat") else str(last_ts)
+            )
 
         # Build response based on format
         if compact:
             # Compact array format - ~60% smaller
             results = [self._candle_to_array(c) for c in candles]
-            return Response({
-                "columns": list(CANDLE_FIELDS),
-                "results": results,
-                "next_cursor": next_cursor,
-                "has_next": has_next,
-            })
+            return Response(
+                {
+                    "columns": list(CANDLE_FIELDS),
+                    "results": results,
+                    "next_cursor": next_cursor,
+                    "has_next": has_next,
+                }
+            )
         else:
             # Legacy object format
             results = [self._candle_to_dict(c) for c in candles]
-            return Response({
-                "results": results,
-                "next_cursor": next_cursor,
-                "has_next": has_next,
-            })
+            return Response(
+                {
+                    "results": results,
+                    "next_cursor": next_cursor,
+                    "has_next": has_next,
+                }
+            )
 
     def _query_candles_values(
         self,
@@ -154,18 +169,18 @@ class CandleViewMixin:
     ) -> list[dict]:
         """
         Query candles using .values() for reduced DB→Python transfer.
-        
+
         Using .values() instead of full model instances reduces:
         - Memory usage (no model instantiation overhead)
         - Data transfer (only selected columns)
         - Serialization time (already dict format)
-        
+
         Args:
             asset_id: Asset ID.
             timeframe: Candle timeframe.
             limit: Maximum records to return.
             cursor_dt: Cursor timestamp for pagination.
-        
+
         Returns:
             List of candle dicts with only required fields.
         """
@@ -183,15 +198,12 @@ class CandleViewMixin:
 
         # Use .values() to get only needed fields as dicts
         # This is more efficient than fetching full model instances
-        return list(
-            qs.order_by("-timestamp")
-            .values(*CANDLE_FIELDS)[:limit]
-        )
+        return list(qs.order_by("-timestamp").values(*CANDLE_FIELDS)[:limit])
 
     def _candle_to_array(self, candle: dict) -> list:
         """
         Convert candle dict to compact array format.
-        
+
         Array order matches CANDLE_FIELDS:
         [timestamp, open, high, low, close, volume, trade_count, vwap]
         """
@@ -225,7 +237,7 @@ class CandleViewMixin:
 def get_candles_v3(viewset, request, pk=None) -> Response:
     """
     Optimized candle retrieval endpoint with cursor pagination and compression.
-    
+
     Query Parameters:
         timeframe: Candle timeframe in minutes (1, 5, 15, 30, 60, 240, 1440).
                   Defaults to 1 (1-minute).
@@ -234,7 +246,7 @@ def get_candles_v3(viewset, request, pk=None) -> Response:
                 Returns candles with timestamp < cursor.
         format: Response format - "compact" (default) or "object".
                 Compact format reduces payload by ~60%.
-    
+
     Compact Response Format:
         {
             "columns": ["timestamp", "open", "high", "low", "close", "volume", "trade_count", "vwap"],
@@ -245,7 +257,7 @@ def get_candles_v3(viewset, request, pk=None) -> Response:
             "next_cursor": "2024-01-15T09:00:00+00:00",
             "has_next": true
         }
-    
+
     Object Response Format (format=object):
         {
             "results": [{"timestamp": "...", "open": "...", ...}],
@@ -301,16 +313,18 @@ def get_candles_v3(viewset, request, pk=None) -> Response:
 def get_estimated_count(asset_id: int, timeframe: str) -> int:
     """
     Get estimated count of candles using PostgreSQL statistics.
-    
+
     Much faster than COUNT(*) for large tables. Uses pg_class.reltuples
     with a filter estimation based on the query.
-    
+
     Note:
         This is an approximation. For exact counts, use COUNT(*)
         but be aware of performance implications.
     """
     # Get table name based on timeframe
-    table = "core_minute_candle" if timeframe == const.TF_1T else "core_aggregated_candle"
+    table = (
+        "core_minute_candle" if timeframe == const.TF_1T else "core_aggregated_candle"
+    )
 
     # Use a fast estimation query
     sql = """

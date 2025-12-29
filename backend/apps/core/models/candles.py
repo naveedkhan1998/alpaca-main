@@ -37,10 +37,10 @@ from main.const import AGGREGATED_TIMEFRAME_CHOICES, TIMEFRAME_CHOICES
 class BaseCandleMixin(models.Model):
     """
     Abstract base mixin for OHLCV candle data.
-    
+
     Provides the common fields for all candle types with proper
     decimal precision for financial data.
-    
+
     Attributes:
         open: Opening price of the candle period.
         high: Highest price during the candle period.
@@ -51,7 +51,7 @@ class BaseCandleMixin(models.Model):
         vwap: Volume-weighted average price (optional, from Alpaca).
         timestamp: Start time of the candle period.
         created_at: When this record was created.
-    
+
     Note:
         DecimalField with max_digits=18, decimal_places=8 supports:
         - Prices up to $9,999,999,999.99999999
@@ -128,16 +128,16 @@ class BaseCandleMixin(models.Model):
 class MinuteCandle(BaseCandleMixin):
     """
     1-minute OHLCV candle data.
-    
+
     This is the highest resolution candle data stored. Higher timeframe
     candles are aggregated from these. Designed for high-volume writes
     from real-time data streams.
-    
+
     Table Design:
     - Optimized for append-heavy workloads (BRIN index on timestamp)
     - Composite unique constraint prevents duplicates
     - Descending timestamp index for "most recent first" queries
-    
+
     Example:
         >>> candle = MinuteCandle.objects.create(
         ...     asset=asset,
@@ -193,22 +193,22 @@ class MinuteCandle(BaseCandleMixin):
 class AggregatedCandle(BaseCandleMixin):
     """
     Aggregated OHLCV candle data for timeframes > 1 minute.
-    
+
     Stores pre-computed aggregations for 5T, 15T, 30T, 1H, 4H, and 1D
     timeframes. These are materialized from MinuteCandle data for fast reads.
-    
+
     Table Design:
     - Separate from MinuteCandle to avoid index bloat
     - Timeframe discriminator for different aggregation levels
     - Lower volume than minute data, optimized for read-heavy workloads
-    
+
     Aggregation:
     - Open: First 1T open in the period
     - High: Maximum of all 1T highs
     - Low: Minimum of all 1T lows
     - Close: Last 1T close in the period
     - Volume: Sum of all 1T volumes
-    
+
     Example:
         >>> candle = AggregatedCandle.objects.create(
         ...     asset=asset,
@@ -273,11 +273,11 @@ class AggregatedCandle(BaseCandleMixin):
 class Candle(BaseCandleMixin):
     """
     DEPRECATED: Legacy candle model.
-    
+
     This model is kept for backward compatibility during the migration.
     New code should use MinuteCandle for 1T data and AggregatedCandle
     for higher timeframes.
-    
+
     Will be removed in a future release.
     """
 

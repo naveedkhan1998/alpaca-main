@@ -370,17 +370,19 @@ def fetch_historical_data(asset_id: int):
                         ts = datetime.fromisoformat(bar["t"].replace("Z", "+00:00"))
                         if not _is_market_hours(ts):
                             continue
-                        candles.append({
-                            "asset_id": asset.id,
-                            "timestamp": ts,
-                            "open": float(bar["o"]),
-                            "high": float(bar["h"]),
-                            "low": float(bar["l"]),
-                            "close": float(bar["c"]),
-                            "volume": int(bar.get("v", 0)),
-                            "trade_count": bar.get("n"),
-                            "vwap": bar.get("vw"),
-                        })
+                        candles.append(
+                            {
+                                "asset_id": asset.id,
+                                "timestamp": ts,
+                                "open": float(bar["o"]),
+                                "high": float(bar["h"]),
+                                "low": float(bar["l"]),
+                                "close": float(bar["c"]),
+                                "volume": int(bar.get("v", 0)),
+                                "trade_count": bar.get("n"),
+                                "vwap": bar.get("vw"),
+                            }
+                        )
 
                     if candles:
                         # Use repository for efficient bulk insert

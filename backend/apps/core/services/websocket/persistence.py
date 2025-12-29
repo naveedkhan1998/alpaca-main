@@ -16,16 +16,16 @@ if TYPE_CHECKING:
 class CandlePersistence:
     """
     Unified persistence layer for candle data.
-    
+
     Wraps the CandleRepository and integrates with the cache layer
     for real-time updates. This is the primary interface for the
     WebSocket client and aggregator.
-    
+
     Features:
     - PostgreSQL upserts for high-performance writes
     - Automatic cache invalidation on writes
     - Support for both minute and aggregated candles
-    
+
     Example:
         >>> persistence = CandlePersistence()
         >>> persistence.upsert_minutes([
@@ -40,6 +40,7 @@ class CandlePersistence:
         """Lazy-initialize the repository."""
         if self._repo is None:
             from apps.core.services.candle_repository import CandleRepository
+
             self._repo = CandleRepository()
         return self._repo
 
@@ -51,11 +52,11 @@ class CandlePersistence:
     ) -> int:
         """
         Upsert 1-minute candles.
-        
+
         Args:
             candles: List of candle dicts with asset_id, timestamp, OHLCV.
             mode: "delta" adds volume, "snapshot" replaces.
-        
+
         Returns:
             Number of rows affected.
         """
@@ -80,12 +81,12 @@ class CandlePersistence:
     ) -> int:
         """
         Upsert aggregated candles for a specific timeframe.
-        
+
         Args:
             timeframe: One of "5T", "15T", "30T", "1H", "4H", "1D".
             candles: List of candle dicts.
             mode: "snapshot" for aggregated (default).
-        
+
         Returns:
             Number of rows affected.
         """
@@ -109,13 +110,13 @@ class CandlePersistence:
     ) -> int:
         """
         Bulk insert minute candles (no update on conflict).
-        
+
         Use for historical backfill where data is known to be new.
-        
+
         Args:
             candles: List of candle dicts.
             ignore_conflicts: Whether to skip duplicates silently.
-        
+
         Returns:
             Number of rows inserted.
         """
@@ -142,13 +143,13 @@ class CandlePersistence:
     ) -> int:
         """
         Aggregate minute candles to a higher timeframe using SQL.
-        
+
         Args:
             asset_id: Asset to aggregate for.
             timeframe: Target timeframe.
             start: Start of aggregation window.
             end: End of aggregation window.
-        
+
         Returns:
             Number of aggregated candles created/updated.
         """
@@ -168,10 +169,10 @@ CandleRepository = CandlePersistence
 class LegacyCandleRepository:
     """
     Backward-compatible repository matching the old interface.
-    
+
     This is provided for gradual migration. New code should use
     CandlePersistence directly.
-    
+
     DEPRECATED: Will be removed in a future release.
     """
 
@@ -194,7 +195,7 @@ class LegacyCandleRepository:
     ) -> None:
         """
         Legacy method matching old interface.
-        
+
         Converts dict-keyed format to list format and delegates.
         """
         if not updates:
@@ -225,7 +226,7 @@ class LegacyCandleRepository:
     ) -> dict[tuple[int, datetime], int]:
         """
         Fetch minute candle IDs for given keys.
-        
+
         Note: This is less efficient than the new design which
         doesn't require minute ID tracking. Consider removing
         minute_candle_ids usage from higher-TF candles.

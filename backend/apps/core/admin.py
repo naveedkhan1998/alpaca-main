@@ -15,7 +15,7 @@ from apps.core.models import (
 @admin.register(MinuteCandle)
 class MinuteCandleAdmin(admin.ModelAdmin):
     """Admin for 1-minute candle data."""
-    
+
     list_display = ["asset", "timestamp", "open", "high", "low", "close", "volume"]
     list_filter = ["asset__asset_class"]
     search_fields = ["asset__symbol"]
@@ -28,8 +28,17 @@ class MinuteCandleAdmin(admin.ModelAdmin):
 @admin.register(AggregatedCandle)
 class AggregatedCandleAdmin(admin.ModelAdmin):
     """Admin for aggregated candle data (5T+)."""
-    
-    list_display = ["asset", "timeframe", "timestamp", "open", "high", "low", "close", "volume"]
+
+    list_display = [
+        "asset",
+        "timeframe",
+        "timestamp",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+    ]
     list_filter = ["timeframe", "asset__asset_class"]
     search_fields = ["asset__symbol"]
     date_hierarchy = "timestamp"

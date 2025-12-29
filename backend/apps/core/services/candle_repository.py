@@ -15,15 +15,15 @@ Performance Benefits:
 Usage:
 ------
     from apps.core.services.candle_repository import CandleRepository
-    
+
     repo = CandleRepository()
-    
+
     # Upsert minute candles
     repo.upsert_minute_candles([
         {"asset_id": 1, "timestamp": dt, "open": "150.25", ...},
         ...
     ])
-    
+
     # Upsert aggregated candles
     repo.upsert_aggregated_candles("1H", [...])
 """
@@ -47,14 +47,14 @@ logger = logging.getLogger(__name__)
 class CandleRepository:
     """
     High-performance repository for candle data persistence.
-    
+
     Uses PostgreSQL-native upserts for efficient batch operations.
     Supports both minute candles and aggregated (higher timeframe) candles.
-    
+
     Attributes:
         batch_size: Maximum number of records per INSERT statement.
                    Larger batches are more efficient but use more memory.
-    
+
     Example:
         >>> repo = CandleRepository()
         >>> repo.upsert_minute_candles([
@@ -80,7 +80,7 @@ class CandleRepository:
     ) -> int:
         """
         Upsert 1-minute candles using PostgreSQL ON CONFLICT.
-        
+
         Args:
             candles: List of candle dicts with keys:
                 - asset_id: int
@@ -93,10 +93,10 @@ class CandleRepository:
                 - trade_count: Optional[int]
                 - vwap: Optional[Decimal]
             mode: "delta" adds volume to existing, "snapshot" replaces.
-        
+
         Returns:
             Number of rows affected (inserted + updated).
-        
+
         SQL Strategy:
             INSERT INTO core_minute_candle (...)
             VALUES (...)
@@ -140,17 +140,19 @@ class CandleRepository:
 
         for candle in batch:
             placeholders.append("(%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())")
-            params.extend([
-                candle["asset_id"],
-                candle["timestamp"],
-                self._to_decimal(candle.get("open")),
-                self._to_decimal(candle.get("high")),
-                self._to_decimal(candle.get("low")),
-                self._to_decimal(candle.get("close")),
-                self._to_decimal(candle.get("volume", 0)),
-                candle.get("trade_count"),
-                self._to_decimal(candle.get("vwap")),
-            ])
+            params.extend(
+                [
+                    candle["asset_id"],
+                    candle["timestamp"],
+                    self._to_decimal(candle.get("open")),
+                    self._to_decimal(candle.get("high")),
+                    self._to_decimal(candle.get("low")),
+                    self._to_decimal(candle.get("close")),
+                    self._to_decimal(candle.get("volume", 0)),
+                    candle.get("trade_count"),
+                    self._to_decimal(candle.get("vwap")),
+                ]
+            )
 
         sql = f"""
             INSERT INTO core_minute_candle (
@@ -183,15 +185,15 @@ class CandleRepository:
     ) -> int:
         """
         Upsert aggregated candles for a specific timeframe.
-        
+
         Args:
             timeframe: One of "5T", "15T", "30T", "1H", "4H", "1D".
             candles: List of candle dicts (same structure as minute candles).
             mode: "delta" adds volume, "snapshot" replaces (default for aggregated).
-        
+
         Returns:
             Number of rows affected.
-        
+
         Note:
             For aggregated candles, "snapshot" mode is typically used since
             we're replacing the entire bucket with updated aggregations.
@@ -202,7 +204,9 @@ class CandleRepository:
         # Validate timeframe
         valid_timeframes = {"5T", "15T", "30T", "1H", "4H", "1D"}
         if timeframe not in valid_timeframes:
-            raise ValueError(f"Invalid timeframe: {timeframe}. Must be one of {valid_timeframes}")
+            raise ValueError(
+                f"Invalid timeframe: {timeframe}. Must be one of {valid_timeframes}"
+            )
 
         total_affected = 0
 
@@ -233,18 +237,20 @@ class CandleRepository:
 
         for candle in batch:
             placeholders.append("(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())")
-            params.extend([
-                candle["asset_id"],
-                timeframe,
-                candle["timestamp"],
-                self._to_decimal(candle.get("open")),
-                self._to_decimal(candle.get("high")),
-                self._to_decimal(candle.get("low")),
-                self._to_decimal(candle.get("close")),
-                self._to_decimal(candle.get("volume", 0)),
-                candle.get("trade_count"),
-                self._to_decimal(candle.get("vwap")),
-            ])
+            params.extend(
+                [
+                    candle["asset_id"],
+                    timeframe,
+                    candle["timestamp"],
+                    self._to_decimal(candle.get("open")),
+                    self._to_decimal(candle.get("high")),
+                    self._to_decimal(candle.get("low")),
+                    self._to_decimal(candle.get("close")),
+                    self._to_decimal(candle.get("volume", 0)),
+                    candle.get("trade_count"),
+                    self._to_decimal(candle.get("vwap")),
+                ]
+            )
 
         sql = f"""
             INSERT INTO core_aggregated_candle (
@@ -276,14 +282,14 @@ class CandleRepository:
     ) -> int:
         """
         Bulk insert minute candles (no update on conflict).
-        
+
         Use this for historical backfill where you know the data is new.
         Faster than upsert because no update logic is needed.
-        
+
         Args:
             candles: List of candle dicts.
             ignore_conflicts: If True, silently skip duplicates.
-        
+
         Returns:
             Number of rows inserted.
         """
@@ -315,17 +321,19 @@ class CandleRepository:
 
         for candle in batch:
             placeholders.append("(%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())")
-            params.extend([
-                candle["asset_id"],
-                candle["timestamp"],
-                self._to_decimal(candle.get("open")),
-                self._to_decimal(candle.get("high")),
-                self._to_decimal(candle.get("low")),
-                self._to_decimal(candle.get("close")),
-                self._to_decimal(candle.get("volume", 0)),
-                candle.get("trade_count"),
-                self._to_decimal(candle.get("vwap")),
-            ])
+            params.extend(
+                [
+                    candle["asset_id"],
+                    candle["timestamp"],
+                    self._to_decimal(candle.get("open")),
+                    self._to_decimal(candle.get("high")),
+                    self._to_decimal(candle.get("low")),
+                    self._to_decimal(candle.get("close")),
+                    self._to_decimal(candle.get("volume", 0)),
+                    candle.get("trade_count"),
+                    self._to_decimal(candle.get("vwap")),
+                ]
+            )
 
         sql = f"""
             INSERT INTO core_minute_candle (
@@ -348,16 +356,16 @@ class CandleRepository:
     ) -> int:
         """
         Aggregate minute candles to a higher timeframe using SQL.
-        
+
         Uses PostgreSQL's date_bin() function for efficient bucket alignment
         and aggregation entirely on the database side.
-        
+
         Args:
             asset_id: Asset to aggregate for.
             timeframe: Target timeframe (5T, 15T, 30T, 1H, 4H, 1D).
             start: Start of the aggregation window.
             end: End of the aggregation window.
-        
+
         Returns:
             Number of aggregated candles upserted.
         """
@@ -431,11 +439,12 @@ class CandleRepository:
 # Legacy compatibility layer
 # TODO: Remove after migration is complete
 
+
 @dataclass
 class LegacyCandleRepository:
     """
     Backward-compatible repository using the old Candle model.
-    
+
     This is provided for migration purposes. New code should use
     CandleRepository with the new MinuteCandle/AggregatedCandle models.
     """
@@ -450,7 +459,7 @@ class LegacyCandleRepository:
     ) -> None:
         """
         Legacy upsert method matching old interface.
-        
+
         Converts to new format and delegates to CandleRepository.
         """
         if not updates:
@@ -479,7 +488,7 @@ class LegacyCandleRepository:
     ) -> dict[tuple[int, datetime], int]:
         """
         Fetch minute candle IDs for given keys.
-        
+
         Note: This is less efficient than the new design which
         doesn't require minute ID tracking.
         """

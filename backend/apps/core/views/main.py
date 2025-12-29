@@ -23,7 +23,11 @@ from apps.core.models import (
     WatchList,
     WatchListAsset,
 )
-from apps.core.views.candle_views import get_candles_v3, get_estimated_count, CandleViewMixin
+from apps.core.views.candle_views import (
+    get_candles_v3,
+    get_estimated_count,
+    CandleViewMixin,
+)
 from apps.core.pagination import CandleBucketPagination, OffsetPagination
 from apps.core.serializers import (
     AggregatedCandleSerializer,
@@ -494,7 +498,7 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
     def candles_v2(self, request, pk=None):
         """
         Legacy candle endpoint with offset pagination.
-        
+
         Deprecated: Use candles_v3 for better performance with cursor pagination.
         """
         asset = self.get_object()
@@ -528,10 +532,13 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
         if tf_label == _const.TF_1T:
             base_qs = MinuteCandle.objects.filter(asset_id=asset.id)
         else:
-            base_qs = AggregatedCandle.objects.filter(asset_id=asset.id, timeframe=tf_label)
-        
+            base_qs = AggregatedCandle.objects.filter(
+                asset_id=asset.id, timeframe=tf_label
+            )
+
         # Use estimated count to avoid COUNT(*) overhead
         from apps.core.views.candle_views import get_estimated_count
+
         total = get_estimated_count(asset.id, tf_label)
 
         candles_qs = base_qs.order_by("-timestamp")[offset : offset + limit]
@@ -564,13 +571,13 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
     def candles_v3(self, request, pk=None):
         """
         Optimized candle endpoint with Redis caching and cursor pagination.
-        
+
         Query Parameters:
             timeframe: Candle timeframe in minutes (1, 5, 15, 30, 60, 240, 1440).
             limit: Maximum candles to return (default 1000, max 5000).
             cursor: ISO 8601 timestamp for pagination.
             cache: Whether to use cache (default "true").
-        
+
         Returns:
             {
                 "results": [...],
@@ -580,7 +587,6 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
             }
         """
         return get_candles_v3(self, request, pk)
-
 
 
 class WatchListViewSet(viewsets.ModelViewSet):

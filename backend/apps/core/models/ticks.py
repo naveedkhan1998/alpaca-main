@@ -8,11 +8,11 @@ from django.db import models
 class Tick(models.Model):
     """
     Real-time tick/trade data from Alpaca stream.
-    
+
     Represents individual trade executions received via WebSocket.
     Used for aggregating into 1-minute candles and for high-frequency
     analysis when needed.
-    
+
     Attributes:
         asset: The asset this tick is for.
         alpaca_trade_id: Alpaca's unique trade identifier.
@@ -24,7 +24,7 @@ class Tick(models.Model):
         timestamp: When the trade occurred.
         received_at: When we received this tick.
         used: Whether this tick has been processed into a candle.
-    
+
     Note:
         Ticks are typically short-lived and can be pruned after
         aggregation into minute candles.
