@@ -270,7 +270,7 @@ class TimeframeAggregator:
             return None
         if isinstance(value, Decimal):
             return value
-        if isinstance(value, (int, float)):
+        if isinstance(value, (int | float)):
             return Decimal(str(value))
         if isinstance(value, str):
             return Decimal(value)

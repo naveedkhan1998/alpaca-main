@@ -161,7 +161,7 @@ class CandleRepository:
             )
             VALUES {", ".join(placeholders)}
             ON CONFLICT (asset_id, timestamp) DO UPDATE SET
-                open = CASE 
+                open = CASE
                     WHEN core_minute_candle.open IS NULL THEN EXCLUDED.open
                     ELSE core_minute_candle.open
                 END,
@@ -259,7 +259,7 @@ class CandleRepository:
             )
             VALUES {", ".join(placeholders)}
             ON CONFLICT (asset_id, timeframe, timestamp) DO UPDATE SET
-                open = CASE 
+                open = CASE
                     WHEN core_aggregated_candle.open IS NULL THEN EXCLUDED.open
                     ELSE core_aggregated_candle.open
                 END,
@@ -392,7 +392,7 @@ class CandleRepository:
             INSERT INTO core_aggregated_candle (
                 asset_id, timeframe, timestamp, open, high, low, close, volume, trade_count, vwap, created_at
             )
-            SELECT 
+            SELECT
                 asset_id,
                 %s as timeframe,
                 date_bin(%s::interval, timestamp, %s::timestamptz) as bucket,
@@ -430,7 +430,7 @@ class CandleRepository:
             return None
         if isinstance(value, Decimal):
             return value
-        if isinstance(value, (int, float)):
+        if isinstance(value, (int | float)):
             return Decimal(str(value))
         if isinstance(value, str):
             return Decimal(value)
