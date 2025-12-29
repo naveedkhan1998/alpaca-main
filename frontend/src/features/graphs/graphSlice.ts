@@ -260,8 +260,9 @@ export const selectIsFullscreen = (state: RootState) =>
   state.graph.isFullscreen;
 
 // Indicator system
-export const selectIndicatorInstances = (state: RootState): IndicatorInstance[] =>
-  state.graph.indicatorInstances;
+export const selectIndicatorInstances = (
+  state: RootState
+): IndicatorInstance[] => state.graph.indicatorInstances;
 
 export const selectIndicatorInstanceById =
   (instanceId: string) =>
@@ -277,8 +278,12 @@ export const selectIndicatorInstancesByType =
       (inst: IndicatorInstance) => inst.indicatorId === indicatorId
     );
 
-export const selectVisibleIndicators = (state: RootState): IndicatorInstance[] =>
-  state.graph.indicatorInstances.filter((inst: IndicatorInstance) => inst.visible);
+export const selectVisibleIndicators = (
+  state: RootState
+): IndicatorInstance[] =>
+  state.graph.indicatorInstances.filter(
+    (inst: IndicatorInstance) => inst.visible
+  );
 
 export const selectHasIndicatorOfType =
   (indicatorId: IndicatorId) =>

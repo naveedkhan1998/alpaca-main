@@ -101,7 +101,7 @@ const MainChart: React.FC<MainChartProps> = memo(
     const overlaySeriesRefs = useRef<Map<string, ISeriesApi<'Line'>[]>>(
       new Map()
     );
-    
+
     // Keep volumeData in ref for chart initialization
     const volumeDataRef = useRef(volumeData);
     const showVolumeRef = useRef(showVolume);
@@ -193,7 +193,8 @@ const MainChart: React.FC<MainChartProps> = memo(
 
         // Helper to format volume with K/M/B suffixes
         const formatVolume = (vol: number): string => {
-          if (vol >= 1_000_000_000) return (vol / 1_000_000_000).toFixed(2) + 'B';
+          if (vol >= 1_000_000_000)
+            return (vol / 1_000_000_000).toFixed(2) + 'B';
           if (vol >= 1_000_000) return (vol / 1_000_000).toFixed(2) + 'M';
           if (vol >= 1_000) return (vol / 1_000).toFixed(2) + 'K';
           return vol.toFixed(0);
@@ -210,14 +211,30 @@ const MainChart: React.FC<MainChartProps> = memo(
                 { label: 'H', value: high.toFixed(2), color: '#26a69a' },
                 { label: 'L', value: low.toFixed(2), color: '#ef5350' },
                 { label: 'C', value: close.toFixed(2), color: '#F59E0B' },
-                ...(showVolumeRef.current && volume !== undefined ? [{ label: 'V', value: formatVolume(volume), color: '#7c3aed' }] : []),
+                ...(showVolumeRef.current && volume !== undefined
+                  ? [
+                      {
+                        label: 'V',
+                        value: formatVolume(volume),
+                        color: '#7c3aed',
+                      },
+                    ]
+                  : []),
               ]
             : [
                 { label: 'Open', value: open.toFixed(2), color: '#3B82F6' },
                 { label: 'High', value: high.toFixed(2), color: '#26a69a' },
                 { label: 'Low', value: low.toFixed(2), color: '#ef5350' },
                 { label: 'Close', value: close.toFixed(2), color: '#F59E0B' },
-                ...(showVolumeRef.current && volume !== undefined ? [{ label: 'Vol', value: formatVolume(volume), color: '#7c3aed' }] : []),
+                ...(showVolumeRef.current && volume !== undefined
+                  ? [
+                      {
+                        label: 'Vol',
+                        value: formatVolume(volume),
+                        color: '#7c3aed',
+                      },
+                    ]
+                  : []),
               ];
 
           // Build HTML string instead of creating elements
@@ -250,125 +267,150 @@ const MainChart: React.FC<MainChartProps> = memo(
     }, [updateLegend]);
 
     // Update overlay indicators legend
-    const updateOverlayLegend = useCallback(
-      (param: MouseEventParams<Time>) => {
-        const overlaySection = overlaySectionRef.current;
-        if (!overlaySection) return;
+    const updateOverlayLegend = useCallback((param: MouseEventParams<Time>) => {
+      const overlaySection = overlaySectionRef.current;
+      if (!overlaySection) return;
 
-        const indicators = overlayIndicatorsRef.current;
-        if (!indicators || indicators.length === 0) {
-          overlaySection.style.display = 'none';
-          return;
-        }
+      const indicators = overlayIndicatorsRef.current;
+      if (!indicators || indicators.length === 0) {
+        overlaySection.style.display = 'none';
+        return;
+      }
 
-        overlaySection.style.display = 'flex';
+      overlaySection.style.display = 'flex';
 
-        // Build HTML for each overlay indicator with settings icon
-        const overlayItems: string[] = [];
+      // Build HTML for each overlay indicator with settings icon
+      const overlayItems: string[] = [];
 
-        indicators.forEach((indicator) => {
-          const { instance, definition, output } = indicator;
-          if (!output) return;
+      indicators.forEach(indicator => {
+        const { instance, definition, output } = indicator;
+        if (!output) return;
 
-          const displayLabel =
-            instance.label ||
-            `${definition.shortName}(${instance.config.period || ''})`;
+        const displayLabel =
+          instance.label ||
+          `${definition.shortName}(${instance.config.period || ''})`;
 
-          // Get values based on output type
-          let valueHtml = '';
+        // Get values based on output type
+        let valueHtml = '';
 
-          if (output.type === 'line' && output.data.length > 0) {
-            // Single line indicator
+        if (output.type === 'line' && output.data.length > 0) {
+          // Single line indicator
+          const color =
+            (instance.config.color as string) ||
+            definition.outputs[0]?.defaultColor ||
+            '#FBBF24';
+
+          // Try to get value at crosshair time, fallback to last value
+          const seriesArr = overlaySeriesRefs.current.get(instance.instanceId);
+          let value: number | undefined;
+          if (seriesArr && seriesArr[0] && param.seriesData) {
+            const seriesData = param.seriesData.get(seriesArr[0]) as
+              | LineData
+              | undefined;
+            value = seriesData?.value;
+          }
+          if (value === undefined) {
+            value = output.data[output.data.length - 1]?.value;
+          }
+          if (value !== undefined) {
+            valueHtml = `<span style="color: ${color}" class="font-medium">${value.toFixed(2)}</span>`;
+          }
+        } else if (output.type === 'band') {
+          // Band indicator
+          const upperColor =
+            (instance.config.upperColor as string) ||
+            definition.outputs.find(o => o.key === 'upper')?.defaultColor ||
+            '#FBBF24';
+          const middleColor =
+            (instance.config.middleColor as string) ||
+            definition.outputs.find(o => o.key === 'middle')?.defaultColor ||
+            '#60A5FA';
+          const lowerColor =
+            (instance.config.lowerColor as string) ||
+            definition.outputs.find(o => o.key === 'lower')?.defaultColor ||
+            '#EF4444';
+
+          const seriesArr = overlaySeriesRefs.current.get(instance.instanceId);
+          let upperVal: number | undefined;
+          let middleVal: number | undefined;
+          let lowerVal: number | undefined;
+
+          if (seriesArr && seriesArr.length >= 3 && param.seriesData) {
+            const upperData = param.seriesData.get(seriesArr[0]) as
+              | LineData
+              | undefined;
+            const middleData = param.seriesData.get(seriesArr[1]) as
+              | LineData
+              | undefined;
+            const lowerData = param.seriesData.get(seriesArr[2]) as
+              | LineData
+              | undefined;
+            upperVal = upperData?.value;
+            middleVal = middleData?.value;
+            lowerVal = lowerData?.value;
+          }
+
+          // Fallback to last values
+          if (upperVal === undefined && output.upper.length > 0) {
+            upperVal = output.upper[output.upper.length - 1]?.value;
+          }
+          if (middleVal === undefined && output.middle.length > 0) {
+            middleVal = output.middle[output.middle.length - 1]?.value;
+          }
+          if (lowerVal === undefined && output.lower.length > 0) {
+            lowerVal = output.lower[output.lower.length - 1]?.value;
+          }
+
+          if (
+            upperVal !== undefined &&
+            middleVal !== undefined &&
+            lowerVal !== undefined
+          ) {
+            valueHtml = `<span style="color: ${upperColor}" class="font-medium">${upperVal.toFixed(2)}</span> <span style="color: ${middleColor}" class="font-medium">${middleVal.toFixed(2)}</span> <span style="color: ${lowerColor}" class="font-medium">${lowerVal.toFixed(2)}</span>`;
+          }
+        } else if (output.type === 'multi-line') {
+          // Multi-line indicator
+          const parts: string[] = [];
+          const seriesArr = overlaySeriesRefs.current.get(instance.instanceId);
+
+          definition.outputs.forEach((outputDef, idx) => {
+            const colorKey = outputDef.key + 'Color';
             const color =
-              (instance.config.color as string) ||
-              definition.outputs[0]?.defaultColor ||
-              '#FBBF24';
+              (instance.config[colorKey] as string) ||
+              (instance.config[outputDef.key] as string) ||
+              outputDef.defaultColor ||
+              '#888';
 
-            // Try to get value at crosshair time, fallback to last value
-            const seriesArr = overlaySeriesRefs.current.get(instance.instanceId);
             let value: number | undefined;
-            if (seriesArr && seriesArr[0] && param.seriesData) {
-              const seriesData = param.seriesData.get(seriesArr[0]) as LineData | undefined;
+            if (seriesArr && seriesArr[idx] && param.seriesData) {
+              const seriesData = param.seriesData.get(seriesArr[idx]) as
+                | LineData
+                | undefined;
               value = seriesData?.value;
             }
             if (value === undefined) {
-              value = output.data[output.data.length - 1]?.value;
-            }
-            if (value !== undefined) {
-              valueHtml = `<span style="color: ${color}" class="font-medium">${value.toFixed(2)}</span>`;
-            }
-          } else if (output.type === 'band') {
-            // Band indicator
-            const upperColor = (instance.config.upperColor as string) || definition.outputs.find(o => o.key === 'upper')?.defaultColor || '#FBBF24';
-            const middleColor = (instance.config.middleColor as string) || definition.outputs.find(o => o.key === 'middle')?.defaultColor || '#60A5FA';
-            const lowerColor = (instance.config.lowerColor as string) || definition.outputs.find(o => o.key === 'lower')?.defaultColor || '#EF4444';
-
-            const seriesArr = overlaySeriesRefs.current.get(instance.instanceId);
-            let upperVal: number | undefined;
-            let middleVal: number | undefined;
-            let lowerVal: number | undefined;
-
-            if (seriesArr && seriesArr.length >= 3 && param.seriesData) {
-              const upperData = param.seriesData.get(seriesArr[0]) as LineData | undefined;
-              const middleData = param.seriesData.get(seriesArr[1]) as LineData | undefined;
-              const lowerData = param.seriesData.get(seriesArr[2]) as LineData | undefined;
-              upperVal = upperData?.value;
-              middleVal = middleData?.value;
-              lowerVal = lowerData?.value;
-            }
-
-            // Fallback to last values
-            if (upperVal === undefined && output.upper.length > 0) {
-              upperVal = output.upper[output.upper.length - 1]?.value;
-            }
-            if (middleVal === undefined && output.middle.length > 0) {
-              middleVal = output.middle[output.middle.length - 1]?.value;
-            }
-            if (lowerVal === undefined && output.lower.length > 0) {
-              lowerVal = output.lower[output.lower.length - 1]?.value;
-            }
-
-            if (upperVal !== undefined && middleVal !== undefined && lowerVal !== undefined) {
-              valueHtml = `<span style="color: ${upperColor}" class="font-medium">${upperVal.toFixed(2)}</span> <span style="color: ${middleColor}" class="font-medium">${middleVal.toFixed(2)}</span> <span style="color: ${lowerColor}" class="font-medium">${lowerVal.toFixed(2)}</span>`;
-            }
-          } else if (output.type === 'multi-line') {
-            // Multi-line indicator
-            const parts: string[] = [];
-            const seriesArr = overlaySeriesRefs.current.get(instance.instanceId);
-            
-            definition.outputs.forEach((outputDef, idx) => {
-              const colorKey = outputDef.key + 'Color';
-              const color =
-                (instance.config[colorKey] as string) ||
-                (instance.config[outputDef.key] as string) ||
-                outputDef.defaultColor || '#888';
-
-              let value: number | undefined;
-              if (seriesArr && seriesArr[idx] && param.seriesData) {
-                const seriesData = param.seriesData.get(seriesArr[idx]) as LineData | undefined;
-                value = seriesData?.value;
-              }
-              if (value === undefined) {
-                const data = output.series[outputDef.key];
-                if (data && data.length > 0) {
-                  const lastPoint = data[data.length - 1];
-                  if ('value' in lastPoint) {
-                    value = lastPoint.value;
-                  }
+              const data = output.series[outputDef.key];
+              if (data && data.length > 0) {
+                const lastPoint = data[data.length - 1];
+                if ('value' in lastPoint) {
+                  value = lastPoint.value;
                 }
               }
-              if (value !== undefined) {
-                parts.push(`<span style="color: ${color}" class="font-medium">${value.toFixed(2)}</span>`);
-              }
-            });
-            valueHtml = parts.join(' ');
-          }
+            }
+            if (value !== undefined) {
+              parts.push(
+                `<span style="color: ${color}" class="font-medium">${value.toFixed(2)}</span>`
+              );
+            }
+          });
+          valueHtml = parts.join(' ');
+        }
 
-          // Build the indicator item - compact inline style with settings and remove icons on right
-          const settingsIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path fill-rule="evenodd" d="M8.34 1.804A1 1 0 019.32 1h1.36a1 1 0 01.98.804l.21 1.042a5.5 5.5 0 011.46.843l1.01-.344a1 1 0 011.19.447l.68 1.178a1 1 0 01-.21 1.25l-.8.703a5.5 5.5 0 010 1.686l.8.704a1 1 0 01.21 1.25l-.68 1.177a1 1 0 01-1.19.448l-1.01-.345a5.5 5.5 0 01-1.46.844l-.21 1.041a1 1 0 01-.98.804H9.32a1 1 0 01-.98-.804l-.21-1.041a5.5 5.5 0 01-1.46-.844l-1.01.345a1 1 0 01-1.19-.448l-.68-1.177a1 1 0 01.21-1.25l.8-.704a5.5 5.5 0 010-1.686l-.8-.703a1 1 0 01-.21-1.25l.68-1.178a1 1 0 011.19-.447l1.01.344a5.5 5.5 0 011.46-.843l.21-1.042zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>`;
-          const removeIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>`;
+        // Build the indicator item - compact inline style with settings and remove icons on right
+        const settingsIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path fill-rule="evenodd" d="M8.34 1.804A1 1 0 019.32 1h1.36a1 1 0 01.98.804l.21 1.042a5.5 5.5 0 011.46.843l1.01-.344a1 1 0 011.19.447l.68 1.178a1 1 0 01-.21 1.25l-.8.703a5.5 5.5 0 010 1.686l.8.704a1 1 0 01.21 1.25l-.68 1.177a1 1 0 01-1.19.448l-1.01-.345a5.5 5.5 0 01-1.46.844l-.21 1.041a1 1 0 01-.98.804H9.32a1 1 0 01-.98-.804l-.21-1.041a5.5 5.5 0 01-1.46-.844l-1.01.345a1 1 0 01-1.19-.448l-.68-1.177a1 1 0 01.21-1.25l.8-.704a5.5 5.5 0 010-1.686l-.8-.703a1 1 0 01-.21-1.25l.68-1.178a1 1 0 011.19-.447l1.01.344a5.5 5.5 0 011.46-.843l.21-1.042zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>`;
+        const removeIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>`;
 
-          overlayItems.push(`
+        overlayItems.push(`
             <div class="inline-flex items-center gap-1 group/ind">
               <span class="font-semibold text-muted-foreground">${displayLabel}</span>
               ${valueHtml}
@@ -384,37 +426,35 @@ const MainChart: React.FC<MainChartProps> = memo(
               >${removeIconSvg}</button>
             </div>
           `);
+      });
+
+      const html = overlayItems.join('');
+      if (overlaySection.innerHTML !== html) {
+        overlaySection.innerHTML = html;
+
+        // Add click handlers for settings buttons
+        overlaySection.querySelectorAll('[data-config-id]').forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const instanceId = (btn as HTMLElement).dataset.configId;
+            if (instanceId) {
+              openConfigRef.current(instanceId);
+            }
+          });
         });
 
-        const html = overlayItems.join('');
-        if (overlaySection.innerHTML !== html) {
-          overlaySection.innerHTML = html;
-
-          // Add click handlers for settings buttons
-          overlaySection.querySelectorAll('[data-config-id]').forEach((btn) => {
-            btn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              const instanceId = (btn as HTMLElement).dataset.configId;
-              if (instanceId) {
-                openConfigRef.current(instanceId);
-              }
-            });
+        // Add click handlers for remove buttons
+        overlaySection.querySelectorAll('[data-remove-id]').forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const instanceId = (btn as HTMLElement).dataset.removeId;
+            if (instanceId) {
+              removeIndicatorRef.current(instanceId);
+            }
           });
-
-          // Add click handlers for remove buttons
-          overlaySection.querySelectorAll('[data-remove-id]').forEach((btn) => {
-            btn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              const instanceId = (btn as HTMLElement).dataset.removeId;
-              if (instanceId) {
-                removeIndicatorRef.current(instanceId);
-              }
-            });
-          });
-        }
-      },
-      []
-    );
+        });
+      }
+    }, []);
 
     // Keep updateOverlayLegend in ref for crosshair callback
     const updateOverlayLegendRef = useRef(updateOverlayLegend);
@@ -471,7 +511,8 @@ const MainChart: React.FC<MainChartProps> = memo(
 
       // Overlay indicators section - inside the legend but as a separate row
       const overlaySection = document.createElement('div');
-      overlaySection.className = 'flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs';
+      overlaySection.className =
+        'flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs';
       overlaySection.style.display = 'none';
       legendContainer.appendChild(overlaySection);
       overlaySectionRef.current = overlaySection;
@@ -487,25 +528,29 @@ const MainChart: React.FC<MainChartProps> = memo(
         rafId = requestAnimationFrame(() => {
           const data = param.seriesData.get(seriesRef.current!);
           // Get volume data if available
-          const volumeData = volumeSeriesRef.current 
-            ? param.seriesData.get(volumeSeriesRef.current) as HistogramData<Time> | undefined
+          const volumeData = volumeSeriesRef.current
+            ? (param.seriesData.get(volumeSeriesRef.current) as
+                | HistogramData<Time>
+                | undefined)
             : undefined;
           const volume = volumeData?.value;
-          
+
           if (data) {
             updateLegendRef.current(data, param.time, volume);
           } else if (seriesDataRef.current.length > 0) {
-            const lastCandle = seriesDataRef.current[seriesDataRef.current.length - 1];
+            const lastCandle =
+              seriesDataRef.current[seriesDataRef.current.length - 1];
             // Get last volume from volumeDataRef
-            const lastVolume = volumeDataRef.current && volumeDataRef.current.length > 0 
-              ? volumeDataRef.current[volumeDataRef.current.length - 1]?.value 
-              : undefined;
+            const lastVolume =
+              volumeDataRef.current && volumeDataRef.current.length > 0
+                ? volumeDataRef.current[volumeDataRef.current.length - 1]?.value
+                : undefined;
             updateLegendRef.current(lastCandle, lastCandle.time, lastVolume);
           }
-          
+
           // Update overlay indicators legend
           updateOverlayLegendRef.current(param);
-          
+
           rafId = null;
         });
       });
@@ -523,18 +568,28 @@ const MainChart: React.FC<MainChartProps> = memo(
       // Create initial series and set data if available
       // This ensures data is displayed even if it arrived before chart initialization
       if (seriesDataRef.current.length > 0) {
-        const series = createSeriesForType(chart, prevChartTypeRef.current, modeRef.current, seriesDataRef.current as any);
+        const series = createSeriesForType(
+          chart,
+          prevChartTypeRef.current,
+          modeRef.current,
+          seriesDataRef.current as any
+        );
         seriesRef.current = series;
         series.setData(seriesDataRef.current as any);
         prevSeriesDataLengthRef.current = seriesDataRef.current.length;
-        
-        const lastPoint = seriesDataRef.current[seriesDataRef.current.length - 1];
+
+        const lastPoint =
+          seriesDataRef.current[seriesDataRef.current.length - 1];
         lastDataTimeRef.current = lastPoint.time;
         lastDataPointRef.current = { ...lastPoint };
       }
 
       // Create volume series overlay if data is available (TradingView style)
-      if (showVolumeRef.current && volumeDataRef.current && volumeDataRef.current.length > 0) {
+      if (
+        showVolumeRef.current &&
+        volumeDataRef.current &&
+        volumeDataRef.current.length > 0
+      ) {
         const volumeSeries = chart.addSeries(HistogramSeries, {
           priceFormat: { type: 'volume' },
           priceScaleId: 'volume',
@@ -783,7 +838,7 @@ const MainChart: React.FC<MainChartProps> = memo(
             (instance.config.color as string) ||
             definition.outputs[0]?.defaultColor ||
             '#FBBF24';
-            
+
           if (!seriesArr || seriesArr.length === 0) {
             const series = mainChartRef.current!.addSeries(LineSeries, {
               color: color,

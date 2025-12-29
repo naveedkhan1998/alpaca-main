@@ -121,7 +121,9 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                   className="h-8 gap-2"
                   onClick={() => toggleReplay(!replayEnabled)}
                 >
-                  <HiPlay className={`w-4 h-4 ${replayEnabled ? 'text-primary' : ''}`} />
+                  <HiPlay
+                    className={`w-4 h-4 ${replayEnabled ? 'text-primary' : ''}`}
+                  />
                   {!isMobile && (
                     <span className="text-xs">
                       {replayEnabled ? 'Replay On' : 'Replay'}

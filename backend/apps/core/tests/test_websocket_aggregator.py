@@ -4,7 +4,7 @@ from unittest.mock import Mock
 from django.utils import timezone
 
 from apps.core.services.websocket.aggregator import TimeframeAggregator
-from apps.core.services.websocket.persistence import CandleRepository
+from apps.core.services.websocket.persistence import CandlePersistence
 from apps.core.services.websocket.utils import floor_to_bucket
 from main import const
 
@@ -14,7 +14,7 @@ class TestTimeframeAggregator:
 
     def setup_method(self):
         """Set up test data."""
-        self.mock_repo = Mock(spec=CandleRepository)
+        self.mock_repo = Mock(spec=CandlePersistence)
         self.mock_backfill = Mock()
         self.mock_logger = Mock()
 
@@ -30,7 +30,7 @@ class TestTimeframeAggregator:
         touched = self.aggregator.rollup_from_minutes({})
 
         assert touched == {}
-        self.mock_repo.save_candles.assert_not_called()
+        self.mock_repo.upsert_aggregated.assert_not_called()
 
     def test_rollup_from_minutes_single_candle(self):
         """Test rollup with single 1T candle."""
@@ -174,7 +174,7 @@ class TestTimeframeAggregator:
         latest_ts = timezone.now()
         self.aggregator.persist_open({}, latest_ts)
 
-        self.mock_repo.save_candles.assert_not_called()
+        self.mock_repo.upsert_aggregated.assert_not_called()
 
     def test_persist_open_with_touched(self):
         """Test persist_open with touched timeframes."""
@@ -197,21 +197,14 @@ class TestTimeframeAggregator:
         touched = {const.TF_1H: {(asset_id, bucket_ts)}}
         self.aggregator.persist_open(touched, ts)
 
-        # Should call save_candles
-        self.mock_repo.save_candles.assert_called_once_with(
-            const.TF_1H,
-            {
-                (asset_id, bucket_ts): {
-                    "open": 100.0,
-                    "high": 105.0,
-                    "low": 95.0,
-                    "close": 102.0,
-                    "volume": 1000,
-                }
-            },
-            write_mode="snapshot",
-            logger=self.mock_logger,
-        )
+        # Should call upsert_aggregated
+        self.mock_repo.upsert_aggregated.assert_called_once()
+        call_args = self.mock_repo.upsert_aggregated.call_args
+        assert call_args[0][0] == const.TF_1H  # timeframe
+        assert len(call_args[0][1]) == 1  # one candle
+        candle = call_args[0][1][0]
+        assert candle["asset_id"] == asset_id
+        assert candle["timestamp"] == bucket_ts
 
     def test_persist_open_backfill_not_complete(self):
         """Test persist_open when backfill is not complete."""
@@ -234,8 +227,8 @@ class TestTimeframeAggregator:
         touched = {const.TF_1H: {(asset_id, bucket_ts)}}
         self.aggregator.persist_open(touched, ts)
 
-        # Should not call save_candles
-        self.mock_repo.save_candles.assert_not_called()
+        # Should not call upsert_aggregated
+        self.mock_repo.upsert_aggregated.assert_not_called()
 
     def test_persist_open_bucket_not_open(self):
         """Test persist_open when bucket end time is before latest timestamp."""
@@ -258,8 +251,8 @@ class TestTimeframeAggregator:
         touched = {const.TF_1H: {(asset_id, bucket_ts)}}
         self.aggregator.persist_open(touched, ts)
 
-        # Should not call save_candles since bucket is closed
-        self.mock_repo.save_candles.assert_not_called()
+        # Should not call upsert_aggregated since bucket is closed
+        self.mock_repo.upsert_aggregated.assert_not_called()
 
     def test_persist_open_throttling(self):
         """Test that persist_open throttles calls."""
@@ -283,18 +276,18 @@ class TestTimeframeAggregator:
 
         # First call should persist
         self.aggregator.persist_open(touched, ts)
-        assert self.mock_repo.save_candles.call_count == 1
+        assert self.mock_repo.upsert_aggregated.call_count == 1
 
         # Second call immediately after should be throttled
         self.aggregator.persist_open(touched, ts)
-        assert self.mock_repo.save_candles.call_count == 1  # Still 1
+        assert self.mock_repo.upsert_aggregated.call_count == 1  # Still 1
 
     def test_flush_closed_no_data(self):
         """Test flush_closed with no accumulator data."""
         latest_ts = timezone.now()
         self.aggregator.flush_closed(latest_ts)
 
-        self.mock_repo.save_candles.assert_not_called()
+        self.mock_repo.upsert_aggregated.assert_not_called()
 
     def test_flush_closed_with_closed_buckets(self):
         """Test flush_closed with buckets that have ended."""
@@ -316,21 +309,14 @@ class TestTimeframeAggregator:
 
         self.aggregator.flush_closed(latest_ts)
 
-        # Should call save_candles and remove from accumulator
-        self.mock_repo.save_candles.assert_called_once_with(
-            const.TF_1H,
-            {
-                (asset_id, bucket_ts): {
-                    "open": 100.0,
-                    "high": 105.0,
-                    "low": 95.0,
-                    "close": 102.0,
-                    "volume": 1000,
-                }
-            },
-            write_mode="snapshot",
-            logger=self.mock_logger,
-        )
+        # Should call upsert_aggregated and remove from accumulator
+        self.mock_repo.upsert_aggregated.assert_called_once()
+        call_args = self.mock_repo.upsert_aggregated.call_args
+        assert call_args[0][0] == const.TF_1H  # timeframe
+        assert len(call_args[0][1]) == 1  # one candle
+        candle = call_args[0][1][0]
+        assert candle["asset_id"] == asset_id
+        assert candle["timestamp"] == bucket_ts
 
         # Should be removed from accumulator
         assert (asset_id, bucket_ts) not in self.aggregator._tf_acc[const.TF_1H]
@@ -355,8 +341,8 @@ class TestTimeframeAggregator:
 
         self.aggregator.flush_closed(latest_ts)
 
-        # Should not call save_candles and should remove from accumulator
-        self.mock_repo.save_candles.assert_not_called()
+        # Should not call upsert_aggregated and should remove from accumulator
+        self.mock_repo.upsert_aggregated.assert_not_called()
         assert (asset_id, bucket_ts) not in self.aggregator._tf_acc[const.TF_1H]
 
     def test_flush_closed_open_buckets_untouched(self):
@@ -389,10 +375,12 @@ class TestTimeframeAggregator:
         self.aggregator.flush_closed(latest_ts)
 
         # Should only flush closed bucket
-        self.mock_repo.save_candles.assert_called_once()
-        saved_data = self.mock_repo.save_candles.call_args[0][1]
-        assert (asset_id, closed_bucket) in saved_data
-        assert (asset_id, open_bucket) not in saved_data
+        self.mock_repo.upsert_aggregated.assert_called_once()
+        call_args = self.mock_repo.upsert_aggregated.call_args
+        candles = call_args[0][1]
+        saved_keys = {(c["asset_id"], c["timestamp"]) for c in candles}
+        assert (asset_id, closed_bucket) in saved_keys
+        assert (asset_id, open_bucket) not in saved_keys
 
         # Open bucket should remain
         assert (asset_id, open_bucket) in self.aggregator._tf_acc[const.TF_1H]

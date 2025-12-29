@@ -57,7 +57,10 @@ interface UseIndicatorsReturn {
   panelIndicators: CalculatedIndicator[];
 
   /** Add a new indicator instance */
-  addIndicator: (indicatorId: IndicatorId, config?: Partial<IndicatorConfig>) => string;
+  addIndicator: (
+    indicatorId: IndicatorId,
+    config?: Partial<IndicatorConfig>
+  ) => string;
 
   /** Remove an indicator instance */
   removeIndicator: (instanceId: string) => void;
@@ -94,13 +97,16 @@ const getCandleFingerprint = (candle: Candle | undefined): string | null => {
 /**
  * Convert candles to OHLCV format for indicator calculations - with caching
  */
-function candlesToOHLCV(candles: Candle[], cacheRef: React.MutableRefObject<OHLCVCache | null>): OHLCVData[] {
+function candlesToOHLCV(
+  candles: Candle[],
+  cacheRef: React.MutableRefObject<OHLCVCache | null>
+): OHLCVData[] {
   const candleCount = candles.length;
   const firstDate = candleCount > 0 ? candles[0].date : null;
   const lastDate = candleCount > 0 ? candles[candleCount - 1].date : null;
   // Track latest candle values (candles[0] is most recent in descending order)
   const latestCandleFingerprint = getCandleFingerprint(candles[0]);
-  
+
   // Check if cache is valid - also check if latest candle values changed (for realtime)
   if (
     cacheRef.current &&
@@ -127,7 +133,13 @@ function candlesToOHLCV(candles: Candle[], cacheRef: React.MutableRefObject<OHLC
   }
 
   // Update cache
-  cacheRef.current = { candleCount, firstDate, lastDate, latestCandleFingerprint, data };
+  cacheRef.current = {
+    candleCount,
+    firstDate,
+    lastDate,
+    latestCandleFingerprint,
+    data,
+  };
   return data;
 }
 
@@ -142,7 +154,7 @@ interface IndicatorCache {
 // Buffer cache for replay mode - stores pre-calculated results for a range
 interface ReplayBufferCache {
   startIndex: number; // Start of buffered range (in series order)
-  endIndex: number;   // End of buffered range
+  endIndex: number; // End of buffered range
   dataLength: number; // Total candle count used for calculation
   configHash: string; // Combined hash of all indicator configs
   // Full calculated results for the entire buffer range
@@ -210,9 +222,14 @@ function filterIndicatorOutputByTime(
       };
     }
     case 'multi-line': {
-      const filteredSeries: Record<string, LineData<Time>[] | HistogramData<Time>[]> = {};
+      const filteredSeries: Record<
+        string,
+        LineData<Time>[] | HistogramData<Time>[]
+      > = {};
       for (const [key, data] of Object.entries(output.series)) {
-        filteredSeries[key] = (data as (LineData<Time>[] | HistogramData<Time>[])).filter(d => isTimeInRange(d.time));
+        filteredSeries[key] = (
+          data as LineData<Time>[] | HistogramData<Time>[]
+        ).filter(d => isTimeInRange(d.time));
       }
       return {
         ...output,
@@ -231,7 +248,7 @@ export function useIndicators({
 }: UseIndicatorsParams): UseIndicatorsReturn {
   const dispatch = useAppDispatch();
   const instances = useAppSelector(selectIndicatorInstances);
-  
+
   // Caches
   const ohlcvCacheRef = useRef<OHLCVCache | null>(null);
   const indicatorCacheRef = useRef<Map<string, IndicatorCache>>(new Map());
@@ -248,17 +265,17 @@ export function useIndicators({
     if (!isReplayEnabled || !replayDisplayIndex) {
       return null;
     }
-    
+
     const displayIdx = replayDisplayIndex;
     const totalLength = ohlcvData.length;
-    
+
     // Buffer end = current position + REPLAY_BUFFER_AHEAD (clamped to data length)
     const bufferEnd = Math.min(displayIdx + REPLAY_BUFFER_AHEAD, totalLength);
-    
+
     // Buffer start = 0 (we always need full history for indicator warmup)
     // The lookback data is implicit in the full OHLCV calculation
     const bufferStart = 0;
-    
+
     return { start: bufferStart, end: bufferEnd };
   }, [isReplayEnabled, replayDisplayIndex, ohlcvData.length]);
 
@@ -267,12 +284,12 @@ export function useIndicators({
     if (!isReplayEnabled || !replayDisplayIndex || !bufferRange) {
       return false;
     }
-    
+
     const cache = replayBufferCacheRef.current;
     if (!cache) return true;
-    
+
     const configHash = hashAllConfigs(instances);
-    
+
     // Recalculate if:
     // 1. Config changed
     // 2. Data length changed
@@ -280,24 +297,31 @@ export function useIndicators({
     // 4. Display index went backwards (seek) beyond buffer start
     if (cache.configHash !== configHash) return true;
     if (cache.dataLength !== ohlcvData.length) return true;
-    if (replayDisplayIndex > cache.endIndex - REPLAY_BUFFER_THRESHOLD) return true;
+    if (replayDisplayIndex > cache.endIndex - REPLAY_BUFFER_THRESHOLD)
+      return true;
     if (replayDisplayIndex < cache.startIndex) return true;
-    
+
     return false;
-  }, [isReplayEnabled, replayDisplayIndex, bufferRange, instances, ohlcvData.length]);
+  }, [
+    isReplayEnabled,
+    replayDisplayIndex,
+    bufferRange,
+    instances,
+    ohlcvData.length,
+  ]);
 
   // Calculate all indicator outputs - with replay buffer support
   const calculatedIndicators = useMemo<CalculatedIndicator[]>(() => {
     if (ohlcvData.length === 0) return [];
 
     const visibleInstances = instances.filter(i => i.visible);
-    
+
     // Non-replay mode: use original per-indicator caching
     // Also handle case where replayDisplayIndex is undefined/0
     if (!isReplayEnabled || !replayDisplayIndex || replayDisplayIndex <= 0) {
       const results: CalculatedIndicator[] = [];
       const newCache = new Map<string, IndicatorCache>();
-      
+
       for (const instance of visibleInstances) {
         const definition = getIndicator(instance.indicatorId);
         if (!definition) continue;
@@ -305,7 +329,7 @@ export function useIndicators({
         const cacheKey = instance.instanceId;
         const configHash = hashConfig(instance.config);
         const cached = indicatorCacheRef.current.get(cacheKey);
-        
+
         if (
           cached &&
           cached.configHash === configHash &&
@@ -324,7 +348,12 @@ export function useIndicators({
             error: `Insufficient data: requires ${definition.minDataPoints} points`,
           };
           results.push(result);
-          newCache.set(cacheKey, { instanceId: cacheKey, configHash, dataLength: ohlcvData.length, result });
+          newCache.set(cacheKey, {
+            instanceId: cacheKey,
+            configHash,
+            dataLength: ohlcvData.length,
+            result,
+          });
           continue;
         }
 
@@ -340,7 +369,12 @@ export function useIndicators({
             output,
           };
           results.push(result);
-          newCache.set(cacheKey, { instanceId: cacheKey, configHash, dataLength: ohlcvData.length, result });
+          newCache.set(cacheKey, {
+            instanceId: cacheKey,
+            configHash,
+            dataLength: ohlcvData.length,
+            result,
+          });
         } catch (error) {
           const result: CalculatedIndicator = {
             instance,
@@ -349,44 +383,52 @@ export function useIndicators({
             error: `Calculation error: ${error instanceof Error ? error.message : 'Unknown error'}`,
           };
           results.push(result);
-          newCache.set(cacheKey, { instanceId: cacheKey, configHash, dataLength: ohlcvData.length, result });
+          newCache.set(cacheKey, {
+            instanceId: cacheKey,
+            configHash,
+            dataLength: ohlcvData.length,
+            result,
+          });
         }
       }
-      
+
       indicatorCacheRef.current = newCache;
       // Clear replay buffer when not in replay mode
       replayBufferCacheRef.current = null;
-      
+
       return results;
     }
 
     // Replay mode: use buffered calculation
     const configHash = hashAllConfigs(instances);
     const currentDisplayIndex = replayDisplayIndex;
-    
+
     // Get the max time for filtering - this is the time of the last displayed candle
     // replayDisplayIndex is 1-based, so we access ohlcvData[replayDisplayIndex - 1]
-    const maxTime = currentDisplayIndex > 0 && currentDisplayIndex <= ohlcvData.length
-      ? ohlcvData[currentDisplayIndex - 1].time
-      : undefined;
-    
+    const maxTime =
+      currentDisplayIndex > 0 && currentDisplayIndex <= ohlcvData.length
+        ? ohlcvData[currentDisplayIndex - 1].time
+        : undefined;
+
     // Check if we can use cached buffer
     if (!needsBufferRecalc && replayBufferCacheRef.current) {
       // Filter the cached results by time to match displayed candles
-      const filteredResults = replayBufferCacheRef.current.results.map(calc => ({
-        ...calc,
-        output: filterIndicatorOutputByTime(calc.output, maxTime),
-      }));
+      const filteredResults = replayBufferCacheRef.current.results.map(
+        calc => ({
+          ...calc,
+          output: filterIndicatorOutputByTime(calc.output, maxTime),
+        })
+      );
       return filteredResults;
     }
 
     // Calculate fresh buffer
     const results: CalculatedIndicator[] = [];
     const bufferEnd = bufferRange?.end ?? ohlcvData.length;
-    
+
     // Slice OHLCV data to buffer end for calculation
     const bufferedOhlcv = ohlcvData.slice(0, bufferEnd);
-    
+
     for (const instance of visibleInstances) {
       const definition = getIndicator(instance.indicatorId);
       if (!definition) continue;
@@ -435,9 +477,10 @@ export function useIndicators({
     };
 
     // Get max time for filtering (defined earlier, but we need to recalculate if not in cache path)
-    const filterMaxTime = currentDisplayIndex > 0 && currentDisplayIndex <= ohlcvData.length
-      ? ohlcvData[currentDisplayIndex - 1].time
-      : undefined;
+    const filterMaxTime =
+      currentDisplayIndex > 0 && currentDisplayIndex <= ohlcvData.length
+        ? ohlcvData[currentDisplayIndex - 1].time
+        : undefined;
 
     // Return filtered results for current display position
     const filteredResults = results.map(calc => ({
@@ -445,7 +488,14 @@ export function useIndicators({
       output: filterIndicatorOutputByTime(calc.output, filterMaxTime),
     }));
     return filteredResults;
-  }, [instances, ohlcvData, isReplayEnabled, replayDisplayIndex, needsBufferRecalc, bufferRange]);
+  }, [
+    instances,
+    ohlcvData,
+    isReplayEnabled,
+    replayDisplayIndex,
+    needsBufferRecalc,
+    bufferRange,
+  ]);
 
   // Separate overlay and panel indicators - stable references
   const overlayIndicators = useMemo(
@@ -458,9 +508,7 @@ export function useIndicators({
 
   const panelIndicators = useMemo(
     () =>
-      calculatedIndicators.filter(
-        calc => calc.definition.category === 'panel'
-      ),
+      calculatedIndicators.filter(calc => calc.definition.category === 'panel'),
     [calculatedIndicators]
   );
 

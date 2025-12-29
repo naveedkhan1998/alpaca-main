@@ -623,7 +623,9 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
           {/* Animate Toggle */}
           {onAnimateToggle && (
             <div className="flex items-center justify-between pt-1 border-t border-border/50">
-              <span className="text-xs text-muted-foreground">Animate candle formation</span>
+              <span className="text-xs text-muted-foreground">
+                Animate candle formation
+              </span>
               <Switch
                 checked={animate}
                 onCheckedChange={onAnimateToggle}

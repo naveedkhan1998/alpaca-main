@@ -21,9 +21,9 @@ export function createSeriesForType(
   sample?: (BarData<Time> | LineData<Time>)[]
 ): ISeriesApi<SeriesType> {
   // TradingView professional colors
-  const upColor = '#26a69a';   // Teal green
+  const upColor = '#26a69a'; // Teal green
   const downColor = '#ef5350'; // Coral red
-  
+
   switch (type) {
     case 'Candlestick':
       return chart.addSeries(CandlestickSeries, {

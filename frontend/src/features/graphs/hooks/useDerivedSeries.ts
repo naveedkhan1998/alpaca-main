@@ -12,7 +12,12 @@
  */
 
 import { useMemo, useRef } from 'react';
-import type { Time, LineData, BarData, HistogramData } from 'lightweight-charts';
+import type {
+  Time,
+  LineData,
+  BarData,
+  HistogramData,
+} from 'lightweight-charts';
 import type { Candle } from '@/types/common-types';
 import { formatDate } from '@/lib/functions';
 
@@ -60,14 +65,15 @@ export function useDerivedSeries({
   const candlesLength = candles.length;
   // Candles are in descending order (newest first)
   const lastTimestamp = candlesLength > 0 ? candles[0].timestamp : null; // Newest
-  const firstTimestamp = candlesLength > 0 ? candles[candlesLength - 1].timestamp : null; // Oldest
+  const firstTimestamp =
+    candlesLength > 0 ? candles[candlesLength - 1].timestamp : null; // Oldest
   const latestFingerprint = getCandleFingerprint(candles[0]);
 
   // Compute derived data with incremental updates support
   const derivedData = useMemo(() => {
     const cache = cacheRef.current;
     const colors = isDarkMode ? VOLUME_COLORS.dark : VOLUME_COLORS.light;
-    
+
     // Check if this is a pure historical append (only added older candles)
     // This happens when: lastTimestamp (newest) is same, firstTimestamp (oldest) changed
     const isHistoricalAppend =
@@ -86,16 +92,22 @@ export function useDerivedSeries({
       const newVolumeData = [...cache.volumeData];
       const seenTimes = new Set(cache.seenTimestamps);
       let hasVolume = cache.hasValidVolume;
-      
+
       // Get the prev close from the first (oldest) existing candle for volume color
-      let prevClose = cache.seriesData.length > 0 
-        ? ('close' in cache.seriesData[0] ? (cache.seriesData[0] as BarData<Time>).close : 0)
-        : 0;
+      let prevClose =
+        cache.seriesData.length > 0
+          ? 'close' in cache.seriesData[0]
+            ? (cache.seriesData[0] as BarData<Time>).close
+            : 0
+          : 0;
 
       // Process only the new candles (which are older, at end of array)
       // Insert at the beginning of series data since they are chronologically earlier
-      const newItems: { series: BarData<Time> | LineData<Time>; volume: HistogramData<Time> }[] = [];
-      
+      const newItems: {
+        series: BarData<Time> | LineData<Time>;
+        volume: HistogramData<Time>;
+      }[] = [];
+
       for (let i = candles.length - 1; i >= existingLength; i--) {
         const candle = candles[i];
         const time = formatDate(candle.timestamp) as Time;
@@ -136,8 +148,14 @@ export function useDerivedSeries({
       }
 
       // Prepend new items (they go at the beginning since they're older)
-      const finalSeriesData = [...newItems.map(i => i.series), ...newSeriesData];
-      const finalVolumeData = [...newItems.map(i => i.volume), ...newVolumeData];
+      const finalSeriesData = [
+        ...newItems.map(i => i.series),
+        ...newSeriesData,
+      ];
+      const finalVolumeData = [
+        ...newItems.map(i => i.volume),
+        ...newVolumeData,
+      ];
 
       // Update cache
       cacheRef.current = {
@@ -262,7 +280,15 @@ export function useDerivedSeries({
     };
 
     return result;
-  }, [candles, candlesLength, firstTimestamp, lastTimestamp, latestFingerprint, seriesType, isDarkMode]);
+  }, [
+    candles,
+    candlesLength,
+    firstTimestamp,
+    lastTimestamp,
+    latestFingerprint,
+    seriesType,
+    isDarkMode,
+  ]);
 
   return {
     seriesData: derivedData.seriesData,

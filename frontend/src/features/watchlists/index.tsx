@@ -54,7 +54,9 @@ export const WatchlistsPage: React.FC = () => {
   return (
     <PageLayout
       header={<PageHeader>Watchlists</PageHeader>}
-      subheader={<PageSubHeader>Organize and monitor your instruments</PageSubHeader>}
+      subheader={
+        <PageSubHeader>Organize and monitor your instruments</PageSubHeader>
+      }
       actions={
         <PageActions>
           {selectedWatchlist && (
@@ -78,7 +80,11 @@ export const WatchlistsPage: React.FC = () => {
             <div className="p-4 border rounded-lg">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-medium">Your Watchlists</h3>
-                <Button size="sm" variant="ghost" onClick={() => setCreateOpen(true)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setCreateOpen(true)}
+                >
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
@@ -115,7 +121,10 @@ export const WatchlistsPage: React.FC = () => {
                 {isLoading ? (
                   <div className="space-y-2">
                     {Array.from({ length: 4 }).map((_, i) => (
-                      <div key={i} className="w-full rounded-md h-14 animate-pulse bg-muted/40" />
+                      <div
+                        key={i}
+                        className="w-full rounded-md h-14 animate-pulse bg-muted/40"
+                      />
                     ))}
                   </div>
                 ) : error ? (
@@ -155,7 +164,10 @@ export const WatchlistsPage: React.FC = () => {
                             <div className="flex items-center gap-2 text-xs shrink-0 text-muted-foreground">
                               <span>{w.asset_count} assets</span>
                               {!w.is_active && (
-                                <Badge variant="secondary" className="text-[10px]">
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[10px]"
+                                >
                                   Inactive
                                 </Badge>
                               )}
@@ -166,7 +178,6 @@ export const WatchlistsPage: React.FC = () => {
                     })}
                   </div>
                 )}
-
               </div>
             </div>
           </div>

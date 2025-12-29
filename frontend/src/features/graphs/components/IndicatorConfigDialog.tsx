@@ -97,7 +97,9 @@ const IndicatorConfigDialog: React.FC<IndicatorConfigDialogProps> = ({
               {param.label}
             </Label>
             {param.description && (
-              <p className="text-xs text-muted-foreground">{param.description}</p>
+              <p className="text-xs text-muted-foreground">
+                {param.description}
+              </p>
             )}
           </div>
           <div className="text-right">
@@ -223,21 +225,27 @@ const IndicatorConfigDialog: React.FC<IndicatorConfigDialogProps> = ({
             {/* Numeric parameters */}
             {numericParams.length > 0 && (
               <div className="space-y-4">
-                {numericParams.map(param => renderNumericParam(param as NumericParameter))}
+                {numericParams.map(param =>
+                  renderNumericParam(param as NumericParameter)
+                )}
               </div>
             )}
 
             {/* Select parameters */}
             {selectParams.length > 0 && (
               <div className="space-y-4">
-                {selectParams.map(param => renderSelectParam(param as SelectParameter))}
+                {selectParams.map(param =>
+                  renderSelectParam(param as SelectParameter)
+                )}
               </div>
             )}
 
             {/* Boolean parameters */}
             {booleanParams.length > 0 && (
               <div className="space-y-2 border-t pt-4">
-                {booleanParams.map(param => renderBooleanParam(param as BooleanParameter))}
+                {booleanParams.map(param =>
+                  renderBooleanParam(param as BooleanParameter)
+                )}
               </div>
             )}
 
@@ -248,7 +256,9 @@ const IndicatorConfigDialog: React.FC<IndicatorConfigDialogProps> = ({
                   Colors
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {colorParams.map(param => renderColorParam(param as ColorParameter))}
+                  {colorParams.map(param =>
+                    renderColorParam(param as ColorParameter)
+                  )}
                 </div>
               </div>
             )}
@@ -273,7 +283,11 @@ const IndicatorConfigDialog: React.FC<IndicatorConfigDialogProps> = ({
               <HiRefresh className="w-4 h-4" />
               Reset to Default
             </Button>
-            <Button onClick={handleSave} type="button" className="w-full sm:w-auto">
+            <Button
+              onClick={handleSave}
+              type="button"
+              className="w-full sm:w-auto"
+            >
               Apply Changes
             </Button>
           </div>

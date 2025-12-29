@@ -194,11 +194,11 @@ const assetApi = baseApi.injectEndpoints({
 
     /**
      * V3 Candle endpoint with cursor-based pagination and compact format.
-     * 
+     *
      * Uses compact array format by default (~60% smaller payload):
      * - Backend returns: { columns: [...], results: [[...], [...]] }
      * - GZip compressed via middleware
-     * 
+     *
      * Optimized for high-performance reads with no COUNT(*) overhead.
      */
     getAssetCandlesV3: builder.query<

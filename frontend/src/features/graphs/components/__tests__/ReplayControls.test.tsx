@@ -92,8 +92,12 @@ vi.mock('react-icons/hi', () => ({
   HiRefresh: () => <span data-testid="icon-refresh">Refresh</span>,
   HiChevronLeft: () => <span data-testid="icon-chevron-left">Left</span>,
   HiChevronRight: () => <span data-testid="icon-chevron-right">Right</span>,
-  HiChevronDoubleLeft: () => <span data-testid="icon-chevron-double-left">DoubleLeft</span>,
-  HiChevronDoubleRight: () => <span data-testid="icon-chevron-double-right">DoubleRight</span>,
+  HiChevronDoubleLeft: () => (
+    <span data-testid="icon-chevron-double-left">DoubleLeft</span>
+  ),
+  HiChevronDoubleRight: () => (
+    <span data-testid="icon-chevron-double-right">DoubleRight</span>
+  ),
   HiX: () => <span data-testid="icon-x">X</span>,
   HiLightningBolt: () => <span data-testid="icon-lightning">Lightning</span>,
 }));
@@ -118,7 +122,9 @@ const defaultProps = {
 describe('ReplayControls', () => {
   describe('mobile variant', () => {
     it('renders mobile layout with slider and controls', () => {
-      render(<ReplayControls {...defaultProps} variant="mobile" enabled={true} />);
+      render(
+        <ReplayControls {...defaultProps} variant="mobile" enabled={true} />
+      );
 
       // Mobile variant uses a slider, not a progress bar
       expect(screen.getByTestId('slider')).toBeInTheDocument();
@@ -160,7 +166,14 @@ describe('ReplayControls', () => {
     });
 
     it('shows speed dropdown button with current speed', () => {
-      render(<ReplayControls {...defaultProps} variant="mobile" enabled={true} speed={2} />);
+      render(
+        <ReplayControls
+          {...defaultProps}
+          variant="mobile"
+          enabled={true}
+          speed={2}
+        />
+      );
 
       // Mobile uses a dropdown, shows current speed as button text
       expect(screen.getByText('2×')).toBeInTheDocument();
@@ -168,11 +181,7 @@ describe('ReplayControls', () => {
 
     it('renders playback control buttons', () => {
       render(
-        <ReplayControls
-          {...defaultProps}
-          variant="mobile"
-          enabled={true}
-        />
+        <ReplayControls {...defaultProps} variant="mobile" enabled={true} />
       );
 
       // Check playback buttons exist
@@ -182,7 +191,12 @@ describe('ReplayControls', () => {
 
     it('disables controls when totalSteps <= 1', () => {
       render(
-        <ReplayControls {...defaultProps} variant="mobile" enabled={true} totalSteps={1} />
+        <ReplayControls
+          {...defaultProps}
+          variant="mobile"
+          enabled={true}
+          totalSteps={1}
+        />
       );
 
       // Find the play button by its secondary variant
@@ -215,7 +229,9 @@ describe('ReplayControls', () => {
 
   describe('popover variant (desktop)', () => {
     it('renders desktop popover layout', () => {
-      render(<ReplayControls {...defaultProps} variant="popover" enabled={true} />);
+      render(
+        <ReplayControls {...defaultProps} variant="popover" enabled={true} />
+      );
 
       expect(screen.getByTestId('switch')).toBeInTheDocument();
       expect(screen.getByText('Replay Mode')).toBeInTheDocument();

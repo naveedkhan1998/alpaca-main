@@ -46,7 +46,7 @@ describe('useChartSync', () => {
     const main = makeTimeScale();
     const indicator1 = makeTimeScale();
     const indicator2 = makeTimeScale();
-    
+
     const indicatorTimeScaleRefs = new Map<string, ITimeScaleApi<Time>>();
     indicatorTimeScaleRefs.set('rsi-1', indicator1);
     indicatorTimeScaleRefs.set('macd-1', indicator2);
@@ -63,8 +63,12 @@ describe('useChartSync', () => {
       result.current.syncCharts();
     });
 
-    expect(indicator1.setVisibleRange).toHaveBeenCalledWith(main.getVisibleRange());
-    expect(indicator2.setVisibleRange).toHaveBeenCalledWith(main.getVisibleRange());
+    expect(indicator1.setVisibleRange).toHaveBeenCalledWith(
+      main.getVisibleRange()
+    );
+    expect(indicator2.setVisibleRange).toHaveBeenCalledWith(
+      main.getVisibleRange()
+    );
 
     // Simulate visible range change on main timescale
     main._visibleRange = {
@@ -76,13 +80,19 @@ describe('useChartSync', () => {
       vi.runOnlyPendingTimers();
       main._handler?.(main.getVisibleRange()!);
     });
-    expect(indicator1.setVisibleRange).toHaveBeenLastCalledWith({ from: 5, to: 10 });
-    expect(indicator2.setVisibleRange).toHaveBeenLastCalledWith({ from: 5, to: 10 });
+    expect(indicator1.setVisibleRange).toHaveBeenLastCalledWith({
+      from: 5,
+      to: 10,
+    });
+    expect(indicator2.setVisibleRange).toHaveBeenLastCalledWith({
+      from: 5,
+      to: 10,
+    });
   });
-  
+
   it('works with empty indicator refs', () => {
     const main = makeTimeScale();
-    
+
     const indicatorTimeScaleRefs = new Map<string, ITimeScaleApi<Time>>();
 
     vi.useFakeTimers();

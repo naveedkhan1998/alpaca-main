@@ -55,24 +55,41 @@ export function formatDate(originalDate: string): number {
     // Use Intl.DateTimeFormat.formatToParts for accurate timezone conversion
     // This correctly handles DST transitions for each specific date
     const parts = easternFormatter.formatToParts(parsedDate);
-    
+
     // Extract components from the formatted parts
-    let year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0;
+    let year = 0,
+      month = 0,
+      day = 0,
+      hour = 0,
+      minute = 0,
+      second = 0;
     for (const part of parts) {
       switch (part.type) {
-        case 'year': year = parseInt(part.value, 10); break;
-        case 'month': month = parseInt(part.value, 10) - 1; break; // 0-indexed
-        case 'day': day = parseInt(part.value, 10); break;
-        case 'hour': hour = parseInt(part.value, 10); break;
-        case 'minute': minute = parseInt(part.value, 10); break;
-        case 'second': second = parseInt(part.value, 10); break;
+        case 'year':
+          year = parseInt(part.value, 10);
+          break;
+        case 'month':
+          month = parseInt(part.value, 10) - 1;
+          break; // 0-indexed
+        case 'day':
+          day = parseInt(part.value, 10);
+          break;
+        case 'hour':
+          hour = parseInt(part.value, 10);
+          break;
+        case 'minute':
+          minute = parseInt(part.value, 10);
+          break;
+        case 'second':
+          second = parseInt(part.value, 10);
+          break;
       }
     }
 
     // Create a UTC timestamp using Eastern time components
     // This "tricks" the chart into displaying Eastern time
     const result = Date.UTC(year, month, day, hour, minute, second) / 1000;
-    
+
     // Cache the result (limit cache size to prevent memory issues)
     if (formatDateCache.size > 50000) {
       // Clear oldest entries when cache gets too large
@@ -80,7 +97,7 @@ export function formatDate(originalDate: string): number {
       keysToDelete.forEach(k => formatDateCache.delete(k));
     }
     formatDateCache.set(originalDate, result);
-    
+
     return result;
   } catch {
     return Math.floor(Date.now() / 1000);

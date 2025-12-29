@@ -62,12 +62,16 @@ export function getIndicator(id: IndicatorId): IndicatorDefinition | undefined {
 }
 
 /** Get indicator module (definition + calculator) by ID */
-export function getIndicatorModule(id: IndicatorId): IndicatorModule | undefined {
+export function getIndicatorModule(
+  id: IndicatorId
+): IndicatorModule | undefined {
   return INDICATOR_MODULES.get(id);
 }
 
 /** Get calculator function for an indicator */
-export function getCalculator(id: IndicatorId): IndicatorCalculator | undefined {
+export function getCalculator(
+  id: IndicatorId
+): IndicatorCalculator | undefined {
   return INDICATOR_MODULES.get(id)?.calculate;
 }
 
@@ -160,7 +164,9 @@ export function calculateIndicator(
  * This is used to ensure sufficient historical data is available for indicator calculations.
  * Defaults to 200 if no indicators have period parameters.
  */
-export function getMaxLookback(instances: { indicatorId: IndicatorId; config: Record<string, unknown> }[]): number {
+export function getMaxLookback(
+  instances: { indicatorId: IndicatorId; config: Record<string, unknown> }[]
+): number {
   let maxPeriod = 0;
 
   for (const instance of instances) {
@@ -172,7 +178,13 @@ export function getMaxLookback(instances: { indicatorId: IndicatorId; config: Re
       if (param.type === 'number') {
         const key = param.key.toLowerCase();
         // Look for period, length, or other lookback-related parameters
-        if (key.includes('period') || key.includes('length') || key === 'slow' || key === 'fast' || key === 'signal') {
+        if (
+          key.includes('period') ||
+          key.includes('length') ||
+          key === 'slow' ||
+          key === 'fast' ||
+          key === 'signal'
+        ) {
           const value = instance.config[param.key];
           if (typeof value === 'number' && value > maxPeriod) {
             maxPeriod = value;

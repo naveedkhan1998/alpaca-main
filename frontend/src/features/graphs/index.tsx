@@ -1,4 +1,10 @@
-import React, { useRef, useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import type { ITimeScaleApi, Time } from 'lightweight-charts';
 import { useLocation } from 'react-router-dom';
 import {
@@ -111,7 +117,8 @@ const GraphsPage: React.FC = () => {
 
   // Refs
   const mainChartRef = useRef<ITimeScaleApi<Time> | null>(null);
-  const [mainTimeScale, setMainTimeScaleState] = useState<ITimeScaleApi<Time> | null>(null);
+  const [mainTimeScale, setMainTimeScaleState] =
+    useState<ITimeScaleApi<Time> | null>(null);
   const indicatorChartsRef = useRef<Map<string, ITimeScaleApi<Time>>>(
     new Map()
   );
@@ -129,12 +136,11 @@ const GraphsPage: React.FC = () => {
     loadMoreHistoricalData,
   } = useCandlesV3({ assetId: obj?.id, timeframe, autoRefresh });
 
-  const { seriesData, volumeData, hasValidVolume } =
-    useDerivedSeries({
-      candles,
-      seriesType,
-      isDarkMode,
-    });
+  const { seriesData, volumeData, hasValidVolume } = useDerivedSeries({
+    candles,
+    seriesType,
+    isDarkMode,
+  });
 
   const prevSeriesLengthRef = useRef(seriesData.length);
   const prevReplayEnabledRef = useRef(isReplayEnabled);
@@ -160,7 +166,12 @@ const GraphsPage: React.FC = () => {
       return Math.max(1, effectiveReplayIndex - 1);
     }
     return effectiveReplayIndex;
-  }, [isReplayEnabled, isReplayAnimate, animationProgress, effectiveReplayIndex]);
+  }, [
+    isReplayEnabled,
+    isReplayAnimate,
+    animationProgress,
+    effectiveReplayIndex,
+  ]);
 
   // New indicator system - with replay support
   const { panelIndicators, overlayIndicators } = useIndicators({
@@ -180,34 +191,40 @@ const GraphsPage: React.FC = () => {
     if (!isReplayEnabled || !isReplayAnimate || animationProgress >= 1) {
       return displayedSeriesData;
     }
-    
+
     if (displayedSeriesData.length === 0) {
       return displayedSeriesData;
     }
-    
+
     // Get the last candle to animate
     const lastCandle = displayedSeriesData[displayedSeriesData.length - 1];
-    
+
     // Check if it's an OHLC candle (has open, high, low, close)
     if (!('open' in lastCandle)) {
       return displayedSeriesData;
     }
-    
-    const { open, high, low, close, time } = lastCandle as { open: number; high: number; low: number; close: number; time: Time };
-    
+
+    const { open, high, low, close, time } = lastCandle as {
+      open: number;
+      high: number;
+      low: number;
+      close: number;
+      time: Time;
+    };
+
     // Determine if it's a bullish (green) or bearish (red) candle
     const isBullish = close >= open;
     const progress = animationProgress;
-    
+
     // Animation phases:
     // Phase 1 (0-0.3): Start at open, move toward first extreme
-    // Phase 2 (0.3-0.7): Move toward second extreme  
+    // Phase 2 (0.3-0.7): Move toward second extreme
     // Phase 3 (0.7-1.0): Move toward close
-    
+
     let animatedHigh = open;
     let animatedLow = open;
     let animatedClose = open;
-    
+
     if (isBullish) {
       // Bullish candle: typically goes down first (wick), then up to high, then settles at close
       if (progress < 0.3) {
@@ -251,7 +268,7 @@ const GraphsPage: React.FC = () => {
         animatedClose = low + (close - low) * phaseProgress;
       }
     }
-    
+
     const animatedCandle = {
       time,
       open,
@@ -259,9 +276,14 @@ const GraphsPage: React.FC = () => {
       low: animatedLow,
       close: animatedClose,
     };
-    
+
     return [...displayedSeriesData.slice(0, -1), animatedCandle];
-  }, [displayedSeriesData, isReplayEnabled, isReplayAnimate, animationProgress]);
+  }, [
+    displayedSeriesData,
+    isReplayEnabled,
+    isReplayAnimate,
+    animationProgress,
+  ]);
 
   const displayedVolumeData = useMemo(
     () =>
@@ -471,13 +493,16 @@ const GraphsPage: React.FC = () => {
       // Animation runs at 60fps-ish, completing one candle animation in the interval time
       const baseIntervalMs = Math.max(120, Math.round(800 / replaySpeed));
       const animationFrameMs = 16; // ~60fps
-      const totalFrames = Math.max(1, Math.floor(baseIntervalMs / animationFrameMs));
+      const totalFrames = Math.max(
+        1,
+        Math.floor(baseIntervalMs / animationFrameMs)
+      );
       let currentFrame = Math.floor(animationProgress * totalFrames);
-      
+
       const animationTimer = window.setInterval(() => {
         currentFrame++;
         const newProgress = Math.min(1, currentFrame / totalFrames);
-        
+
         if (newProgress >= 1) {
           // Animation complete, move to next candle
           window.clearInterval(animationTimer);
@@ -601,68 +626,68 @@ const GraphsPage: React.FC = () => {
           replayControls={headerReplayControls}
         />
 
-      {/* Main Content */}
-      <div
-        ref={chartSectionRef}
-        className="flex flex-col h-full overflow-hidden bg-background"
-      >
-        {/* Chart Toolbar */}
-        <ChartToolbar />
+        {/* Main Content */}
+        <div
+          ref={chartSectionRef}
+          className="flex flex-col h-full overflow-hidden bg-background"
+        >
+          {/* Chart Toolbar */}
+          <ChartToolbar />
 
-        {/* Desktop Replay Controls - Inline bar below toolbar */}
-        {desktopReplayControls}
+          {/* Desktop Replay Controls - Inline bar below toolbar */}
+          {desktopReplayControls}
 
-        <div className="flex-1 min-h-0">
-          <ResizablePanelGroup direction="vertical">
-            {/* Main Chart with Volume Overlay */}
-            <ResizablePanel defaultSize={mainChartSize} minSize={30}>
-              <div className="relative h-full">
-                <MainChart
-                  seriesData={animatedSeriesData}
-                  volumeData={displayedVolumeData}
-                  showVolume={shouldShowVolume}
-                  mode={isDarkMode}
-                  setTimeScale={setMainChartTimeScale}
-                  overlayIndicators={overlayIndicators}
-                  onLoadMoreData={loadMoreHistoricalData}
-                  isLoadingMore={isLoadingMore || isFetching}
-                  hasMoreData={hasMore}
-                  isReplayEnabled={isReplayEnabled}
-                  replayStep={effectiveReplayIndex}
-                />
-              </div>
-              {(isLoadingMore || isFetching) && (
-                <div className="flex items-center justify-center py-2 text-xs text-muted-foreground animate-pulse">
-                  Loading more…
-                </div>
-              )}
-            </ResizablePanel>
-
-            {/* Dynamic Indicator Panels */}
-            {panelIndicators.map(indicator => (
-              <React.Fragment key={indicator.instance.instanceId}>
-                <ResizableHandle className="p-0" withHandle />
-                <ResizablePanel defaultSize={indicatorSize} minSize={10}>
-                  <IndicatorPanel
-                    indicator={indicator}
-                    isDarkMode={isDarkMode}
-                    setTimeScale={setIndicatorTimeScale(
-                      indicator.instance.instanceId
-                    )}
-                    mainTimeScale={mainTimeScale}
-                    onRemove={handleRemoveIndicator}
-                    onToggleVisibility={handleToggleVisibility}
+          <div className="flex-1 min-h-0">
+            <ResizablePanelGroup direction="vertical">
+              {/* Main Chart with Volume Overlay */}
+              <ResizablePanel defaultSize={mainChartSize} minSize={30}>
+                <div className="relative h-full">
+                  <MainChart
+                    seriesData={animatedSeriesData}
+                    volumeData={displayedVolumeData}
+                    showVolume={shouldShowVolume}
+                    mode={isDarkMode}
+                    setTimeScale={setMainChartTimeScale}
+                    overlayIndicators={overlayIndicators}
+                    onLoadMoreData={loadMoreHistoricalData}
+                    isLoadingMore={isLoadingMore || isFetching}
+                    hasMoreData={hasMore}
+                    isReplayEnabled={isReplayEnabled}
+                    replayStep={effectiveReplayIndex}
                   />
-                </ResizablePanel>
-              </React.Fragment>
-            ))}
-          </ResizablePanelGroup>
-        </div>
+                </div>
+                {(isLoadingMore || isFetching) && (
+                  <div className="flex items-center justify-center py-2 text-xs text-muted-foreground animate-pulse">
+                    Loading more…
+                  </div>
+                )}
+              </ResizablePanel>
 
-        {/* Mobile Replay Controls - Fixed at bottom */}
-        {mobileReplayControls}
+              {/* Dynamic Indicator Panels */}
+              {panelIndicators.map(indicator => (
+                <React.Fragment key={indicator.instance.instanceId}>
+                  <ResizableHandle className="p-0" withHandle />
+                  <ResizablePanel defaultSize={indicatorSize} minSize={10}>
+                    <IndicatorPanel
+                      indicator={indicator}
+                      isDarkMode={isDarkMode}
+                      setTimeScale={setIndicatorTimeScale(
+                        indicator.instance.instanceId
+                      )}
+                      mainTimeScale={mainTimeScale}
+                      onRemove={handleRemoveIndicator}
+                      onToggleVisibility={handleToggleVisibility}
+                    />
+                  </ResizablePanel>
+                </React.Fragment>
+              ))}
+            </ResizablePanelGroup>
+          </div>
+
+          {/* Mobile Replay Controls - Fixed at bottom */}
+          {mobileReplayControls}
+        </div>
       </div>
-    </div>
     </IndicatorProvider>
   );
 };

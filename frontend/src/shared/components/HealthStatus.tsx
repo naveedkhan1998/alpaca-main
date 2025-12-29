@@ -47,9 +47,7 @@ const ServiceStatusItem = ({
         {getServiceIcon(name)}
         <span className="text-sm">{formatServiceName(name)}</span>
       </div>
-      <Circle
-        className={`w-2 h-2 fill-current ${statusColor[status]}`}
-      />
+      <Circle className={`w-2 h-2 fill-current ${statusColor[status]}`} />
     </div>
   );
 };
@@ -95,7 +93,9 @@ const HealthStatusComponent: React.FC<{ compact?: boolean }> = ({
           className={`flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50 ${compact ? 'justify-center w-8 h-8' : 'w-full'}`}
           aria-label={`System status: ${overallStatus}`}
         >
-          <span className={`w-2 h-2 rounded-full ${statusColor[overallStatus]} ${overallStatus === 'pending' ? 'animate-pulse' : ''}`} />
+          <span
+            className={`w-2 h-2 rounded-full ${statusColor[overallStatus]} ${overallStatus === 'pending' ? 'animate-pulse' : ''}`}
+          />
           {!compact && <span>Status</span>}
         </button>
       </PopoverTrigger>
@@ -103,9 +103,11 @@ const HealthStatusComponent: React.FC<{ compact?: boolean }> = ({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">System Status</span>
-            <span className={`w-2 h-2 rounded-full ${statusColor[overallStatus]}`} />
+            <span
+              className={`w-2 h-2 rounded-full ${statusColor[overallStatus]}`}
+            />
           </div>
-          
+
           <p className="text-xs text-muted-foreground">
             {statusText[overallStatus]}
           </p>
@@ -127,7 +129,9 @@ const HealthStatusComponent: React.FC<{ compact?: boolean }> = ({
             <div className="flex items-center gap-3 pt-2 text-xs border-t text-muted-foreground">
               <span>{healthyCount} healthy</span>
               {errorCount > 0 && (
-                <span className="text-destructive">{errorCount} error{errorCount !== 1 ? 's' : ''}</span>
+                <span className="text-destructive">
+                  {errorCount} error{errorCount !== 1 ? 's' : ''}
+                </span>
               )}
             </div>
           )}

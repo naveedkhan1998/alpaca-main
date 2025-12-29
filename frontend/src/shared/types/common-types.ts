@@ -326,7 +326,7 @@ export interface CandleV3 {
 
 /**
  * Compact candle response format - ~60% smaller than object format.
- * 
+ *
  * Backend returns candles as arrays with column headers:
  * {
  *   columns: ["timestamp", "open", "high", "low", "close", "volume", "trade_count", "vwap"],

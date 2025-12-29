@@ -70,7 +70,9 @@ const IndicatorSelector: React.FC<IndicatorSelectorProps> = ({
   onOpenSettings,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'overlay' | 'panel'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'overlay' | 'panel'>(
+    'all'
+  );
 
   // Get grouped indicators
   const indicatorGroups = useMemo(() => getIndicatorsGrouped(), []);
@@ -105,11 +107,14 @@ const IndicatorSelector: React.FC<IndicatorSelectorProps> = ({
 
   // Get count of active instances for an indicator type
   const getInstanceCount = (indicatorId: IndicatorId): number => {
-    return activeInstances.filter(inst => inst.indicatorId === indicatorId).length;
+    return activeInstances.filter(inst => inst.indicatorId === indicatorId)
+      .length;
   };
 
   // Get instances of a specific indicator type
-  const getInstancesOfType = (indicatorId: IndicatorId): IndicatorInstance[] => {
+  const getInstancesOfType = (
+    indicatorId: IndicatorId
+  ): IndicatorInstance[] => {
     return activeInstances.filter(inst => inst.indicatorId === indicatorId);
   };
 

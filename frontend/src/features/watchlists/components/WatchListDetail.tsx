@@ -35,9 +35,7 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const handleDelete = async () => {
-    if (
-      window.confirm('Delete this watchlist? This cannot be undone.')
-    ) {
+    if (window.confirm('Delete this watchlist? This cannot be undone.')) {
       try {
         await deleteWatchList(watchlistId).unwrap();
         onBack();
@@ -114,7 +112,9 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
       {/* Stats */}
       <div className="flex gap-4 text-sm text-muted-foreground">
         <span>{watchlist.asset_count} assets</span>
-        <span>Created {new Date(watchlist.created_at).toLocaleDateString()}</span>
+        <span>
+          Created {new Date(watchlist.created_at).toLocaleDateString()}
+        </span>
       </div>
 
       {/* Assets */}

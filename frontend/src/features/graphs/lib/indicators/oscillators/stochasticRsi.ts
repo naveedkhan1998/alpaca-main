@@ -182,7 +182,11 @@ function calculate(
     if (kIdx < kValues.length && !isNaN(kValues[kIdx])) {
       kResult.push({ time: data[i].time, value: kValues[kIdx] });
 
-      if (kIdx >= dPeriod - 1 && dIdx < dValues.length && !isNaN(dValues[dIdx])) {
+      if (
+        kIdx >= dPeriod - 1 &&
+        dIdx < dValues.length &&
+        !isNaN(dValues[dIdx])
+      ) {
         dResult.push({ time: data[i].time, value: dValues[dIdx] });
         dIdx++;
       }

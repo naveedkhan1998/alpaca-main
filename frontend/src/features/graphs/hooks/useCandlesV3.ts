@@ -44,7 +44,7 @@ const COL = {
 
 /**
  * Convert compact array format to legacy Candle object.
- * 
+ *
  * Compact format: [timestamp, open, high, low, close, volume, trade_count, vwap]
  * This is ~60% smaller than object format over the wire.
  */
@@ -74,7 +74,8 @@ function parseCompactResponse(res: CompactCandlesResponse): Candle[] {
  */
 const requestIdleCallback =
   (typeof window !== 'undefined' && window.requestIdleCallback) ||
-  ((cb: IdleRequestCallback) => setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 50 }), 1));
+  ((cb: IdleRequestCallback) =>
+    setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 50 }), 1));
 
 export function useCandlesV3({
   assetId,
@@ -150,13 +151,15 @@ export function useCandlesV3({
           setCandles(prev => {
             // Quick dedup using Set of timestamps
             const existingTimestamps = new Set(prev.map(c => c.timestamp));
-            const newCandles = results.filter(c => !existingTimestamps.has(c.timestamp));
-            
+            const newCandles = results.filter(
+              c => !existingTimestamps.has(c.timestamp)
+            );
+
             // Append new (older) candles to the end
             return newCandles.length > 0 ? [...prev, ...newCandles] : prev;
           });
         });
-        
+
         setNextCursor(res.next_cursor);
         setHasMore(res.has_next);
       } else {
@@ -169,14 +172,7 @@ export function useCandlesV3({
       setIsLoadingMore(false);
       isLoadingMoreRef.current = false;
     }
-  }, [
-    assetId,
-    timeframe,
-    loadMoreLimit,
-    nextCursor,
-    hasMore,
-    getCandles,
-  ]);
+  }, [assetId, timeframe, loadMoreLimit, nextCursor, hasMore, getCandles]);
 
   /**
    * Fetch latest candle for real-time updates.
@@ -200,22 +196,25 @@ export function useCandlesV3({
 
         // Build map for efficient lookup
         const map = new Map(prev.map(c => [c.timestamp, c] as const));
-        
+
         // Update or add latest candles
         for (const c of latestCandles) {
           map.set(c.timestamp, c);
         }
-        
+
         // Only sort if we added new candles (not just updated existing)
-        const hasNew = latestCandles.some(c => !prev.find(p => p.timestamp === c.timestamp));
-        
+        const hasNew = latestCandles.some(
+          c => !prev.find(p => p.timestamp === c.timestamp)
+        );
+
         if (hasNew) {
           // Convert back to array and sort descending
           return Array.from(map.values()).sort(
-            (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+            (a, b) =>
+              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
           );
         }
-        
+
         // Just update existing candles in place
         return Array.from(map.values());
       });

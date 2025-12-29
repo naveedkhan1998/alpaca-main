@@ -44,7 +44,10 @@ interface IndicatorContextValue {
   instances: IndicatorInstance[];
 
   /** Add a new indicator by its ID */
-  addIndicator: (indicatorId: IndicatorId, config?: Partial<IndicatorConfig>) => string;
+  addIndicator: (
+    indicatorId: IndicatorId,
+    config?: Partial<IndicatorConfig>
+  ) => string;
 
   /** Remove an indicator instance by ID */
   removeIndicator: (instanceId: string) => void;
@@ -191,7 +194,8 @@ export function IndicatorProvider({ children }: IndicatorProviderProps) {
 
   // Get default config
   const getDefault = useCallback(
-    (indicatorId: IndicatorId) => getDefaultConfig(indicatorId) as IndicatorConfig,
+    (indicatorId: IndicatorId) =>
+      getDefaultConfig(indicatorId) as IndicatorConfig,
     []
   );
 

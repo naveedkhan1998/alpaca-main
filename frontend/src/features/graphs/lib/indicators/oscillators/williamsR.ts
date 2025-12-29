@@ -13,7 +13,7 @@ import type {
 
 const definition: IndicatorDefinition = {
   id: 'Williams%R',
-  name: "Williams %R",
+  name: 'Williams %R',
   shortName: '%R',
   description:
     'Momentum indicator that measures overbought/oversold levels. Similar to Stochastic but inverted.',
