@@ -12,14 +12,13 @@ from typing import Any
 from django.db import close_old_connections
 import websocket
 
-from main import const
 from main.settings.base import APCA_API_KEY, APCA_API_SECRET_KEY
 
 from .aggregator import TimeframeAggregator
 from .backfill import BackfillGuard
-from .persistence import CandleRepository
+from .persistence import CandlePersistence
 from .subscriptions import SubscriptionManager
-from .utils import floor_to_bucket, is_regular_trading_hours, parse_tick_timestamp
+from .utils import is_regular_trading_hours, parse_tick_timestamp
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)  # Switch to INFO in production
@@ -50,7 +49,7 @@ class WebsocketClient:
         self.message_buffer: Queue[dict[str, Any]] = Queue()
 
         # Persistence + aggregation stack
-        self.repo = CandleRepository()
+        self.repo = CandlePersistence()
         self.backfill_guard = BackfillGuard(
             schedule_backfill=self._schedule_backfill_for_asset
         )
@@ -362,6 +361,14 @@ class WebsocketClient:
         logger.debug("batch_processor stopped")
 
     def _process_batch(self, messages: list[dict]):
+        """
+        Process a batch of WebSocket messages (trades and bars).
+
+        Aggregates trade ticks into 1-minute candles and persists them,
+        then rolls up to higher timeframes.
+        """
+        from decimal import Decimal
+
         # Separate trades and bars
         trades = [m for m in messages if m.get("T") == "t"]
         bars = [m for m in messages if m.get("T") == "b"]
@@ -372,7 +379,9 @@ class WebsocketClient:
             id_to_class = self.subscriptions.asset_class_cache.copy()
 
         # Process bars directly as 1T candles
-        bar_candles: dict[tuple[int, datetime], dict[str, Any]] = {}
+        bar_candles_list: list[dict[str, Any]] = []
+        bar_candles_map: dict[tuple[int, datetime], dict[str, Any]] = {}
+
         if bars:
             for b in bars:
                 sym = b.get("S")
@@ -394,24 +403,29 @@ class WebsocketClient:
                 } and not is_regular_trading_hours(ts):
                     continue
 
-                key = (aid, ts)
-                bar_candles[key] = {
-                    "open": b.get("o"),
-                    "high": b.get("h"),
-                    "low": b.get("l"),
-                    "close": b.get("c"),
-                    "volume": b.get("v", 0),
+                candle = {
+                    "asset_id": aid,
+                    "timestamp": ts,
+                    "open": Decimal(str(b.get("o"))) if b.get("o") else None,
+                    "high": Decimal(str(b.get("h"))) if b.get("h") else None,
+                    "low": Decimal(str(b.get("l"))) if b.get("l") else None,
+                    "close": Decimal(str(b.get("c"))) if b.get("c") else None,
+                    "volume": Decimal(str(b.get("v", 0))),
                 }
-            self.repo.save_candles(const.TF_1T, bar_candles, logger=logger)
+                bar_candles_list.append(candle)
+                bar_candles_map[(aid, ts)] = candle
 
-        # Aggregate trades into 1T bars from trades
+            if bar_candles_list:
+                self.repo.upsert_minutes(bar_candles_list, mode="snapshot")
+
+        # Aggregate trades into 1T bars
         m1_map: dict[tuple[int, datetime], dict[str, Any]] = defaultdict(
             lambda: {
                 "open": None,
-                "high": -float("inf"),
-                "low": float("inf"),
+                "high": None,
+                "low": None,
                 "close": None,
-                "volume": 0,
+                "volume": Decimal("0"),
             }
         )
 
@@ -437,16 +451,26 @@ class WebsocketClient:
 
             key = (aid, ts)
             c = m1_map[key]
+            price_dec = Decimal(str(price))
+            vol_dec = Decimal(str(vol))
+
             if c["open"] is None:
-                c["open"] = c["close"] = price
-            c["high"] = max(c["high"], price)
-            c["low"] = min(c["low"], price)
-            c["close"] = price
-            c["volume"] += vol
+                c["open"] = c["close"] = price_dec
+                c["high"] = c["low"] = price_dec
+            else:
+                c["high"] = max(c["high"], price_dec)
+                c["low"] = min(c["low"], price_dec)
+            c["close"] = price_dec
+            c["volume"] += vol_dec
             latest_ts = max(latest_ts, ts) if latest_ts else ts
 
-        # Persist 1T from trades
-        self.repo.save_candles(const.TF_1T, m1_map, logger=logger)
+        # Convert m1_map to list format and persist
+        if m1_map:
+            m1_list = [
+                {"asset_id": aid, "timestamp": ts, **data}
+                for (aid, ts), data in m1_map.items()
+            ]
+            self.repo.upsert_minutes(m1_list, mode="delta")
 
         # Combine latest_ts from bars and trades
         if bars:
@@ -456,48 +480,20 @@ class WebsocketClient:
                     ts = parse_tick_timestamp(ts_str)
                     latest_ts = max(latest_ts, ts) if latest_ts else ts
 
-        # Map minute keys back to PKs for linkage
-        all_m1_keys = list(m1_map.keys()) + list(bar_candles.keys())
-        minute_ids_by_key = self.repo.fetch_minute_ids(all_m1_keys)
-
         # Merge bar-based minutes into trade-based minutes for rollup authority
         # Prefer bar values when present as authoritative 1T OHLCV
-        if bar_candles:
-            for k, v in bar_candles.items():
+        if bar_candles_map:
+            for k, v in bar_candles_map.items():
                 m1_map[k] = v
 
-        # Update higher timeframes and attach minute IDs
+        # Update higher timeframes
+        # Note: minute_candle_ids tracking is removed in the new design
+        # Relationships can be reconstructed via timestamps if needed
         if latest_ts:
             touched_by_tf = self.aggregator.rollup_from_minutes(m1_map)
             # Persist open buckets immediately for lower latency updates
             self.aggregator.persist_open(touched_by_tf, latest_ts)
-            # Attach minute ids to accumulators
-            from main import const as _const
-
-            for tf, delta in _const.TF_CFG.items():
-                if tf == _const.TF_1T:
-                    continue
-                acc = self.aggregator._tf_acc[tf]
-                for (aid, m1_ts), _ in m1_map.items():
-                    # derive bucket from incoming minute timestamps
-                    bucket = floor_to_bucket(m1_ts, delta)
-                    key = (aid, bucket)
-                    acc.setdefault(key, {})
-                    ids_list = acc[key].setdefault("minute_candle_ids", [])
-                    mid = minute_ids_by_key.get((aid, m1_ts))
-                    if mid is not None and mid not in ids_list:
-                        ids_list.append(mid)
-                # Also for bars
-                for (aid, m1_ts), _ in bar_candles.items():
-                    bucket = floor_to_bucket(m1_ts, delta)
-                    key = (aid, bucket)
-                    acc.setdefault(key, {})
-                    ids_list = acc[key].setdefault("minute_candle_ids", [])
-                    mid = minute_ids_by_key.get((aid, m1_ts))
-                    if mid is not None and mid not in ids_list:
-                        ids_list.append(mid)
-            # Persist open buckets again (may be throttled) and flush closed
-            self.aggregator.persist_open(touched_by_tf, latest_ts)
+            # Flush any closed buckets
             self.aggregator.flush_closed(latest_ts)
 
     # Backfill scheduling helper used by BackfillGuard

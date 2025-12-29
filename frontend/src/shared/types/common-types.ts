@@ -312,6 +312,48 @@ export type PaginatedWatchLists = PaginatedResponse<WatchList>;
 export type PaginatedCandles = PaginatedResponse<Candle>;
 export type PaginatedTicks = PaginatedResponse<Tick>;
 
+// V3 Cursor-based pagination for candles (optimized with compact format)
+export interface CandleV3 {
+  timestamp: string;
+  open: string;
+  high: string;
+  low: string;
+  close: string;
+  volume: string;
+  trade_count: number | null;
+  vwap: string | null;
+}
+
+/**
+ * Compact candle response format - ~60% smaller than object format.
+ *
+ * Backend returns candles as arrays with column headers:
+ * {
+ *   columns: ["timestamp", "open", "high", "low", "close", "volume", "trade_count", "vwap"],
+ *   results: [["2024-01-15T09:30:00Z", "150.25", "150.50", ...], ...]
+ * }
+ */
+export interface CompactCandlesResponse {
+  columns: string[];
+  results: (string | number | null)[][];
+  next_cursor: string | null;
+  has_next: boolean;
+}
+
+// Legacy object format response (use format=object query param)
+export interface CursorPaginatedCandlesResponse {
+  results: CandleV3[];
+  next_cursor: string | null;
+  has_next: boolean;
+}
+
+export interface GetCandlesV3Params {
+  id: number;
+  timeframe?: number; // 1, 5, 15, 30, 60, 240, 1440
+  limit?: number;
+  cursor?: string; // ISO 8601 timestamp
+}
+
 export interface EmailVerificationResponse {
   message: string;
 }

@@ -4,145 +4,137 @@
 
 @layer base {
   :root {
-    /* Light Mode - Premium Professional Aesthetic */
-    --background: 220 18% 97%;
-    --foreground: 222 50% 10%;
+    /* Light Mode - Clean Professional */
+    --background: 0 0% 99%;
+    --foreground: 240 10% 4%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 50% 10%;
+    --card-foreground: 240 10% 4%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 50% 10%;
+    --popover-foreground: 240 10% 4%;
 
-    /* Primary: Modern Professional Blue */
-    --primary: 217 91% 55%;
+    /* Primary: Subtle Professional Blue */
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary/Neutrals */
-    --secondary: 220 20% 92%;
-    --secondary-foreground: 222 47% 12%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 10%;
 
-    --muted: 220 18% 94%;
-    --muted-foreground: 220 12% 42%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
 
-    /* Accent: Vibrant Professional Teal */
-    --accent: 180 82% 50%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent: Same as primary for consistency */
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 6% 10%;
 
     /* Semantic Colors */
-    --destructive: 0 86% 62%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 76% 42%;
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 95% 52%;
-    --warning-foreground: 25 5% 5%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 0%;
 
-    --border: 220 15% 86%;
-    --input: 220 15% 89%;
-    --ring: 217 91% 55%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 221 83% 53%;
 
     /* Chart palette (light) */
     --chart-1: 221 83% 53%;
     --chart-2: 142 71% 45%;
     --chart-3: 0 84% 60%;
     --chart-4: 38 92% 50%;
-    --chart-5: 262 80% 60%;
+    --chart-5: 262 80% 50%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
     /* Sidebar */
-    --sidebar-background: 220 20% 99%;
-    --sidebar-foreground: 222 47% 11%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 6% 10%;
     --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 95%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 220 13% 90%;
+    --sidebar-accent: 240 5% 96%;
+    --sidebar-accent-foreground: 240 6% 10%;
+    --sidebar-border: 240 6% 90%;
     --sidebar-ring: 221 83% 53%;
 
     --vh: 1vh;
 
-    /* Trading-specific colors */
-    --profit: 142 76% 42%;
-    --loss: 0 86% 62%;
+    /* Trading-specific colors - TradingView style */
+    --profit: 168 76% 42%;
+    --loss: 4 85% 60%;
+    --candle-up: 168 76% 42%;
+    --candle-down: 4 85% 60%;
     --trading-card: 0 0% 100%;
-    --trading-border: 220 15% 86%;
-
-    /* Additional premium variables */
-    --gradient-start: 217 91% 55%;
-    --gradient-end: 262 83% 62%;
-    --glass-bg: 0 0% 100%;
-    --glass-border: 220 15% 86%;
+    --trading-border: 240 6% 90%;
   }
 
   .dark {
-    /* Dark Mode - Premium Professional Deep Aesthetic */
-    --background: 222 50% 5%;
-    --foreground: 220 20% 96%;
+    /* Dark Mode - Clean Professional */
+    --background: 240 10% 4%;
+    --foreground: 0 0% 95%;
 
-    --card: 222 47% 8%;
-    --card-foreground: 220 20% 96%;
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 222 47% 8%;
-    --popover-foreground: 220 20% 96%;
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 95%;
 
-    /* Primary: Vibrant Professional Blue */
-    --primary: 217 91% 62%;
-    --primary-foreground: 222 50% 5%;
+    /* Primary: Clear Blue */
+    --primary: 217 91% 60%;
+    --primary-foreground: 240 10% 4%;
 
-    --secondary: 222 47% 12%;
-    --secondary-foreground: 220 20% 94%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 222 47% 10%;
-    --muted-foreground: 220 20% 65%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
 
-    /* Accent: Professional Neon Cyan */
-    --accent: 180 91% 58%;
-    --accent-foreground: 222 50% 5%;
+    /* Accent */
+    --accent: 240 4% 16%;
+    --accent-foreground: 0 0% 95%;
 
-    --destructive: 0 86% 67%;
-    --destructive-foreground: 220 20% 96%;
+    --destructive: 0 62% 55%;
+    --destructive-foreground: 0 0% 95%;
 
-    --success: 142 76% 50%;
-    --success-foreground: 222 50% 5%;
+    --success: 142 70% 45%;
+    --success-foreground: 0 0% 95%;
 
-    --warning: 38 100% 62%;
-    --warning-foreground: 25 5% 5%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 0%;
 
-    --border: 222 47% 18%;
-    --input: 222 47% 15%;
-    --ring: 217 91% 62%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 217 91% 60%;
 
     /* Chart palette (dark) */
     --chart-1: 217 91% 60%;
-    --chart-2: 142 76% 48%;
-    --chart-3: 0 84% 65%;
-    --chart-4: 38 100% 60%;
-    --chart-5: 262 83% 68%;
+    --chart-2: 142 70% 50%;
+    --chart-3: 0 70% 55%;
+    --chart-4: 38 92% 55%;
+    --chart-5: 262 80% 60%;
 
     /* Sidebar */
-    --sidebar-background: 222 47% 5%;
-    --sidebar-foreground: 220 17% 98%;
+    --sidebar-background: 240 10% 4%;
+    --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 222 47% 4%;
-    --sidebar-accent: 222 47% 10%;
-    --sidebar-accent-foreground: 220 17% 96%;
-    --sidebar-border: 222 47% 14%;
+    --sidebar-primary-foreground: 240 10% 4%;
+    --sidebar-accent: 240 4% 16%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 240 4% 16%;
     --sidebar-ring: 217 91% 60%;
 
-    /* Dark mode trading colors */
-    --profit: 142 76% 50%;
-    --loss: 0 86% 67%;
-    --trading-card: 222 47% 8%;
-    --trading-border: 222 47% 18%;
-
-    /* Additional premium variables */
-    --gradient-start: 217 91% 62%;
-    --gradient-end: 262 83% 68%;
-    --glass-bg: 222 47% 8%;
-    --glass-border: 222 47% 18%;
+    /* Dark mode trading colors - TradingView style */
+    --profit: 168 76% 42%;
+    --loss: 4 85% 60%;
+    --candle-up: 168 76% 42%;
+    --candle-down: 4 85% 60%;
+    --trading-card: 240 10% 6%;
+    --trading-border: 240 4% 16%;
   }
 
   @layer base {
@@ -200,84 +192,28 @@
     display: none; /* Chrome, Safari, and Opera */
   }
 
-  /* Premium Glass Effect */
+  /* Simple card styling */
   .glass-card {
-    background: hsl(var(--glass-bg) / 0.7);
-    backdrop-filter: saturate(140%) blur(12px);
-    -webkit-backdrop-filter: saturate(140%) blur(12px);
-    border: 1px solid hsl(var(--glass-border) / 0.5);
-    box-shadow:
-      0 0 0 1px hsl(var(--border) / 0.1),
-      0 4px 16px -2px hsl(var(--foreground) / 0.05),
-      0 8px 24px -4px hsl(var(--foreground) / 0.03);
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
   }
 
-  .glass-strong {
-    background: hsl(var(--glass-bg) / 0.85);
-    backdrop-filter: saturate(160%) blur(16px);
-    -webkit-backdrop-filter: saturate(160%) blur(16px);
-    border: 1px solid hsl(var(--glass-border) / 0.7);
-  }
-
-  /* Modern Chart Container */
+  /* Chart Container */
   .chart-container {
-    @apply relative overflow-hidden rounded-lg shadow ring-1 ring-border/40;
-    background: linear-gradient(
-      135deg,
-      hsl(var(--card)) 0%,
-      hsl(var(--muted) / 0.5) 100%
-    );
-  }
-
-  /* Enhanced Button Effects */
-  .action-button {
-    @apply relative overflow-hidden transition-all duration-200 ease-out hover:scale-[1.02] active:scale-[0.98];
-    box-shadow: 0 2px 8px hsl(var(--foreground) / 0.08);
-  }
-
-  .action-button::before {
-    @apply absolute inset-0 transition-transform duration-500 -translate-x-full;
-    content: '';
-    background: linear-gradient(
-      90deg,
-      transparent,
-      hsl(var(--primary) / 0.15),
-      transparent
-    );
-  }
-
-  .action-button:hover::before {
-    @apply translate-x-full;
+    @apply relative overflow-hidden rounded-lg border border-border bg-card;
   }
 
   /* Status Indicators */
   .status-positive {
-    @apply text-green-600 dark:text-green-400;
+    @apply text-success;
   }
 
   .status-negative {
-    @apply text-red-600 dark:text-red-400;
+    @apply text-destructive;
   }
 
   .status-neutral {
     @apply text-muted-foreground;
-  }
-
-  /* Smooth Animations */
-  .live-pulse {
-    animation: live-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  @keyframes live-pulse {
-    0%,
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.9;
-      transform: scale(1.015);
-    }
   }
 
   /* Market Status */
@@ -340,7 +276,7 @@
   }
 }
 
-/* Premium Utilities */
+/* Utilities */
 @layer utilities {
   .profit-text {
     @apply text-profit;
@@ -352,56 +288,6 @@
 
   .trading-card {
     @apply bg-trading-card border-trading-border;
-  }
-
-  .glass-effect {
-    @apply backdrop-blur-md bg-card/70 border-border/50;
-  }
-
-  .gradient-premium {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--gradient-start)) 0%,
-      hsl(var(--gradient-end)) 100%
-    );
-  }
-
-  .text-gradient {
-    @apply text-transparent bg-clip-text;
-    background-image: linear-gradient(
-      to right,
-      hsl(var(--primary)),
-      hsl(var(--accent))
-    );
-  }
-
-  .animate-in {
-    animation: animate-in 0.4s ease-out;
-  }
-
-  @keyframes animate-in {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .shadow-premium {
-    box-shadow:
-      0 0 0 1px hsl(var(--border) / 0.1),
-      0 4px 16px -2px hsl(var(--foreground) / 0.08),
-      0 12px 32px -4px hsl(var(--foreground) / 0.04);
-  }
-
-  .shadow-premium-lg {
-    box-shadow:
-      0 0 0 1px hsl(var(--border) / 0.1),
-      0 8px 24px -4px hsl(var(--foreground) / 0.12),
-      0 20px 48px -8px hsl(var(--foreground) / 0.08);
   }
 
   /* Mobile-specific improvements */
@@ -421,11 +307,5 @@
   .touch-target {
     min-height: 44px;
     min-width: 44px;
-  }
-
-  /* Smooth scrolling on touch devices */
-  .smooth-scroll {
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
   }
 }

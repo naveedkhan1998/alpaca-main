@@ -9,7 +9,6 @@ import {
   PageActions,
 } from '@/components/PageLayout';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RefreshCcw, AlertTriangle } from 'lucide-react';
 
 import { AssetTable } from './components/AssetTable';
@@ -163,83 +162,47 @@ export const AssetsPage: React.FC = () => {
 
   return (
     <PageLayout
-      header={<PageHeader>Trading Assets</PageHeader>}
+      header={<PageHeader>Instruments</PageHeader>}
       subheader={
-        <PageSubHeader>
-          Discover and analyze trading instruments across multiple asset
-          classes. Filter, sort, and explore market data with advanced search
-          capabilities.
-        </PageSubHeader>
+        <PageSubHeader>Browse and search trading instruments</PageSubHeader>
       }
       actions={
         <PageActions>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={handleSyncAssets}
-              disabled={isSyncing || syncStatus?.is_syncing}
-              className="gap-2"
-            >
-              <RefreshCcw
-                className={`w-4 h-4 ${isSyncing || syncStatus?.is_syncing ? 'animate-spin' : ''}`}
-              />
-              <span className="hidden sm:inline">
-                {isSyncing || syncStatus?.is_syncing
-                  ? 'Syncing...'
-                  : 'Sync Assets'}
-              </span>
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSyncAssets}
+            disabled={isSyncing || syncStatus?.is_syncing}
+          >
+            <RefreshCcw
+              className={`w-4 h-4 ${isSyncing || syncStatus?.is_syncing ? 'animate-spin' : ''}`}
+            />
+            <span className="hidden ml-2 sm:inline">
+              {isSyncing || syncStatus?.is_syncing ? 'Syncing...' : 'Sync'}
+            </span>
+          </Button>
         </PageActions>
       }
     >
-      {/* Sync Banner */}
-      {syncStatus?.needs_sync && (
-        <Alert className="mb-6 border-amber-200/50 bg-amber-50/50 dark:border-amber-800/50 dark:bg-amber-950/50 backdrop-blur-sm">
-          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-          <AlertDescription className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className="mb-1 font-medium text-amber-800 dark:text-amber-200">
-                Asset Data Sync Required
-              </p>
-              <p className="text-sm text-amber-700 dark:text-amber-300">
-                {syncStatus.is_syncing
-                  ? 'Assets are currently being synced from Alpaca...'
-                  : syncStatus.total_assets === 0
-                    ? 'No assets found in your database. Sync assets to get started.'
-                    : 'Your asset data is outdated. Consider syncing to get the latest information.'}
-              </p>
-            </div>
-            {!syncStatus.is_syncing && (
-              <Button
-                onClick={handleSyncAssets}
-                disabled={isSyncing}
-                size="sm"
-                className="ml-4 text-white bg-amber-600 hover:bg-amber-700 border-amber-600"
-              >
-                <RefreshCcw
-                  className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`}
-                />
-                Sync Now
-              </Button>
-            )}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Syncing Banner */}
-      {syncStatus?.is_syncing && (
-        <Alert className="mb-6 border-blue-200/50 bg-blue-50/50 dark:border-blue-800/50 dark:bg-blue-950/50 backdrop-blur-sm">
-          <RefreshCcw className="w-4 h-4 text-blue-600 animate-spin dark:text-blue-400" />
-          <AlertDescription>
-            <p className="font-medium text-blue-800 dark:text-blue-200">
-              Syncing Assets from Alpaca
-            </p>
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              This may take 30-40 seconds. Please wait while we fetch the latest
-              asset data...
-            </p>
-          </AlertDescription>
-        </Alert>
+      {/* Sync Status */}
+      {(syncStatus?.needs_sync || syncStatus?.is_syncing) && (
+        <div className="flex items-center gap-3 p-3 mb-4 text-sm border rounded-lg bg-muted/50">
+          {syncStatus.is_syncing ? (
+            <>
+              <RefreshCcw className="w-4 h-4 animate-spin text-muted-foreground" />
+              <span className="text-muted-foreground">Syncing assets...</span>
+            </>
+          ) : (
+            <>
+              <AlertTriangle className="w-4 h-4 text-muted-foreground" />
+              <span className="text-muted-foreground">
+                {syncStatus.total_assets === 0
+                  ? 'No assets found. Click Sync to fetch data.'
+                  : 'Asset data may be outdated.'}
+              </span>
+            </>
+          )}
+        </div>
       )}
 
       <PageContent>

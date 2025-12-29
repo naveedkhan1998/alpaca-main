@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { AssetSearch } from './AssetSearch';
 import { useIsMobile } from '@/hooks/useMobile';
 import { useAppSelector } from '../../app/hooks';
@@ -29,8 +28,8 @@ export const PageHeader: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <div className={`mb-4 sm:mb-6 animate-fade-in ${className}`}>
-    <h1 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl text-foreground">
+  <div className={`mb-2 ${className}`}>
+    <h1 className="text-xl font-semibold tracking-tight sm:text-2xl text-foreground">
       {children}
     </h1>
   </div>
@@ -40,22 +39,14 @@ export const PageSubHeader: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <div
-    className={`mb-6 sm:mb-8 text-base sm:text-lg text-muted-foreground leading-relaxed animate-fade-in ${className}`}
-    style={{ animationDelay: '0.1s' }}
-  >
-    {children}
-  </div>
+  <div className={`text-sm text-muted-foreground ${className}`}>{children}</div>
 );
 
 export const PageActions: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <div
-    className={`flex flex-wrap items-center gap-3 mb-8 animate-fade-in ${className}`}
-    style={{ animationDelay: '0.2s' }}
-  >
+  <div className={`flex flex-wrap items-center gap-2 ${className}`}>
     {children}
   </div>
 );
@@ -64,12 +55,7 @@ export const PageContent: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <main
-    className={`flex-1 w-full animate-fade-in ${className}`}
-    style={{ animationDelay: '0.3s' }}
-  >
-    {children}
-  </main>
+  <main className={`flex-1 w-full ${className}`}>{children}</main>
 );
 
 const extractTextContent = (element: React.ReactNode): string => {
@@ -110,11 +96,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   const getContainerClasses = () => {
     switch (effectiveVariant) {
       case 'clean':
-        return 'mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10';
+        return 'mx-auto w-full max-w-[1400px] px-4 py-4 sm:px-6 sm:py-6';
       case 'full-width':
-        return 'w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10';
+        return 'w-full px-4 py-4 sm:px-6 sm:py-6';
       default:
-        return 'mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10';
+        return 'mx-auto w-full max-w-[1400px] px-4 py-4 sm:px-6 sm:py-6';
     }
   };
 
@@ -125,7 +111,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       case 'full-width':
         return `${contentClassName}`;
       default:
-        return `rounded-2xl bg-gradient-to-br min-h-[calc(100dvh-22rem)] from-card/50 to-card/30 border border-border/50 backdrop-blur-sm ${contentClassName}`;
+        return `${contentClassName}`;
     }
   };
 
@@ -143,39 +129,25 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             <div className={getContainerClasses()}>
               {/* Header Section */}
               {(header || subheader || actions) && (
-                <div className="mb-8 sm:mb-10">
-                  <div className="p-6 border rounded-2xl border-border/50 bg-gradient-to-br from-card/60 to-muted/30 backdrop-blur-sm shadow-premium sm:p-8">
-                    <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="flex-1 space-y-3">
-                        {header}
-                        {subheader}
-                      </div>
-                      {actions && (
-                        <div className="flex-shrink-0">
-                          <div className="flex flex-wrap items-center gap-3">
-                            {actions}
-                          </div>
-                        </div>
-                      )}
+                <div className="mb-6">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="flex-1 space-y-2">
+                      {header}
+                      {subheader}
                     </div>
+                    {actions && (
+                      <div className="flex-shrink-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {actions}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
               {/* Content Section */}
-              {effectiveVariant === 'default' ? (
-                <Card className={getContentClasses()}>
-                  <CardContent className="p-6 sm:p-8">{children}</CardContent>
-                </Card>
-              ) : (
-                <div className={getContentClasses()}>
-                  {effectiveVariant === 'clean' ? (
-                    <div className="space-y-6 sm:space-y-8">{children}</div>
-                  ) : (
-                    children
-                  )}
-                </div>
-              )}
+              <div className={getContentClasses()}>{children}</div>
             </div>
           </div>
         </div>
@@ -227,39 +199,25 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               <div className={getContainerClasses()}>
                 {/* Header Section */}
                 {(header || subheader || actions) && (
-                  <div className="mb-8 sm:mb-10">
-                    <div className="p-6 border rounded-2xl border-border/50 bg-gradient-to-br from-card/60 to-muted/30 backdrop-blur-sm shadow-premium sm:p-8">
-                      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="flex-1 space-y-3">
-                          {header}
-                          {subheader}
-                        </div>
-                        {actions && (
-                          <div className="flex-shrink-0">
-                            <div className="flex flex-wrap items-center gap-3">
-                              {actions}
-                            </div>
-                          </div>
-                        )}
+                  <div className="mb-6">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="flex-1 space-y-2">
+                        {header}
+                        {subheader}
                       </div>
+                      {actions && (
+                        <div className="flex-shrink-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            {actions}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
 
                 {/* Content Section */}
-                {effectiveVariant === 'default' ? (
-                  <Card className={getContentClasses()}>
-                    <CardContent className="p-6 sm:p-8">{children}</CardContent>
-                  </Card>
-                ) : (
-                  <div className={getContentClasses()}>
-                    {effectiveVariant === 'clean' ? (
-                      <div className="space-y-6 sm:space-y-8">{children}</div>
-                    ) : (
-                      children
-                    )}
-                  </div>
-                )}
+                <div className={getContentClasses()}>{children}</div>
               </div>
             </div>
           </div>

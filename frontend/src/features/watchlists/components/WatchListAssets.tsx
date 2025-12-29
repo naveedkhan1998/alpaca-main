@@ -9,10 +9,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-
 import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Building2, AlertCircle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { useGetWatchListByIdQuery } from '@/api/watchlistService';
 
 interface WatchListAssetsProps {
@@ -32,14 +30,9 @@ export const WatchListAssets: React.FC<WatchListAssetsProps> = ({
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex items-center space-x-4">
-            <Skeleton className="w-16 h-4" />
-            <Skeleton className="w-32 h-4" />
-            <Skeleton className="w-20 h-6" />
-            <Skeleton className="w-16 h-4" />
-          </div>
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="w-full h-10" />
         ))}
       </div>
     );
@@ -47,78 +40,79 @@ export const WatchListAssets: React.FC<WatchListAssetsProps> = ({
 
   if (error || !watchlist) {
     return (
-      <Alert>
-        <AlertCircle className="w-4 h-4" />
-        <AlertDescription>
-          Failed to load watchlist assets. Please try again.
-        </AlertDescription>
-      </Alert>
+      <div className="flex items-center gap-2 p-3 text-sm border rounded-lg text-destructive bg-destructive/5">
+        <AlertTriangle className="w-4 h-4" />
+        Failed to load assets
+      </div>
     );
   }
 
   if (!watchlist.assets || watchlist.assets.length === 0) {
     return (
-      <div className="py-8 text-center">
-        <Building2 className="w-12 h-12 mx-auto text-muted-foreground" />
-        <h3 className="mt-2 text-lg font-semibold">No assets yet</h3>
-        <p className="text-muted-foreground">
-          Add assets to this watchlist from the Assets page.
-        </p>
+      <div className="py-6 text-sm text-center text-muted-foreground">
+        No assets yet. Add from the Instruments page.
       </div>
     );
   }
 
+  const getAssetClassColor = (assetClass: string) => {
+    switch (assetClass) {
+      case 'us_equity':
+        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
+      case 'us_option':
+        return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300';
+      case 'crypto':
+        return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="overflow-hidden border rounded-md border-border/40">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Symbol</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Asset Class</TableHead>
-              <TableHead>Exchange</TableHead>
-              <TableHead>Added</TableHead>
+    <div className="overflow-hidden border rounded-md">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Symbol</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Class</TableHead>
+            <TableHead>Exchange</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {watchlist.assets.map(watchlistAsset => (
+            <TableRow
+              key={watchlistAsset.id}
+              onClick={() =>
+                navigate(`/graphs/${watchlistAsset.asset.id}`, {
+                  state: { obj: watchlistAsset.asset },
+                })
+              }
+              className="cursor-pointer"
+            >
+              <TableCell className="font-mono font-medium">
+                {watchlistAsset.asset.symbol}
+              </TableCell>
+              <TableCell className="max-w-[200px]">
+                <div className="truncate" title={watchlistAsset.asset.name}>
+                  {watchlistAsset.asset.name}
+                </div>
+              </TableCell>
+              <TableCell>
+                <Badge
+                  variant="secondary"
+                  className={`text-xs ${getAssetClassColor(watchlistAsset.asset.asset_class)}`}
+                >
+                  {watchlistAsset.asset.asset_class.replace('_', ' ')}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {watchlistAsset.asset.exchange}
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {watchlist.assets.map(watchlistAsset => (
-              <TableRow
-                key={watchlistAsset.id}
-                onClick={() =>
-                  navigate(`/graphs/${watchlistAsset.asset.id}`, {
-                    state: { obj: watchlistAsset.asset },
-                  })
-                }
-                className="cursor-pointer hover:bg-accent/10"
-              >
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-primary" />
-                    {watchlistAsset.asset.symbol}
-                  </div>
-                </TableCell>
-                <TableCell className="max-w-[240px]">
-                  <div className="truncate" title={watchlistAsset.asset.name}>
-                    {watchlistAsset.asset.name}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="secondary">
-                    {watchlistAsset.asset.asset_class
-                      .replace('_', ' ')
-                      .toUpperCase()}
-                  </Badge>
-                </TableCell>
-                <TableCell>{watchlistAsset.asset.exchange}</TableCell>
-                <TableCell>
-                  {new Date(watchlistAsset.added_at).toLocaleDateString()}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };

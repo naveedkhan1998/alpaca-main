@@ -3,9 +3,11 @@
 from rest_framework import serializers
 
 from apps.core.models import (
+    AggregatedCandle,
     AlpacaAccount,
     Asset,
     Candle,
+    MinuteCandle,
     Tick,
     WatchList,
     WatchListAsset,
@@ -100,6 +102,8 @@ class TickSerializer(serializers.ModelSerializer):
 
 
 class CandleSerializer(serializers.ModelSerializer):
+    """Serializer for legacy Candle model."""
+
     asset_symbol = serializers.CharField(source="asset.symbol", read_only=True)
 
     class Meta:
@@ -123,6 +127,55 @@ class CandleSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at"]
 
 
+class MinuteCandleSerializer(serializers.ModelSerializer):
+    """Serializer for 1-minute candle data."""
+
+    asset_symbol = serializers.CharField(source="asset.symbol", read_only=True)
+
+    class Meta:
+        model = MinuteCandle
+        fields = [
+            "id",
+            "asset",
+            "asset_symbol",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
+            "trade_count",
+            "vwap",
+            "timestamp",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at"]
+
+
+class AggregatedCandleModelSerializer(serializers.ModelSerializer):
+    """Serializer for aggregated candle model data."""
+
+    asset_symbol = serializers.CharField(source="asset.symbol", read_only=True)
+
+    class Meta:
+        model = AggregatedCandle
+        fields = [
+            "id",
+            "asset",
+            "asset_symbol",
+            "timeframe",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
+            "trade_count",
+            "vwap",
+            "timestamp",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at"]
+
+
 class AlpacaAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = AlpacaAccount
@@ -131,15 +184,33 @@ class AlpacaAccountSerializer(serializers.ModelSerializer):
 
 
 class CandleChartSerializer(serializers.ModelSerializer):
-    """Simplified serializer for chart data"""
+    """Simplified serializer for chart data (legacy)."""
 
     class Meta:
         model = Candle
         fields = ["open", "high", "low", "close", "volume", "timestamp"]
 
 
+class CandleV3Serializer(serializers.Serializer):
+    """
+    Lightweight serializer for new candle API (v3).
+
+    Uses Serializer instead of ModelSerializer for performance
+    when working with pre-computed dictionaries.
+    """
+
+    timestamp = serializers.CharField()
+    open = serializers.CharField()
+    high = serializers.CharField()
+    low = serializers.CharField()
+    close = serializers.CharField()
+    volume = serializers.CharField()
+    trade_count = serializers.IntegerField(allow_null=True, required=False)
+    vwap = serializers.CharField(allow_null=True, required=False)
+
+
 class AggregatedCandleSerializer(serializers.Serializer):
-    """For aggregated candle data from database queries"""
+    """For aggregated candle data from database queries (legacy v2 format)."""
 
     date = serializers.DateTimeField(source="bucket")
     open = serializers.FloatField(source="o")

@@ -3,15 +3,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Separator } from '@/components/ui/separator';
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '@/components/ui/hover-card';
 import {
   Tooltip,
   TooltipContent,
@@ -24,7 +17,6 @@ import {
   HiArrowLeft,
   HiArrowsExpand,
   HiChartBar,
-  HiColorSwatch,
   HiDotsVertical,
   HiDownload,
   HiPause,
@@ -44,8 +36,6 @@ import {
 import { Asset } from '@/types/common-types';
 import { ModeToggle } from '@/components/ModeToggle';
 import { useIsMobile } from '@/hooks/useMobile';
-import ReplayControls from './ReplayControls';
-import { useMemo } from 'react';
 
 interface GraphHeaderProps {
   obj: Asset;
@@ -87,171 +77,80 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
   const {
     enabled: replayEnabled,
     playing: replayPlaying,
-    currentStep: replayCurrentStep,
-    totalSteps: replayTotalSteps,
     onToggle: toggleReplay,
     onPlayPause: playPauseReplay,
-    onRestart: restartReplay,
-    onSeek: seekReplay,
-    speed: replaySpeed,
-    onSpeedChange: changeReplaySpeed,
-    currentLabel: replayCurrentLabel,
-    isLoadingMore: replayIsLoadingMore,
-    hasMoreHistorical: replayHasMoreHistorical,
-    onLoadMoreHistorical: replayLoadMoreHistorical,
   } = replayControls;
 
-  const replayTriggerButton = useMemo(() => {
-    const commonClasses = `relative h-9 w-9 rounded-full border transition-all ${
-      replayEnabled
-        ? 'border-primary/40 bg-primary/10 text-primary shadow-sm'
-        : 'border-border/40 bg-card/95 text-muted-foreground hover:text-foreground'
-    }`;
-
-    return (
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label={
-          replayEnabled ? 'Disable candle replay' : 'Enable candle replay'
-        }
-        className={commonClasses}
-        onClick={() => toggleReplay(!replayEnabled)}
-      >
-        <HiPlay
-          className={`w-4 h-4 ${
-            replayPlaying ? 'text-primary animate-pulse' : ''
-          }`}
-        />
-        {replayPlaying ? (
-          <span className="absolute top-1 right-1 inline-flex h-2.5 w-2.5 rounded-full bg-primary/80 animate-ping" />
-        ) : replayEnabled ? (
-          <span className="absolute top-1 right-1 inline-flex h-1.5 w-1.5 rounded-full bg-primary/70" />
-        ) : null}
-      </Button>
-    );
-  }, [replayEnabled, replayPlaying, toggleReplay]);
-
-  const replayControlsContent = (
-    <ReplayControls
-      variant="popover"
-      enabled={replayEnabled}
-      playing={replayPlaying}
-      currentStep={replayCurrentStep}
-      totalSteps={replayTotalSteps}
-      onToggle={toggleReplay}
-      onPlayPause={playPauseReplay}
-      onRestart={restartReplay}
-      onSeek={seekReplay}
-      speed={replaySpeed}
-      onSpeedChange={changeReplaySpeed}
-      currentLabel={replayCurrentLabel}
-      isLoadingMore={replayIsLoadingMore}
-      hasMoreHistorical={replayHasMoreHistorical}
-      onLoadMoreHistorical={replayLoadMoreHistorical}
-    />
-  );
-
   return (
-    <header className="sticky top-0 z-30 border-b border-border/40 bg-card/95 backdrop-blur-xl supports-[backdrop-filter]:bg-card/90 shadow-sm">
+    <header className="sticky top-0 z-30 border-b bg-background">
       <Helmet>
         <title>{obj?.name} - Alpaca</title>
       </Helmet>
-      <div
-        className={`flex items-center ${isMobile ? 'h-16 px-3' : 'h-16 px-4'} mx-auto sm:px-6 lg:px-8`}
-      >
+      <div className={`flex items-center h-14 px-4`}>
         {/* Left Section - Navigation & Title */}
         <div className="flex items-center flex-1 gap-3">
-          <TooltipProvider>
-            <Tooltip delayDuration={0}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="w-8 h-8"
+          >
+            <HiArrowLeft className="w-4 h-4" />
+          </Button>
+
+          <div>
+            <h1 className="text-sm font-semibold font-mono">
+              {obj?.symbol || 'Chart'}
+            </h1>
+            {!isMobile && obj?.name && (
+              <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                {obj.name}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Center Section - Replay Quick Toggle */}
+        <div className="flex items-center justify-center flex-1">
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigate(-1)}
-                  className="transition-colors rounded-lg hover:bg-muted/80"
+                  variant={replayEnabled ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-8 gap-2"
+                  onClick={() => toggleReplay(!replayEnabled)}
                 >
-                  <HiArrowLeft className="w-5 h-5" />
+                  <HiPlay
+                    className={`w-4 h-4 ${replayEnabled ? 'text-primary' : ''}`}
+                  />
+                  {!isMobile && (
+                    <span className="text-xs">
+                      {replayEnabled ? 'Replay On' : 'Replay'}
+                    </span>
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
-                Go back
+                {replayEnabled ? 'Exit replay mode' : 'Start candle replay'}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
-          <div className="flex items-center gap-2">
-            <div>
-              <h1
-                className={`${
-                  isMobile ? 'text-base' : 'text-lg'
-                } font-bold text-foreground tracking-tight`}
-              >
-                {obj?.symbol || 'Chart'}
-              </h1>
-              {!isMobile && obj?.name && (
-                <p className="text-xs text-muted-foreground truncate max-w-[200px]">
-                  {obj.name}
-                </p>
+          {/* Quick play/pause when replay is active */}
+          {replayEnabled && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-8 h-8 ml-1"
+              onClick={playPauseReplay}
+            >
+              {replayPlaying ? (
+                <HiPause className="w-4 h-4 text-primary" />
+              ) : (
+                <HiPlay className="w-4 h-4" />
               )}
-            </div>
-          </div>
-        </div>
-
-        {/* Center Section - Replay Controls */}
-        <div className="flex items-center justify-center flex-1">
-          {isMobile ? (
-            // Mobile: Just toggle replay, overlay shows at bottom
-            replayTriggerButton
-          ) : (
-            // Desktop: Show replay controls with hover card
-            <HoverCard>
-              <HoverCardTrigger asChild>
-                {replayEnabled ? (
-                  <div className="flex items-center gap-2 px-3 py-2 transition-colors border rounded-lg cursor-pointer bg-primary/10 border-primary/20 hover:bg-primary/15">
-                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                    <span className="text-sm font-medium text-primary">
-                      {replayCurrentStep}/{replayTotalSteps}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={e => {
-                        e.stopPropagation();
-                        playPauseReplay();
-                      }}
-                      className="w-6 h-6 p-0 hover:bg-primary/20 text-primary"
-                    >
-                      {replayPlaying ? (
-                        <HiPause className="w-3 h-3" />
-                      ) : (
-                        <HiPlay className="w-3 h-3" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={e => {
-                        e.stopPropagation();
-                        toggleReplay(false);
-                      }}
-                      className="w-6 h-6 p-0 ml-1 hover:bg-primary/20 text-primary"
-                    >
-                      ✕
-                    </Button>
-                  </div>
-                ) : (
-                  replayTriggerButton
-                )}
-              </HoverCardTrigger>
-              <HoverCardContent
-                side="bottom"
-                align="center"
-                className="p-0 border rounded-xl shadow-2xl backdrop-blur w-[min(420px,calc(100vw-2rem))]"
-              >
-                {replayControlsContent}
-              </HoverCardContent>
-            </HoverCard>
+            </Button>
           )}
         </div>
 
@@ -259,18 +158,14 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
         <div className="flex items-center justify-end flex-1 gap-1">
           <TooltipProvider>
             {!isMobile && (
-              <div className="flex items-center gap-1 mr-1">
+              <div className="flex items-center gap-1">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant={autoRefresh ? 'default' : 'ghost'}
                       size="icon"
                       onClick={() => dispatch(setAutoRefresh(!autoRefresh))}
-                      className={`rounded-lg transition-all ${
-                        autoRefresh
-                          ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md'
-                          : 'hover:bg-muted/80'
-                      }`}
+                      className="w-8 h-8"
                     >
                       {autoRefresh ? (
                         <HiPause className="w-4 h-4" />
@@ -280,7 +175,7 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className="text-xs">
-                    {autoRefresh ? 'Pause Live Data' : 'Enable Live Data'}
+                    {autoRefresh ? 'Pause Live' : 'Enable Live'}
                   </TooltipContent>
                 </Tooltip>
                 <Tooltip>
@@ -289,29 +184,20 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                       variant="ghost"
                       size="icon"
                       onClick={refetch}
-                      className="transition-colors rounded-lg hover:bg-muted/80"
+                      className="w-8 h-8"
                     >
                       <HiRefresh className="w-4 h-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="text-xs">
-                    Refresh Data
-                  </TooltipContent>
+                  <TooltipContent className="text-xs">Refresh</TooltipContent>
                 </Tooltip>
-              </div>
-            )}
-
-            <Separator orientation="vertical" className="h-6 mx-1" />
-
-            {!isMobile && (
-              <>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={toggleFullscreen}
-                      className="transition-colors rounded-lg hover:bg-muted/80"
+                      className="w-8 h-8"
                     >
                       {isFullscreen ? (
                         <HiX className="w-4 h-4" />
@@ -321,12 +207,10 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className="text-xs">
-                    {isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+                    {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
                   </TooltipContent>
                 </Tooltip>
-
-                <Separator orientation="vertical" className="h-6 mx-1" />
-              </>
+              </div>
             )}
           </TooltipProvider>
 
@@ -334,29 +218,20 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="transition-colors rounded-lg hover:bg-muted/80"
-              >
+              <Button variant="ghost" size="icon" className="w-8 h-8">
                 <HiDotsVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem
                 onClick={() => dispatch(setShowVolume(!showVolume))}
               >
                 <HiChartBar className="w-4 h-4 mr-2" />
-                <span>{showVolume ? 'Hide' : 'Show'} Volume</span>
+                {showVolume ? 'Hide' : 'Show'} Volume
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleDownload}>
                 <HiDownload className="w-4 h-4 mr-2" />
-                <span>Export as CSV</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <HiColorSwatch className="w-4 h-4 mr-2" />
-                <span>Customize Theme</span>
+                Export CSV
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

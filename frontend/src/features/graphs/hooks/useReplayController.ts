@@ -6,10 +6,14 @@ import {
   selectReplaySpeed,
   selectReplayStep,
   selectReplayTotalSteps,
+  selectReplayAnimate,
+  selectReplayAnimationProgress,
   setReplayEnabled,
   setReplayPlaying,
   setReplaySpeed,
   setReplayStep,
+  setReplayAnimate,
+  setReplayAnimationProgress,
 } from '../graphSlice';
 
 export function useReplayController() {
@@ -20,6 +24,8 @@ export function useReplayController() {
   const speed = useAppSelector(selectReplaySpeed);
   const currentStep = useAppSelector(selectReplayStep);
   const totalSteps = useAppSelector(selectReplayTotalSteps);
+  const animate = useAppSelector(selectReplayAnimate);
+  const animationProgress = useAppSelector(selectReplayAnimationProgress);
 
   const handleReplayToggle = useCallback(
     (value: boolean) => {
@@ -36,13 +42,19 @@ export function useReplayController() {
     }
     if (!playing && currentStep >= totalSteps) {
       dispatch(setReplayStep(totalSteps > 1 ? 1 : totalSteps));
+      dispatch(setReplayAnimationProgress(0)); // Reset animation when restarting from end
+    }
+    if (!playing && animate) {
+      // When starting playback with animate enabled, reset animation progress
+      dispatch(setReplayAnimationProgress(0));
     }
     dispatch(setReplayPlaying(!playing));
-  }, [dispatch, enabled, playing, currentStep, totalSteps]);
+  }, [dispatch, enabled, playing, animate, currentStep, totalSteps]);
 
   const handleReplayRestart = useCallback(() => {
     dispatch(setReplayPlaying(false));
     dispatch(setReplayStep(totalSteps > 1 ? 1 : totalSteps));
+    dispatch(setReplayAnimationProgress(0)); // Reset animation on restart
   }, [dispatch, totalSteps]);
 
   const handleReplaySeek = useCallback(
@@ -53,6 +65,7 @@ export function useReplayController() {
       }
       const clamped = Math.min(Math.max(Math.round(value), 1), totalSteps);
       dispatch(setReplayStep(clamped));
+      dispatch(setReplayAnimationProgress(1)); // Complete animation when seeking
     },
     [dispatch, totalSteps]
   );
@@ -64,16 +77,34 @@ export function useReplayController() {
     [dispatch]
   );
 
+  const handleReplayAnimateToggle = useCallback(
+    (value: boolean) => {
+      dispatch(setReplayAnimate(value));
+    },
+    [dispatch]
+  );
+
+  const handleAnimationProgressChange = useCallback(
+    (value: number) => {
+      dispatch(setReplayAnimationProgress(value));
+    },
+    [dispatch]
+  );
+
   return {
     enabled,
     playing,
     speed,
     currentStep,
     totalSteps,
+    animate,
+    animationProgress,
     handleReplayToggle,
     handleReplayPlayPause,
     handleReplayRestart,
     handleReplaySeek,
     handleReplaySpeedChange,
+    handleReplayAnimateToggle,
+    handleAnimationProgressChange,
   };
 }

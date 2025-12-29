@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/src/index.css" />
@@ -191,19 +191,19 @@
 
       /* Enhanced light mode support for gradient orbs */
       .gradient-orb-1 {
-        background: hsl(var(--accent) / 0.15);
+        background: hsl(var(--primary) / 0.1);
       }
 
       .gradient-orb-2 {
-        background: hsl(var(--primary) / 0.12);
+        background: hsl(var(--primary) / 0.08);
       }
 
       .light .gradient-orb-1 {
-        background: hsl(var(--accent) / 0.08);
+        background: hsl(var(--primary) / 0.06);
       }
 
       .light .gradient-orb-2 {
-        background: hsl(var(--primary) / 0.06);
+        background: hsl(var(--primary) / 0.04);
       }
 
       /* Better card backgrounds for light mode */
@@ -242,9 +242,9 @@
         padding: 8px;
         background: linear-gradient(
           135deg,
-          hsl(var(--accent) / 0.3) 0%,
-          hsl(var(--primary) / 0.2) 50%,
-          hsl(var(--accent) / 0.3) 100%
+          hsl(var(--primary) / 0.2) 0%,
+          hsl(var(--primary) / 0.1) 50%,
+          hsl(var(--primary) / 0.2) 100%
         );
         border-radius: 1.5rem;
         backdrop-filter: blur(20px);
@@ -255,9 +255,9 @@
       .light .hero-image-container {
         background: linear-gradient(
           135deg,
-          hsl(var(--accent) / 0.2) 0%,
-          hsl(var(--primary) / 0.15) 50%,
-          hsl(var(--accent) / 0.2) 100%
+          hsl(var(--primary) / 0.15) 0%,
+          hsl(var(--primary) / 0.1) 50%,
+          hsl(var(--primary) / 0.15) 100%
         );
       }
 
@@ -271,7 +271,7 @@
         padding: 4px;
         box-shadow:
           0 0 0 1px hsl(var(--border) / 0.2),
-          inset 0 0 20px hsl(var(--accent) / 0.1),
+          inset 0 0 20px hsl(var(--primary) / 0.05),
           0 20px 60px -10px hsl(var(--foreground) / 0.2);
       }
 
@@ -281,7 +281,7 @@
         border: 3px solid hsl(var(--border));
         box-shadow:
           0 0 0 1px hsl(var(--border) / 0.3),
-          inset 0 0 20px hsl(var(--accent) / 0.05),
+          inset 0 0 20px hsl(var(--primary) / 0.03),
           0 20px 60px -10px hsl(var(--foreground) / 0.08);
       }
     </style>
@@ -373,7 +373,7 @@
             <!-- Mobile menu button -->
             <button
               id="mobile-menu-btn"
-              class="p-2 transition rounded-lg md:hidden hover:bg-accent/10"
+              class="p-2 transition rounded-lg md:hidden hover:bg-primary/10"
               aria-label="Toggle menu"
             >
               <svg
@@ -474,14 +474,14 @@
           <div class="max-w-4xl mx-auto text-center animate-slide-up">
             <!-- Badge -->
             <div
-              class="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-accent/30 bg-accent/5 text-accent text-xs sm:text-sm font-medium mb-6 sm:mb-8"
+              class="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-primary/30 bg-primary/5 text-primary text-xs sm:text-sm font-medium mb-6 sm:mb-8"
             >
               <span class="relative flex w-2 h-2">
                 <span
-                  class="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-accent"
+                  class="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-primary"
                 ></span>
                 <span
-                  class="relative inline-flex w-2 h-2 rounded-full bg-accent"
+                  class="relative inline-flex w-2 h-2 rounded-full bg-primary"
                 ></span>
               </span>
               Open Source • Free Tier • Production Ready
@@ -492,7 +492,7 @@
               class="mb-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl lg:text-7xl sm:mb-6 text-balance"
             >
               The complete platform to build
-              <span class="text-accent"> market data apps</span>
+              <span class="text-primary"> market data apps</span>
             </h1>
 
             <!-- Subheadline -->
@@ -552,7 +552,7 @@
             >
               <div class="text-center">
                 <div
-                  class="mb-1 text-2xl font-bold sm:text-3xl md:text-4xl text-accent sm:mb-2"
+                  class="mb-1 text-2xl font-bold sm:text-3xl md:text-4xl text-primary sm:mb-2"
                 >
                   30+
                 </div>
@@ -562,7 +562,7 @@
               </div>
               <div class="text-center">
                 <div
-                  class="mb-1 text-2xl font-bold sm:text-3xl md:text-4xl text-accent sm:mb-2"
+                  class="mb-1 text-2xl font-bold sm:text-3xl md:text-4xl text-primary sm:mb-2"
                 >
                   5
                 </div>
@@ -572,7 +572,7 @@
               </div>
               <div class="text-center">
                 <div
-                  class="mb-1 text-2xl font-bold sm:text-3xl md:text-4xl text-accent sm:mb-2"
+                  class="mb-1 text-2xl font-bold sm:text-3xl md:text-4xl text-primary sm:mb-2"
                 >
                   100%
                 </div>
@@ -582,7 +582,7 @@
               </div>
               <div class="text-center">
                 <div
-                  class="mb-1 text-2xl font-bold sm:text-3xl md:text-4xl text-accent sm:mb-2"
+                  class="mb-1 text-2xl font-bold sm:text-3xl md:text-4xl text-primary sm:mb-2"
                 >
                   $0
                 </div>
@@ -609,7 +609,7 @@
               />
             </div>
             <div
-              class="absolute w-24 h-24 rounded-full -bottom-4 sm:-bottom-6 -right-4 sm:-right-6 sm:w-32 sm:h-32 bg-accent/30 blur-3xl"
+              class="absolute w-24 h-24 rounded-full -bottom-4 sm:-bottom-6 -right-4 sm:-right-6 sm:w-32 sm:h-32 bg-primary/30 blur-3xl"
             ></div>
             <div
               class="absolute w-24 h-24 rounded-full -top-4 sm:-top-6 -left-4 sm:-left-6 sm:w-32 sm:h-32 bg-primary/30 blur-3xl"
@@ -632,10 +632,10 @@
               class="relative z-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6"
             >
               <div
-                class="flex items-center justify-center flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-accent/10"
+                class="flex items-center justify-center flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-primary/10"
               >
                 <svg
-                  class="w-6 h-6 sm:w-7 sm:h-7 text-accent"
+                  class="w-6 h-6 sm:w-7 sm:h-7 text-primary"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -663,7 +663,7 @@
                   href="https://mnaveedk.com/blog/real-time-trading-infra"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="inline-flex items-center text-sm font-semibold transition sm:text-base text-accent hover:text-accent/80"
+                  class="inline-flex items-center text-sm font-semibold transition sm:text-base text-primary hover:text-primary/80"
                 >
                   Read the blog post
                   <svg
@@ -714,13 +714,13 @@
             <!-- Feature 1 -->
             <!-- Updated all feature cards with new card-bg class -->
             <div
-              class="relative p-8 transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-accent/50 hover:-translate-y-1"
+              class="relative p-8 transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-primary/50 hover:-translate-y-1"
             >
               <div
-                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-accent/10 group-hover:bg-accent/20"
+                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-primary/10 group-hover:bg-primary/20"
               >
                 <svg
-                  class="w-6 h-6 text-accent"
+                  class="w-6 h-6 text-primary"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -743,13 +743,13 @@
 
             <!-- Feature 2 -->
             <div
-              class="relative p-8 transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-accent/50 hover:-translate-y-1"
+              class="relative p-8 transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-primary/50 hover:-translate-y-1"
             >
               <div
-                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-accent/10 group-hover:bg-accent/20"
+                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-primary/10 group-hover:bg-primary/20"
               >
                 <svg
-                  class="w-6 h-6 text-accent"
+                  class="w-6 h-6 text-primary"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -772,13 +772,13 @@
 
             <!-- Feature 3 -->
             <div
-              class="relative p-8 transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-accent/50 hover:-translate-y-1"
+              class="relative p-8 transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-primary/50 hover:-translate-y-1"
             >
               <div
-                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-accent/10 group-hover:bg-accent/20"
+                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-primary/10 group-hover:bg-primary/20"
               >
                 <svg
-                  class="w-6 h-6 text-accent"
+                  class="w-6 h-6 text-primary"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -801,13 +801,13 @@
 
             <!-- Feature 4 -->
             <div
-              class="relative p-8 transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-accent/50 hover:-translate-y-1"
+              class="relative p-8 transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-primary/50 hover:-translate-y-1"
             >
               <div
-                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-accent/10 group-hover:bg-accent/20"
+                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-primary/10 group-hover:bg-primary/20"
               >
                 <svg
-                  class="w-6 h-6 text-accent"
+                  class="w-6 h-6 text-primary"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -830,13 +830,13 @@
 
             <!-- Feature 5 -->
             <div
-              class="relative p-8 transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-accent/50 hover:-translate-y-1"
+              class="relative p-8 transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-primary/50 hover:-translate-y-1"
             >
               <div
-                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-accent/10 group-hover:bg-accent/20"
+                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-primary/10 group-hover:bg-primary/20"
               >
                 <svg
-                  class="w-6 h-6 text-accent"
+                  class="w-6 h-6 text-primary"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -859,13 +859,13 @@
 
             <!-- Feature 6 -->
             <div
-              class="relative p-8 transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-accent/50 hover:-translate-y-1"
+              class="relative p-8 transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-primary/50 hover:-translate-y-1"
             >
               <div
-                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-accent/10 group-hover:bg-accent/20"
+                class="flex items-center justify-center w-12 h-12 mb-6 transition rounded-xl bg-primary/10 group-hover:bg-primary/20"
               >
                 <svg
-                  class="w-6 h-6 text-accent"
+                  class="w-6 h-6 text-primary"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -914,10 +914,10 @@
             <div class="space-y-6 sm:space-y-8">
               <div class="flex items-start gap-4">
                 <div
-                  class="flex items-center justify-center flex-shrink-0 w-10 h-10 mt-1 rounded-lg bg-accent/10"
+                  class="flex items-center justify-center flex-shrink-0 w-10 h-10 mt-1 rounded-lg bg-primary/10"
                 >
                   <svg
-                    class="w-5 h-5 text-accent"
+                    class="w-5 h-5 text-primary"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -943,10 +943,10 @@
 
               <div class="flex items-start gap-4">
                 <div
-                  class="flex items-center justify-center flex-shrink-0 w-10 h-10 mt-1 rounded-lg bg-accent/10"
+                  class="flex items-center justify-center flex-shrink-0 w-10 h-10 mt-1 rounded-lg bg-primary/10"
                 >
                   <svg
-                    class="w-5 h-5 text-accent"
+                    class="w-5 h-5 text-primary"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -973,10 +973,10 @@
 
               <div class="flex items-start gap-4">
                 <div
-                  class="flex items-center justify-center flex-shrink-0 w-10 h-10 mt-1 rounded-lg bg-accent/10"
+                  class="flex items-center justify-center flex-shrink-0 w-10 h-10 mt-1 rounded-lg bg-primary/10"
                 >
                   <svg
-                    class="w-5 h-5 text-accent"
+                    class="w-5 h-5 text-primary"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1014,23 +1014,23 @@
                     </div>
                     <div class="flex flex-wrap gap-2">
                       <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
                         >Django</span
                       >
                       <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
                         >Celery</span
                       >
                       <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
                         >Redis</span
                       >
                       <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
                         >PostgreSQL</span
                       >
                       <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
                         >Channels</span
                       >
                     </div>
@@ -1044,19 +1044,19 @@
                     </div>
                     <div class="flex flex-wrap gap-2">
                       <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
                         >React</span
                       >
                       <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
                         >Vite</span
                       >
                       <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
                         >TradingView</span
                       >
                       <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
                         >RTK Query</span
                       >
                     </div>
@@ -1070,19 +1070,19 @@
                     </div>
                     <div class="flex flex-wrap gap-2">
                       <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
                         >Docker</span
                       >
                       <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
                         >NX</span
                       >
                       <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
                         >Pytest</span
                       >
                       <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-accent/10 text-accent"
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
                         >Vitest</span
                       >
                     </div>
@@ -1127,7 +1127,7 @@
           >
             <!-- Updated screenshot cards with new card-bg class -->
             <div
-              class="relative w-full overflow-hidden transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-accent/50"
+              class="relative w-full overflow-hidden transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-primary/50"
             >
               <div
                 class="w-full h-48 bg-[url('/alpaca-main-watchlist.png')] dark:bg-[url('/alpaca-main-watchlist-dark.png')] bg-cover bg-center rounded-t-2xl"
@@ -1142,7 +1142,7 @@
             </div>
 
             <div
-              class="relative w-full overflow-hidden transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-accent/50"
+              class="relative w-full overflow-hidden transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-primary/50"
             >
               <div
                 class="w-full h-48 bg-[url('/alpaca-main-hero.png')] dark:bg-[url('/alpaca-main-hero-dark.png')] bg-cover bg-center rounded-t-2xl"
@@ -1157,7 +1157,7 @@
             </div>
 
             <div
-              class="relative w-full overflow-hidden transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-accent/50"
+              class="relative w-full overflow-hidden transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-primary/50"
             >
               <div
                 class="w-full h-48 bg-[url('/alpaca-main-asset.png')] dark:bg-[url('/alpaca-main-asset-dark.png')] bg-cover bg-center rounded-t-2xl"

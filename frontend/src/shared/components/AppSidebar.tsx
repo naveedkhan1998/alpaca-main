@@ -37,7 +37,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import {
   Tooltip,
   TooltipContent,
@@ -175,48 +174,33 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
 
         {/* Theme Toggle and Health Status Row */}
         {state === 'expanded' && (
-          <div className="px-2 py-2">
-            <div className="grid grid-cols-2 gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      onClick={toggleTheme}
-                      className="flex flex-col items-center justify-center h-16 gap-1 hover:bg-sidebar-accent"
-                    >
-                      <Sun className="w-4 h-4 transition-all scale-100 rotate-0 dark:-rotate-180 dark:scale-0" />
-                      <Moon className="absolute w-4 h-4 transition-all scale-0 rotate-180 dark:rotate-0 dark:scale-100" />
-                      <span className="text-xs font-medium">
-                        {theme === 'dark' ? 'Dark' : 'Light'}
-                      </span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <p>Toggle theme</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
-              <HealthStatus />
-            </div>
+          <div className="px-2 py-2 space-y-1">
+            <button
+              onClick={toggleTheme}
+              className="flex items-center w-full gap-2 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50"
+            >
+              <Sun className="w-4 h-4 scale-100 rotate-0 dark:scale-0 dark:-rotate-90" />
+              <Moon className="absolute w-4 h-4 scale-0 rotate-90 dark:scale-100 dark:rotate-0" />
+              <span className="ml-3">
+                {theme === 'dark' ? 'Dark' : 'Light'} mode
+              </span>
+            </button>
+            <HealthStatus />
           </div>
         )}
 
         {state === 'collapsed' && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col items-center gap-1 px-2 py-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
+                  <button
                     onClick={toggleTheme}
-                    className="w-8 h-8 rounded-md hover:bg-sidebar-accent"
+                    className="flex items-center justify-center w-8 h-8 transition-colors rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   >
-                    <Sun className="w-4 h-4 transition-all scale-100 rotate-0 dark:-rotate-90 dark:scale-0" />
-                    <Moon className="absolute w-4 h-4 transition-all scale-0 rotate-90 dark:rotate-0 dark:scale-100" />
-                  </Button>
+                    <Sun className="w-4 h-4 scale-100 rotate-0 dark:scale-0 dark:-rotate-90" />
+                    <Moon className="absolute w-4 h-4 scale-0 rotate-90 dark:scale-100 dark:rotate-0" />
+                  </button>
                 </TooltipTrigger>
                 <TooltipContent side="right">
                   <p>Toggle theme</p>

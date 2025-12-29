@@ -463,8 +463,7 @@ class TestWebsocketClient:
             patch.object(self.client.aggregator, "rollup_from_minutes") as mock_rollup,
             patch.object(self.client.aggregator, "persist_open") as _mock_persist_open,
             patch.object(self.client.aggregator, "flush_closed") as _mock_flush_closed,
-            patch.object(self.client.repo, "save_candles") as mock_save_candles,
-            patch.object(self.client.repo, "fetch_minute_ids") as mock_fetch_ids,
+            patch.object(self.client.repo, "upsert_minutes") as mock_upsert_minutes,
             patch(
                 "apps.core.services.websocket.client.parse_tick_timestamp"
             ) as mock_parse,
@@ -472,7 +471,6 @@ class TestWebsocketClient:
                 "apps.core.services.websocket.client.is_regular_trading_hours",
                 return_value=True,
             ),
-            patch("apps.core.services.websocket.client.floor_to_bucket") as mock_floor,
         ):
 
             # Mock caches
@@ -480,14 +478,12 @@ class TestWebsocketClient:
             self.client.subscriptions.asset_class_cache = {1: "us_equity"}
 
             mock_rollup.return_value = {}
-            mock_fetch_ids.return_value = {}
             mock_parse.return_value = timezone.now()
-            mock_floor.return_value = timezone.now()
 
             self.client._process_batch(messages)
 
-            # Should save 1T candles
-            assert mock_save_candles.call_count >= 1
+            # Should upsert 1T candles
+            assert mock_upsert_minutes.call_count >= 1
 
     def test_schedule_backfill_for_asset(self):
         """Test backfill scheduling for asset."""

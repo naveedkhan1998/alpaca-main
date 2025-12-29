@@ -20,19 +20,23 @@ export function createSeriesForType(
   mode: boolean,
   sample?: (BarData<Time> | LineData<Time>)[]
 ): ISeriesApi<SeriesType> {
+  // TradingView professional colors
+  const upColor = '#26a69a'; // Teal green
+  const downColor = '#ef5350'; // Coral red
+
   switch (type) {
     case 'Candlestick':
       return chart.addSeries(CandlestickSeries, {
-        upColor: mode ? 'hsl(142, 76%, 48%)' : 'hsl(142, 71%, 45%)',
-        downColor: mode ? 'hsl(0, 84%, 65%)' : 'hsl(0, 84%, 60%)',
+        upColor,
+        downColor,
         borderVisible: false,
-        wickUpColor: mode ? 'hsl(142, 76%, 48%)' : 'hsl(142, 71%, 45%)',
-        wickDownColor: mode ? 'hsl(0, 84%, 65%)' : 'hsl(0, 84%, 60%)',
+        wickUpColor: upColor,
+        wickDownColor: downColor,
       });
     case 'Bar':
       return chart.addSeries(BarSeries, {
-        upColor: mode ? 'hsl(142, 76%, 48%)' : 'hsl(142, 71%, 45%)',
-        downColor: mode ? 'hsl(0, 84%, 65%)' : 'hsl(0, 84%, 60%)',
+        upColor,
+        downColor,
       });
     case 'Area':
       return chart.addSeries(AreaSeries, {
@@ -54,20 +58,12 @@ export function createSeriesForType(
                 ? (sample[0] as LineData<Time>).value
                 : 0,
         },
-        topLineColor: mode ? 'hsl(142, 76%, 48%)' : 'hsl(142, 71%, 45%)',
-        bottomLineColor: mode ? 'hsl(0, 84%, 65%)' : 'hsl(0, 84%, 60%)',
-        topFillColor1: mode
-          ? 'hsla(142, 76%, 48%, 0.28)'
-          : 'hsla(142, 71%, 45%, 0.28)',
-        topFillColor2: mode
-          ? 'hsla(142, 76%, 48%, 0.05)'
-          : 'hsla(142, 71%, 45%, 0.05)',
-        bottomFillColor1: mode
-          ? 'hsla(0, 84%, 65%, 0.05)'
-          : 'hsla(0, 84%, 60%, 0.05)',
-        bottomFillColor2: mode
-          ? 'hsla(0, 84%, 65%, 0.28)'
-          : 'hsla(0, 84%, 60%, 0.28)',
+        topLineColor: upColor,
+        bottomLineColor: downColor,
+        topFillColor1: 'rgba(38, 166, 154, 0.28)',
+        topFillColor2: 'rgba(38, 166, 154, 0.05)',
+        bottomFillColor1: 'rgba(239, 83, 80, 0.05)',
+        bottomFillColor2: 'rgba(239, 83, 80, 0.28)',
       });
     case 'Line':
     default:

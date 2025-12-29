@@ -1,40 +1,37 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import type { ITimeScaleApi, Time } from 'lightweight-charts';
 
 export function useChartSync(options: {
   mainChartRef: React.MutableRefObject<ITimeScaleApi<Time> | null>;
-  volumeChartRef: React.MutableRefObject<ITimeScaleApi<Time> | null>;
-  rsiChartRef: React.MutableRefObject<ITimeScaleApi<Time> | null>;
-  atrChartRef: React.MutableRefObject<ITimeScaleApi<Time> | null>;
-  shouldShowVolume: boolean;
-  activeIndicators: string[];
+  indicatorTimeScaleRefs: React.MutableRefObject<
+    Map<string, ITimeScaleApi<Time>>
+  >;
 }) {
-  const {
-    mainChartRef,
-    volumeChartRef,
-    rsiChartRef,
-    atrChartRef,
-    shouldShowVolume,
-    activeIndicators,
-  } = options;
+  const { mainChartRef, indicatorTimeScaleRefs } = options;
+
+  // Track handler reference for cleanup
+  const handlerRef = useRef<(() => void) | null>(null);
 
   const syncCharts = useCallback(() => {
     if (!mainChartRef.current) return;
 
     const getChartsToSync = () => {
       const charts: ITimeScaleApi<Time>[] = [];
-      if (shouldShowVolume && volumeChartRef.current)
-        charts.push(volumeChartRef.current);
-      if (activeIndicators.includes('RSI') && rsiChartRef.current)
-        charts.push(rsiChartRef.current);
-      if (activeIndicators.includes('ATR') && atrChartRef.current)
-        charts.push(atrChartRef.current);
+
+      // Access current value of ref to get latest indicator charts
+      indicatorTimeScaleRefs.current.forEach(timeScale => {
+        if (timeScale) {
+          charts.push(timeScale);
+        }
+      });
+
       return charts;
     };
 
     const handleVisibleTimeRangeChange = () => {
       const mainVisibleRange = mainChartRef.current?.getVisibleRange();
       if (!mainVisibleRange) return;
+
       getChartsToSync().forEach(timeScale => {
         if (!timeScale) return;
         try {
@@ -44,6 +41,9 @@ export function useChartSync(options: {
         }
       });
     };
+
+    // Store handler ref for external triggering
+    handlerRef.current = handleVisibleTimeRangeChange;
 
     const subscribeToMainChart = () => {
       mainChartRef.current?.subscribeVisibleTimeRangeChange(
@@ -59,15 +59,16 @@ export function useChartSync(options: {
       mainChartRef.current?.unsubscribeVisibleTimeRangeChange(
         handleVisibleTimeRangeChange
       );
+      handlerRef.current = null;
     };
-  }, [
-    mainChartRef,
-    volumeChartRef,
-    rsiChartRef,
-    atrChartRef,
-    shouldShowVolume,
-    activeIndicators,
-  ]);
+  }, [mainChartRef, indicatorTimeScaleRefs]);
 
-  return { syncCharts } as const;
+  // Trigger sync when indicator charts change
+  const triggerSync = useCallback(() => {
+    if (handlerRef.current) {
+      handlerRef.current();
+    }
+  }, []);
+
+  return { syncCharts, triggerSync } as const;
 }
