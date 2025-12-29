@@ -22,14 +22,14 @@ export const AssetDetailPage: React.FC = () => {
   if (!id) {
     return (
       <PageLayout
-        header={<PageHeader>Asset Not Found</PageHeader>}
-        subheader={<PageSubHeader>Invalid asset ID provided.</PageSubHeader>}
+        header={<PageHeader>Not Found</PageHeader>}
+        subheader={<PageSubHeader>Invalid instrument ID</PageSubHeader>}
       >
         <PageContent>
-          <div className="text-center py-8">
-            <Button onClick={handleBack}>
+          <div className="py-8 text-center">
+            <Button variant="outline" size="sm" onClick={handleBack}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Assets
+              Back
             </Button>
           </div>
         </PageContent>
@@ -39,17 +39,13 @@ export const AssetDetailPage: React.FC = () => {
 
   return (
     <PageLayout
-      header={<PageHeader>Asset Details</PageHeader>}
-      subheader={
-        <PageSubHeader>
-          View detailed information about this trading instrument.
-        </PageSubHeader>
-      }
+      header={<PageHeader>Instrument Details</PageHeader>}
+      subheader={<PageSubHeader>View instrument information</PageSubHeader>}
       actions={
         <PageActions>
-          <Button variant="outline" onClick={handleBack}>
+          <Button variant="outline" size="sm" onClick={handleBack}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Assets
+            Back
           </Button>
         </PageActions>
       }

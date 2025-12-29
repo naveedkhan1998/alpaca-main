@@ -8,18 +8,9 @@ import {
   PageActions,
 } from '@/components/PageLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  ArrowLeft,
-  Plus,
-  Search,
-  Calendar,
-  Building2,
-  AlertCircle,
-} from 'lucide-react';
+import { ArrowLeft, Plus, Search, AlertTriangle } from 'lucide-react';
 import { WatchListDetail } from './components/WatchListDetail';
 import { WatchListDialog } from './components/WatchListDialog';
 import { setSelectedWatchlist } from './watchlistSlice';
@@ -62,68 +53,50 @@ export const WatchlistsPage: React.FC = () => {
 
   return (
     <PageLayout
-      header={
-        <PageHeader>
-          <div className="flex items-center gap-3">Watchlist</div>
-        </PageHeader>
-      }
-      subheader={
-        <PageSubHeader>
-          Organize and monitor assets with custom lists. Filter, search, and
-          jump to charts quickly.
-        </PageSubHeader>
-      }
+      header={<PageHeader>Watchlists</PageHeader>}
+      subheader={<PageSubHeader>Organize and monitor your instruments</PageSubHeader>}
       actions={
         <PageActions>
           {selectedWatchlist && (
-            <Button variant="outline" onClick={handleBack}>
+            <Button variant="outline" size="sm" onClick={handleBack}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
           )}
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" /> New Watchlist
+          <Button size="sm" onClick={() => setCreateOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" /> New
           </Button>
         </PageActions>
       }
     >
       <PageContent>
-        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-12">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
           {/* Sidebar (List) */}
           <div
             className={`md:col-span-5 lg:col-span-4 ${selectedWatchlist ? 'hidden md:block' : 'block'}`}
           >
-            <Card className="border-border/40">
-              <CardHeader className="pb-3 sm:pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base font-semibold sm:text-lg">
-                    Your Watchlists
-                  </CardTitle>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setCreateOpen(true)}
-                  >
-                    <Plus className="w-4 h-4 mr-2" /> New
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3 sm:space-y-4">
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-medium">Your Watchlists</h3>
+                <Button size="sm" variant="ghost" onClick={() => setCreateOpen(true)}>
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="space-y-3">
                 <div className="relative">
                   <Search className="absolute w-4 h-4 -translate-y-1/2 pointer-events-none left-3 top-1/2 text-muted-foreground" />
                   <Input
                     value={query}
                     onChange={e => setQuery(e.target.value)}
-                    placeholder="Search watchlists…"
+                    placeholder="Search…"
                     className="h-9 pl-9"
                   />
                 </div>
-                <div className="inline-flex rounded-md border border-border/50 p-0.5 bg-card/60">
+                <div className="flex gap-1">
                   <Button
                     type="button"
                     variant={showActiveOnly ? 'ghost' : 'secondary'}
                     size="sm"
-                    className="h-8"
                     onClick={() => setShowActiveOnly(false)}
                   >
                     All
@@ -132,7 +105,6 @@ export const WatchlistsPage: React.FC = () => {
                     type="button"
                     variant={showActiveOnly ? 'secondary' : 'ghost'}
                     size="sm"
-                    className="h-8"
                     onClick={() => setShowActiveOnly(true)}
                   >
                     Active
@@ -141,78 +113,52 @@ export const WatchlistsPage: React.FC = () => {
 
                 {/* List body */}
                 {isLoading ? (
-                  <div className="space-y-3">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-full h-16 rounded-md animate-pulse bg-muted/40"
-                      />
+                  <div className="space-y-2">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="w-full rounded-md h-14 animate-pulse bg-muted/40" />
                     ))}
                   </div>
                 ) : error ? (
-                  <Alert>
-                    <AlertCircle className="w-4 h-4" />
-                    <AlertDescription>
-                      Failed to load watchlists. Please try again.
-                    </AlertDescription>
-                  </Alert>
+                  <div className="flex items-center gap-2 p-3 text-sm border rounded-lg text-destructive bg-destructive/5">
+                    <AlertTriangle className="w-4 h-4" />
+                    Failed to load watchlists
+                  </div>
                 ) : filtered.length === 0 ? (
-                  <div className="py-10 text-center">
-                    <div className="text-sm text-muted-foreground">
-                      No watchlists found.
-                    </div>
-                    <div className="mt-3">
-                      <Button onClick={() => setCreateOpen(true)} size="sm">
-                        <Plus className="w-4 h-4 mr-2" /> Create your first list
-                      </Button>
-                    </div>
+                  <div className="py-8 text-sm text-center text-muted-foreground">
+                    No watchlists found
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     {filtered.map(w => {
-                      const isActive = selectedWatchlist?.id === w.id;
+                      const isSelected = selectedWatchlist?.id === w.id;
                       return (
                         <button
                           key={w.id}
                           onClick={() => handleWatchListSelect(w)}
-                          className={`w-full rounded-md border px-3 py-3 text-left transition-colors hover:shadow-sm ${
-                            isActive
-                              ? 'border-primary/30 bg-primary/5'
-                              : 'border-border/40 hover:bg-muted/30'
+                          className={`w-full rounded-md px-3 py-2 text-left transition-colors ${
+                            isSelected
+                              ? 'bg-accent text-accent-foreground'
+                              : 'hover:bg-muted/50'
                           }`}
                         >
-                          <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center justify-between gap-2">
                             <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium truncate">
-                                  {w.name}
-                                </span>
-                                <Badge
-                                  variant={
-                                    w.is_active ? 'default' : 'secondary'
-                                  }
-                                  className="h-5 px-1.5 text-[10px]"
-                                >
-                                  {w.is_active ? 'Active' : 'Inactive'}
-                                </Badge>
-                              </div>
+                              <span className="block text-sm font-medium truncate">
+                                {w.name}
+                              </span>
                               {w.description && (
-                                <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                                <p className="text-xs line-clamp-1 text-muted-foreground">
                                   {w.description}
                                 </p>
                               )}
                             </div>
                             <div className="flex items-center gap-2 text-xs shrink-0 text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <Building2 className="h-3.5 w-3.5" />
-                                <span>{w.asset_count}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Calendar className="h-3.5 w-3.5" />
-                                <span>
-                                  {new Date(w.created_at).toLocaleDateString()}
-                                </span>
-                              </div>
+                              <span>{w.asset_count} assets</span>
+                              {!w.is_active && (
+                                <Badge variant="secondary" className="text-[10px]">
+                                  Inactive
+                                </Badge>
+                              )}
                             </div>
                           </div>
                         </button>
@@ -221,18 +167,8 @@ export const WatchlistsPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Mobile create button (shown at bottom) */}
-                <div className="pt-2 md:hidden">
-                  <Button
-                    className="w-full"
-                    onClick={() => setCreateOpen(true)}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Watchlist
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
           {/* Detail Pane */}
@@ -245,26 +181,11 @@ export const WatchlistsPage: React.FC = () => {
                 onBack={handleBack}
               />
             ) : (
-              <Card className="border-border/40">
-                <CardHeader>
-                  <CardTitle className="text-base sm:text-lg">
-                    Select a watchlist
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Choose a watchlist from the left to view its assets and
-                    details. Or create a new watchlist to start organizing your
-                    instruments.
-                  </p>
-                  <div className="mt-4">
-                    <Button onClick={() => setCreateOpen(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Watchlist
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="p-6 text-center border rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  Select a watchlist to view details
+                </p>
+              </div>
             )}
           </div>
         </div>

@@ -3,10 +3,10 @@ import { CandlestickData, LineData } from 'lightweight-charts';
 
 /**
  * Convert ISO timestamp to Unix timestamp in US Eastern Time.
- * 
+ *
  * Lightweight-charts expects Unix timestamps (seconds since epoch).
  * For financial data, we want to display times in US market time (Eastern).
- * 
+ *
  * @param originalDate - ISO 8601 timestamp string
  * @returns Unix timestamp (seconds) adjusted for US Eastern display
  */
@@ -72,7 +72,7 @@ export const calculateMA = (
 };
 
 export const calculateBollingerBands = (
-  data: (Candle & { time?: number })[],
+  data: Candle[],
   period: number = 20,
   stdDev: number = 2
 ) => {
@@ -99,14 +99,10 @@ export const calculateBollingerBands = (
     const variance = sumSquares / period - mean ** 2;
     const stdDevValue = Math.sqrt(variance);
 
-    // Use pre-computed time if available, otherwise compute it
-    const time =
-      data[i].time ??
-      formatDate(
-        data[i].timestamp || (data[i] as unknown as { date: string }).date
-      );
+    const dateField =
+      data[i].timestamp || (data[i] as unknown as { date: string }).date;
     bands.push({
-      time,
+      time: formatDate(dateField),
       upper: mean + stdDev * stdDevValue,
       middle: mean,
       lower: mean - stdDev * stdDevValue,
@@ -116,10 +112,7 @@ export const calculateBollingerBands = (
   return bands;
 };
 
-export const calculateRSI = (
-  data: (Candle & { time?: number })[],
-  period: number = 14
-) => {
+export const calculateRSI = (data: Candle[], period: number = 14) => {
   // Not enough data points to compute RSI
   if (!Array.isArray(data) || data.length <= period)
     return [] as { time: number; value: number }[];
@@ -139,15 +132,11 @@ export const calculateRSI = (
 
   let avgGain = gains / period;
   let avgLoss = losses / period;
-  // Use pre-computed time if available
-  const time0 =
-    data[period].time ??
-    formatDate(
-      data[period].timestamp ||
-        (data[period] as unknown as { date: string }).date
-    );
+  const dateField =
+    data[period].timestamp ||
+    (data[period] as unknown as { date: string }).date;
   rsi.push({
-    time: time0,
+    time: formatDate(dateField),
     value: 100 - 100 / (1 + avgGain / avgLoss),
   });
 
@@ -160,14 +149,10 @@ export const calculateRSI = (
       avgGain = (avgGain * (period - 1)) / period;
       avgLoss = (avgLoss * (period - 1) - diff) / period;
     }
-    // Use pre-computed time if available
-    const time =
-      data[i].time ??
-      formatDate(
-        data[i].timestamp || (data[i] as unknown as { date: string }).date
-      );
+    const dateFieldCurrent =
+      data[i].timestamp || (data[i] as unknown as { date: string }).date;
     rsi.push({
-      time,
+      time: formatDate(dateFieldCurrent),
       value: 100 - 100 / (1 + avgGain / avgLoss),
     });
   }
@@ -219,10 +204,7 @@ export const calculateMACD = (
   });
 };
 
-export const calculateATR = (
-  data: (Candle & { time?: number })[],
-  period: number = 14
-) => {
+export const calculateATR = (data: Candle[], period: number = 14) => {
   const trs: number[] = [];
   const atrs: { time: number; value: number }[] = [];
 
@@ -245,13 +227,9 @@ export const calculateATR = (
       } else {
         atr = (atrs[atrs.length - 1].value * (period - 1) + tr) / period;
       }
-      // Use pre-computed time if available
-      const time =
-        data[i].time ??
-        formatDate(
-          data[i].timestamp || (data[i] as unknown as { date: string }).date
-        );
-      atrs.push({ time, value: atr });
+      const dateField =
+        data[i].timestamp || (data[i] as unknown as { date: string }).date;
+      atrs.push({ time: formatDate(dateField), value: atr });
     }
   }
   return atrs;

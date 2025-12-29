@@ -22,7 +22,6 @@ import {
 } from '@/components/ui/table';
 import {
   AlertTriangle,
-  Building2,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -100,13 +99,13 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
   const getAssetClassColor = (assetClass: string) => {
     switch (assetClass) {
       case 'us_equity':
-        return 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 dark:from-blue-900/20 dark:to-blue-800/20 dark:text-blue-300 border-blue-200 dark:border-blue-800';
+        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
       case 'us_option':
-        return 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 dark:from-purple-900/20 dark:to-purple-800/20 dark:text-purple-300 border-purple-200 dark:border-purple-800';
+        return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300';
       case 'crypto':
-        return 'bg-gradient-to-r from-orange-50 to-orange-100 text-orange-800 dark:from-orange-900/20 dark:to-orange-800/20 dark:text-orange-300 border-orange-200 dark:border-orange-800';
+        return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300';
       default:
-        return 'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 dark:from-gray-900/20 dark:to-gray-800/20 dark:text-gray-300 border-gray-200 dark:border-gray-800';
+        return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -152,25 +151,20 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
       )}
 
       {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {isLoading ? (
             Array.from({ length: pageSize }).map((_, i) => (
-              <Card key={i} className="overflow-hidden">
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="w-10 h-10 rounded-lg" />
-                      <div className="flex-1 space-y-2">
-                        <Skeleton className="w-16 h-5" />
-                        <Skeleton className="w-24 h-4" />
-                      </div>
+              <Card key={i}>
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Skeleton className="w-16 h-5" />
+                      <Skeleton className="w-6 h-6" />
                     </div>
-                    <div className="space-y-3">
-                      <Skeleton className="w-full h-4" />
-                      <div className="flex gap-2">
-                        <Skeleton className="w-16 h-6 rounded-full" />
-                        <Skeleton className="w-20 h-6 rounded-full" />
-                      </div>
+                    <Skeleton className="w-32 h-4" />
+                    <div className="flex gap-2">
+                      <Skeleton className="w-16 h-5" />
+                      <Skeleton className="w-16 h-5" />
                     </div>
                   </div>
                 </CardContent>
@@ -186,314 +180,224 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
               />
             ))
           ) : (
-            <Card className="border-dashed col-span-full">
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <div className="flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-muted/50">
-                  <Search className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <h3 className="mb-2 text-lg font-semibold">No assets found</h3>
-                <p className="max-w-sm text-center text-muted-foreground">
-                  {quickFilterText
-                    ? "Try adjusting your search terms or filters to find what you're looking for."
-                    : 'No assets match your current filters. Try broadening your search criteria.'}
-                </p>
-              </CardContent>
-            </Card>
+            <div className="py-8 text-center col-span-full">
+              <Search className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+              <p className="font-medium">No instruments found</p>
+              <p className="text-sm text-muted-foreground">
+                Try adjusting your search or filters
+              </p>
+            </div>
           )}
         </div>
       ) : (
-        <Card className="overflow-hidden border-0 shadow-sm">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur-sm">
-                <TableRow className="border-b bg-muted/30 hover:bg-muted/30">
-                  <SortableHeader
-                    className={`${headerCellClass} font-semibold`}
-                    field="symbol"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4" />
-                      Symbol
-                    </div>
-                  </SortableHeader>
-                  <SortableHeader
-                    className={`${headerCellClass} font-semibold`}
-                    field="name"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    Name
-                  </SortableHeader>
-                  <SortableHeader
-                    className={`${headerCellClass} font-semibold`}
-                    field="asset_class"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    Asset Class
-                  </SortableHeader>
-                  <SortableHeader
-                    className={`${headerCellClass} font-semibold`}
-                    field="exchange"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    Exchange
-                  </SortableHeader>
-                  <SortableHeader
-                    className={`${headerCellClass} font-semibold`}
-                    field="tradable"
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    Status
-                  </SortableHeader>
-                  <TableHead
-                    className={`${headerCellClass} font-semibold w-24`}
-                  >
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  Array.from({ length: pageSize }).map((_, i) => (
-                    <TableRow key={i} className={isCompact ? 'h-12' : 'h-16'}>
-                      <TableCell className={bodyCellClass}>
-                        <div className="flex items-center gap-3">
-                          <Skeleton className="w-8 h-8 rounded" />
-                          <Skeleton className="w-16 h-4" />
-                        </div>
-                      </TableCell>
-                      <TableCell className={bodyCellClass}>
-                        <Skeleton className="w-32 h-4" />
-                      </TableCell>
-                      <TableCell className={bodyCellClass}>
-                        <Skeleton className="w-20 h-6 rounded-full" />
-                      </TableCell>
-                      <TableCell className={bodyCellClass}>
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <SortableHeader
+                  className={`${headerCellClass} font-medium`}
+                  field="symbol"
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                >
+                  Symbol
+                </SortableHeader>
+                <SortableHeader
+                  className={`${headerCellClass} font-medium`}
+                  field="name"
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                >
+                  Name
+                </SortableHeader>
+                <SortableHeader
+                  className={`${headerCellClass} font-medium`}
+                  field="asset_class"
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                >
+                  Class
+                </SortableHeader>
+                <SortableHeader
+                  className={`${headerCellClass} font-medium`}
+                  field="exchange"
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                >
+                  Exchange
+                </SortableHeader>
+                <SortableHeader
+                  className={`${headerCellClass} font-medium`}
+                  field="tradable"
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                >
+                  Status
+                </SortableHeader>
+                <TableHead className={`${headerCellClass} font-medium w-20`}>
+                  Actions
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: pageSize }).map((_, i) => (
+                  <TableRow key={i} className={isCompact ? 'h-12' : 'h-16'}>
+                    <TableCell className={bodyCellClass}>
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="w-8 h-8 rounded" />
                         <Skeleton className="w-16 h-4" />
-                      </TableCell>
-                      <TableCell className={bodyCellClass}>
-                        <div className="flex gap-1">
-                          <Skeleton className="w-12 h-5 rounded-full" />
-                          <Skeleton className="w-12 h-5 rounded-full" />
-                        </div>
-                      </TableCell>
-                      <TableCell className={bodyCellClass}>
-                        <Skeleton className="w-16 h-8 rounded" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : assets.length > 0 ? (
-                  assets.map(asset => (
-                    <TableRow
-                      key={asset.id}
-                      className="transition-colors cursor-pointer hover:bg-muted/50 group"
-                      onClick={() => navigate(`/instruments/${asset.id}`)}
+                      </div>
+                    </TableCell>
+                    <TableCell className={bodyCellClass}>
+                      <Skeleton className="w-32 h-4" />
+                    </TableCell>
+                    <TableCell className={bodyCellClass}>
+                      <Skeleton className="w-20 h-6 rounded-full" />
+                    </TableCell>
+                    <TableCell className={bodyCellClass}>
+                      <Skeleton className="w-16 h-4" />
+                    </TableCell>
+                    <TableCell className={bodyCellClass}>
+                      <Skeleton className="w-12 h-5 rounded-full" />
+                    </TableCell>
+                    <TableCell className={bodyCellClass}>
+                      <Skeleton className="w-16 h-8 rounded" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : assets.length > 0 ? (
+                assets.map(asset => (
+                  <TableRow
+                    key={asset.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => navigate(`/instruments/${asset.id}`)}
+                  >
+                    <TableCell
+                      className={`${bodyCellClass} font-medium font-mono`}
                     >
-                      <TableCell className={`${bodyCellClass} font-medium`}>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
-                            <Building2 className="w-4 h-4 text-primary" />
-                          </div>
-                          <span className="font-mono text-sm">
-                            {asset.symbol}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className={`${bodyCellClass} max-w-xs`}>
-                        <div
-                          className="font-medium truncate"
-                          title={asset.name}
-                        >
-                          {asset.name}
-                        </div>
-                      </TableCell>
-                      <TableCell className={bodyCellClass}>
-                        <Badge
-                          className={`${getAssetClassColor(asset.asset_class)} border shadow-sm`}
-                        >
-                          {asset.asset_class.replace('_', ' ').toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell
-                        className={`${bodyCellClass} text-muted-foreground`}
+                      {asset.symbol}
+                    </TableCell>
+                    <TableCell className={`${bodyCellClass} max-w-xs`}>
+                      <span className="truncate" title={asset.name}>
+                        {asset.name}
+                      </span>
+                    </TableCell>
+                    <TableCell className={bodyCellClass}>
+                      <Badge
+                        variant="secondary"
+                        className={`text-xs ${getAssetClassColor(asset.asset_class)}`}
                       >
-                        {asset.exchange}
-                      </TableCell>
-                      <TableCell className={bodyCellClass}>
-                        <div className="flex gap-1">
-                          <Badge
-                            variant={asset.tradable ? 'default' : 'secondary'}
-                            className="text-xs px-2 py-0.5"
-                          >
-                            {asset.tradable ? 'Tradable' : 'No Trade'}
-                          </Badge>
-                          {asset.marginable && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs px-2 py-0.5"
-                            >
-                              Margin
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className={bodyCellClass}>
-                        <div
-                          className={`flex items-center gap-1 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}
+                        {asset.asset_class.replace('_', ' ')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell
+                      className={`${bodyCellClass} text-muted-foreground`}
+                    >
+                      {asset.exchange}
+                    </TableCell>
+                    <TableCell className={bodyCellClass}>
+                      <Badge
+                        variant={asset.tradable ? 'default' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {asset.tradable ? 'Tradable' : 'No Trade'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className={bodyCellClass}>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={e => handleAddToWatchlist(asset, e)}
+                          className="p-0 w-7 h-7"
                         >
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={e => handleAddToWatchlist(asset, e)}
-                            className="w-8 h-8 p-0 hover:text-red-500"
-                            title="Add to Watchlist"
-                          >
-                            <Heart className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={e => {
-                              e.stopPropagation();
-                              navigate(`/instruments/${asset.id}`);
-                            }}
-                            className="w-8 h-8 p-0"
-                            title="View Details"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="py-12">
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted/50">
-                          <Search className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                        <div className="text-center">
-                          <h3 className="mb-2 text-lg font-semibold">
-                            No assets found
-                          </h3>
-                          <p className="max-w-sm text-muted-foreground">
-                            {quickFilterText
-                              ? "Try adjusting your search terms or filters to find what you're looking for."
-                              : 'No assets match your current filters. Try broadening your search criteria.'}
-                          </p>
-                        </div>
+                          <Heart className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={e => {
+                            e.stopPropagation();
+                            navigate(`/instruments/${asset.id}`);
+                          }}
+                          className="p-0 w-7 h-7"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </Card>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-8 text-center">
+                    <Search className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="font-medium">No instruments found</p>
+                    <p className="text-sm text-muted-foreground">
+                      Try adjusting your search or filters
+                    </p>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
       {!isLoading && totalCount > 0 && (
-        <Card className="border-0 shadow-sm bg-muted/20">
-          <CardContent className="p-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="text-sm text-muted-foreground">
-                Showing{' '}
-                <span className="font-semibold text-foreground">
-                  {currentPage * pageSize + 1}
-                </span>{' '}
-                to{' '}
-                <span className="font-semibold text-foreground">
-                  {Math.min((currentPage + 1) * pageSize, totalCount)}
-                </span>{' '}
-                of{' '}
-                <span className="font-semibold text-foreground">
-                  {totalCount.toLocaleString()}
-                </span>{' '}
-                assets
-              </div>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                {/* Page Size Selector */}
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Show:</span>
-                  <Select
-                    value={pageSize.toString()}
-                    onValueChange={handlePageSizeChange}
-                  >
-                    <SelectTrigger className="w-20 h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="25">25</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                      <SelectItem value="100">100</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+        <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing {currentPage * pageSize + 1}-
+            {Math.min((currentPage + 1) * pageSize, totalCount)} of{' '}
+            {totalCount.toLocaleString()}
+          </p>
+          <div className="flex items-center gap-2">
+            <Select
+              value={pageSize.toString()}
+              onValueChange={handlePageSizeChange}
+            >
+              <SelectTrigger className="w-16 h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
 
-                {/* Pagination Controls */}
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 0}
-                    className="gap-1 h-9"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                    <span className="hidden sm:inline">Previous</span>
-                  </Button>
-
-                  {/* Page Numbers */}
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      const pageNum =
-                        Math.max(
-                          0,
-                          Math.min(Math.max(0, totalPages - 5), currentPage - 2)
-                        ) + i;
-                      return (
-                        <Button
-                          key={pageNum}
-                          variant={
-                            pageNum === currentPage ? 'default' : 'outline'
-                          }
-                          size="sm"
-                          onClick={() => handlePageChange(pageNum)}
-                          className="w-9 h-9"
-                        >
-                          {pageNum + 1}
-                        </Button>
-                      );
-                    })}
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage >= totalPages - 1}
-                    className="gap-1 h-9"
-                  >
-                    <span className="hidden sm:inline">Next</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 0}
+                className="h-8 px-2"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="px-2 text-sm">
+                {currentPage + 1} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage >= totalPages - 1}
+                className="h-8 px-2"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       <AddToWatchlistDialog
