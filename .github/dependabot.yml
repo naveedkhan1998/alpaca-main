@@ -18,6 +18,20 @@ updates:
       - "dependencies"
       - "python"
 
+  # ────────────────────────── JavaScript (root/) ────────────────────────
+  - package-ecosystem: "npm"           # Root monorepo tooling (NX, etc.)
+    directory: "/"                     # Root package.json for NX and scripts
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      root-js-deps:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "javascript"
+
   # ────────────────────────── JavaScript (frontend/) ─────────────────────
   - package-ecosystem: "npm"           # Works for npm / yarn / pnpm lockfiles
     directory: "/frontend"             # Path to your Vite + React UI
@@ -47,7 +61,7 @@ updates:
 
   # ────────────────────────── Dockerfiles (root) ─────────────────────────
   - package-ecosystem: "docker"
-    directory: "/"                     # Dependabot scans all Dockerfiles here
+    directory: "/backend"                     # Dependabot scans all Dockerfiles here
     schedule:
       interval: "weekly"
     labels:
