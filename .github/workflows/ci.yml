@@ -184,7 +184,7 @@ jobs:
 
       - name: Publish test report
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         continue-on-error: true
         with:
           name: Frontend tests
@@ -235,7 +235,7 @@ jobs:
 
       - name: Publish test report
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         continue-on-error: true
         with:
           name: Backend tests
