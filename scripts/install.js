@@ -4,35 +4,22 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+const ui = require('./cli-ui');
+
 const rootDir = path.resolve(__dirname, '..');
 const isWindows = process.platform === 'win32';
 
-const colors = {
-  green: '\x1b[32m',
-  red: '\x1b[31m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  reset: '\x1b[0m'
-};
-
-function printError(title, message) {
-  const width = 60;
-  const border = '='.repeat(width);
-  console.error(`\n${colors.red}${border}`);
-  console.error(`${title}`);
-  console.error(`${message}`);
-  console.error(`${border}${colors.reset}\n`);
-}
+ui.header('Alpaca Main', 'Dependency installation');
 
 // Skip installation steps in CI environment
-if (process.env.CI === 'true') {
-  console.log(`${colors.green}✅ Running in CI environment - skipping local installation steps${colors.reset}`);
+if (process.env.CI) {
+  ui.success('CI detected — skipping local installation steps');
   process.exit(0);
 }
 
 function runCommand(command, args, cwd, name) {
   return new Promise((resolve, reject) => {
-    console.log(`${colors.yellow}📦 Installing ${name}...${colors.reset}`);
+    const startedAt = ui.stepStart(`Installing ${name}`, `${command} ${args.join(' ')}  (${path.relative(rootDir, cwd) || '.'})`);
     let spawnCommand, spawnArgs;
     if (isWindows) {
       spawnCommand = 'cmd';
@@ -44,32 +31,41 @@ function runCommand(command, args, cwd, name) {
     const child = spawn(spawnCommand, spawnArgs, { cwd, stdio: 'inherit' });
     child.on('close', (code) => {
       if (code === 0) {
-        console.log(`${colors.green}✅ ${name} installed successfully${colors.reset}`);
+        ui.stepEnd(`${name}`, startedAt);
         resolve();
       } else {
-        reject(new Error(`${name} installation failed with exit code ${code}`));
+        reject(
+          new Error(
+            `${name} installation failed (exit code ${code}). Command: ${command} ${args.join(' ')} (cwd: ${cwd})`
+          )
+        );
       }
     });
     child.on('error', (error) => {
-      reject(new Error(`${name} installation failed: ${error.message}`));
+      reject(new Error(`${name} installation failed: ${error.message}. Command: ${command} ${args.join(' ')} (cwd: ${cwd})`));
     });
   });
 }
 
-console.log(`${colors.blue}📦 Starting parallel dependency installation...${colors.reset}\n`);
+ui.section('Running installs in parallel');
+ui.info('This may take a few minutes the first time.');
+
+const overallStartedAt = Date.now();
 
 const frontendPromise = runCommand('npm', ['install'], path.join(rootDir, 'frontend'), 'frontend dependencies');
 const backendPromise = runCommand('uv', ['sync'], path.join(rootDir, 'backend'), 'backend dependencies');
 
 Promise.all([frontendPromise, backendPromise])
   .then(() => {
-    console.log(`\n${colors.yellow}📦 Creating setup completion marker...${colors.reset}`);
+    const markerStartedAt = ui.stepStart('Creating setup completion marker', '.nx/bootstrap-complete');
     process.chdir(rootDir);
     fs.mkdirSync('.nx', { recursive: true });
     fs.writeFileSync('.nx/bootstrap-complete', new Date().toISOString());
-    console.log(`${colors.green}✅ Installation completed successfully!${colors.reset}`);
+    ui.stepEnd('Setup marker', markerStartedAt);
+    ui.success(`Installation completed successfully (${ui.formatDuration(Date.now() - overallStartedAt)})`);
+    ui.info(`Next: run ${ui.commandHint('npm run dev')}`);
   })
   .catch((error) => {
-    printError('❌ Installation failed', error.message);
+    ui.errorBox('Installation failed', [error.message], ['npm run install', 'npm run install:frontend', 'npm run install:backend']);
     process.exit(1);
   });

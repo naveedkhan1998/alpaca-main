@@ -4,34 +4,30 @@ const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+const ui = require('./cli-ui');
+
 const rootDir = path.resolve(__dirname, '..');
 
-const colors = {
-  green: '\x1b[32m',
-  red: '\x1b[31m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  reset: '\x1b[0m'
-};
-
-function printError(title, message) {
-  const width = 60;
-  const border = '='.repeat(width);
-  console.error(`\n${colors.red}${border}`);
-  console.error(`${title}`);
-  console.error(`${message}`);
-  console.error(`${border}${colors.reset}\n`);
-}
+ui.header('Alpaca Main', 'Prerequisite checks');
 
 function checkCommand(command, name, args = ['--version']) {
   try {
-    const result = spawnSync(command, args, { stdio: 'pipe' });
+    const result = spawnSync(command, args, { stdio: 'pipe', encoding: 'utf8' });
     if (result.status !== 0) {
       throw new Error(`${name} not found`);
     }
-    console.log(`${colors.green}✅ ${name} is installed${colors.reset}`);
+    const versionLine = (result.stdout || result.stderr || '').trim().split(/\r?\n/)[0];
+    ui.success(`${name} detected${versionLine ? ` ${ui.ansi.reset}${ui.ansi.reset}` : ''}`);
+    if (versionLine) ui.info(`${name}: ${versionLine}`);
   } catch (error) {
-    printError(`❌ ${name} is not installed or not in PATH`, `Please install ${name} and try again.`);
+    ui.errorBox(
+      `${name} is not installed or not in PATH`,
+      [
+        `Required command: ${command}`,
+        `Tried: ${command} ${(args || []).join(' ')}`
+      ],
+      ['npm run install']
+    );
     process.exit(1);
   }
 }
@@ -40,22 +36,30 @@ function checkNodeVersion() {
   const version = process.version;
   const major = parseInt(version.split('.')[0].slice(1));
   if (major < 18) {
-    printError(`❌ Node.js version ${version} is too old`, `Please upgrade to Node.js >= 18`);
+    ui.errorBox(
+      `Node.js version ${version} is too old`,
+      ['Required: Node.js >= 18'],
+      ['node --version', 'npm run install']
+    );
     process.exit(1);
   }
-  console.log(`${colors.green}✅ Node.js ${version} is installed${colors.reset}`);
+  ui.success(`Node.js ${version} detected`);
 }
 
 function checkDocker() {
   checkCommand('docker', 'Docker');
   try {
-    const result = spawnSync('docker', ['info'], { stdio: 'pipe' });
+    const result = spawnSync('docker', ['info'], { stdio: 'pipe', encoding: 'utf8' });
     if (result.status !== 0) {
       throw new Error('Docker daemon not running');
     }
-    console.log(`${colors.green}✅ Docker daemon is running${colors.reset}`);
+    ui.success('Docker daemon is running');
   } catch (error) {
-    printError('❌ Docker daemon is not running', 'Please start Docker and try again.');
+    ui.errorBox(
+      'Docker daemon is not running',
+      ['Start Docker Desktop (or your Docker daemon) and try again.'],
+      ['docker info', 'npm run docker:up']
+    );
     process.exit(1);
   }
 }
@@ -63,7 +67,11 @@ function checkDocker() {
 function checkEnvVars() {
   const envPath = path.join(rootDir, '.envs', '.env');
   if (!fs.existsSync(envPath)) {
-    printError('❌ .env file not found at .envs/.env', 'Please create this file with your Alpaca API configuration.');
+    ui.errorBox(
+      '.env file not found',
+      ['Expected file: .envs/.env', 'Create it with your Alpaca API configuration.'],
+      ['npm run install']
+    );
     process.exit(1);
   }
 
@@ -71,32 +79,41 @@ function checkEnvVars() {
 
   const apiKeyMatch = envContent.match(/^APCA_API_KEY=(.*)$/m);
   if (!apiKeyMatch || !apiKeyMatch[1].trim() || apiKeyMatch[1].trim() === 'YOUR_ALPACA_KEY') {
-    printError('❌ APCA_API_KEY not properly configured in .envs/.env', 'Please set a valid Alpaca API key.');
+    ui.errorBox(
+      'APCA_API_KEY not configured',
+      ['Set APCA_API_KEY in .envs/.env (not a placeholder).'],
+      ['npm run install']
+    );
     process.exit(1);
   }
 
   const secretKeyMatch = envContent.match(/^APCA_API_SECRET_KEY=(.*)$/m);
   if (!secretKeyMatch || !secretKeyMatch[1].trim() || secretKeyMatch[1].trim() === 'YOUR_ALPACA_SECRET_KEY') {
-    printError('❌ APCA_API_SECRET_KEY not properly configured in .envs/.env', 'Please set a valid Alpaca API secret key.');
+    ui.errorBox(
+      'APCA_API_SECRET_KEY not configured',
+      ['Set APCA_API_SECRET_KEY in .envs/.env (not a placeholder).'],
+      ['npm run install']
+    );
     process.exit(1);
   }
 
-  console.log(`${colors.green}✅ Environment variables are configured${colors.reset}`);
+  ui.success('Environment variables are configured');
 }
 
-console.log(`\n${colors.blue}🔍 Checking prerequisites...${colors.reset}\n`);
+ui.section('Checking prerequisites');
 
 // Skip checks in CI environment
 if (process.env.CI) {
-  console.log(`${colors.green}✅ Running in CI environment - skipping prerequisite checks${colors.reset}`);
-  console.log(`\n${colors.green}✅ Prerequisites check skipped for CI...${colors.reset}\n`);
+  ui.success('CI detected — skipping prerequisite checks');
   process.exit(0);
 }
+
+const startedAt = ui.stepStart('Running checks');
 
 checkNodeVersion();
 checkDocker();
 checkCommand('uv', 'uv');
-
 checkEnvVars();
 
-console.log(`\n${colors.green}✅ All prerequisites met. Proceeding with installation...${colors.reset}\n`);
+ui.stepEnd('Prerequisites', startedAt);
+ui.success('All prerequisites met. Proceeding with installation.');

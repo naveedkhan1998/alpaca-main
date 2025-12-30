@@ -14,9 +14,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["echo ✅ Starting Docker build...", "docker compose build"],
-        "tty": true,
-        "color": true,
+        "command": "node scripts/docker-build.js",
         "cwd": "."
       },
       "cache": true

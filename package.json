@@ -8,7 +8,7 @@
     "install": "node scripts/install.js",
     "install:frontend": "cd frontend && npm install && cd ..",
     "install:backend": "cd backend && uv sync && cd ..",
-    "dev": "nx run-many -t dev",
+    "dev": "nx run-many -t dev --output-style=stream",
     "dev:frontend": "nx run frontend:dev",
     "dev:backend": "nx run backend:dev",
     "lint": "nx run-many -t lint --color",
