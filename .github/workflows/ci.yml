@@ -10,17 +10,21 @@ on:
 permissions:
   actions: read
   contents: read
+  security-events: write
+  checks: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  quality:
+  format:
+    name: Format (affected)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -29,43 +33,304 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "npm"
+          cache: npm
+
+      - name: Cache Nx
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ hashFiles('nx.json', 'package-lock.json', 'frontend/package-lock.json') }}
+          restore-keys: |
+            nx-${{ runner.os }}-
 
       - name: Install root dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Set up NX SHAs for affected detection
+      - name: Set Nx SHAs
         uses: nrwl/nx-set-shas@v4
 
-      # ───────── Setup Python ─────────
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
 
-      - name: Install UV
+      - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
           cache-dependency-glob: "backend/**/pyproject.toml"
 
-      # ───────── Install project dependencies ─────────
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm ci
 
       - name: Install backend dependencies
         working-directory: ./backend
         run: uv sync --dev --frozen
 
-      - name: Run affected tasks
-        run: npx nx affected -t format-check lint test build
+      - name: Format check (affected)
+        run: npx nx affected -t format-check --output-style=stream
 
-      - name: CI Summary
-        if: always()
+  lint_frontend:
+    name: Lint (frontend)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run ESLint (console + SARIF)
+        working-directory: ./frontend
+        shell: bash
         run: |
-          echo "### CI Results" >> $GITHUB_STEP_SUMMARY
-          echo "- Format check: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Linting: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Tests: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Build: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          set +e
+          mkdir -p reports
+          npx eslint .
+          eslint_exit=$?
+          npx eslint . -f @microsoft/eslint-formatter-sarif -o reports/eslint.sarif
+          exit $eslint_exit
+
+      - name: Upload ESLint SARIF
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: frontend/reports/eslint.sarif
+
+  lint_backend:
+    name: Lint (backend)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "backend/**/pyproject.toml"
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: uv sync --dev --frozen
+
+      - name: Run Ruff (console + SARIF)
+        working-directory: ./backend
+        shell: bash
+        run: |
+          set +e
+          mkdir -p reports
+          uvx ruff check .
+          ruff_exit=$?
+          uvx ruff check . --output-format sarif > reports/ruff.sarif
+          exit $ruff_exit
+
+      - name: Upload Ruff SARIF
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: backend/reports/ruff.sarif
+
+  test_frontend:
+    name: Tests (frontend)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run Vitest (JUnit)
+        working-directory: ./frontend
+        shell: bash
+        run: |
+          mkdir -p reports
+          npx vitest run --reporter=default --reporter=junit --outputFile reports/vitest-junit.xml
+
+      - name: Publish test report
+        if: always()
+        uses: dorny/test-reporter@v1
+        continue-on-error: true
+        with:
+          name: Frontend tests
+          path: frontend/reports/vitest-junit.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Upload frontend test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-output
+          path: |
+            frontend/reports/**
+
+  test_backend:
+    name: Tests (backend)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "backend/**/pyproject.toml"
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: uv sync --dev --frozen
+
+      - name: Run Pytest (JUnit)
+        working-directory: ./backend
+        shell: bash
+        run: |
+          mkdir -p reports
+          uv run pytest --junitxml=reports/pytest-junit.xml
+
+      - name: Publish test report
+        if: always()
+        uses: dorny/test-reporter@v1
+        continue-on-error: true
+        with:
+          name: Backend tests
+          path: backend/reports/pytest-junit.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Upload backend test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-output
+          path: |
+            backend/reports/**
+
+  build_frontend:
+    name: Build (frontend)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Upload frontend build output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: |
+            frontend/dist/**
+
+  build_backend:
+    name: Build (backend)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Backend Docker build (no push)
+        run: npx nx run backend:build
+
+  summary:
+    name: Summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - format
+      - lint_frontend
+      - lint_backend
+      - test_frontend
+      - test_backend
+      - build_frontend
+      - build_backend
+
+    steps:
+      - name: Write summary
+        run: |
+          echo "### CI Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Format (affected): ${{ needs.format.result }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Lint (frontend): ${{ needs.lint_frontend.result }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Lint (backend): ${{ needs.lint_backend.result }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Tests (frontend): ${{ needs.test_frontend.result }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Tests (backend): ${{ needs.test_backend.result }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Build (frontend): ${{ needs.build_frontend.result }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Build (backend): ${{ needs.build_backend.result }}" >> "$GITHUB_STEP_SUMMARY"
