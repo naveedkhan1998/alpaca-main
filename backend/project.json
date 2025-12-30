@@ -5,19 +5,21 @@
   "projectType": "application",
   "targets": {
     "dev": {
-      "executor": "nx:run-commands",
+      "executor": "nx:run-script",
       "options": {
-        "command": "docker compose up -d ",
-        "cwd": "."
+        "script": "dev-init"
       },
       "dependsOn": ["build"]
     },
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docker compose build",
+        "commands": ["echo ✅ Starting Docker build...", "docker compose build"],
+        "tty": true,
+        "color": true,
         "cwd": "."
-      }
+      },
+      "cache": true
     },
     "runserver": {
       "executor": "nx:run-commands",
@@ -80,14 +82,6 @@
       "options": {
         "command": "uv run pytest --cov",
         "cwd": "backend"
-      }
-    },
-
-    "shell": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "docker compose exec backend sh",
-        "cwd": "."
       }
     }
   },

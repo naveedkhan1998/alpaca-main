@@ -2,7 +2,10 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "defaultBase": "main",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
     "production": [
       "default",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
@@ -18,39 +21,74 @@
       "cache": true
     },
     "dev": {
-      "cache": false
+      "cache": false,
+      "options": {
+        "color": true
+      }
     },
     "lint": {
       "cache": true,
-      "inputs": ["default"]
+      "inputs": [
+        "default"
+      ]
     },
     "lint-fix": {
       "cache": false,
-      "inputs": ["default"]
+      "inputs": [
+        "default"
+      ]
     },
     "format": {
       "cache": false,
-      "inputs": ["default"]
+      "inputs": [
+        "default"
+      ]
     },
     "format-check": {
       "cache": true,
-      "inputs": ["default"]
+      "inputs": [
+        "default"
+      ]
     },
     "test": {
       "cache": true,
-      "inputs": ["default", "^production"]
+      "inputs": [
+        "default",
+        "^production"
+      ]
     },
     "test-coverage": {
       "cache": true,
-      "inputs": ["default", "^production"]
+      "inputs": [
+        "default",
+        "^production"
+      ]
     },
     "build": {
       "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ]
     }
   },
   "parallel": 2,
   "cacheDirectory": ".nx/cache",
-  "useInferencePlugins": false
+  "useInferencePlugins": false,
+  "plugins": [
+    {
+      "plugin": "@nx/docker",
+      "options": {
+        "buildTarget": {
+          "name": "docker:build"
+        },
+        "runTarget": {
+          "name": "docker:run"
+        }
+      }
+    }
+  ]
 }

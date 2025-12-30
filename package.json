@@ -8,7 +8,7 @@
     "install": "node scripts/install.js",
     "install:frontend": "cd frontend && npm install && cd ..",
     "install:backend": "cd backend && uv sync && cd ..",
-    "dev": "node scripts/dev-check.js && nx run-many -t dev --parallel --color",
+    "dev": "nx run-many -t dev",
     "dev:frontend": "nx run frontend:dev",
     "dev:backend": "nx run backend:dev",
     "lint": "nx run-many -t lint --color",
@@ -18,17 +18,18 @@
     "test": "nx run-many -t test --color",
     "test:coverage": "nx run-many -t test-coverage --color",
     "build": "nx run frontend:build",
-    "docker:up": "docker compose up -d ",
+    "docker:up": "docker compose up --build -d  ",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f ",
     "docker:clean": "docker compose down -v",
     "migrate": "nx run backend:migrate",
     "makemigrations": "nx run backend:makemigrations",
     "makemigrations:local": "cd backend && uv run python manage.py makemigrations",
-    "backend:shell": "nx run backend:shell"
+    "backend:shell": "docker compose exec -it backend sh"
   },
   "devDependencies": {
-    "nx": "^20.0.0",
-    "@nx/js": "^20.0.0"
+    "@nx/docker": "^22.3.3",
+    "@nx/js": "^20.0.0",
+    "nx": "^20.0.0"
   }
 }
