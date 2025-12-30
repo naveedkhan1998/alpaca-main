@@ -445,8 +445,17 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
         Get asset statistics for filter options.
         """
         cache_key = "asset_stats"
-        cached_stats = cache.get(cache_key)
-        if cached_stats:
+        try:
+            cached_stats = cache.get(cache_key)
+        except Exception:
+            logger.warning(
+                "Cache get failed for %s; continuing without cache",
+                cache_key,
+                exc_info=True,
+            )
+            cached_stats = None
+
+        if cached_stats is not None:
             return Response(cached_stats)
 
         queryset = self.get_queryset()
@@ -490,7 +499,14 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
         }
 
         # Cache for 30 minutes
-        cache.set(cache_key, stats, 1800)
+        try:
+            cache.set(cache_key, stats, 1800)
+        except Exception:
+            logger.warning(
+                "Cache set failed for %s; returning uncached response",
+                cache_key,
+                exc_info=True,
+            )
         return Response(stats)
 
     @action(detail=True, methods=["get"], url_path="candles_v2")
