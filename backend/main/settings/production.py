@@ -70,7 +70,10 @@ CACHES["default"]["OPTIONS"].update(
     {
         "CONNECTION_POOL_KWARGS": {
             "max_connections": 20,
-            "decode_responses": True,
+            # IMPORTANT: Keep this False when using django-redis' default
+            # PickleSerializer (binary payloads). If True, redis-py will try
+            # to decode cached bytes as UTF-8 and can raise UnicodeDecodeError.
+            "decode_responses": False,
             "retry_on_timeout": True,
             "socket_timeout": 5,
             "socket_connect_timeout": 5,
