@@ -142,6 +142,15 @@ function runDockerComposeUpShowHealthyOnly() {
 runDockerComposeUpShowHealthyOnly()
   .then(() => {
     ui.success("Docker services started successfully.");
+    ui.section("Following backend logs");
+    ui.info(ui.commandHint("docker compose logs backend -f"));
+    const logsProcess = spawn("docker", ["compose", "logs", "backend", "-f"], {
+      cwd: rootDir,
+      stdio: "inherit",
+    });
+    logsProcess.on("error", (error) => {
+      ui.error(`Failed to start logs: ${error.message}`);
+    });
   })
   .catch((error) => {
     const body = ["Docker compose failed to bring services up."];

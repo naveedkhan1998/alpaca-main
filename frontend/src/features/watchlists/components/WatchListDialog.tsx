@@ -17,6 +17,7 @@ import {
   useUpdateWatchListMutation,
 } from '@/api/watchlistService';
 import { WatchList, CreateWatchListParams } from '@/types/common-types';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 interface WatchListDialogProps {
   watchlist?: WatchList;
@@ -31,6 +32,7 @@ export const WatchListDialog: React.FC<WatchListDialogProps> = ({
   onOpenChange,
   onSuccess,
 }) => {
+  const requireAuth = useRequireAuth();
   const [formData, setFormData] = useState<CreateWatchListParams>({
     name: '',
     description: '',
@@ -57,6 +59,9 @@ export const WatchListDialog: React.FC<WatchListDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!requireAuth(isEditing ? 'update watchlists' : 'create watchlists')) {
+      return;
+    }
 
     try {
       if (isEditing) {

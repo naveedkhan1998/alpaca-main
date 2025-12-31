@@ -24,6 +24,7 @@ from apps.core.models import (
     WatchListAsset,
 )
 from apps.core.pagination import CandleBucketPagination, OffsetPagination
+from apps.core.permissions import PublicReadOnlyMixin
 from apps.core.serializers import (
     AggregatedCandleSerializer,
     AlpacaAccountSerializer,
@@ -217,7 +218,7 @@ class AlpacaAccountViewSet(viewsets.ModelViewSet):
             )
 
 
-class AssetViewSet(viewsets.ReadOnlyModelViewSet):
+class AssetViewSet(PublicReadOnlyMixin, viewsets.ReadOnlyModelViewSet):
     """
     A ViewSet for viewing Asset instances with optimized filtering and search.
     """
@@ -225,7 +226,6 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
     # Keep base queryset lean; avoid unnecessary select_related/prefetch on Asset
     queryset = Asset.objects.filter(status="active")
     serializer_class = AssetSerializer
-    permission_classes = [IsAuthenticated]
     filter_backends = [
         DjangoFilterBackend,
         filters.OrderingFilter,
@@ -603,21 +603,23 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
         return get_candles_v3(self, request, pk)
 
 
-class WatchListViewSet(viewsets.ModelViewSet):
+class WatchListViewSet(PublicReadOnlyMixin, viewsets.ModelViewSet):
     """
     A ViewSet for viewing and editing WatchList instances.
     """
 
     serializer_class = WatchListSerializer
-    permission_classes = [IsAuthenticated]
     pagination_class = OffsetPagination
 
     def get_queryset(self):
         # Include both default watchlists and user-specific watchlists
-        return WatchList.objects.filter(
-            Q(user=self.request.user) | Q(user=None),
-            is_active=True,
-        )
+        base_qs = WatchList.objects.filter(is_active=True)
+        user = self.request.user
+
+        if user and user.is_authenticated:
+            return base_qs.filter(Q(user=user) | Q(user=None))
+
+        return base_qs.filter(user=None, is_default=True)
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -633,6 +635,15 @@ class WatchListViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        watchlist = self.get_object()
+        if watchlist.is_default:
+            return Response(
+                {"msg": "Default watchlists cannot be deleted."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=True, methods=["post"], url_path="add_asset")
     def add_asset(self, request, pk=None):
@@ -717,14 +728,13 @@ class WatchListViewSet(viewsets.ModelViewSet):
             )
 
 
-class CandleViewSet(viewsets.ReadOnlyModelViewSet):
+class CandleViewSet(PublicReadOnlyMixin, viewsets.ReadOnlyModelViewSet):
     """
     A ViewSet for viewing Candle instances.
     """
 
     queryset = Candle.objects.filter(is_active=True)
     serializer_class = CandleSerializer
-    permission_classes = [IsAuthenticated]
     pagination_class = CandleBucketPagination
 
     def get_queryset(self):
@@ -809,14 +819,13 @@ class CandleViewSet(viewsets.ReadOnlyModelViewSet):
         )
 
 
-class TickViewSet(viewsets.ReadOnlyModelViewSet):
+class TickViewSet(PublicReadOnlyMixin, viewsets.ReadOnlyModelViewSet):
     """
     A ViewSet for viewing Tick instances.
     """
 
     queryset = Tick.objects.all()
     serializer_class = TickSerializer
-    permission_classes = [IsAuthenticated]
     pagination_class = OffsetPagination
 
     def get_queryset(self):

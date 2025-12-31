@@ -17,21 +17,23 @@
     <meta name="robots" content="index,follow" />
     <meta
       name="description"
-      content="Alpaca API Wrapper is the missing-middle starter kit for real-time market data-Django, Celery, Redis, React + TradingView, and Docker Compose powered by a free Alpaca API key."
+      content="Open-source Alpaca API boilerplate for market data apps, backtesting, and trading bots. Django + DRF, Channels WebSockets, Celery + Redis, React + Vite, TradingView charts, Docker Compose, and NX."
     />
+    <meta name="author" content="Naveed Khan" />
     <meta
       name="keywords"
-      content="alpaca api wrapper, real-time market data, django, celery, react, tradingview, docker compose, nx monorepo, open source trading"
+      content="alpaca api boilerplate, market data app, backtesting, trading bot, django rest framework, channels websocket, celery, redis, react, vite, tradingview charts, docker compose, nx monorepo, watchlists"
     />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Alpaca API Wrapper" />
+    <meta property="og:locale" content="en_US" />
     <meta
       property="og:title"
-      content="Alpaca API Wrapper - Real-time Alpaca developer starter"
+      content="Alpaca API Wrapper - open-source market data stack"
     />
     <meta
       property="og:description"
-      content="Launch a production-grade Alpaca stack with Django models, TradingView charts, Celery workers, and Docker-ready to stream up to 30 assets in real time."
+      content="Build Alpaca market data apps with Django, Channels, Celery, React, TradingView, and Docker Compose. Public demo and self-hosting ready."
     />
     <meta property="og:url" content="https://alpaca.mnaveedk.com/" />
     <meta
@@ -42,15 +44,21 @@
     <meta name="twitter:title" content="Alpaca API Wrapper" />
     <meta
       name="twitter:description"
-      content="Open-source full-stack starter that streams Alpaca market data, aggregates candles, and ships a TradingView-style UI out of the box."
+      content="Open-source Alpaca API boilerplate with Django, Channels, Celery, React, TradingView, and Docker Compose for real-time market data."
     />
     <meta
       name="twitter:image"
       content="https://alpaca.mnaveedk.com/android-chrome-512x512.png"
     />
+    <meta
+      name="twitter:image:alt"
+      content="Alpaca API Wrapper dashboard preview"
+    />
     <meta name="theme-color" content="#0a0a0a" />
     <link rel="canonical" href="https://alpaca.mnaveedk.com/" />
-    <title>Alpaca API Wrapper - Real-time Alpaca developer starter</title>
+    <title>
+      Alpaca API Wrapper - open-source Alpaca market data boilerplate
+    </title>
     <script>
       (function () {
         var storageKey = 'vite-ui-theme';
@@ -130,6 +138,99 @@
       #app-root[hidden] {
         display: none !important;
       }
+      #landing-root {
+        font-family: 'DM Sans', 'Plus Jakarta Sans', sans-serif;
+      }
+      #landing-root h1,
+      #landing-root h2,
+      #landing-root h3 {
+        font-family: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
+        letter-spacing: -0.02em;
+      }
+      #landing-root .text-muted-foreground {
+        color: hsl(var(--foreground) / 0.72);
+      }
+      .dark #landing-root .text-muted-foreground {
+        color: hsl(var(--foreground) / 0.78);
+      }
+      #landing-root .bg-primary\/10 {
+        background-color: hsl(var(--primary) / 0.12);
+      }
+      .dark #landing-root .bg-primary\/10 {
+        background-color: hsl(var(--primary) / 0.2);
+      }
+      #landing-root .border-primary\/30 {
+        border-color: hsl(var(--primary) / 0.4);
+      }
+      .dark #landing-root .border-primary\/30 {
+        border-color: hsl(var(--primary) / 0.55);
+      }
+      .landing-backdrop {
+        background:
+          radial-gradient(
+            1000px circle at 10% -10%,
+            hsl(var(--primary) / 0.18),
+            transparent 55%
+          ),
+          radial-gradient(
+            900px circle at 90% 0%,
+            hsl(var(--primary) / 0.1),
+            transparent 60%
+          ),
+          linear-gradient(
+            180deg,
+            hsl(var(--background)) 0%,
+            hsl(var(--muted) / 0.35) 100%
+          );
+      }
+      .dark .landing-backdrop {
+        background:
+          radial-gradient(
+            1000px circle at 10% -10%,
+            hsl(var(--primary) / 0.28),
+            transparent 60%
+          ),
+          radial-gradient(
+            900px circle at 90% 0%,
+            hsl(var(--primary) / 0.18),
+            transparent 65%
+          ),
+          linear-gradient(
+            180deg,
+            hsl(var(--background)) 0%,
+            hsl(var(--card) / 0.7) 100%
+          );
+      }
+      .landing-surface {
+        background: linear-gradient(
+          180deg,
+          hsl(var(--background) / 0.92) 0%,
+          hsl(var(--background) / 0.78) 100%
+        );
+        border-color: hsl(var(--border) / 0.7);
+        box-shadow: 0 1px 0 hsl(var(--foreground) / 0.04);
+      }
+      .dark .landing-surface {
+        background: linear-gradient(
+          180deg,
+          hsl(var(--background) / 0.9) 0%,
+          hsl(var(--background) / 0.6) 100%
+        );
+        border-color: hsl(var(--border) / 0.85);
+        box-shadow:
+          0 1px 0 hsl(var(--foreground) / 0.08),
+          0 12px 32px -28px hsl(var(--primary) / 0.6);
+      }
+      .landing-fab {
+        background: hsl(var(--card) / 0.85);
+        border: 1px solid hsl(var(--border) / 0.65);
+        box-shadow: 0 14px 30px -20px hsl(var(--foreground) / 0.3);
+      }
+      .dark .landing-fab {
+        background: hsl(var(--card) / 0.75);
+        border: 1px solid hsl(var(--border) / 0.9);
+        box-shadow: 0 16px 35px -24px hsl(var(--primary) / 0.45);
+      }
 
       @keyframes float {
         0%,
@@ -178,53 +279,71 @@
         background-image:
           linear-gradient(
             to right,
-            hsl(var(--border) / 0.1) 1px,
+            hsl(var(--border) / 0.18) 1px,
             transparent 1px
           ),
           linear-gradient(
             to bottom,
-            hsl(var(--border) / 0.1) 1px,
+            hsl(var(--border) / 0.18) 1px,
             transparent 1px
           );
         background-size: 40px 40px;
       }
 
-      /* Enhanced light mode support for gradient orbs */
-      .gradient-orb-1 {
-        background: hsl(var(--primary) / 0.1);
-      }
-
-      .gradient-orb-2 {
-        background: hsl(var(--primary) / 0.08);
-      }
-
-      .light .gradient-orb-1 {
-        background: hsl(var(--primary) / 0.06);
-      }
-
-      .light .gradient-orb-2 {
-        background: hsl(var(--primary) / 0.04);
+      .dark .grid-pattern {
+        background-image:
+          linear-gradient(
+            to right,
+            hsl(var(--border) / 0.28) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            to bottom,
+            hsl(var(--border) / 0.28) 1px,
+            transparent 1px
+          );
       }
 
       /* Better card backgrounds for light mode */
       .card-bg {
-        background: hsl(var(--card) / 0.5);
-        border: 1px solid hsl(var(--border) / 0.4);
+        background: linear-gradient(
+          145deg,
+          hsl(var(--card)) 0%,
+          hsl(var(--muted) / 0.6) 100%
+        );
+        border: 1px solid hsl(var(--border) / 0.75);
+        box-shadow:
+          0 18px 45px -32px hsl(var(--foreground) / 0.18),
+          inset 0 1px 0 hsl(var(--foreground) / 0.04);
       }
 
-      .light .card-bg {
-        background: hsl(var(--card));
-        border: 1px solid hsl(var(--border));
-        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+      .dark .card-bg {
+        background: linear-gradient(
+          145deg,
+          hsl(var(--card)) 0%,
+          hsl(var(--secondary)) 100%
+        );
+        border: 1px solid hsl(var(--border) / 0.9);
+        box-shadow:
+          0 22px 55px -36px hsl(var(--primary) / 0.3),
+          inset 0 1px 0 hsl(var(--foreground) / 0.08);
       }
 
       /* Enhanced section backgrounds for light mode */
       .section-bg {
-        background: hsl(var(--card) / 0.3);
+        background: linear-gradient(
+          180deg,
+          hsl(var(--background)) 0%,
+          hsl(var(--muted) / 0.5) 100%
+        );
       }
 
-      .light .section-bg {
-        background: hsl(var(--muted) / 0.3);
+      .dark .section-bg {
+        background: linear-gradient(
+          180deg,
+          hsl(var(--background)) 0%,
+          hsl(var(--card) / 0.7) 100%
+        );
       }
 
       /* Mobile menu toggle */
@@ -239,50 +358,71 @@
       /* Thick glassy border effect for hero image */
       .hero-image-container {
         position: relative;
-        padding: 8px;
+        padding: 10px;
         background: linear-gradient(
           135deg,
-          hsl(var(--primary) / 0.2) 0%,
-          hsl(var(--primary) / 0.1) 50%,
-          hsl(var(--primary) / 0.2) 100%
+          hsl(var(--primary) / 0.28) 0%,
+          hsl(var(--primary) / 0.12) 50%,
+          hsl(var(--primary) / 0.28) 100%
         );
         border-radius: 1.5rem;
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 30px 80px -40px hsl(var(--primary) / 0.35);
       }
 
       /* Light mode adjustments for hero image border */
       .light .hero-image-container {
         background: linear-gradient(
           135deg,
-          hsl(var(--primary) / 0.15) 0%,
-          hsl(var(--primary) / 0.1) 50%,
-          hsl(var(--primary) / 0.15) 100%
+          hsl(var(--primary) / 0.22) 0%,
+          hsl(var(--primary) / 0.12) 50%,
+          hsl(var(--primary) / 0.22) 100%
         );
+        box-shadow: 0 26px 70px -45px hsl(var(--foreground) / 0.14);
+      }
+
+      .dark .hero-image-container {
+        background: linear-gradient(
+          135deg,
+          hsl(var(--primary) / 0.38) 0%,
+          hsl(var(--primary) / 0.2) 50%,
+          hsl(var(--primary) / 0.38) 100%
+        );
+        box-shadow: 0 30px 80px -45px hsl(var(--primary) / 0.45);
       }
 
       .hero-image-inner {
         position: relative;
-        background: hsl(var(--card) / 0.8);
-        backdrop-filter: saturate(140%) blur(16px);
-        -webkit-backdrop-filter: saturate(140%) blur(16px);
-        border: 3px solid hsl(var(--border) / 0.6);
+        background: hsl(var(--card) / 0.9);
+        backdrop-filter: saturate(150%) blur(16px);
+        -webkit-backdrop-filter: saturate(150%) blur(16px);
+        border: 2px solid hsl(var(--border) / 0.7);
         border-radius: 1.25rem;
         padding: 4px;
         box-shadow:
-          0 0 0 1px hsl(var(--border) / 0.2),
-          inset 0 0 20px hsl(var(--primary) / 0.05),
-          0 20px 60px -10px hsl(var(--foreground) / 0.2);
+          0 0 0 1px hsl(var(--border) / 0.25),
+          inset 0 0 25px hsl(var(--primary) / 0.08),
+          0 24px 70px -18px hsl(var(--foreground) / 0.25);
       }
 
       /* Light mode adjustments for hero image inner */
       .light .hero-image-inner {
         background: hsl(var(--card));
-        border: 3px solid hsl(var(--border));
+        border: 2px solid hsl(var(--border));
         box-shadow:
-          0 0 0 1px hsl(var(--border) / 0.3),
-          inset 0 0 20px hsl(var(--primary) / 0.03),
-          0 20px 60px -10px hsl(var(--foreground) / 0.08);
+          0 0 0 1px hsl(var(--border) / 0.35),
+          inset 0 0 25px hsl(var(--primary) / 0.04),
+          0 24px 70px -20px hsl(var(--foreground) / 0.12);
+      }
+
+      .dark .hero-image-inner {
+        background: hsl(var(--card) / 0.95);
+        border: 2px solid hsl(var(--border) / 0.95);
+        box-shadow:
+          0 0 0 1px hsl(var(--border) / 0.4),
+          inset 0 0 30px hsl(var(--primary) / 0.12),
+          0 24px 70px -20px hsl(var(--primary) / 0.35);
       }
     </style>
     <script type="application/ld+json">
@@ -292,9 +432,11 @@
         "name": "Alpaca API Wrapper",
         "applicationCategory": "FinanceApplication",
         "operatingSystem": "Web",
-        "description": "Open-source Alpaca starter kit with Django, Celery, Redis, React, and TradingView components for streaming market data in real time.",
+        "description": "Open-source Alpaca API boilerplate with Django, Channels, Celery, Redis, React, and TradingView charts for real-time and historical market data.",
         "image": "https://alpaca.mnaveedk.com/android-chrome-512x512.png",
         "url": "https://alpaca.mnaveedk.com/",
+        "applicationSuite": "Alpaca Main",
+        "keywords": "Alpaca API, market data, Django, React, TradingView, Docker Compose, Celery, Redis, Channels, NX",
         "author": {
           "@type": "Person",
           "name": "Naveed Khan"
@@ -310,23 +452,19 @@
   </head>
   <body class="font-sans antialiased bg-background text-foreground">
     <div id="landing-root" class="relative min-h-screen overflow-hidden">
-      <!-- Grid Pattern Background -->
-      <div class="absolute inset-0 grid-pattern opacity-40"></div>
-
-      <!-- Gradient Orbs -->
-      <!-- Updated gradient orbs with new classes for better light mode support -->
+      <div class="absolute inset-0 landing-backdrop"></div>
       <div
-        class="absolute top-0 left-1/4 w-[600px] h-[600px] gradient-orb-1 rounded-full blur-[120px] animate-pulse-glow"
+        class="absolute inset-0 opacity-25 grid-pattern dark:opacity-40"
       ></div>
       <div
-        class="absolute bottom-0 right-1/4 w-[500px] h-[500px] gradient-orb-2 rounded-full blur-[100px] animate-pulse-glow"
-        style="animation-delay: 1s"
+        class="absolute -top-24 left-[8%] w-[560px] h-[560px] rounded-full bg-primary/20 dark:bg-primary/30 blur-[140px] animate-pulse-glow"
+      ></div>
+      <div
+        class="absolute bottom-[-10%] right-[5%] w-[420px] h-[420px] rounded-full bg-primary/10 dark:bg-primary/20 blur-[160px] animate-pulse-glow"
       ></div>
 
       <!-- Navigation -->
-      <nav
-        class="relative z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl"
-      >
+      <nav class="relative z-50 border-b backdrop-blur-xl landing-surface">
         <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div class="flex items-center justify-between h-16">
             <div class="flex items-center gap-2">
@@ -365,7 +503,7 @@
               >
               <a
                 href="/app"
-                class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold transition rounded-lg bg-foreground text-background hover:opacity-90"
+                class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold transition rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 Launch App
               </a>
@@ -420,7 +558,7 @@
               >
               <a
                 href="/app"
-                class="inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-foreground text-background hover:opacity-90 transition mt-2"
+                class="inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition mt-2"
               >
                 Launch App
               </a>
@@ -432,7 +570,7 @@
       <!-- Floating Theme Toggle -->
       <button
         id="theme-toggle"
-        class="fixed z-50 p-3 transition-all duration-200 border rounded-full shadow-lg bottom-6 right-4 bg-background/80 backdrop-blur-sm border-border/40 hover:shadow-xl hover:scale-105 md:bottom-8 md:right-6"
+        class="fixed z-50 p-3 transition-all duration-200 rounded-full bottom-6 right-4 backdrop-blur-sm landing-fab hover:shadow-xl hover:scale-105 md:bottom-8 md:right-6"
         aria-label="Toggle theme"
       >
         <svg
@@ -472,47 +610,42 @@
       >
         <div class="mx-auto max-w-7xl">
           <div class="max-w-4xl mx-auto text-center animate-slide-up">
-            <!-- Badge -->
-            <div
-              class="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-primary/30 bg-primary/5 text-primary text-xs sm:text-sm font-medium mb-6 sm:mb-8"
+            <p
+              class="mb-4 text-xs font-semibold tracking-[0.3em] text-muted-foreground uppercase sm:mb-6"
             >
-              <span class="relative flex w-2 h-2">
-                <span
-                  class="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-primary"
-                ></span>
-                <span
-                  class="relative inline-flex w-2 h-2 rounded-full bg-primary"
-                ></span>
-              </span>
-              Open Source • Free Tier • Production Ready
-            </div>
+              Open Source / Public Demo / Self-Host Ready
+            </p>
 
             <!-- Main Headline -->
             <h1
               class="mb-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl lg:text-7xl sm:mb-6 text-balance"
             >
               The complete platform to build
-              <span class="text-primary"> market data apps</span>
+              <span
+                class="text-transparent bg-gradient-to-r from-primary to-primary/60 bg-clip-text"
+              >
+                market data app
+              </span>
             </h1>
 
             <!-- Subheadline -->
             <p
               class="px-4 mb-8 text-base leading-relaxed sm:text-lg md:text-xl lg:text-2xl text-muted-foreground sm:mb-12 text-balance"
             >
-              Stream real-time market data with Django, React, and TradingView.
-              Deploy in minutes with Docker. Start building with a free Alpaca
-              API key.
+              Open-source Django + React stack for Alpaca market data,
+              streaming, and backtesting. Channels, Celery, TradingView charts,
+              and Docker Compose included.
             </p>
 
             <!-- CTA Buttons -->
             <div
-              class="flex flex-col items-center justify-center gap-3 px-4 mb-12 sm:flex-row sm:gap-4 sm:mb-16"
+              class="flex flex-col items-center justify-center gap-3 px-4 mb-6 sm:flex-row sm:gap-4 sm:mb-8"
             >
               <a
                 href="/app"
-                class="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl bg-foreground text-background hover:opacity-90 transition shadow-lg hover:shadow-xl hover:-translate-y-0.5 duration-200"
+                class="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition shadow-lg hover:shadow-xl hover:-translate-y-0.5 duration-200"
               >
-                Get Started Free
+                Try Live Demo
                 <svg
                   class="w-4 h-4 ml-2 sm:w-5 sm:h-5"
                   fill="none"
@@ -531,7 +664,7 @@
                 href="https://github.com/naveedkhan1998/alpaca-main"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl border-2 border-border hover:border-foreground/40 transition hover:-translate-y-0.5 duration-200"
+                class="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl border-2 border-primary/30 dark:border-primary/50 bg-background/70 dark:bg-card/60 text-foreground hover:border-primary/70 hover:bg-primary/10 transition hover:-translate-y-0.5 duration-200"
               >
                 <svg
                   class="w-4 h-4 mr-2 sm:w-5 sm:h-5"
@@ -545,51 +678,17 @@
                 View on GitHub
               </a>
             </div>
-
-            <!-- Stats -->
-            <div
-              class="grid max-w-3xl grid-cols-2 gap-4 px-4 mx-auto md:grid-cols-4 sm:gap-6 lg:gap-8"
-            >
-              <div class="text-center">
-                <div
-                  class="mb-1 text-2xl font-bold sm:text-3xl md:text-4xl text-primary sm:mb-2"
-                >
-                  30+
-                </div>
-                <div class="text-xs sm:text-sm text-muted-foreground">
-                  Assets Streaming
-                </div>
-              </div>
-              <div class="text-center">
-                <div
-                  class="mb-1 text-2xl font-bold sm:text-3xl md:text-4xl text-primary sm:mb-2"
-                >
-                  5
-                </div>
-                <div class="text-xs sm:text-sm text-muted-foreground">
-                  Timeframes
-                </div>
-              </div>
-              <div class="text-center">
-                <div
-                  class="mb-1 text-2xl font-bold sm:text-3xl md:text-4xl text-primary sm:mb-2"
-                >
-                  100%
-                </div>
-                <div class="text-xs sm:text-sm text-muted-foreground">
-                  Open Source
-                </div>
-              </div>
-              <div class="text-center">
-                <div
-                  class="mb-1 text-2xl font-bold sm:text-3xl md:text-4xl text-primary sm:mb-2"
-                >
-                  $0
-                </div>
-                <div class="text-xs sm:text-sm text-muted-foreground">
-                  To Start
-                </div>
-              </div>
+            <div class="px-4 mb-10 text-center sm:mb-12">
+              <a
+                href="/app/graphs/1282"
+                class="text-sm font-semibold underline transition text-primary underline-offset-4 hover:text-foreground"
+              >
+                View the AAPL sample graph
+              </a>
+              <p class="mt-2 text-xs sm:text-sm text-muted-foreground">
+                Read-only guest mode. Log in to save watchlists and enable live
+                updates.
+              </p>
             </div>
           </div>
         </div>
@@ -608,12 +707,6 @@
                 class="w-full rounded-lg bg-[url('/alpaca-main-hero.png')] dark:bg-[url('/alpaca-main-hero-dark.png')] bg-cover bg-center h-64 sm:h-80 md:h-96 lg:h-[500px] xl:h-[600px]"
               />
             </div>
-            <div
-              class="absolute w-24 h-24 rounded-full -bottom-4 sm:-bottom-6 -right-4 sm:-right-6 sm:w-32 sm:h-32 bg-primary/30 blur-3xl"
-            ></div>
-            <div
-              class="absolute w-24 h-24 rounded-full -top-4 sm:-top-6 -left-4 sm:-left-6 sm:w-32 sm:h-32 bg-primary/30 blur-3xl"
-            ></div>
           </div>
         </div>
       </section>
@@ -627,7 +720,7 @@
           <div
             class="relative p-6 overflow-hidden rounded-2xl card-bg backdrop-blur-sm sm:p-8 lg:p-10"
           >
-            <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
+            <div class="absolute inset-0 grid-pattern opacity-10"></div>
             <div
               class="relative z-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6"
             >
@@ -698,13 +791,13 @@
         <div class="mx-auto max-w-7xl">
           <div class="mb-12 text-center sm:mb-16 lg:mb-20">
             <h2 class="mb-4 text-3xl font-bold sm:text-4xl md:text-5xl sm:mb-6">
-              Everything you need to build
+              Everything you need to ship
             </h2>
             <p
               class="max-w-2xl px-4 mx-auto text-base sm:text-lg lg:text-xl text-muted-foreground"
             >
-              A complete stack for streaming, storing, and visualizing market
-              data in real-time
+              Stream, store, and visualize Alpaca market data with a
+              production-ready Django + React stack
             </p>
           </div>
 
@@ -735,9 +828,9 @@
               </div>
               <h3 class="mb-3 text-xl font-semibold">Real-Time Streaming</h3>
               <p class="leading-relaxed text-muted-foreground">
-                WebSocket ingestion builds 1-minute candles on the fly. Celery
-                workers resample into 5m, 15m, 1h, 4h, and daily intervals with
-                automatic reconnect logic.
+                Dedicated WebSocket service ingests Alpaca ticks and builds
+                1-minute candles live. Celery resamples into higher timeframes
+                with auto-reconnect and recovery logic.
               </p>
             </div>
 
@@ -762,11 +855,13 @@
                   />
                 </svg>
               </div>
-              <h3 class="mb-3 text-xl font-semibold">Django Models</h3>
+              <h3 class="mb-3 text-xl font-semibold">
+                Historical Data Pipelines
+              </h3>
               <p class="leading-relaxed text-muted-foreground">
-                Pre-built models for assets, candles, watchlists, and paper
-                trades. Query rich data with Django ORM and extend with custom
-                endpoints or notebooks.
+                Automatic OHLCV backfills and caching for watchlist assets.
+                Query rich data with Django ORM and extend for research,
+                notebooks, or custom endpoints.
               </p>
             </div>
 
@@ -791,11 +886,11 @@
                   />
                 </svg>
               </div>
-              <h3 class="mb-3 text-xl font-semibold">TradingView Charts</h3>
+              <h3 class="mb-3 text-xl font-semibold">Interactive Analysis</h3>
               <p class="leading-relaxed text-muted-foreground">
-                Professional charting interface with real-time updates. Built
-                with React and TradingView components for a familiar trading
-                experience.
+                TradingView-style charts with multi-timeframe data, indicators,
+                and live updates. Built with React for a familiar trading
+                workflow.
               </p>
             </div>
 
@@ -820,10 +915,10 @@
                   />
                 </svg>
               </div>
-              <h3 class="mb-3 text-xl font-semibold">Docker Orchestration</h3>
+              <h3 class="mb-3 text-xl font-semibold">Dockerized Stack</h3>
               <p class="leading-relaxed text-muted-foreground">
-                Complete Docker Compose stack with Django, Postgres, Redis,
-                Celery, and Flower. Launch everything with one command and hot
+                Docker Compose brings up Django API, Postgres, Redis, Celery,
+                Channels WebSockets, and Flower. Launch with one command and hot
                 reload everywhere.
               </p>
             </div>
@@ -851,9 +946,8 @@
               </div>
               <h3 class="mb-3 text-xl font-semibold">Watchlist Management</h3>
               <p class="leading-relaxed text-muted-foreground">
-                Create and manage watchlists directly in the UI. Store them in
-                Django, sync with Alpaca, and keep everything ready for research
-                or automation.
+                Create and manage watchlists in the UI, sync assets, and keep
+                everything organized for research, alerts, or automation.
               </p>
             </div>
 
@@ -880,8 +974,8 @@
               </div>
               <h3 class="mb-3 text-xl font-semibold">Developer Experience</h3>
               <p class="leading-relaxed text-muted-foreground">
-                NX monorepo with unified commands, Vite hot reload, purposeful
-                logging, and included tooling like Ruff, Black, Prettier,
+                NX monorepo with unified commands, Vite HMR, uv for Python deps,
+                and batteries-included tooling with Ruff, Black, Prettier,
                 Pytest, and Vitest.
               </p>
             </div>
@@ -904,7 +998,7 @@
             <p
               class="max-w-2xl px-4 mx-auto text-base sm:text-lg lg:text-xl text-muted-foreground"
             >
-              Production-grade stack that you can understand and extend
+              Production-grade stack you can self-host, inspect, and extend
             </p>
           </div>
 
@@ -990,11 +1084,10 @@
                   </svg>
                 </div>
                 <div>
-                  <h3 class="mb-2 text-lg font-semibold">Free Tier Friendly</h3>
+                  <h3 class="mb-2 text-lg font-semibold">Monorepo Workflow</h3>
                   <p class="text-muted-foreground">
-                    Streams up to 30 symbols on Alpaca's free API key with
-                    resilience, resubscribe logic, and cached aggregates for
-                    optimal performance.
+                    NX orchestration, smart scripts, and uv-based Python
+                    installs keep the stack consistent while you iterate.
                   </p>
                 </div>
               </div>
@@ -1079,6 +1172,10 @@
                       >
                       <span
                         class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
+                        >uv</span
+                      >
+                      <span
+                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
                         >Pytest</span
                       >
                       <span
@@ -1091,7 +1188,7 @@
                   <div class="pt-6 border-t border-border/40">
                     <div class="mb-2 text-sm font-semibold">Quick Start</div>
                     <div
-                      class="p-4 font-mono text-sm rounded-lg bg-background/80 text-muted-foreground"
+                      class="p-4 font-mono text-sm rounded-lg bg-background/90 dark:bg-card/60 text-muted-foreground"
                     >
                       <div>$ npm install</div>
                       <div>$ npm run dev</div>
@@ -1117,8 +1214,7 @@
             <p
               class="max-w-2xl px-4 mx-auto text-base sm:text-lg lg:text-xl text-muted-foreground"
             >
-              Professional trading interface with real-time data and powerful
-              features
+              Production-ready UI with real-time data, watchlists, and charts
             </p>
           </div>
 
@@ -1132,11 +1228,13 @@
               <div
                 class="w-full h-48 bg-[url('/alpaca-main-watchlist.png')] dark:bg-[url('/alpaca-main-watchlist-dark.png')] bg-cover bg-center rounded-t-2xl"
               ></div>
-              <div class="p-6 bg-background/80 backdrop-blur-sm">
+              <div
+                class="p-6 bg-background/90 dark:bg-card/70 backdrop-blur-sm"
+              >
                 <h3 class="mb-2 text-lg font-semibold">Watchlist Management</h3>
                 <p class="text-sm text-muted-foreground">
-                  Create and organize watchlists with drag-and-drop interface
-                  and real-time price updates.
+                  Create watchlists, add assets, and backfill history for fast
+                  research workflows.
                 </p>
               </div>
             </div>
@@ -1147,11 +1245,13 @@
               <div
                 class="w-full h-48 bg-[url('/alpaca-main-hero.png')] dark:bg-[url('/alpaca-main-hero-dark.png')] bg-cover bg-center rounded-t-2xl"
               ></div>
-              <div class="p-6 bg-background/80 backdrop-blur-sm">
+              <div
+                class="p-6 bg-background/90 dark:bg-card/70 backdrop-blur-sm"
+              >
                 <h3 class="mb-2 text-lg font-semibold">Real-Time Charts</h3>
                 <p class="text-sm text-muted-foreground">
-                  TradingView-powered charts with multiple timeframes and
-                  technical indicators.
+                  Multi-timeframe TradingView charts with live updates and
+                  indicator-ready data.
                 </p>
               </div>
             </div>
@@ -1162,11 +1262,13 @@
               <div
                 class="w-full h-48 bg-[url('/alpaca-main-asset.png')] dark:bg-[url('/alpaca-main-asset-dark.png')] bg-cover bg-center rounded-t-2xl"
               ></div>
-              <div class="p-6 bg-background/80 backdrop-blur-sm">
+              <div
+                class="p-6 bg-background/90 dark:bg-card/70 backdrop-blur-sm"
+              >
                 <h3 class="mb-2 text-lg font-semibold">Asset Discovery</h3>
                 <p class="text-sm text-muted-foreground">
-                  Search and filter thousands of assets with instant results and
-                  detailed information.
+                  Search and filter assets with instant results and detailed
+                  metadata.
                 </p>
               </div>
             </div>
@@ -1182,27 +1284,28 @@
         <div class="max-w-4xl mx-auto">
           <!-- Updated CTA card with better light mode support -->
           <div
-            class="relative p-8 overflow-hidden text-center border rounded-2xl sm:rounded-3xl border-border/40 bg-gradient-to-br from-accent/10 via-card/50 to-primary/10 backdrop-blur-sm sm:p-12 md:p-16"
+            class="relative p-8 overflow-hidden text-center border rounded-2xl sm:rounded-3xl border-border/60 bg-gradient-to-br from-primary/10 via-card/70 to-primary/10 dark:from-primary/20 dark:via-card/60 dark:to-primary/20 backdrop-blur-sm sm:p-12 md:p-16"
           >
-            <div class="absolute inset-0 bg-grid-pattern opacity-20"></div>
+            <div class="absolute inset-0 grid-pattern opacity-20"></div>
             <div class="relative z-10">
               <h2
                 class="mb-4 text-3xl font-bold sm:text-4xl md:text-5xl sm:mb-6"
               >
-                Ready to start building?
+                Ready to build your stack?
               </h2>
               <p
                 class="max-w-2xl px-4 mx-auto mb-8 text-base sm:text-lg lg:text-xl text-muted-foreground sm:mb-10"
               >
-                Deploy in minutes with Docker Compose or Render. Shape it into
-                your research lab or trading cockpit.
+                Launch the demo, fork the repo, and self-host with Docker
+                Compose. Shape it into a research lab, trading bot, or data
+                pipeline.
               </p>
               <div
                 class="flex flex-col items-center justify-center gap-3 px-4 sm:flex-row sm:gap-4"
               >
                 <a
                   href="/app"
-                  class="inline-flex items-center justify-center w-full px-6 py-3 text-sm font-semibold transition shadow-lg sm:w-auto sm:px-8 sm:py-4 sm:text-base rounded-xl bg-foreground text-background hover:opacity-90"
+                  class="inline-flex items-center justify-center w-full px-6 py-3 text-sm font-semibold transition shadow-lg sm:w-auto sm:px-8 sm:py-4 sm:text-base rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   Launch the App
                   <svg
@@ -1223,7 +1326,7 @@
                   href="https://github.com/naveedkhan1998/alpaca-main"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="inline-flex items-center justify-center w-full px-6 py-3 text-sm font-semibold transition border-2 sm:w-auto sm:px-8 sm:py-4 sm:text-base rounded-xl border-border hover:border-foreground/40"
+                  class="inline-flex items-center justify-center w-full px-6 py-3 text-sm font-semibold transition border-2 sm:w-auto sm:px-8 sm:py-4 sm:text-base rounded-xl border-primary/30 dark:border-primary/50 bg-background/70 dark:bg-card/60 hover:border-primary/70 hover:bg-primary/10"
                 >
                   <svg
                     class="w-4 h-4 mr-2 sm:w-5 sm:h-5"
@@ -1244,9 +1347,7 @@
 
       <!-- Footer -->
       <!-- Improved mobile footer layout and added blog link -->
-      <footer
-        class="relative z-10 border-t border-border/40 bg-background/80 backdrop-blur-xl"
-      >
+      <footer class="relative z-10 border-t backdrop-blur-xl landing-surface">
         <div class="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8 sm:py-12">
           <div
             class="grid gap-6 mb-6 sm:grid-cols-2 md:grid-cols-4 sm:gap-8 sm:mb-8"
@@ -1263,8 +1364,8 @@
               <p
                 class="max-w-md mb-3 text-sm sm:text-base text-muted-foreground sm:mb-4"
               >
-                Open-source full-stack starter for building market data
-                applications with Django, React, and TradingView.
+                Open-source Alpaca API boilerplate for market data, backtesting,
+                and trading bots with Django, React, and TradingView.
               </p>
               <p class="text-xs sm:text-sm text-muted-foreground">
                 Special thanks to Alpaca for their generous free tier that
@@ -1381,9 +1482,9 @@
           margin: 1.5rem auto;
           padding: 1rem 1.25rem;
           border-radius: 12px;
-          background: #0f172a;
-          color: #e2e8f0;
-          border: 1px solid rgba(148, 163, 184, 0.25);
+          background: hsl(var(--card));
+          color: hsl(var(--card-foreground));
+          border: 1px solid hsl(var(--border) / 0.6);
         "
       >
         JavaScript is required to launch the interactive Alpaca API Wrapper app,

@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Heart, TrendingUp, Loader2, X } from 'lucide-react';
+import {
+  Search,
+  Heart,
+  TrendingUp,
+  Loader2,
+  X,
+  AlertTriangle,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
@@ -21,6 +28,7 @@ import { useGetAssetsQuery } from '@/api/assetService';
 import { AddToWatchlistDialog } from '../../features/assets/components/AddToWatchlistDialog';
 import { Asset } from '@/types/common-types';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 interface AssetSearchProps {
   open: boolean;
@@ -124,8 +132,9 @@ export const AssetSearch: React.FC<AssetSearchProps> = ({
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [showWatchlistDialog, setShowWatchlistDialog] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 300);
+  const requireAuth = useRequireAuth();
 
-  const { data, isLoading, isFetching } = useGetAssetsQuery(
+  const { data, isLoading, isFetching, error } = useGetAssetsQuery(
     {
       search: debouncedSearch,
       limit: 20,
@@ -136,11 +145,23 @@ export const AssetSearch: React.FC<AssetSearchProps> = ({
   );
 
   const assets = data?.results || [];
+  const errorStatus =
+    error && typeof error === 'object' && 'status' in error
+      ? (error as { status?: number }).status
+      : undefined;
+  const errorMessage =
+    errorStatus === 429
+      ? 'Rate limit reached. Please wait a moment or log in for higher limits.'
+      : 'Unable to load search results. Please try again.';
 
-  const handleAddToWatchlist = useCallback((asset: Asset) => {
-    setSelectedAsset(asset);
-    setShowWatchlistDialog(true);
-  }, []);
+  const handleAddToWatchlist = useCallback(
+    (asset: Asset) => {
+      if (!requireAuth('add assets to watchlists')) return;
+      setSelectedAsset(asset);
+      setShowWatchlistDialog(true);
+    },
+    [requireAuth]
+  );
 
   const handleClose = useCallback(() => {
     setSearchQuery('');
@@ -208,6 +229,18 @@ export const AssetSearch: React.FC<AssetSearchProps> = ({
               <Loader2 className="w-8 h-8 mb-4 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">
                 Searching assets...
+              </p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-destructive/10">
+                <AlertTriangle className="w-8 h-8 text-destructive" />
+              </div>
+              <p className="text-sm font-medium text-foreground">
+                {errorStatus === 429 ? 'Rate limit reached' : 'Search error'}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {errorMessage}
               </p>
             </div>
           ) : assets.length === 0 ? (

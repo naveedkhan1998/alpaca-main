@@ -68,6 +68,7 @@ export const {
   useRegisterUserMutation,
   useLoginUserMutation,
   useGetLoggedUserQuery,
+  useLazyGetLoggedUserQuery,
   useGoogleLoginMutation,
   useLazySendEmailQuery,
 } = userAuthApi;

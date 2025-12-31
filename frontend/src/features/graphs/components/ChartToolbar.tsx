@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
+import { getIsGuest } from 'src/features/auth/authSlice';
 import {
   setTimeframe,
   setChartType,
@@ -44,6 +45,7 @@ import {
 import type { SeriesType } from 'lightweight-charts';
 import { timeframeOptions } from '@/lib/constants';
 import { useIndicatorUI } from '../context';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 const chartTypeOptions: {
   value: SeriesType;
@@ -101,6 +103,8 @@ export default function ChartToolbar() {
   const showVolume = useAppSelector(selectShowVolume);
   const autoRefresh = useAppSelector(selectAutoRefresh);
   const replayEnabled = useAppSelector(selectReplayEnabled);
+  const isGuest = useAppSelector(getIsGuest);
+  const requireAuth = useRequireAuth();
 
   // Use indicator UI context for modal management
   const { instances, openSelector, clearAll } = useIndicatorUI();
@@ -120,6 +124,12 @@ export default function ChartToolbar() {
         dispatch(setShowVolume(false));
         break;
     }
+  };
+
+  const handleAutoRefreshChange = (value: boolean) => {
+    if (!requireAuth('enable live updates')) return;
+    if (isGuest) return;
+    dispatch(setAutoRefresh(value));
   };
 
   return (
@@ -284,7 +294,7 @@ export default function ChartToolbar() {
                   <Switch
                     id="auto-refresh"
                     checked={autoRefresh}
-                    onCheckedChange={auto => dispatch(setAutoRefresh(auto))}
+                    onCheckedChange={handleAutoRefreshChange}
                   />
                 </div>
 

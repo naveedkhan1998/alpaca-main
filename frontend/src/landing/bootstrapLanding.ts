@@ -1,6 +1,7 @@
 import '../index.css';
 import { getApiBaseUrl } from '../shared/lib/environment';
 import { initGA4, trackPageView, trackEvent } from '../shared/lib/analytics';
+import { clearGuestMode, setGuestMode } from '../shared/lib/guestMode';
 
 const HEALTH_CHECK_INTERVAL = 120000; // 2 minutes
 
@@ -71,6 +72,13 @@ function setupLandingPageTracking() {
   document.addEventListener('click', e => {
     const target = e.target as HTMLElement;
 
+    const guestLink = target.closest('a[data-guest]');
+    if (guestLink) {
+      setGuestMode(true);
+      trackEvent('Landing Page', 'Click', 'CTA: Guest Mode');
+      return;
+    }
+
     // Track links to app
     if (
       target.closest('a[href*="/app"]') ||
@@ -78,6 +86,7 @@ function setupLandingPageTracking() {
     ) {
       const link = target.closest('a') as HTMLAnchorElement;
       trackEvent('Landing Page', 'Click', `CTA: ${link.href}`);
+      clearGuestMode();
     }
 
     // Track any button clicks with tracking data

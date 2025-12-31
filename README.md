@@ -13,13 +13,57 @@
 
 Use it as a foundation for **backtesting, live-trading bots, research notebooks, or data pipelines**—with built-in support for watchlists, historical and real-time data, and a dedicated WebSocket service for streaming market data.
 
-🌐 **Try the live demo:** [https://alpaca.mnaveedk.com/](https://alpaca.mnaveedk.com/)
+🌐 **Live Demo:**  
+👉 <https://alpaca.mnaveedk.com>
+
+Try it instantly as an **anonymous user**, or **sign up** to unlock the full real-time experience.
+
+---
+
+## 🚀 Live Demo (Anonymous vs Registered)
+
+The hosted demo is designed to let you experience the project quickly **and** keep infrastructure costs sustainable.
+
+### Anonymous Demo (No Account Required)
+
+Anonymous access is intentionally **limited** to prevent abuse and protect API workloads.
+
+**Anonymous users can:**
+
+- Browse **historical market data**
+- View existing **example watchlists**
+- Explore the UI and overall architecture
+- Refresh pages to fetch the latest available data snapshot
+
+**Anonymous limitations (intentional):**
+
+- ⏱ **Rate limited** (~30 requests/min)
+- 🔒 **Read-only**
+- ❌ No creating/modifying watchlists
+- ❌ No adding/removing assets
+- ❌ No real-time streaming updates
+
+### Registered Demo (Full Experience)
+
+If you **sign up**, you get the **full power** of the app on the demo platform.
+
+**Registered users can:**
+
+- Create and manage watchlists
+- Add/remove assets
+- See asset data update in **real time** (streaming)
+- Explore the WebSocket + Celery pipeline as intended
+
+> The goal is still the same: **experience it on the demo → clone it → run locally with your own API keys.**
 
 ---
 
 ## Table of Contents
 
 - [Alpaca API Wrapper](#alpaca-api-wrapper)
+  - [🚀 Live Demo (Anonymous vs Registered)](#-live-demo-anonymous-vs-registered)
+    - [Anonymous Demo (No Account Required)](#anonymous-demo-no-account-required)
+    - [Registered Demo (Full Experience)](#registered-demo-full-experience)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
   - [Tech Stack](#tech-stack)
@@ -37,9 +81,8 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
     - [Database Development](#database-development)
     - [Running Tests](#running-tests)
   - [Testing \& Monitoring](#testing--monitoring)
-    - [Follow Celery logs](#follow-celery-logs)
-    - [Multitail (optional)](#multitail-optional)
     - [Flower dashboard](#flower-dashboard)
+  - [⭐ Supporting the Project](#-supporting-the-project)
   - [Contributing](#contributing)
     - [Development Guidelines](#development-guidelines)
     - [Issues](#issues)
@@ -59,6 +102,7 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
 
 | Category                 | What you get                                                                 |
 | ------------------------ | ---------------------------------------------------------------------------- |
+| **Public Demo**          | Anonymous (read-only + rate limited) and Registered (full real-time) modes   |
 | **Watchlists**           | Create watchlists, add assets, and manage your market focus                  |
 | **Historical Data**      | Assets in watchlists fetch and cache historical OHLCV data automatically     |
 | **Real-Time Data**       | Assets in watchlists are subscribed to real-time Alpaca market feeds         |
@@ -73,22 +117,22 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
 
 ## Tech Stack
 
-| Layer                 | Tech                                                                                    |
-| --------------------- | --------------------------------------------------------------------------------------- |
-| **Monorepo**          | NX · npm workspaces                                                                     |
-| **Backend**           | Django · Django REST Framework                                                          |
-| **Async / broker**    | Celery · Redis                                                                          |
-| **Realtime**          | Django Channels (WebSockets)                                                            |
-| **Frontend**          | React · Vite                                                                            |
-| **Database**          | PostgreSQL                                                                              |
-| **Container / infra** | Docker · Docker Compose                                                                 |
+| Layer                 | Tech                                                                                                              |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Monorepo**          | NX · npm workspaces                                                                                               |
+| **Backend**           | Django · Django REST Framework                                                                                    |
+| **Async / broker**    | Celery · Redis                                                                                                    |
+| **Realtime**          | Django Channels (WebSockets)                                                                                      |
+| **Frontend**          | React · Vite                                                                                                      |
+| **Database**          | PostgreSQL                                                                                                        |
+| **Container / infra** | Docker · Docker Compose                                                                                           |
 | **Dev tooling**       | `uv` (deps) · `black` (format) · `ruff` (lint) · `pytest` (tests) · `vitest` (FE tests) · **Smart setup scripts** |
 
 ---
 
 ## Architecture
 
-![Architecture Diagram](docs/architecture_diagram.svg)
+![Architecture Diagram](docs/architecture_diagram.png)
 
 ### Service Breakdown
 
@@ -117,6 +161,8 @@ Use it as a foundation for **backtesting, live-trading bots, research notebooks,
 - An **Alpaca API** key & secret
 - Create a `.envs/.env` file with your API credentials
 
+> **Note:** Alpaca API credentials are **not required** to try the hosted demo.  
+> They are only needed when running the project locally.
 > **Note:** The setup will automatically check for all prerequisites and guide you through any missing requirements.
 
 ---
@@ -139,7 +185,7 @@ npm install
 - ✅ Installs frontend dependencies (~768 packages)
 - ✅ Installs and syncs backend dependencies (~72 Python packages)
 - ✅ Creates setup completion marker
-
+  
 > **Note:** If any prerequisites are missing, the installation will stop and provide clear instructions on what to install.
 
 ---
@@ -263,28 +309,18 @@ npm run test:coverage
 
 ## Testing & Monitoring
 
-### Follow Celery logs
-
-```bash
-# all workers
-docker compose exec backend tail -f /var/log/celery/w*.log
-```
-
-### Multitail (optional)
-
-```bash
-# install once on the host
-sudo apt-get install multitail  # or yum install multitail
-
-# split‑screen log view
-docker compose exec backend multitail /var/log/celery/w1.log /var/log/celery/w2.log
-```
-
 ### Flower dashboard
 
-Open **[http://localhost:5555](http://localhost:5555)** in your browser for task‑level visibility.
+Open **[http://localhost:5555](http://localhost:5555)** in your browser for task-level visibility.
 
-> **Tip:** Configure log‑rotation (`logrotate`) inside the container—or mount `/var/log/celery` to your host—to keep log sizes under control.
+> **Tip:** Configure log-rotation (`logrotate`) inside the container—or mount `/var/log/celery` to your host—to keep log sizes under control.
+
+---
+
+## ⭐ Supporting the Project
+
+If you tried the demo or pulled a release and found this useful, consider starring the repo ⭐
+It helps justify continued maintenance and makes the project easier to discover.
 
 ---
 
@@ -370,9 +406,9 @@ This project wouldn't be possible without these amazing technologies and resourc
 
 ## Contact
 
-**Naveed Khan**  
-📧 **Email:** [naveedkhan13041998@gmail.com](mailto:naveedkhan13041998@gmail.com)  
-🐙 **GitHub:** [naveedkhan1998](https://github.com/naveedkhan1998)  
+**Naveed Khan**
+📧 **Email:** [naveedkhan13041998@gmail.com](mailto:naveedkhan13041998@gmail.com)
+🐙 **GitHub:** [naveedkhan1998](https://github.com/naveedkhan1998)
 🌐 **Website:** [mnaveedk.com](https://mnaveedk.com)
 
 ---
@@ -381,4 +417,4 @@ This project wouldn't be possible without these amazing technologies and resourc
 
 docker compose -f docker-compose.yaml -f docker-compose.local.yaml up -d
 
-_Happy hacking & good trades! 🚀_
+Happy hacking & good trades! 🚀

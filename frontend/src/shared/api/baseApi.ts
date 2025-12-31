@@ -6,7 +6,11 @@ import type {
 } from '@reduxjs/toolkit/query';
 import { getToken, removeToken } from './auth';
 import { getApiBaseUrl } from '../lib/environment';
-import { logOut } from 'src/features/auth/authSlice';
+import { toast } from 'sonner';
+import type { RootState } from 'src/app/store';
+import { getIsGuest, logOut, setGuestMode } from 'src/features/auth/authSlice';
+import { promptLogin } from '@/lib/loginPrompt';
+import { clearGuestMode } from '@/lib/guestMode';
 
 const baseUrl = getApiBaseUrl();
 
@@ -30,23 +34,53 @@ const PUBLIC_ENDPOINTS = [
   '/core/', // health check
 ];
 
+const getRequestMeta = (args: string | FetchArgs) => {
+  if (typeof args === 'string') {
+    return { url: args, method: 'GET' };
+  }
+
+  return {
+    url: args.url,
+    method: (args.method || 'GET').toUpperCase(),
+  };
+};
+
+let lastRateLimitNotice = 0;
+
 // Custom base query with 401 handling
 const baseQueryWithReauth: BaseQueryFn<
   string | FetchArgs,
   unknown,
   FetchBaseQueryError
 > = async (args, api, extraOptions) => {
+  const { url, method } = getRequestMeta(args);
+  const isPublicEndpoint = PUBLIC_ENDPOINTS.some(endpoint =>
+    url.includes(endpoint)
+  );
+  const isGuest = getIsGuest(api.getState() as RootState);
+
+  if (isGuest && method !== 'GET' && !isPublicEndpoint) {
+    promptLogin('Log in to perform this action.', () =>
+      api.dispatch(setGuestMode(false))
+    );
+    return {
+      error: {
+        status: 401,
+        data: { detail: 'Authentication required.' },
+      },
+    };
+  }
+
   const result = await baseQuery(args, api, extraOptions);
 
   // If we get a 401 (Unauthorized), clear tokens and redirect to login
   if (result.error && result.error.status === 401) {
-    // Get the endpoint URL
-    const url = typeof args === 'string' ? args : args.url;
-
-    // Check if this is a public endpoint
-    const isPublicEndpoint = PUBLIC_ENDPOINTS.some(endpoint =>
-      url.includes(endpoint)
-    );
+    if (isGuest && !isPublicEndpoint) {
+      promptLogin('Log in to access this feature.', () =>
+        api.dispatch(setGuestMode(false))
+      );
+      return result;
+    }
 
     // Only clear tokens and redirect if:
     // 1. Not on login page already
@@ -64,6 +98,37 @@ const baseQueryWithReauth: BaseQueryFn<
 
       // Redirect to login page
       window.location.href = '/login';
+    }
+  }
+
+  if (
+    result.error &&
+    typeof result.error.status === 'number' &&
+    isGuest &&
+    !isPublicEndpoint
+  ) {
+    if (result.error.status === 403) {
+      promptLogin('Log in to perform this action.', () =>
+        api.dispatch(setGuestMode(false))
+      );
+    }
+
+    if (result.error.status === 429) {
+      const now = Date.now();
+      if (now - lastRateLimitNotice > 10000) {
+        lastRateLimitNotice = now;
+        toast('Rate limit reached', {
+          description: 'Guest access is limited. Log in for higher limits.',
+          action: {
+            label: 'Log in',
+            onClick: () => {
+              clearGuestMode();
+              api.dispatch(setGuestMode(false));
+              window.location.href = '/login';
+            },
+          },
+        });
+      }
     }
   }
 
