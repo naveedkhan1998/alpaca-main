@@ -193,9 +193,9 @@ export default function App() {
         <DefaultSEO />
         <RouteSEO />
         <PageTracker />
-        <AnnouncementBanner />
         <GoogleOAuthProvider clientId={clientId}>
           <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+            <AnnouncementBanner />
             <Suspense fallback={<PageLoadingFallback />}>
               <Routes>
                 {routes.map(({ path, element, private: isPrivate }) => (
