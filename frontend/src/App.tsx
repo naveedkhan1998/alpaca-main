@@ -4,8 +4,10 @@ import { HelmetProvider } from 'react-helmet-async';
 import { useAppDispatch, useAppSelector } from './app/hooks';
 import {
   getCurrentToken,
+  getIsGuest,
   getLoggedInUser,
   setCredentials,
+  setGuestMode,
 } from './features/auth/authSlice';
 
 import {
@@ -39,6 +41,7 @@ import { useAlpacaAccount } from './features/auth/hooks';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
 import { DefaultSEO } from '@/components/DefaultSEO';
 import { RouteSEO } from '@/components/RouteSEO';
+import { setGuestMode as persistGuestMode } from '@/lib/guestMode';
 
 // Subtle page transition loading component
 const PageLoadingFallback = () => (
@@ -55,6 +58,26 @@ const PrivateRoute: React.FC<{ element: React.ReactElement }> = ({
 }) => {
   const accessToken = useAppSelector(getCurrentToken);
   return accessToken ? element : <Navigate to="/login" />;
+};
+
+const GuestRoute: React.FC<{ element: React.ReactElement }> = ({ element }) => {
+  const accessToken = useAppSelector(getCurrentToken);
+  const isGuest = useAppSelector(getIsGuest);
+  const dispatch = useAppDispatch();
+  const shouldEnableGuest = !accessToken && !isGuest;
+
+  useEffect(() => {
+    if (shouldEnableGuest) {
+      persistGuestMode(true);
+      dispatch(setGuestMode(true));
+    }
+  }, [dispatch, shouldEnableGuest]);
+
+  return accessToken || isGuest || shouldEnableGuest ? (
+    element
+  ) : (
+    <Navigate to="/login" />
+  );
 };
 
 export default function App() {
@@ -174,17 +197,17 @@ export default function App() {
   }
 
   const routes = [
-    { path: '/', element: <WatchlistsPage />, private: true },
-    { path: '/profile', element: <ProfilePage />, private: true },
-    { path: '/instruments', element: <AssetsPage />, private: true },
-    { path: '/instruments/:id', element: <AssetDetailPage />, private: true },
-    { path: '/graphs/:id', element: <GraphsPage />, private: true },
-    { path: '/accounts', element: <AccountsPage />, private: true },
-    { path: '/contact', element: <ContactPage />, private: true },
-    { path: '/privacy', element: <PrivacyPage />, private: false },
-    { path: '/terms', element: <TermsPage />, private: false },
-    { path: '/login', element: <LoginRegPage />, private: false },
-    { path: '*', element: <NotFoundPage />, private: false },
+    { path: '/', element: <WatchlistsPage />, access: 'guest' },
+    { path: '/profile', element: <ProfilePage />, access: 'auth' },
+    { path: '/instruments', element: <AssetsPage />, access: 'guest' },
+    { path: '/instruments/:id', element: <AssetDetailPage />, access: 'guest' },
+    { path: '/graphs/:id', element: <GraphsPage />, access: 'guest' },
+    { path: '/accounts', element: <AccountsPage />, access: 'auth' },
+    { path: '/contact', element: <ContactPage />, access: 'public' },
+    { path: '/privacy', element: <PrivacyPage />, access: 'public' },
+    { path: '/terms', element: <TermsPage />, access: 'public' },
+    { path: '/login', element: <LoginRegPage />, access: 'public' },
+    { path: '*', element: <NotFoundPage />, access: 'public' },
   ];
 
   return (
@@ -198,22 +221,32 @@ export default function App() {
             <AnnouncementBanner />
             <Suspense fallback={<PageLoadingFallback />}>
               <Routes>
-                {routes.map(({ path, element, private: isPrivate }) => (
-                  <Route
-                    key={path}
-                    path={path}
-                    element={
-                      isPrivate ? <PrivateRoute element={element} /> : element
-                    }
-                  />
-                ))}
+                {routes.map(({ path, element, access }) => {
+                  const routeElement =
+                    access === 'auth' ? (
+                      <PrivateRoute element={element} />
+                    ) : access === 'guest' ? (
+                      <GuestRoute element={element} />
+                    ) : (
+                      element
+                    );
+
+                  return (
+                    <Route key={path} path={path} element={routeElement} />
+                  );
+                })}
               </Routes>
             </Suspense>
             <Toaster
               position="top-right"
               toastOptions={{
-                className: 'glass-card',
                 duration: 3000,
+                classNames: {
+                  toast: 'glass-card text-foreground border-border shadow-lg',
+                  description: 'text-muted-foreground',
+                  actionButton: 'bg-primary text-primary-foreground',
+                  cancelButton: 'bg-muted text-muted-foreground',
+                },
               }}
             />
           </ThemeProvider>

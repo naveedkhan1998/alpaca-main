@@ -11,8 +11,13 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { AssetSearch } from './AssetSearch';
 import { useIsMobile } from '@/hooks/useMobile';
-import { useAppSelector } from '../../app/hooks';
-import { getCurrentToken } from 'src/features/auth/authSlice';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import {
+  getCurrentToken,
+  getIsGuest,
+  setGuestMode,
+} from 'src/features/auth/authSlice';
+import { clearGuestMode } from '@/lib/guestMode';
 
 interface PageLayoutProps {
   children?: React.ReactNode;
@@ -86,8 +91,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 }) => {
   const pageTitle = header ? extractTextContent(header) : 'Alpaca Trading';
   const isMobile = useIsMobile();
+  const dispatch = useAppDispatch();
   const accessToken = useAppSelector(getCurrentToken);
+  const isGuest = useAppSelector(getIsGuest);
   const [isAssetSearchOpen, setIsAssetSearchOpen] = useState(false);
+  const showSidebarLayout = Boolean(accessToken || isGuest);
 
   // Use clean variant on mobile by default
   const effectiveVariant =
@@ -115,8 +123,31 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
     }
   };
 
-  // If user is not logged in, show simplified layout without sidebar
-  if (!accessToken) {
+  const handleLogin = () => {
+    clearGuestMode();
+    dispatch(setGuestMode(false));
+    window.location.href = '/login';
+  };
+
+  const guestBanner = isGuest ? (
+    <div className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="font-semibold text-foreground">Guest mode</p>
+          <p className="text-muted-foreground">
+            Read-only access. Log in to save watchlists, sync assets, and enable
+            live updates.
+          </p>
+        </div>
+        <Button size="sm" onClick={handleLogin}>
+          Log in
+        </Button>
+      </div>
+    </div>
+  ) : null;
+
+  // If user is not logged in and not in guest mode, show simplified layout without sidebar
+  if (!showSidebarLayout) {
     return (
       <>
         <Helmet>
@@ -127,6 +158,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         >
           <div className="flex-1 w-full">
             <div className={getContainerClasses()}>
+              {guestBanner}
               {/* Header Section */}
               {(header || subheader || actions) && (
                 <div className="mb-6">
@@ -197,6 +229,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           <div className="flex-1 overflow-auto scrollbar-hidden">
             <div className="flex-1 w-full bg-background">
               <div className={getContainerClasses()}>
+                {guestBanner}
                 {/* Header Section */}
                 {(header || subheader || actions) && (
                   <div className="mb-6">

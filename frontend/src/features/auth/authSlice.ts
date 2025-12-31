@@ -2,8 +2,10 @@ import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import { RootState } from 'src/app/store';
 import { User, AlpacaAccount } from '@/types/common-types';
 import { getToken } from '@/api/auth';
+import { getGuestMode } from '@/lib/guestMode';
 
 const access_token = getToken();
+const guestModeEnabled = getGuestMode();
 
 interface AuthState {
   access?: string | null;
@@ -11,6 +13,7 @@ interface AuthState {
   alpacaAccount?: AlpacaAccount | null;
   hasAlpacaAccount?: boolean;
   isAlpacaAccountLoading?: boolean;
+  isGuest?: boolean;
 }
 
 const initialState: AuthState = {
@@ -19,6 +22,7 @@ const initialState: AuthState = {
   alpacaAccount: null,
   hasAlpacaAccount: false,
   isAlpacaAccountLoading: false,
+  isGuest: !access_token && guestModeEnabled,
 };
 
 export const authSlice = createSlice({
@@ -32,6 +36,7 @@ export const authSlice = createSlice({
       const { access, user } = action.payload;
       state.access = access;
       state.user = user;
+      state.isGuest = false;
     },
     setAlpacaAccount: (state, action: PayloadAction<AlpacaAccount | null>) => {
       state.alpacaAccount = action.payload;
@@ -42,12 +47,16 @@ export const authSlice = createSlice({
     setAlpacaAccountLoading: (state, action: PayloadAction<boolean>) => {
       state.isAlpacaAccountLoading = action.payload;
     },
+    setGuestMode: (state, action: PayloadAction<boolean>) => {
+      state.isGuest = action.payload;
+    },
     logOut: state => {
       state.access = null;
       state.user = null;
       state.alpacaAccount = null;
       state.hasAlpacaAccount = false;
       state.isAlpacaAccountLoading = false;
+      state.isGuest = false;
     },
   },
 });
@@ -56,6 +65,7 @@ export const {
   setCredentials,
   setAlpacaAccount,
   setAlpacaAccountLoading,
+  setGuestMode,
   logOut,
 } = authSlice.actions;
 
@@ -69,3 +79,4 @@ export const getHasAlpacaAccount = (state: RootState) =>
   state.auth.hasAlpacaAccount;
 export const getIsAlpacaAccountLoading = (state: RootState) =>
   state.auth.isAlpacaAccountLoading;
+export const getIsGuest = (state: RootState) => state.auth.isGuest;

@@ -6,7 +6,7 @@ import React, {
   useState,
 } from 'react';
 import type { ITimeScaleApi, Time } from 'lightweight-charts';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -17,6 +17,7 @@ import { useTheme } from '@/components/ThemeProvider';
 import MainChart from './components/MainChart';
 import IndicatorPanel from './components/IndicatorPanel';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
+import { getIsGuest } from 'src/features/auth/authSlice';
 import LoadingScreen from './components/LoadingScreen';
 import ErrorScreen from './components/ErrorScreen';
 import NotFoundScreen from './components/NotFoundScreen';
@@ -33,6 +34,7 @@ import { useReplayController } from './hooks/useReplayController';
 import { useIndicators } from './hooks/useIndicators';
 import ChartToolbar from './components/ChartToolbar';
 import { IndicatorProvider } from './context';
+import { useGetAssetByIdQuery } from '@/api/assetService';
 import {
   setAutoRefresh,
   selectTimeframe,
@@ -85,9 +87,24 @@ const formatReplayTimeLabel = (timeValue?: Time) => {
 
 const GraphsPage: React.FC = () => {
   const location = useLocation();
+  const params = useParams();
   const isMobile = useIsMobile();
 
   const { obj } = (location.state as LocationState) || {};
+  const assetIdParam = params.id ? Number(params.id) : undefined;
+  const normalizedAssetId = Number.isFinite(assetIdParam)
+    ? assetIdParam
+    : undefined;
+  const shouldFetchAsset = !obj && typeof normalizedAssetId === 'number';
+  const {
+    data: assetFromApi,
+    isLoading: isAssetLoading,
+    isError: isAssetError,
+    error: assetError,
+  } = useGetAssetByIdQuery(normalizedAssetId as number, {
+    skip: !shouldFetchAsset,
+  });
+  const asset = obj ?? assetFromApi;
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
 
@@ -98,6 +115,7 @@ const GraphsPage: React.FC = () => {
   const autoRefresh = useAppSelector(selectAutoRefresh);
   const seriesType = useAppSelector(selectSeriesType);
   const showControls = useAppSelector(selectShowControls);
+  const isGuest = useAppSelector(getIsGuest);
 
   const {
     enabled: isReplayEnabled,
@@ -130,11 +148,16 @@ const GraphsPage: React.FC = () => {
     isFetching,
     loadingInitial,
     errorInitial,
+    errorStatus: candleErrorStatus,
     isLoadingMore,
     hasMore,
     handleRefetch,
     loadMoreHistoricalData,
-  } = useCandlesV3({ assetId: obj?.id, timeframe, autoRefresh });
+  } = useCandlesV3({
+    assetId: asset?.id ?? normalizedAssetId,
+    timeframe,
+    autoRefresh: autoRefresh && !isGuest,
+  });
 
   const { seriesData, volumeData, hasValidVolume } = useDerivedSeries({
     candles,
@@ -549,6 +572,12 @@ const GraphsPage: React.FC = () => {
   ]);
 
   useEffect(() => {
+    if (isGuest && autoRefresh) {
+      dispatch(setAutoRefresh(false));
+    }
+  }, [autoRefresh, dispatch, isGuest]);
+
+  useEffect(() => {
     if (isReplayPlaying && autoRefresh) {
       dispatch(setAutoRefresh(false));
     }
@@ -597,15 +626,33 @@ const GraphsPage: React.FC = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `${obj?.name}_${timeframe}_data.csv`);
+    link.setAttribute(
+      'download',
+      `${asset?.name ?? 'asset'}_${timeframe}_data.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [candles, obj?.name, timeframe]);
+  }, [asset?.name, candles, timeframe]);
 
-  if (!obj) return <NotFoundScreen />;
-  if (loadingInitial && mainChartRef.current === null) return <LoadingScreen />;
-  if (errorInitial) return <ErrorScreen />;
+  const assetErrorStatus =
+    assetError && typeof assetError === 'object' && 'status' in assetError
+      ? (assetError as { status?: number }).status
+      : undefined;
+  const isRateLimited = assetErrorStatus === 429 || candleErrorStatus === 429;
+  const errorTitle = isRateLimited ? 'Rate limit reached' : undefined;
+  const errorDescription = isRateLimited
+    ? 'Guest access is limited. Please wait a moment or log in for higher limits.'
+    : undefined;
+
+  if (isAssetError && assetErrorStatus === 404) return <NotFoundScreen />;
+  if ((loadingInitial && mainChartRef.current === null) || isAssetLoading)
+    return <LoadingScreen />;
+  if (isAssetError)
+    return <ErrorScreen title={errorTitle} description={errorDescription} />;
+  if (!asset) return <NotFoundScreen />;
+  if (errorInitial)
+    return <ErrorScreen title={errorTitle} description={errorDescription} />;
 
   // Calculate panel sizes
   const hasPanelIndicators = panelIndicators.length > 0;
@@ -619,7 +666,7 @@ const GraphsPage: React.FC = () => {
       <div className="flex flex-col h-[100dvh] bg-background">
         {/* Header */}
         <GraphHeader
-          obj={obj}
+          obj={asset}
           handleDownload={handleDownload}
           toggleFullscreen={toggleFullscreen}
           refetch={handleRefetch}

@@ -18,6 +18,7 @@ import { setSelectedWatchlist } from './watchlistSlice';
 import { WatchList } from '@/types/common-types';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
 import { useGetWatchListsQuery } from '@/api/watchlistService';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 export const WatchlistsPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -28,6 +29,7 @@ export const WatchlistsPage: React.FC = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [showActiveOnly, setShowActiveOnly] = useState(false);
+  const requireAuth = useRequireAuth();
 
   const handleWatchListSelect = useCallback(
     (watchlist: WatchList) => {
@@ -65,7 +67,13 @@ export const WatchlistsPage: React.FC = () => {
               Back
             </Button>
           )}
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
+          <Button
+            size="sm"
+            onClick={() => {
+              if (!requireAuth('create watchlists')) return;
+              setCreateOpen(true);
+            }}
+          >
             <Plus className="w-4 h-4 mr-2" /> New
           </Button>
         </PageActions>
@@ -83,7 +91,10 @@ export const WatchlistsPage: React.FC = () => {
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => setCreateOpen(true)}
+                  onClick={() => {
+                    if (!requireAuth('create watchlists')) return;
+                    setCreateOpen(true);
+                  }}
                 >
                   <Plus className="w-4 h-4" />
                 </Button>

@@ -33,6 +33,7 @@ import {
 } from '@/api/watchlistService';
 import { Asset } from '@/types/common-types';
 import { useIsMobile } from '@/hooks/useMobile';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 interface AddToWatchlistDialogProps {
   asset: Asset | null;
@@ -49,6 +50,7 @@ export const AddToWatchlistDialog: React.FC<AddToWatchlistDialogProps> = ({
   const [selectedWatchlistId, setSelectedWatchlistId] = useState<number | null>(
     null
   );
+  const requireAuth = useRequireAuth();
   const { data: watchlistsData, isLoading: loadingWatchlists } =
     useGetWatchListsQuery({});
   const [addAssetToWatchlist, { isLoading: isAdding }] =
@@ -58,6 +60,7 @@ export const AddToWatchlistDialog: React.FC<AddToWatchlistDialogProps> = ({
 
   const handleAddToWatchlist = async () => {
     if (!asset || !selectedWatchlistId) return;
+    if (!requireAuth('add assets to watchlists')) return;
 
     try {
       await addAssetToWatchlist({

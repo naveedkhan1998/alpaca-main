@@ -89,6 +89,7 @@ export function useCandlesV3({
   const [hasMore, setHasMore] = useState(true);
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [errorInitial, setErrorInitial] = useState<string | null>(null);
+  const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const [getCandles, { isFetching }] = useLazyGetAssetCandlesV3Query();
@@ -103,6 +104,7 @@ export function useCandlesV3({
     if (!assetId) return;
     setLoadingInitial(true);
     setErrorInitial(null);
+    setErrorStatus(null);
 
     try {
       const res = await getCandles({
@@ -117,8 +119,15 @@ export function useCandlesV3({
       setCandles(results);
       setNextCursor(res.next_cursor);
       setHasMore(res.has_next);
-    } catch {
-      setErrorInitial('Failed to load candle data');
+    } catch (error) {
+      const status =
+        error && typeof error === 'object' && 'status' in error
+          ? (error as { status?: number }).status
+          : null;
+      setErrorStatus(typeof status === 'number' ? status : null);
+      setErrorInitial(
+        status === 429 ? 'rate_limit' : 'Failed to load candle data'
+      );
     } finally {
       setLoadingInitial(false);
     }
@@ -252,6 +261,7 @@ export function useCandlesV3({
     isFetching,
     loadingInitial,
     errorInitial,
+    errorStatus,
     isLoadingMore,
     hasMore,
     handleRefetch: fetchLatest,

@@ -26,6 +26,7 @@ import {
 } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
+import { getIsGuest } from 'src/features/auth/authSlice';
 import {
   selectAutoRefresh,
   selectIsFullscreen,
@@ -36,6 +37,7 @@ import {
 import { Asset } from '@/types/common-types';
 import { ModeToggle } from '@/components/ModeToggle';
 import { useIsMobile } from '@/hooks/useMobile';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 interface GraphHeaderProps {
   obj: Asset;
@@ -74,6 +76,8 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
   const showVolume = useAppSelector(selectShowVolume);
   const isFullscreen = useAppSelector(selectIsFullscreen);
   const isMobile = useIsMobile();
+  const isGuest = useAppSelector(getIsGuest);
+  const requireAuth = useRequireAuth();
   const {
     enabled: replayEnabled,
     playing: replayPlaying,
@@ -164,7 +168,10 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                     <Button
                       variant={autoRefresh ? 'default' : 'ghost'}
                       size="icon"
-                      onClick={() => dispatch(setAutoRefresh(!autoRefresh))}
+                      onClick={() => {
+                        if (!requireAuth('enable live updates')) return;
+                        dispatch(setAutoRefresh(!autoRefresh));
+                      }}
                       className="w-8 h-8"
                     >
                       {autoRefresh ? (
@@ -175,7 +182,11 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className="text-xs">
-                    {autoRefresh ? 'Pause Live' : 'Enable Live'}
+                    {isGuest
+                      ? 'Log in to enable live updates'
+                      : autoRefresh
+                        ? 'Pause Live'
+                        : 'Enable Live'}
                   </TooltipContent>
                 </Tooltip>
                 <Tooltip>

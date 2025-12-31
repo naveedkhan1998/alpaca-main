@@ -9,6 +9,7 @@ import {
   User,
   Settings,
   LogOut,
+  LogIn,
   ChevronsUpDown,
   Sun,
   Moon,
@@ -45,13 +46,16 @@ import {
 } from '@/components/ui/tooltip';
 import {
   getCurrentToken,
+  getIsGuest,
   getLoggedInUser,
   logOut,
+  setGuestMode,
 } from 'src/features/auth/authSlice';
 import { useTheme } from './ThemeProvider';
 import HealthStatus from './HealthStatus';
 import { removeToken } from '@/api/auth';
 import SidebarFooterContent from './SidebarFooterContent';
+import { clearGuestMode } from '@/lib/guestMode';
 
 const navItems = [
   {
@@ -81,17 +85,28 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
   const dispatch = useAppDispatch();
   const user = useAppSelector(getLoggedInUser);
   const access_token = useAppSelector(getCurrentToken);
+  const isGuest = useAppSelector(getIsGuest);
   const { theme, setTheme } = useTheme();
   const { state } = useSidebar();
 
   const signOut = () => {
     removeToken();
+    clearGuestMode();
+    dispatch(setGuestMode(false));
     dispatch(logOut());
     window.location.reload();
     toast.success('Logged Out Successfully');
   };
 
-  if (!access_token) return null;
+  const handleLogin = () => {
+    clearGuestMode();
+    dispatch(setGuestMode(false));
+    window.location.href = '/login';
+  };
+
+  if (!access_token && !isGuest) return null;
+
+  const isAuthenticated = Boolean(access_token);
 
   const userInitials = user?.name
     ? user.name
@@ -100,7 +115,9 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
         .join('')
         .toUpperCase()
         .slice(0, 2)
-    : 'U';
+    : isAuthenticated
+      ? 'U'
+      : 'G';
 
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
 
@@ -212,38 +229,15 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
           </div>
         )}
 
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size="lg"
-                  className="h-12 hover:bg-sidebar-accent data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                >
-                  <Avatar className="w-8 h-8 rounded-lg">
-                    <AvatarFallback className="text-xs font-semibold rounded-lg bg-primary/10">
-                      {userInitials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col flex-1 text-left">
-                    <span className="text-sm font-medium truncate">
-                      {user?.name || 'User'}
-                    </span>
-                    <span className="text-xs truncate text-sidebar-foreground/70">
-                      {user?.email}
-                    </span>
-                  </div>
-                  <ChevronsUpDown className="ml-auto size-4 text-sidebar-foreground/70" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                side="bottom"
-                align="end"
-                sideOffset={4}
-              >
-                <DropdownMenuLabel className="p-0 font-normal">
-                  <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+        {isAuthenticated ? (
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    size="lg"
+                    className="h-12 hover:bg-sidebar-accent data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  >
                     <Avatar className="w-8 h-8 rounded-lg">
                       <AvatarFallback className="text-xs font-semibold rounded-lg bg-primary/10">
                         {userInitials}
@@ -253,45 +247,90 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
                       <span className="text-sm font-medium truncate">
                         {user?.name || 'User'}
                       </span>
-                      <span className="text-xs truncate text-muted-foreground">
+                      <span className="text-xs truncate text-sidebar-foreground/70">
                         {user?.email}
                       </span>
                     </div>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem asChild>
-                    <Link
-                      to="/profile"
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <User className="w-4 h-4" />
-                      <span>Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link
-                      to="/accounts"
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <Settings className="w-4 h-4" />
-                      <span>Accounts</span>
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={signOut}
-                  className="cursor-pointer text-destructive focus:text-destructive"
+                    <ChevronsUpDown className="ml-auto size-4 text-sidebar-foreground/70" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                  side="bottom"
+                  align="end"
+                  sideOffset={4}
                 >
-                  <LogOut className="w-4 h-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
+                  <DropdownMenuLabel className="p-0 font-normal">
+                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                      <Avatar className="w-8 h-8 rounded-lg">
+                        <AvatarFallback className="text-xs font-semibold rounded-lg bg-primary/10">
+                          {userInitials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col flex-1 text-left">
+                        <span className="text-sm font-medium truncate">
+                          {user?.name || 'User'}
+                        </span>
+                        <span className="text-xs truncate text-muted-foreground">
+                          {user?.email}
+                        </span>
+                      </div>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/profile"
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <User className="w-4 h-4" />
+                        <span>Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/accounts"
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span>Accounts</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={signOut}
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        ) : (
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                size="lg"
+                onClick={handleLogin}
+                className="h-12 gap-2 hover:bg-sidebar-accent"
+              >
+                <div className="flex items-center justify-center rounded-lg size-8 bg-primary/10">
+                  <LogIn className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex flex-col flex-1 text-left">
+                  <span className="text-sm font-medium truncate">Guest</span>
+                  <span className="text-xs truncate text-sidebar-foreground/70">
+                    Log in for full access
+                  </span>
+                </div>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        )}
       </SidebarFooter>
 
       <SidebarRail />

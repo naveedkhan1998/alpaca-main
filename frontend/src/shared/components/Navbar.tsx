@@ -32,12 +32,14 @@ import {
   getCurrentToken,
   getLoggedInUser,
   logOut,
+  setGuestMode,
 } from 'src/features/auth/authSlice';
 import { ModeToggle } from './ModeToggle';
 import HealthStatus from './HealthStatus';
 import { removeToken } from '@/api/auth';
 import { AssetSearch } from './AssetSearch';
 import { useIsMobile } from '@/hooks/useMobile';
+import { clearGuestMode } from '@/lib/guestMode';
 
 const Navbar: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -62,6 +64,8 @@ const Navbar: React.FC = () => {
 
   const signOut = () => {
     removeToken();
+    clearGuestMode();
+    dispatch(setGuestMode(false));
     dispatch(logOut());
     window.location.reload();
     toast.success('Logged Out Successfully');

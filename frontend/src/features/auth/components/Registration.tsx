@@ -4,7 +4,7 @@ import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import {
   useRegisterUserMutation,
   useGoogleLoginMutation,
-  useGetLoggedUserQuery,
+  useLazyGetLoggedUserQuery,
 } from '@/api/userAuthService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,10 +23,11 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAppDispatch } from 'src/app/hooks';
-import { setCredentials } from '../authSlice';
+import { setCredentials, setGuestMode } from '../authSlice';
 import { setToken } from '@/api/auth';
 import { AuthResponse } from '@/types/common-types';
 import { handleFormError, handleAuthError } from '@/utils/errorHandler';
+import { clearGuestMode } from '@/lib/guestMode';
 
 export default function Registration() {
   const dispatch = useAppDispatch();
@@ -104,13 +105,15 @@ export default function Registration() {
     );
   };
 
-  const { refetch: getLoggedUser } = useGetLoggedUserQuery();
+  const [getLoggedUser] = useLazyGetLoggedUserQuery();
 
   const handleAuthSuccess = async (userData: AuthResponse) => {
     setToken(userData.token.access);
+    clearGuestMode();
+    dispatch(setGuestMode(false));
 
     // Fetch logged in user data
-    const { data: user } = await getLoggedUser();
+    const user = await getLoggedUser().unwrap();
 
     // Update Redux state with access token and user data
     dispatch(

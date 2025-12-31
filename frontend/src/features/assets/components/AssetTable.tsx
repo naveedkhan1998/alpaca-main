@@ -39,6 +39,7 @@ import { AddToWatchlistDialog } from './AddToWatchlistDialog';
 import { AssetToolbar } from './AssetToolbar';
 import { AssetCard } from './AssetCard';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
   refetchTrigger,
@@ -62,6 +63,7 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
     null
   );
   const debouncedQuickFilter = useDebounce(quickFilterText, 300);
+  const requireAuth = useRequireAuth();
 
   const queryParams: GetAssetsParams = useMemo(() => {
     const params: GetAssetsParams = {
@@ -84,6 +86,14 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
   ]);
 
   const { data, isLoading, error, refetch } = useGetAssetsQuery(queryParams);
+  const errorStatus =
+    error && typeof error === 'object' && 'status' in error
+      ? (error as { status?: number }).status
+      : undefined;
+  const errorMessage =
+    errorStatus === 429
+      ? 'Rate limit reached. Please wait a moment or log in for higher limits.'
+      : 'Failed to load assets. Please try again.';
 
   // Trigger refetch when refetchTrigger changes (e.g., after sync completion)
   useEffect(() => {
@@ -128,6 +138,7 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
 
   const handleAddToWatchlist = (asset: Asset, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!requireAuth('add assets to watchlists')) return;
     setAddToWatchlistAsset(asset);
   };
 
@@ -145,7 +156,7 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
         <Alert className="border-destructive/50 bg-destructive/5">
           <AlertTriangle className="w-4 h-4" />
           <AlertDescription className="text-destructive dark:text-destructive-foreground">
-            Failed to load assets. Please try again.
+            {errorMessage}
           </AlertDescription>
         </Alert>
       )}

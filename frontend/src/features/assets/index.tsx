@@ -29,6 +29,7 @@ import {
   useSyncAssetsMutation,
 } from '@/api/assetService';
 import { useToast } from '@/hooks/useToast';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 export const AssetsPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -41,6 +42,7 @@ export const AssetsPage: React.FC = () => {
     pollingInterval: 5000, // Poll every 5 seconds
   });
   const [syncAssets, { isLoading: isSyncing }] = useSyncAssetsMutation();
+  const requireAuth = useRequireAuth();
 
   // Track previous sync status to detect completion
   const prevSyncStatusRef = useRef(syncStatus);
@@ -73,12 +75,14 @@ export const AssetsPage: React.FC = () => {
   }, [syncStatus, toast]);
 
   const handleSyncAssets = useCallback(async () => {
+    if (!requireAuth('sync assets')) return;
+
     try {
       await syncAssets().unwrap();
     } catch (error) {
       console.error('Failed to sync assets:', error);
     }
-  }, [syncAssets]);
+  }, [requireAuth, syncAssets]);
 
   // Read URL params -> Redux state
   useEffect(() => {

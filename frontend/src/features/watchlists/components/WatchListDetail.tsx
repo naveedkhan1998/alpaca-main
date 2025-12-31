@@ -16,6 +16,7 @@ import {
 } from '@/api/watchlistService';
 import { WatchListDialog } from './WatchListDialog';
 import { WatchListAssets } from './WatchListAssets';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 interface WatchListDetailProps {
   watchlistId: number;
@@ -26,6 +27,7 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
   watchlistId,
   onBack,
 }) => {
+  const requireAuth = useRequireAuth();
   const {
     data: watchlist,
     isLoading,
@@ -35,6 +37,8 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const handleDelete = async () => {
+    if (!requireAuth('delete watchlists')) return;
+
     if (window.confirm('Delete this watchlist? This cannot be undone.')) {
       try {
         await deleteWatchList(watchlistId).unwrap();
@@ -93,7 +97,12 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
+            <DropdownMenuItem
+              onClick={() => {
+                if (!requireAuth('edit watchlists')) return;
+                setEditDialogOpen(true);
+              }}
+            >
               <Edit className="w-4 h-4 mr-2" />
               Edit
             </DropdownMenuItem>
