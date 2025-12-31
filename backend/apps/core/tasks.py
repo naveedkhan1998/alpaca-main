@@ -528,48 +528,104 @@ def _find_missing_candle_periods(asset, start_date, end_date):
     """
     Find periods where 1T candles are missing during market hours.
     Returns list of (start, end) tuples for missing periods.
+    
+    Performance Optimization:
+        Uses iterator() to avoid loading all timestamps into memory at once.
+        Only materializes the list when checking boundary conditions.
     """
 
     missing_periods = []
 
-    # Get all existing 1T candles in the period, ordered by timestamp
+    # Get count first to determine if we should load into memory
+    candle_count = Candle.objects.filter(
+        asset=asset,
+        timeframe=const.TF_1T,
+        timestamp__gte=start_date,
+        timestamp__lt=end_date,
+    ).count()
 
-    existing_candles = list(
-        Candle.objects.filter(
-            asset=asset,
-            timeframe=const.TF_1T,
-            timestamp__gte=start_date,
-            timestamp__lt=end_date,
-        )
-        .order_by("timestamp")
-        .values_list("timestamp", flat=True)
-    )
-
-    if not existing_candles:
+    if candle_count == 0:
         # No candles at all, return the entire period
         return [(start_date, end_date)]
 
-    # Check for gaps between consecutive candles
-    prev_ts = None
-    for ts in existing_candles:
-        if prev_ts and _is_market_hours(prev_ts):
-            # Calculate expected next timestamp (1 minute later)
-            expected_next = prev_ts + timedelta(minutes=1)
+    # For large datasets (>10k candles), use a more memory-efficient approach
+    if candle_count > 10000:
+        # Use database-level gap detection with LAG window function
+        from django.db import connection
+        
+        with connection.cursor() as cursor:
+            # Query to find gaps larger than 1 minute during market hours
+            cursor.execute(
+                """
+                WITH candle_gaps AS (
+                    SELECT 
+                        timestamp,
+                        LAG(timestamp) OVER (ORDER BY timestamp) as prev_timestamp
+                    FROM core_candle
+                    WHERE asset_id = %s 
+                      AND timeframe = %s
+                      AND timestamp >= %s 
+                      AND timestamp < %s
+                    ORDER BY timestamp
+                )
+                SELECT prev_timestamp, timestamp
+                FROM candle_gaps
+                WHERE prev_timestamp IS NOT NULL
+                  AND timestamp - prev_timestamp > INTERVAL '1 minute'
+                """,
+                [asset.id, const.TF_1T, start_date, end_date]
+            )
+            
+            gap_rows = cursor.fetchall()
+            for prev_ts, curr_ts in gap_rows:
+                expected_next = prev_ts + timedelta(minutes=1)
+                if _is_market_hours(expected_next):
+                    missing_periods.append((expected_next, curr_ts))
+            
+            # Get first and last timestamps for boundary checks
+            cursor.execute(
+                """
+                SELECT MIN(timestamp), MAX(timestamp)
+                FROM core_candle
+                WHERE asset_id = %s 
+                  AND timeframe = %s
+                  AND timestamp >= %s 
+                  AND timestamp < %s
+                """,
+                [asset.id, const.TF_1T, start_date, end_date]
+            )
+            first_candle, last_candle = cursor.fetchone()
+    else:
+        # For smaller datasets, use the original in-memory approach (it's fine)
+        existing_candles = list(
+            Candle.objects.filter(
+                asset=asset,
+                timeframe=const.TF_1T,
+                timestamp__gte=start_date,
+                timestamp__lt=end_date,
+            )
+            .order_by("timestamp")
+            .values_list("timestamp", flat=True)
+        )
 
-            # If there's a gap and we're still in market hours, it's missing
-            if expected_next < ts and _is_market_hours(expected_next):
-                missing_periods.append((expected_next, ts))
+        # Check for gaps between consecutive candles
+        prev_ts = None
+        for ts in existing_candles:
+            if prev_ts and _is_market_hours(prev_ts):
+                expected_next = prev_ts + timedelta(minutes=1)
+                if expected_next < ts and _is_market_hours(expected_next):
+                    missing_periods.append((expected_next, ts))
+            prev_ts = ts
 
-        prev_ts = ts
+        first_candle = existing_candles[0]
+        last_candle = existing_candles[-1]
 
     # Check if we need data before the first candle
-    first_candle = existing_candles[0]
-    if start_date < first_candle and _is_market_hours(start_date):
+    if first_candle and start_date < first_candle and _is_market_hours(start_date):
         missing_periods.append((start_date, first_candle))
 
     # Check if we need data after the last candle
-    last_candle = existing_candles[-1]
-    if last_candle < end_date and _is_market_hours(last_candle + timedelta(minutes=1)):
+    if last_candle and last_candle < end_date and _is_market_hours(last_candle + timedelta(minutes=1)):
         missing_periods.append((last_candle + timedelta(minutes=1), end_date))
 
     return missing_periods

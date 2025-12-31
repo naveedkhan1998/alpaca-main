@@ -191,6 +191,13 @@ class WatchListAsset(models.Model):
 
     class Meta:
         unique_together = ["watchlist", "asset"]
+        indexes = [
+            # Common query: active assets in active watchlists
+            models.Index(
+                fields=["is_active", "watchlist", "asset"],
+                name="idx_wla_active_wl_asset",
+            ),
+        ]
         verbose_name = "Watch List Asset"
         verbose_name_plural = "Watch List Assets"
 

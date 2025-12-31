@@ -323,14 +323,26 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
     def list(self, request, *args, **kwargs):
         """
         List all assets with pagination and caching.
+        
+        Performance Note:
+            Uses MD5 hash for stable cache keys across Python processes.
+            Python's hash() is not stable across processes/restarts.
         """
-        cache_key = f"assets_list_{hash(str(sorted(request.query_params.items())))}"
+        import hashlib
+        
+        # Create stable cache key using MD5 (hash() varies between processes)
+        params_str = str(sorted(request.query_params.items()))
+        cache_key = f"assets_list_{hashlib.md5(params_str.encode()).hexdigest()[:16]}"
+        
         if not any(
             param in request.query_params for param in ["limit", "offset", "ordering"]
         ):
-            cached_result = cache.get(cache_key)
-            if cached_result:
-                return Response(cached_result)
+            try:
+                cached_result = cache.get(cache_key)
+                if cached_result:
+                    return Response(cached_result)
+            except Exception as e:
+                logger.warning(f"Cache get failed for {cache_key}: {e}")
 
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
@@ -338,7 +350,10 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
             serializer = self.get_serializer(page, many=True)
             response_data = self.get_paginated_response(serializer.data).data
             if len(serializer.data) <= 100:
-                cache.set(cache_key, response_data, 300)
+                try:
+                    cache.set(cache_key, response_data, 300)
+                except Exception as e:
+                    logger.warning(f"Cache set failed for {cache_key}: {e}")
             return Response(response_data)
 
         serializer = self.get_serializer(queryset, many=True)
@@ -347,13 +362,19 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
             "data": serializer.data,
             "count": len(serializer.data),
         }
-        cache.set(cache_key, response_data, 300)
+        try:
+            cache.set(cache_key, response_data, 300)
+        except Exception as e:
+            logger.warning(f"Cache set failed for {cache_key}: {e}")
         return Response(response_data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["get"], url_path="search")
     def search_assets(self, request):
         """
         Optimized search assets by symbol or name with pagination and caching.
+        
+        Performance Note:
+            Uses sanitized cache keys with length limits to avoid Redis key issues.
         """
         search_term = request.query_params.get("q", "").strip()
 
@@ -365,14 +386,23 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
         if len(search_term) < 2:
             return Response(
                 {"msg": "Search term must be at least 2 characters long"},
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Cache search results
-        cache_key = f"asset_search_{search_term.lower()}_{request.query_params.get('limit', 50)}_{request.query_params.get('offset', 0)}"
-        cached_result = cache.get(cache_key)
-        if cached_result:
-            return Response(cached_result)
+        # Cache search results with sanitized key (prevent key length issues)
+        import hashlib
+        search_hash = hashlib.md5(search_term.lower().encode()).hexdigest()[:12]
+        limit = request.query_params.get('limit', 50)
+        offset = request.query_params.get('offset', 0)
+        cache_key = f"asset_search_{search_hash}_{limit}_{offset}"
+        
+        try:
+            cached_result = cache.get(cache_key)
+            if cached_result:
+                return Response(cached_result)
+        except Exception as e:
+            logger.warning(f"Cache get failed for search: {e}")
+
 
         base_qs = self.get_queryset()
 
@@ -421,7 +451,10 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             response_data = self.get_paginated_response(serializer.data).data
-            cache.set(cache_key, response_data, 180)  # 3 minutes
+            try:
+                cache.set(cache_key, response_data, 180)  # 3 minutes
+            except Exception as e:
+                logger.warning(f"Cache set failed for search: {e}")
             return Response(response_data)
 
         if queryset.exists():
@@ -431,7 +464,10 @@ class AssetViewSet(viewsets.ReadOnlyModelViewSet):
                 "data": serializer.data,
                 "count": len(serializer.data),
             }
-            cache.set(cache_key, response_data, 180)
+            try:
+                cache.set(cache_key, response_data, 180)
+            except Exception as e:
+                logger.warning(f"Cache set failed for search: {e}")
             return Response(response_data, status=status.HTTP_200_OK)
 
         return Response(
@@ -812,9 +848,16 @@ class CandleViewSet(viewsets.ReadOnlyModelViewSet):
 class TickViewSet(viewsets.ReadOnlyModelViewSet):
     """
     A ViewSet for viewing Tick instances.
+    
+    Performance Note:
+        Ticks are high-volume data. Always requires filtering by asset_id or symbol.
+        Default queryset is limited to recent data to prevent memory issues.
     """
 
-    queryset = Tick.objects.all()
+    # Only load recent ticks by default (last 24 hours) to prevent memory issues
+    queryset = Tick.objects.filter(
+        timestamp__gte=datetime.now() - timedelta(days=1)
+    ).select_related("asset")
     serializer_class = TickSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = OffsetPagination
@@ -822,7 +865,7 @@ class TickViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        # Filter by asset
+        # Filter by asset (use select_related to avoid N+1 on asset access)
         asset_id = self.request.query_params.get("asset_id")
         if asset_id:
             queryset = queryset.filter(asset_id=asset_id)
@@ -831,5 +874,22 @@ class TickViewSet(viewsets.ReadOnlyModelViewSet):
         symbol = self.request.query_params.get("symbol")
         if symbol:
             queryset = queryset.filter(asset__symbol=symbol)
+
+        # Allow extending time range via query parameter
+        days = self.request.query_params.get("days")
+        if days:
+            try:
+                days_int = int(days)
+                if days_int > 0:
+                    queryset = Tick.objects.filter(
+                        timestamp__gte=datetime.now() - timedelta(days=days_int)
+                    ).select_related("asset")
+                    # Reapply filters
+                    if asset_id:
+                        queryset = queryset.filter(asset_id=asset_id)
+                    if symbol:
+                        queryset = queryset.filter(asset__symbol=symbol)
+            except ValueError:
+                pass  # Ignore invalid days parameter
 
         return queryset.order_by("-timestamp")

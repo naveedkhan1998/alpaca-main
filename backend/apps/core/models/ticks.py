@@ -77,6 +77,8 @@ class Tick(models.Model):
         indexes = [
             models.Index(fields=["asset", "-timestamp"]),
             models.Index(fields=["timestamp"]),
+            # Index for filtering unused ticks in cleanup/aggregation tasks
+            models.Index(fields=["used", "timestamp"], name="idx_tick_used_ts"),
         ]
         verbose_name = "Tick"
         verbose_name_plural = "Ticks"
