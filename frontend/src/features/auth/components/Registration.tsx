@@ -135,7 +135,7 @@ export default function Registration() {
     >
       <div className="space-y-3 text-center">
         <motion.h2
-          className="text-3xl font-bold text-transparent bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text"
+          className="text-3xl font-semibold text-transparent bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text font-['Plus_Jakarta_Sans'] tracking-tight"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -148,7 +148,7 @@ export default function Registration() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          Join thousands of traders and start your journey today
+          Create an account to access the full real-time demo experience
         </motion.p>
       </div>
 
@@ -198,7 +198,7 @@ export default function Registration() {
               value={registerName}
               onChange={e => setRegisterName(e.target.value)}
               required
-              className="pl-10 transition-all h-11 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="pl-10 transition-all h-11 border-border/50 bg-background/70 focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>
@@ -216,7 +216,7 @@ export default function Registration() {
               value={registerEmail}
               onChange={e => setRegisterEmail(e.target.value)}
               required
-              className="pl-10 transition-all h-11 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="pl-10 transition-all h-11 border-border/50 bg-background/70 focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>
@@ -234,12 +234,13 @@ export default function Registration() {
               value={registerPassword}
               onChange={e => setRegisterPassword(e.target.value)}
               required
-              className="pl-10 pr-10 transition-all h-11 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="pl-10 pr-10 transition-all h-11 border-border/50 bg-background/70 focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute transition-colors right-3 top-3 text-muted-foreground hover:text-foreground"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? (
                 <EyeOff className="w-4 h-4" />
@@ -266,12 +267,13 @@ export default function Registration() {
               value={registerPassword2}
               onChange={e => setRegisterPassword2(e.target.value)}
               required
-              className="pl-10 pr-10 transition-all h-11 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="pl-10 pr-10 transition-all h-11 border-border/50 bg-background/70 focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             <button
               type="button"
               onClick={() => setShowPassword2(!showPassword2)}
               className="absolute transition-colors right-3 top-3 text-muted-foreground hover:text-foreground"
+              aria-label={showPassword2 ? 'Hide password' : 'Show password'}
             >
               {showPassword2 ? (
                 <EyeOff className="w-4 h-4" />
@@ -336,20 +338,20 @@ export default function Registration() {
         </Button>
       </form>
 
-      <div className="relative py-4">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-border/50" />
+        <div className="relative py-4">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border/50" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="px-3 py-1 font-medium rounded-full bg-background/70 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="px-3 py-1 font-medium rounded-full bg-background text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
-      </div>
 
       <div className="w-full">
         {isGoogleLoginLoading ? (
-          <div className="flex items-center justify-center p-4 border rounded-lg border-border/50 bg-muted/50">
+          <div className="flex items-center justify-center p-4 border rounded-xl border-border/50 bg-muted/40">
             <Loader2 className="w-5 h-5 mr-2 animate-spin text-primary" />
             <span className="text-sm font-medium">Connecting to Google...</span>
           </div>
