@@ -260,16 +260,16 @@ const Login: React.FC = () => {
         </Button>
       </form>
 
-        <div className="relative py-4">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border/50" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="px-3 py-1 font-medium rounded-full bg-background/70 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
+      <div className="relative py-4">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-border/50" />
         </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="px-3 py-1 font-medium rounded-full bg-background/70 text-muted-foreground">
+            Or continue with
+          </span>
+        </div>
+      </div>
 
       <div className="w-full">
         {isGoogleLoginLoading ? (
