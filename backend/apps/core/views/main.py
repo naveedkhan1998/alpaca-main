@@ -324,21 +324,21 @@ class AssetViewSet(PublicReadOnlyMixin, viewsets.ReadOnlyModelViewSet):
         """
         List all assets with pagination and caching.
         """
-        cache_key = f"assets_list_{hash(str(sorted(request.query_params.items())))}"
-        if not any(
-            param in request.query_params for param in ["limit", "offset", "ordering"]
-        ):
-            cached_result = cache.get(cache_key)
-            if cached_result:
-                return Response(cached_result)
+        # cache_key = f"assets_list_{hash(str(sorted(request.query_params.items())))}"
+        # if not any(
+        #     param in request.query_params for param in ["limit", "offset", "ordering"]
+        # ):
+        #     cached_result = cache.get(cache_key)
+        #     if cached_result:
+        #         return Response(cached_result)
 
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             response_data = self.get_paginated_response(serializer.data).data
-            if len(serializer.data) <= 100:
-                cache.set(cache_key, response_data, 300)
+            # if len(serializer.data) <= 100:
+            # cache.set(cache_key, response_data, 300)
             return Response(response_data)
 
         serializer = self.get_serializer(queryset, many=True)
@@ -347,7 +347,7 @@ class AssetViewSet(PublicReadOnlyMixin, viewsets.ReadOnlyModelViewSet):
             "data": serializer.data,
             "count": len(serializer.data),
         }
-        cache.set(cache_key, response_data, 300)
+        # cache.set(cache_key, response_data, 300)
         return Response(response_data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["get"], url_path="search")
@@ -369,10 +369,10 @@ class AssetViewSet(PublicReadOnlyMixin, viewsets.ReadOnlyModelViewSet):
             )
 
         # Cache search results
-        cache_key = f"asset_search_{search_term.lower()}_{request.query_params.get('limit', 50)}_{request.query_params.get('offset', 0)}"
-        cached_result = cache.get(cache_key)
-        if cached_result:
-            return Response(cached_result)
+        # cache_key = f"asset_search_{search_term.lower()}_{request.query_params.get('limit', 50)}_{request.query_params.get('offset', 0)}"
+        # cached_result = cache.get(cache_key)
+        # if cached_result:
+        #     return Response(cached_result)
 
         base_qs = self.get_queryset()
 
@@ -421,7 +421,7 @@ class AssetViewSet(PublicReadOnlyMixin, viewsets.ReadOnlyModelViewSet):
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             response_data = self.get_paginated_response(serializer.data).data
-            cache.set(cache_key, response_data, 180)  # 3 minutes
+            # cache.set(cache_key, response_data, 180)  # 3 minutes
             return Response(response_data)
 
         if queryset.exists():
@@ -431,7 +431,7 @@ class AssetViewSet(PublicReadOnlyMixin, viewsets.ReadOnlyModelViewSet):
                 "data": serializer.data,
                 "count": len(serializer.data),
             }
-            cache.set(cache_key, response_data, 180)
+            # cache.set(cache_key, response_data, 180)
             return Response(response_data, status=status.HTTP_200_OK)
 
         return Response(
