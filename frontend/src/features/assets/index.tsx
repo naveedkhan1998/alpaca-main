@@ -23,6 +23,7 @@ import {
   setTradableFilter,
   setViewMode,
 } from './assetSlice';
+import { getCurrentToken } from 'src/features/auth/authSlice';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
 import {
   useGetSyncStatusQuery,
@@ -36,10 +37,12 @@ export const AssetsPage: React.FC = () => {
   const assetState = useAppSelector(state => state.asset);
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
+  const accessToken = useAppSelector(getCurrentToken);
 
   // Sync status with frequent polling to catch sync completion
   const { data: syncStatus } = useGetSyncStatusQuery(undefined, {
     pollingInterval: 5000, // Poll every 5 seconds
+    skip: !accessToken,
   });
   const [syncAssets, { isLoading: isSyncing }] = useSyncAssetsMutation();
   const requireAuth = useRequireAuth();

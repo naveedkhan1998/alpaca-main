@@ -191,15 +191,20 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
 
         {/* Theme Toggle and Health Status Row */}
         {state === 'expanded' && (
-          <div className="px-2 py-2 space-y-1">
+          <div className="w-full px-2 py-2 space-y-1">
             <button
               onClick={toggleTheme}
-              className="flex items-center w-full gap-2 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50"
+              className="group flex w-full items-center gap-2 rounded-full border border-border/60 bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:border-primary/30 hover:bg-muted/50 hover:text-foreground"
             >
-              <Sun className="w-4 h-4 scale-100 rotate-0 dark:scale-0 dark:-rotate-90" />
-              <Moon className="absolute w-4 h-4 scale-0 rotate-90 dark:scale-100 dark:rotate-0" />
-              <span className="ml-3">
-                {theme === 'dark' ? 'Dark' : 'Light'} mode
+              <span className="relative flex items-center justify-center w-4 h-4">
+                <Sun className="w-4 h-4 transition-all scale-100 rotate-0 dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute w-4 h-4 transition-all scale-0 rotate-90 dark:rotate-0 dark:scale-100" />
+              </span>
+              <span className="flex items-center gap-1">
+                {theme === 'dark' ? 'Dark' : 'Light'}
+                <span className="text-[10px] uppercase tracking-wide text-muted-foreground/70">
+                  mode
+                </span>
               </span>
             </button>
             <HealthStatus />
@@ -207,16 +212,18 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
         )}
 
         {state === 'collapsed' && (
-          <div className="flex flex-col items-center gap-1 px-2 py-2">
+          <div className="flex flex-col items-center w-full gap-1 px-2 py-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     onClick={toggleTheme}
-                    className="flex items-center justify-center w-8 h-8 transition-colors rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    className="flex items-center justify-center transition-all border rounded-full h-9 w-9 border-border/60 bg-muted/30 text-muted-foreground hover:border-primary/30 hover:bg-muted/50 hover:text-foreground"
                   >
-                    <Sun className="w-4 h-4 scale-100 rotate-0 dark:scale-0 dark:-rotate-90" />
-                    <Moon className="absolute w-4 h-4 scale-0 rotate-90 dark:scale-100 dark:rotate-0" />
+                    <span className="relative flex items-center justify-center w-4 h-4">
+                      <Sun className="w-4 h-4 transition-all scale-100 rotate-0 dark:-rotate-90 dark:scale-0" />
+                      <Moon className="absolute w-4 h-4 transition-all scale-0 rotate-90 dark:rotate-0 dark:scale-100" />
+                    </span>
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="right">
@@ -321,7 +328,9 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
                 <div className="flex items-center justify-center rounded-lg size-8 bg-primary/10">
                   <LogIn className="w-4 h-4 text-primary" />
                 </div>
-                <div className="flex flex-col flex-1 text-left">
+                <div
+                  className={`flex-col flex-1 text-left ${state === 'collapsed' ? 'hidden' : 'flex'}`}
+                >
                   <span className="text-sm font-medium truncate">Guest</span>
                   <span className="text-xs truncate text-sidebar-foreground/70">
                     Log in for full access

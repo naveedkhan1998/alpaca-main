@@ -4,12 +4,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Circle, Server, Zap, Activity } from 'lucide-react';
+import { Activity, Circle, Server, Zap } from 'lucide-react';
 import {
   selectHealthStatus,
   type HealthStatus,
 } from 'src/features/health/healthSlice';
 import { useAppSelector } from 'src/app/hooks';
+import { useIsMobile } from '@/hooks/useMobile';
 
 const ServiceStatusItem = ({
   name,
@@ -42,12 +43,17 @@ const ServiceStatusItem = ({
   };
 
   return (
-    <div className="flex items-center justify-between py-1.5">
+    <div className="flex items-center justify-between gap-3 px-3 py-2 border rounded-lg border-border/60 bg-muted/30">
       <div className="flex items-center gap-2 text-muted-foreground">
         {getServiceIcon(name)}
-        <span className="text-sm">{formatServiceName(name)}</span>
+        <span className="text-sm font-medium text-foreground">
+          {formatServiceName(name)}
+        </span>
       </div>
-      <Circle className={`w-2 h-2 fill-current ${statusColor[status]}`} />
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Circle className={`h-2 w-2 fill-current ${statusColor[status]}`} />
+        <span className="capitalize">{status}</span>
+      </div>
     </div>
   );
 };
@@ -56,6 +62,7 @@ const HealthStatusComponent: React.FC<{ compact?: boolean }> = ({
   compact = false,
 }) => {
   const healthStatus = useAppSelector(selectHealthStatus);
+  const isMobile = useIsMobile();
 
   const getOverallStatus = (): HealthStatus => {
     const statuses = Object.values(healthStatus);
@@ -80,6 +87,12 @@ const HealthStatusComponent: React.FC<{ compact?: boolean }> = ({
     error: 'bg-destructive',
   };
 
+  const statusTone = {
+    ok: 'bg-success/10 text-success border-success/20',
+    pending: 'bg-warning/10 text-warning border-warning/20',
+    error: 'bg-destructive/10 text-destructive border-destructive/20',
+  };
+
   const statusText = {
     ok: 'All systems operational',
     pending: 'Checking services...',
@@ -90,30 +103,78 @@ const HealthStatusComponent: React.FC<{ compact?: boolean }> = ({
     <Popover>
       <PopoverTrigger asChild>
         <button
-          className={`flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50 ${compact ? 'justify-center w-8 h-8' : 'w-full'}`}
+          className={`group flex items-center gap-2 rounded-full border border-border/60 bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:border-primary/30 hover:bg-muted/50 hover:text-foreground ${compact ? 'justify-center h-9 w-9 px-0' : 'w-full sm:w-full'}`}
           aria-label={`System status: ${overallStatus}`}
         >
-          <span
-            className={`w-2 h-2 rounded-full ${statusColor[overallStatus]} ${overallStatus === 'pending' ? 'animate-pulse' : ''}`}
-          />
-          {!compact && <span>Status</span>}
+          <span className="relative flex h-2.5 w-2.5">
+            <span
+              className={`absolute inset-0 rounded-full ${statusColor[overallStatus]} ${overallStatus === 'pending' ? 'animate-pulse' : ''}`}
+            />
+            <span className="absolute inset-0 rounded-full bg-background/30 ring-2 ring-background" />
+          </span>
+          {!compact && (
+            <span className="flex items-center gap-1">
+              System
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground/70">
+                status
+              </span>
+            </span>
+          )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-3" side="right" align="start">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">System Status</span>
-            <span
-              className={`w-2 h-2 rounded-full ${statusColor[overallStatus]}`}
-            />
+      <PopoverContent
+        className="w-[calc(100vw-2rem)] max-w-sm p-4 sm:w-80"
+        side={isMobile ? 'bottom' : 'right'}
+        align={isMobile ? 'center' : 'start'}
+      >
+        <div className="space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                System status
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {statusText[overallStatus]}
+              </p>
+            </div>
+            <div
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusTone[overallStatus]}`}
+            >
+              <span
+                className={`h-2 w-2 rounded-full ${statusColor[overallStatus]} ${overallStatus === 'pending' ? 'animate-pulse' : ''}`}
+              />
+              {overallStatus === 'ok'
+                ? 'Operational'
+                : overallStatus === 'pending'
+                  ? 'Checking'
+                  : 'Degraded'}
+            </div>
           </div>
 
-          <p className="text-xs text-muted-foreground">
-            {statusText[overallStatus]}
-          </p>
+          <div className="p-3 border rounded-xl border-border/60 bg-muted/20">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>
+                {healthyCount}/{serviceCount || 0} healthy
+              </span>
+              <span className={errorCount > 0 ? 'text-destructive' : ''}>
+                {errorCount} issue{errorCount !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-border/60">
+              <div
+                className={`h-full ${statusColor[overallStatus]}`}
+                style={{
+                  width:
+                    serviceCount === 0
+                      ? '100%'
+                      : `${Math.round((healthyCount / serviceCount) * 100)}%`,
+                }}
+              />
+            </div>
+          </div>
 
           {serviceCount > 0 && (
-            <div className="pt-2 space-y-1 border-t">
+            <div className="space-y-2">
               {Object.entries(healthStatus)
                 .sort(([, a], [, b]) => {
                   const order = { error: 0, pending: 1, ok: 2 };
@@ -122,17 +183,6 @@ const HealthStatusComponent: React.FC<{ compact?: boolean }> = ({
                 .map(([name, status]) => (
                   <ServiceStatusItem key={name} name={name} status={status} />
                 ))}
-            </div>
-          )}
-
-          {serviceCount > 0 && (
-            <div className="flex items-center gap-3 pt-2 text-xs border-t text-muted-foreground">
-              <span>{healthyCount} healthy</span>
-              {errorCount > 0 && (
-                <span className="text-destructive">
-                  {errorCount} error{errorCount !== 1 ? 's' : ''}
-                </span>
-              )}
             </div>
           )}
         </div>
