@@ -16,6 +16,16 @@ class ReadOnlyOrAuthenticated(BasePermission):
 class PublicReadAnonThrottle(AnonRateThrottle):
     scope = "public_read"
 
+    def get_ident(self, request):
+        # Prefer Cloudflare's client IP header, fallback to leftmost XFF.
+        cf_ip = request.META.get("HTTP_CF_CONNECTING_IP")
+        if cf_ip:
+            return cf_ip
+        xff = request.META.get("HTTP_X_FORWARDED_FOR")
+        if xff:
+            return xff.split(",")[0].strip()
+        return super().get_ident(request)
+
 
 class PublicReadOnlyMixin:
     permission_classes = [ReadOnlyOrAuthenticated]
