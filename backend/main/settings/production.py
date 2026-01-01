@@ -24,6 +24,9 @@ ALLOWED_HOSTS = [
 
 HOST = os.environ.get("HOST", "alpaca.mnaveedk.com")
 
+# Trust Cloudflare + Render proxies for correct client IP handling.
+NUM_PROXIES = 2
+
 # Production URLs
 MAIN_URL = "https://alpaca.mnaveedk.com/"
 MAIN_URL_2 = "https://alpaca.mnaveedk.com"
