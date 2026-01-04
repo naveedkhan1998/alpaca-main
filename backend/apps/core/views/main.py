@@ -213,7 +213,7 @@ class AlpacaAccountViewSet(viewsets.ModelViewSet):
         except Exception as e:
             logger.error(f"Error getting sync status: {e}", exc_info=True)
             return Response(
-                {"msg": "Error getting sync status", "error": str(e)},
+                {"msg": "Error getting sync status"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
