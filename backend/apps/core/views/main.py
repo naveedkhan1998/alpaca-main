@@ -159,7 +159,7 @@ class AlpacaAccountViewSet(viewsets.ModelViewSet):
         except Exception as e:
             logger.error(f"Error syncing assets: {e}", exc_info=True)
             return Response(
-                {"msg": "Error syncing assets", "error": str(e)},
+                {"msg": "Error syncing assets"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
