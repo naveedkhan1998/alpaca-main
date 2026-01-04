@@ -2,14 +2,15 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAppDispatch } from 'src/app/hooks';
 import { setIsFullscreen } from '../graphSlice';
 
-export function useFullscreen(sectionRef: React.RefObject<HTMLElement>) {
+export function useFullscreen(sectionRef: React.RefObject<HTMLElement | null>) {
   const dispatch = useAppDispatch();
   const [isFullscreenView, setIsFullscreenView] = useState(false);
 
   const toggleFullscreen = useCallback(() => {
+    if (!sectionRef.current) return;
     if (!document.fullscreenElement) {
       sectionRef.current
-        ?.requestFullscreen()
+        .requestFullscreen()
         .then(() => {
           dispatch(setIsFullscreen(true));
           setIsFullscreenView(true);

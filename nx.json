@@ -72,6 +72,9 @@
       "inputs": [
         "production",
         "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/frontend/dist"
       ]
     }
   },

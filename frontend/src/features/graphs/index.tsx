@@ -140,7 +140,7 @@ const GraphsPage: React.FC = () => {
   const indicatorChartsRef = useRef<Map<string, ITimeScaleApi<Time>>>(
     new Map()
   );
-  const chartSectionRef = useRef<HTMLDivElement>(null);
+  const chartSectionRef = useRef<HTMLDivElement | null>(null);
 
   // Data & derived series
   const {

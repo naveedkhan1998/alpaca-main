@@ -1,6 +1,6 @@
 import { useEffect, useState, Suspense, lazy } from 'react';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
-import { HelmetProvider } from 'react-helmet-async';
+import { HelmetProvider } from '@dr.pogodin/react-helmet';
 import { useAppDispatch, useAppSelector } from './app/hooks';
 import {
   getCurrentToken,
