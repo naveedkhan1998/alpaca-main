@@ -485,19 +485,30 @@ const IndicatorPanel: React.FC<IndicatorPanelProps> = memo(
 
           // Get last value
           if (output.type === 'line') {
-            const lastPoint = (output as LineIndicatorOutput).data.at(-1);
-            if (lastPoint) {
-              parts.push(
-                `<span style="color: ${color}">${label}: ${lastPoint.value.toFixed(2)}</span>`
-              );
+            {
+              const dataArr = (output as LineIndicatorOutput).data;
+              const lastPoint =
+                dataArr.length > 0 ? dataArr[dataArr.length - 1] : undefined;
+              if (lastPoint) {
+                parts.push(
+                  `<span style="color: ${color}">${label}: ${lastPoint.value.toFixed(2)}</span>`
+                );
+              }
             }
           } else if (output.type === 'multi-line') {
-            const seriesData = (output as MultiLineIndicatorOutput).series[key];
-            const lastPoint = seriesData?.at(-1);
-            if (lastPoint && 'value' in lastPoint) {
-              parts.push(
-                `<span style="color: ${color}">${label}: ${Number(lastPoint.value).toFixed(2)}</span>`
-              );
+            {
+              const seriesData = (output as MultiLineIndicatorOutput).series[
+                key
+              ];
+              const lastPoint =
+                seriesData && seriesData.length > 0
+                  ? seriesData[seriesData.length - 1]
+                  : undefined;
+              if (lastPoint && 'value' in lastPoint) {
+                parts.push(
+                  `<span style="color: ${color}">${label}: ${Number(lastPoint.value).toFixed(2)}</span>`
+                );
+              }
             }
           }
         });

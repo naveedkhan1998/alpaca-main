@@ -67,15 +67,16 @@ const extractTextContent = (element: React.ReactNode): string => {
   if (typeof element === 'string') return element;
   if (typeof element === 'number') return element.toString();
   if (React.isValidElement(element)) {
-    if (typeof element.props.children === 'string') {
-      return element.props.children;
-    }
-    if (Array.isArray(element.props.children)) {
-      return element.props.children
+    const propsChildren = (element.props as { children?: React.ReactNode })
+      .children;
+    if (typeof propsChildren === 'string') return propsChildren;
+    if (typeof propsChildren === 'number') return propsChildren.toString();
+    if (Array.isArray(propsChildren)) {
+      return propsChildren
         .map((child: React.ReactNode) => extractTextContent(child))
         .join('');
     }
-    return extractTextContent(element.props.children);
+    return extractTextContent(propsChildren);
   }
   return 'Alpaca Trading';
 };
@@ -130,7 +131,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   };
 
   const guestBanner = isGuest ? (
-    <div className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm">
+    <div className="p-4 mb-6 text-sm border rounded-lg border-primary/20 bg-primary/5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-semibold text-foreground">Guest mode</p>
@@ -221,7 +222,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 
           <AssetSearch
             open={isAssetSearchOpen}
-            onOpenChange={setIsAssetSearchOpen}
+            onOpenChange={(open: boolean) => setIsAssetSearchOpen(open)}
             isMobile={isMobile}
           />
 
