@@ -187,8 +187,10 @@ export interface User {
   auth_provider: string;
 }
 
-export interface UserRegistration
-  extends Omit<User, 'id' | 'is_admin' | 'avatar' | 'auth_provider'> {
+export interface UserRegistration extends Omit<
+  User,
+  'id' | 'is_admin' | 'avatar' | 'auth_provider'
+> {
   password: string;
   password2: string;
 }

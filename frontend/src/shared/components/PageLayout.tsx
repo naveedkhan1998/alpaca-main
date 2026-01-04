@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { Helmet } from '@dr.pogodin/react-helmet';
 import { Search } from 'lucide-react';
 import { AppSidebar } from './AppSidebar';
 import {

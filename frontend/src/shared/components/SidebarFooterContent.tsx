@@ -95,9 +95,7 @@ const SidebarFooterContent: React.FC = () => {
                 <TooltipContent side="right">
                   <div className="text-xs">
                     <p className="font-semibold">Alpaca Trading</p>
-                    <p className="text-muted-foreground">
-                      © {currentYear} MNK
-                    </p>
+                    <p className="text-muted-foreground">© {currentYear} MNK</p>
                   </div>
                 </TooltipContent>
               </Tooltip>
