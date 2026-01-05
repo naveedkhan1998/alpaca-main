@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Card,
   CardContent,
@@ -9,7 +7,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-  Heart,
   Check,
   X,
   AlertTriangle,
@@ -21,58 +18,13 @@ import {
   Layers,
   LucideIcon,
 } from 'lucide-react';
-import { useGetAssetByIdQuery } from '@/api/assetService';
-import { AddToWatchlistDialog } from './AddToWatchlistDialog';
+import { Asset } from '@/types/common-types';
 
 interface AssetDetailsProps {
-  assetId: number;
+  asset: Asset;
 }
 
-export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
-  const { data: asset, isLoading, error } = useGetAssetByIdQuery(assetId);
-  const [showWatchlistDialog, setShowWatchlistDialog] = useState(false);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <Skeleton className="w-32 h-10" />
-            <Skeleton className="w-64 h-6" />
-          </div>
-          <Skeleton className="w-40 h-10" />
-        </div>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Skeleton className="h-48" />
-          <Skeleton className="h-48" />
-          <Skeleton className="h-48" />
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !asset) {
-    return (
-      <div className="flex items-center gap-2 p-6 text-sm border rounded-lg border-destructive/20 text-destructive bg-destructive/5">
-        <AlertTriangle className="w-5 h-5" />
-        <span className="font-medium">Failed to load instrument details</span>
-      </div>
-    );
-  }
-
-  const getAssetClassColor = (assetClass: string) => {
-    switch (assetClass) {
-      case 'us_equity':
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800';
-      case 'us_option':
-        return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-purple-200 dark:border-purple-800';
-      case 'crypto':
-        return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 border-orange-200 dark:border-orange-800';
-      default:
-        return 'bg-secondary text-secondary-foreground border-border';
-    }
-  };
-
+export const AssetDetails: React.FC<AssetDetailsProps> = ({ asset }) => {
   const StatusItem = ({
     value,
     label,
@@ -121,42 +73,6 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Header Section */}
-      <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <h1 className="text-4xl font-bold tracking-tight font-mono text-primary">
-              {asset.symbol}
-            </h1>
-            <Badge
-              variant="outline"
-              className={`text-sm px-2.5 py-0.5 ${getAssetClassColor(asset.asset_class)}`}
-            >
-              {asset.asset_class.replace('_', ' ').toUpperCase()}
-            </Badge>
-            <Badge
-              variant={asset.status === 'active' ? 'default' : 'secondary'}
-              className="capitalize"
-            >
-              {asset.status}
-            </Badge>
-          </div>
-          <h2 className="text-xl text-muted-foreground font-medium">
-            {asset.name}
-          </h2>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            size="lg"
-            className="gap-2 shadow-sm"
-            onClick={() => setShowWatchlistDialog(true)}
-          >
-            <Heart className="w-5 h-5" />
-            Add to Watchlist
-          </Button>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Overview Card */}
         <Card>
@@ -288,12 +204,6 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ assetId }) => {
           </CardContent>
         </Card>
       </div>
-
-      <AddToWatchlistDialog
-        asset={asset}
-        open={showWatchlistDialog}
-        onOpenChange={setShowWatchlistDialog}
-      />
     </div>
   );
 };

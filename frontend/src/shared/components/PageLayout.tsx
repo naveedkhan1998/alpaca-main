@@ -24,6 +24,7 @@ interface PageLayoutProps {
   header?: React.ReactNode;
   subheader?: React.ReactNode;
   actions?: React.ReactNode;
+  title?: string;
   className?: string;
   contentClassName?: string;
   variant?: 'default' | 'clean' | 'full-width';
@@ -69,16 +70,18 @@ const extractTextContent = (element: React.ReactNode): string => {
   if (React.isValidElement(element)) {
     const propsChildren = (element.props as { children?: React.ReactNode })
       .children;
+    if (!propsChildren) return '';
     if (typeof propsChildren === 'string') return propsChildren;
     if (typeof propsChildren === 'number') return propsChildren.toString();
     if (Array.isArray(propsChildren)) {
       return propsChildren
         .map((child: React.ReactNode) => extractTextContent(child))
-        .join('');
+        .filter(Boolean)
+        .join(' ');
     }
     return extractTextContent(propsChildren);
   }
-  return 'Alpaca Trading';
+  return '';
 };
 
 export const PageLayout: React.FC<PageLayoutProps> = ({
@@ -86,11 +89,13 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   header,
   subheader,
   actions,
+  title,
   className = '',
   contentClassName = '',
   variant = 'default',
 }) => {
-  const pageTitle = header ? extractTextContent(header) : 'Alpaca Trading';
+  const extracted = header ? extractTextContent(header).trim() : '';
+  const pageTitle = title || extracted || 'Alpaca Trading';
   const isMobile = useIsMobile();
   const dispatch = useAppDispatch();
   const accessToken = useAppSelector(getCurrentToken);
@@ -151,7 +156,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   if (!showSidebarLayout) {
     return (
       <>
-        <Helmet>
+        <Helmet key={pageTitle}>
           <title>{pageTitle} - Alpaca Trading</title>
         </Helmet>
         <div
@@ -190,9 +195,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 
   return (
     <>
-      <Helmet>
-        <title>{pageTitle} - Alpaca Trading</title>
-      </Helmet>
+      <Helmet title={`${pageTitle} - Alpaca Trading`} key={pageTitle} />
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset
