@@ -251,7 +251,7 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
                 </Link>
               </Button>
             </div>
-            <div className="flex-1 min-h-[300px] border rounded-lg overflow-hidden relative">
+            <div className="flex-1 min-h-[300px] border z-50 rounded-lg overflow-hidden relative">
               <WatchlistChart assetId={selectedAsset.id} />
             </div>
           </div>
