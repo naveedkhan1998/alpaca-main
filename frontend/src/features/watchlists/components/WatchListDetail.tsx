@@ -216,7 +216,7 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
         {/* Chart Area (Desktop: Right Side, Mobile: Replaces List when selected) */}
         {selectedAsset ? (
           <div
-            className={`xl:col-span-7 flex flex-col gap-2 ${isMobile ? 'col-span-1 fixed inset-0 z-50 bg-background p-4' : ''}`}
+            className={`xl:col-span-7 flex flex-col gap-2 ${isMobile ? 'col-span-1 fixed inset-0 mt-14 border bg-background p-4' : ''}`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -251,7 +251,7 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
                 </Link>
               </Button>
             </div>
-            <div className="flex-1 min-h-[300px] border z-50 rounded-lg overflow-hidden relative">
+            <div className="flex-1 min-h-[300px] border rounded-lg overflow-hidden relative">
               <WatchlistChart assetId={selectedAsset.id} />
             </div>
           </div>
