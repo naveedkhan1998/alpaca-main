@@ -76,7 +76,8 @@ class WatchListSerializer(serializers.ModelSerializer):
 class WatchListCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = WatchList
-        fields = ["name", "description", "is_active"]
+        fields = ["id", "name", "description", "is_active"]
+        read_only_fields = ["id"]
 
 
 class TickSerializer(serializers.ModelSerializer):

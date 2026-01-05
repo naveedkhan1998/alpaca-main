@@ -169,12 +169,14 @@ const IndicatorPanel: React.FC<IndicatorPanelProps> = memo(
       });
       resizeObserver.observe(containerEl);
 
+      const currentSeriesRefs = seriesRefs.current;
+
       return () => {
         resizeObserver.disconnect();
         if (chartRef.current) {
           chartRef.current.remove();
           chartRef.current = null;
-          seriesRefs.current.clear();
+          currentSeriesRefs.clear();
           isInitializedRef.current = false;
         }
         if (legendRef.current && containerEl) {

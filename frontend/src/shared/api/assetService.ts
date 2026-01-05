@@ -19,6 +19,7 @@ export interface EnhancedGetAssetsParams extends GetAssetsParams {
 
   // Search and filtering
   search?: string;
+  q?: string;
   asset_class?: string;
   exchange?: string;
   tradable?: boolean;
@@ -51,8 +52,8 @@ const assetApi = baseApi.injectEndpoints({
         }
 
         // Search
-        if (params.search) {
-          searchParams.append('search', params.search);
+        if (params.q) {
+          searchParams.append('q', params.q);
         }
 
         // Filtering

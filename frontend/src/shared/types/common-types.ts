@@ -200,7 +200,12 @@ export interface GetAssetsParams {
   asset_class?: string;
   exchange?: string;
   tradable?: boolean;
-  search?: string;
+  marginable?: boolean;
+  shortable?: boolean;
+  fractionable?: boolean;
+  // depreciated
+  // search?: string;
+  q?: string;
   ordering?: string;
   limit?: number;
   offset?: number;

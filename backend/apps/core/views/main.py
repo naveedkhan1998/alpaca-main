@@ -276,7 +276,10 @@ class AssetViewSet(PublicReadOnlyMixin, viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(fractionable=fractionable.lower() == "true")
 
         # Optimized search handling replacing DRF SearchFilter
-        search_term = self.request.query_params.get("search", "").strip()
+        search_term = (
+            self.request.query_params.get("search", "")
+            or self.request.query_params.get("q", "")
+        ).strip()
         if search_term:
             base_qs = queryset
             # Prefer symbol prefix for very short queries

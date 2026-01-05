@@ -51,6 +51,8 @@ export const AssetsPage: React.FC = () => {
   const prevSyncStatusRef = useRef(syncStatus);
   // Trigger for manual refetch when sync completes
   const [refetchTrigger, setRefetchTrigger] = useState<number>(0);
+  // Track initialization to prevent URL overwrite
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Handle sync completion
   useEffect(() => {
@@ -91,8 +93,8 @@ export const AssetsPage: React.FC = () => {
   useEffect(() => {
     const p = Object.fromEntries(searchParams.entries());
     // Only dispatch when values differ to avoid extra renders
-    if (p.search !== undefined && p.search !== assetState.quickFilterText) {
-      dispatch(setQuickFilterText(p.search));
+    if (p.q !== undefined && p.q !== assetState.quickFilterText) {
+      dispatch(setQuickFilterText(p.q));
     }
     if (
       p.asset_class !== undefined &&
@@ -138,15 +140,18 @@ export const AssetsPage: React.FC = () => {
         dispatch(setDensity(p.density));
       }
     }
+    setIsInitialized(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   // Redux state -> URL params
   useEffect(() => {
+    if (!isInitialized) return;
+
     const next = new URLSearchParams();
     // Persist core filters
     if (assetState.quickFilterText)
-      next.set('search', assetState.quickFilterText);
+      next.set('q', assetState.quickFilterText);
     if (assetState.assetClassFilter)
       next.set('asset_class', assetState.assetClassFilter);
     if (assetState.tradableFilter)
@@ -165,7 +170,7 @@ export const AssetsPage: React.FC = () => {
     const current = new URLSearchParams(searchParams.toString());
     const changed = next.toString() !== current.toString();
     if (changed) setSearchParams(next, { replace: true });
-  }, [assetState, searchParams, setSearchParams]);
+  }, [assetState, searchParams, setSearchParams, isInitialized]);
 
   return (
     <PageLayout

@@ -24,7 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useGetAssetsQuery } from '@/api/assetService';
+import { useSearchAssetsOptimizedQuery } from '@/api/assetService';
 import { AddToWatchlistDialog } from '../../features/assets/components/AddToWatchlistDialog';
 import { Asset } from '@/types/common-types';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -134,9 +134,9 @@ export const AssetSearch: React.FC<AssetSearchProps> = ({
   const debouncedSearch = useDebounce(searchQuery, 300);
   const requireAuth = useRequireAuth();
 
-  const { data, isLoading, isFetching, error } = useGetAssetsQuery(
+  const { data, isLoading, isFetching, error } = useSearchAssetsOptimizedQuery(
     {
-      search: debouncedSearch,
+      q: debouncedSearch,
       limit: 20,
     },
     {
