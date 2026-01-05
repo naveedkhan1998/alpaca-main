@@ -1,42 +1,50 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `backend/` hosts the Django API, Celery, and Channels services; apps live in `backend/apps/`, settings in `main/`, and dependencies are tracked in `pyproject.toml` plus `uv.lock`.
-- `frontend/` is a Vite/React workspace under `frontend/src/` with shared UI primitives in `components/` and static assets in `public/`.
-- Monorepo orchestration sits in `nx.json` and each package `project.json`; infrastructure manifests live in `docker-compose*.yaml`, `charts/`, and `nginx/`.
+
+- `backend/`: Django API and services. Apps live in `backend/apps/`, settings in `backend/main/`.
+- `frontend/`: React + Vite SPA. Source in `frontend/src/`, static assets in `frontend/public/`.
+- `docs/`: Architecture and documentation assets.
+- `charts/`: Helm charts for deployment (`charts/alpaca-main/`).
+- `docker-compose.yaml`: Local infrastructure (Postgres, Redis, backend, workers).
+- `scripts/`: Setup and install helpers.
 
 ## Build, Test, and Development Commands
-- `npm run install:all` bootstraps root tooling, installs `frontend` dependencies, and syncs Python packages with `uv`.
-- `npm run dev` runs both servers via NX; use `npm run dev:frontend` or `npm run dev:backend` for focused iterations (backend expects Docker services).
-- `npm run docker:up`/`docker:down` manage Postgres, Redis, Celery, while `npm run build` emits the production frontend bundle.
+
+- `npm install`: Runs prerequisite checks and installs frontend/backend deps.
+- `npm run dev`: Start frontend dev server and Docker services via Nx.
+- `npm run dev:frontend`: Frontend only (expects backend services running).
+- `npm run dev:backend`: Backend infrastructure via Docker Compose.
+- `npm run lint` / `npm run lint:fix`: Lint (and fix) both projects.
+- `npm run format` / `npm run format:check`: Format or validate formatting.
+- `npm run test` / `npm run test:coverage`: Run tests (with coverage).
+- `npm run build`: Build the frontend for production.
+- `npm run migrate` / `npm run makemigrations`: Django migrations.
+- `npm run docker:up|down|logs|clean`: Manage Docker services.
 
 ## Coding Style & Naming Conventions
-- Python is formatted with Black (88 cols) and linted by Ruff; keep Django apps lowercase with underscores and prefer dataclass-style service modules.
-- Frontend TypeScript relies on Prettier (2-space indent) and ESLint's React Hooks rules; name components in PascalCase and hooks in camelCase.
-- Shared UI lives in `frontend/src/components`; colocate feature logic under `frontend/src/features/<area>` and keep Tailwind utility classes readable.
+
+- Python: Black with 88-char lines and Ruff linting. Use `snake_case` for modules
+  and functions. Django apps are organized under `backend/apps/`.
+- TypeScript/React: Prettier (2 spaces, single quotes, semicolons) and ESLint.
+  Use `PascalCase` for components and `camelCase` for functions/vars.
 
 ## Testing Guidelines
-- `npm run test` fans out through NX; limit scope with `npm run test:backend` (pytest against `main.settings.test`) or `npm run test:frontend` (Vitest + Testing Library).
-- Backend tests live in `backend/apps/**/tests/` and follow `test_*.py` patterns per `pytest.ini`; use fixtures to isolate Alpaca API calls.
-- Frontend specs belong beside code as `.test.tsx`/`.test.ts`; leverage `npm run test:frontend -- --ui` when investigating flakes and update snapshots intentionally.
+
+- Backend: `pytest` with `pytest-django`. Tests live under `backend/apps/**`
+  and follow `tests.py`, `test_*.py`, or `*_test.py` naming.
+- Frontend: `vitest` with React Testing Library; tests typically use
+  `*.test.tsx` or `__tests__/` folders.
+- Run `npm run test` for the full suite or `npm run test:coverage` for reports.
 
 ## Commit & Pull Request Guidelines
-- Git history favors conventional prefixes (`feat:`, `refactor:`, `fix:`); keep commits small, include schema migrations, and regenerate locks when dependencies change.
-- Before opening a PR, run `npm run lint`, `npm run format:check`, and the relevant test commands; note any Docker or env prerequisites in the description.
-- Link issues where possible, provide behaviour notes or UI screenshots, and flag configuration changes so reviewers can reproduce quickly.
 
+- Commit messages follow a conventional style: `feat:`, `fix:`, `chore:`,
+  `refactor:`, `build(deps):`.
+- PRs should include a clear description, testing notes, linked issues,
+  and screenshots for UI changes.
 
-<!-- nx configuration start-->
-<!-- Leave the start & end comments to automatically receive updates. -->
+## Security & Configuration Tips
 
-# General Guidelines for working with Nx
-
-- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
-- You have access to the Nx MCP server and its tools, use them to help the user
-- When answering questions about the repository, use the `nx_workspace` tool first to gain an understanding of the workspace architecture where applicable.
-- When working in individual projects, use the `nx_project_details` mcp tool to analyze and understand the specific project structure and dependencies
-- For questions around nx configuration, best practices or if you're unsure, use the `nx_docs` tool to get relevant, up-to-date docs. Always use this instead of assuming things about nx configuration
-- If the user needs help with an Nx configuration or project graph error, use the `nx_workspace` tool to get any errors
-
-
-<!-- nx configuration end-->
+- Store Alpaca credentials in `.envs/.env`. Never commit secrets.
+- Review `docker-compose.local.yaml` for local overrides.

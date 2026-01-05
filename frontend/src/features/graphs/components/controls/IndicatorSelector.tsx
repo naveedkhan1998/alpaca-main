@@ -35,7 +35,7 @@ import {
   type IndicatorId,
   type IndicatorGroup,
   type IndicatorInstance,
-} from '../lib/indicators';
+} from '../../lib/indicators';
 
 interface IndicatorSelectorProps {
   /** Whether the modal is open */

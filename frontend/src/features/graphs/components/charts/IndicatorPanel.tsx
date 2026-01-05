@@ -18,17 +18,17 @@ import {
   HistogramSeries,
   MouseEventParams,
 } from 'lightweight-charts';
-import { getBaseChartOptions } from '../lib/chartOptions';
-import { useResizeObserver } from '../hooks/useResizeObserver';
+import { getBaseChartOptions } from '../../lib/chartOptions';
+import { useResizeObserver } from '../../hooks/useResizeObserver';
 import type {
   CalculatedIndicator,
   LineIndicatorOutput,
   MultiLineIndicatorOutput,
-} from '../lib/indicators';
+} from '../../lib/indicators';
 import type { LineWidth } from 'lightweight-charts';
 import { Button } from '@/components/ui/button';
 import { HiX, HiCog, HiEye, HiEyeOff } from 'react-icons/hi';
-import { useIndicatorUI } from '../context';
+import { useIndicatorUI } from '../../context';
 
 interface IndicatorPanelProps {
   /** The calculated indicator to render */
@@ -169,12 +169,14 @@ const IndicatorPanel: React.FC<IndicatorPanelProps> = memo(
       });
       resizeObserver.observe(containerEl);
 
+      const currentSeriesRefs = seriesRefs.current;
+
       return () => {
         resizeObserver.disconnect();
         if (chartRef.current) {
           chartRef.current.remove();
           chartRef.current = null;
-          seriesRefs.current.clear();
+          currentSeriesRefs.clear();
           isInitializedRef.current = false;
         }
         if (legendRef.current && containerEl) {

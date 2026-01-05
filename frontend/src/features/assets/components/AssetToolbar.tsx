@@ -28,6 +28,10 @@ import { useAppDispatch, useAppSelector } from 'src/app/hooks';
 import {
   clearFilters,
   setAssetClassFilter,
+  setExchangeFilter,
+  setMarginableFilter,
+  setShortableFilter,
+  setFractionableFilter,
   setQuickFilterText,
   setTradableFilter,
   setViewMode,
@@ -45,8 +49,16 @@ type Props = { onRefresh: () => void; refreshing?: boolean };
 
 export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
   const dispatch = useAppDispatch();
-  const { quickFilterText, assetClassFilter, tradableFilter, viewMode } =
-    useAppSelector(s => s.asset);
+  const {
+    quickFilterText,
+    assetClassFilter,
+    exchangeFilter,
+    tradableFilter,
+    marginableFilter,
+    shortableFilter,
+    fractionableFilter,
+    viewMode,
+  } = useAppSelector(s => s.asset);
   const { data: stats } = useGetAssetStatsQuery() as {
     data: AssetStats | undefined;
   };
@@ -55,13 +67,52 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (assetClassFilter) count++;
+    if (exchangeFilter) count++;
     if (tradableFilter) count++;
+    if (marginableFilter) count++;
+    if (shortableFilter) count++;
+    if (fractionableFilter) count++;
     return count;
-  }, [assetClassFilter, tradableFilter]);
+  }, [
+    assetClassFilter,
+    exchangeFilter,
+    tradableFilter,
+    marginableFilter,
+    shortableFilter,
+    fractionableFilter,
+  ]);
 
   const getAssetClassName = (value: string) => {
     return stats?.asset_classes?.find(ac => ac.value === value)?.label || value;
   };
+
+  const getExchangeName = (value: string) => {
+    return stats?.exchanges?.find(ex => ex.value === value)?.label || value;
+  };
+
+  const BooleanFilterSelect = ({
+    value,
+    onChange,
+    label,
+  }: {
+    value: string;
+    onChange: (val: string) => void;
+    label: string;
+  }) => (
+    <Select
+      value={value || 'all'}
+      onValueChange={v => onChange(v === 'all' ? '' : v)}
+    >
+      <SelectTrigger className="w-32 h-8 text-sm">
+        <SelectValue placeholder={label} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">All {label}</SelectItem>
+        <SelectItem value="true">Yes</SelectItem>
+        <SelectItem value="false">No</SelectItem>
+      </SelectContent>
+    </Select>
+  );
 
   return (
     <div className="space-y-4">
@@ -73,8 +124,19 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
             placeholder="Search symbols or names..."
             value={quickFilterText}
             onChange={e => dispatch(setQuickFilterText(e.target.value))}
-            className="pl-9 h-9"
+            className="h-9 pl-9 pr-9"
           />
+          {quickFilterText && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute w-7 h-7 p-0 -translate-y-1/2 right-1 top-1/2 text-muted-foreground hover:text-foreground"
+              onClick={() => dispatch(setQuickFilterText(''))}
+            >
+              <X className="w-3 h-3" />
+              <span className="sr-only">Clear search</span>
+            </Button>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -91,7 +153,7 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
                 )}
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[70dvh]">
+            <SheetContent side="bottom" className="h-[85dvh] overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>Filters</SheetTitle>
                 <SheetDescription>Filter instruments</SheetDescription>
@@ -118,12 +180,13 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Status</label>
+                  <label className="text-sm font-medium">Exchange</label>
                   <Select
-                    value={tradableFilter || 'all'}
+                    value={exchangeFilter || 'all'}
                     onValueChange={v =>
-                      dispatch(setTradableFilter(v === 'all' ? '' : v))
+                      dispatch(setExchangeFilter(v === 'all' ? '' : v))
                     }
                   >
                     <SelectTrigger className="h-9">
@@ -131,14 +194,93 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="true">Tradable</SelectItem>
-                      <SelectItem value="false">Non-tradable</SelectItem>
+                      {stats?.exchanges?.map(ex => (
+                        <SelectItem key={ex.value} value={ex.value}>
+                          {ex.label} ({ex.count})
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Tradable</label>
+                    <Select
+                      value={tradableFilter || 'all'}
+                      onValueChange={v =>
+                        dispatch(setTradableFilter(v === 'all' ? '' : v))
+                      }
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="true">Yes</SelectItem>
+                        <SelectItem value="false">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Marginable</label>
+                    <Select
+                      value={marginableFilter || 'all'}
+                      onValueChange={v =>
+                        dispatch(setMarginableFilter(v === 'all' ? '' : v))
+                      }
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="true">Yes</SelectItem>
+                        <SelectItem value="false">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Shortable</label>
+                    <Select
+                      value={shortableFilter || 'all'}
+                      onValueChange={v =>
+                        dispatch(setShortableFilter(v === 'all' ? '' : v))
+                      }
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="true">Yes</SelectItem>
+                        <SelectItem value="false">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Fractionable</label>
+                    <Select
+                      value={fractionableFilter || 'all'}
+                      onValueChange={v =>
+                        dispatch(setFractionableFilter(v === 'all' ? '' : v))
+                      }
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="true">Yes</SelectItem>
+                        <SelectItem value="false">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className="w-full mt-4"
                   onClick={() => {
                     dispatch(clearFilters());
                     setFilterSheetOpen(false);
@@ -215,19 +357,44 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
             ))}
           </SelectContent>
         </Select>
+
         <Select
-          value={tradableFilter || 'all'}
-          onValueChange={v => dispatch(setTradableFilter(v === 'all' ? '' : v))}
+          value={exchangeFilter || 'all'}
+          onValueChange={v => dispatch(setExchangeFilter(v === 'all' ? '' : v))}
         >
           <SelectTrigger className="w-32 h-8 text-sm">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder="Exchange" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="true">Tradable</SelectItem>
-            <SelectItem value="false">Non-tradable</SelectItem>
+            <SelectItem value="all">All Exchanges</SelectItem>
+            {stats?.exchanges?.map(ex => (
+              <SelectItem key={ex.value} value={ex.value}>
+                {ex.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
+
+        <BooleanFilterSelect
+          label="Tradable"
+          value={tradableFilter}
+          onChange={v => dispatch(setTradableFilter(v))}
+        />
+        <BooleanFilterSelect
+          label="Marginable"
+          value={marginableFilter}
+          onChange={v => dispatch(setMarginableFilter(v))}
+        />
+        <BooleanFilterSelect
+          label="Shortable"
+          value={shortableFilter}
+          onChange={v => dispatch(setShortableFilter(v))}
+        />
+        <BooleanFilterSelect
+          label="Fractionable"
+          value={fractionableFilter}
+          onChange={v => dispatch(setFractionableFilter(v))}
+        />
 
         {activeFilterCount > 0 && (
           <Button
@@ -261,11 +428,57 @@ export const AssetToolbar: React.FC<Props> = ({ onRefresh, refreshing }) => {
               </button>
             </Badge>
           )}
+          {exchangeFilter && (
+            <Badge variant="secondary" className="h-6 gap-1">
+              {getExchangeName(exchangeFilter)}
+              <button
+                onClick={() => dispatch(setExchangeFilter(''))}
+                className="ml-1"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </Badge>
+          )}
           {tradableFilter && (
             <Badge variant="secondary" className="h-6 gap-1">
-              {tradableFilter === 'true' ? 'Tradable' : 'Non-tradable'}
+              {tradableFilter === 'true' ? 'Tradable' : 'Not Tradable'}
               <button
                 onClick={() => dispatch(setTradableFilter(''))}
+                className="ml-1"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </Badge>
+          )}
+          {marginableFilter && (
+            <Badge variant="secondary" className="h-6 gap-1">
+              {marginableFilter === 'true' ? 'Marginable' : 'Not Marginable'}
+              <button
+                onClick={() => dispatch(setMarginableFilter(''))}
+                className="ml-1"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </Badge>
+          )}
+          {shortableFilter && (
+            <Badge variant="secondary" className="h-6 gap-1">
+              {shortableFilter === 'true' ? 'Shortable' : 'Not Shortable'}
+              <button
+                onClick={() => dispatch(setShortableFilter(''))}
+                className="ml-1"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </Badge>
+          )}
+          {fractionableFilter && (
+            <Badge variant="secondary" className="h-6 gap-1">
+              {fractionableFilter === 'true'
+                ? 'Fractionable'
+                : 'Not Fractionable'}
+              <button
+                onClick={() => dispatch(setFractionableFilter(''))}
                 className="ml-1"
               >
                 <X className="w-3 h-3" />

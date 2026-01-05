@@ -1,34 +1,81 @@
-## Codebase Overview: Alpaca Trading App (Frontend)
+# Frontend Context (React + Vite)
 
-This document provides a detailed overview of the React frontend application for the Alpaca Trading App, covering its architecture, state management (Redux), and styling.
+## Overview
 
-### 1. Redux Implementation
+This is a **React 19** Single Page Application (SPA) built with **Vite 7**. It serves as the user interface for the Alpaca Wrapper, featuring real-time data visualization, interactive charts, and dashboard management.
 
-- **Redux Toolkit:** The application leverages Redux Toolkit for efficient and streamlined state management.
-- **RTK Query:** API interactions are handled using RTK Query, integrated through `baseApi.tsx`. This includes dynamic base URL selection (localhost vs. production) and automatic attachment of authorization headers.
-- **Authentication State:** The `authSlice.ts` manages user authentication, including actions for setting and clearing credentials (`setCredentials`, `logOut`). Initial authentication state is derived from `LocalStorageService`.
-- **Redux Hooks:** Custom typed hooks (`useAppDispatch`, `useAppSelector`) are defined in `src/app/hooks.ts` to ensure type safety when interacting with the Redux store.
-- **Token Management:** Authentication tokens are managed using `js-cookie` (via `src/app/api/auth.ts`), storing and retrieving tokens from browser cookies.
+## Architecture
 
-### 2. Styling
+### Feature-Based Structure (`src/features`)
 
-- **Tailwind CSS:** The primary styling framework is Tailwind CSS, providing a utility-first approach to styling.
-- **Configuration:** `tailwind.config.js` is configured with custom colors (defined using CSS variables for theming), extended border-radius values, custom keyframes, and animations. It also includes `tailwindcss-animate` for pre-built animations.
-- **PostCSS:** `postcss.config.js` confirms the use of `tailwindcss` and `autoprefixer`, which are standard PostCSS plugins for Tailwind setups.
-- **Global Styles & Theming:** `src/index.css` defines global styles, including CSS variables for a comprehensive color palette (supporting light and dark modes), custom scrollbar styling, and utility classes for visual effects like glassmorphism. The `ThemeProvider` component (likely from Shadcn UI) is used to manage theme switching.
-- **Shadcn UI:** The presence of numerous component files in `src/components/ui/` (e.g., `accordion.tsx`, `button.tsx`, `dialog.tsx`) strongly indicates the use of Shadcn UI, a collection of re-usable components built with Radix UI and Tailwind CSS.
-- **App.css:** `src/App.css` is empty, indicating that all global and component-specific styling is handled through Tailwind CSS and `src/index.css`.
+The codebase is organized by **domain features** rather than technical layers. Each folder in `src/features/` contains the components, logic, and state relevant to that specific feature.
 
-### 3. Application Architecture
+- **`accounts`**: User account management.
+- **`assets`**: Stock/Crypto asset display and info.
+- **`auth`**: Login, Signup, and protection logic.
+- **`graphs`**: Charting components (Lightweight Charts/Chart.js).
+- **`paperTrading`**: Interfaces for the trading simulator.
+- **`watchlists`**: Watchlist management UI.
 
-- **Entry Point:** The application's entry point is `src/main.tsx`, which renders the main `App` component, wrapped in the Redux `Provider` and `React.StrictMode`.
-- **Main Application Component (`App.tsx`):**
-  - Handles client-side routing using `react-router-dom`.
-  - Implements `PrivateRoute` components to protect routes based on user authentication status (checking the Redux store).
-  - Manages a loading screen and performs periodic health checks to the backend API.
-  - Integrates global UI components such as `AnnouncementBanner`, `Toast`, and `Toaster`.
-  - Utilizes `ThemeProvider` for consistent theming across the application.
-- **Page Components (`src/pages/`):** Contains individual page components (e.g., `HomePage.tsx`, `InstrumentsPage.tsx`, `LoginRegPage.tsx`), ensuring a clear separation of concerns for different application views.
-- **Reusable Components (`src/components/`):** Houses a variety of reusable UI components, including application-specific components (e.g., `ChartControls.tsx`, `Login.tsx`) and the Shadcn UI components within `src/components/ui/`.
-- **Utility Functions (`src/lib/`):** Contains `common-functions.ts`, `common-types.ts`, and `utils.ts`, which are likely used for shared utility functions, helper methods, and common type definitions across the application.
-- **Custom Hooks (`src/hooks/`):** Includes custom React hooks (e.g., `use-mobile.tsx`, `use-toast.ts`, `useResizeObserver.ts`) to encapsulate and reuse specific logic and functionalities.
+### State Management (`src/app`)
+
+- **Redux Toolkit**: Used for global state.
+- **`store.ts`**: The central Redux store configuration.
+- **`analyticsMiddleware.ts`**: Custom middleware for tracking actions.
+
+### UI & Styling
+
+- **Tailwind CSS**: Utility-first styling.
+- **Radix UI**: Headless, accessible UI primitives (Dialogs, Dropdowns, etc.).
+- **Icons**: `react-icons` and `lucide-react`.
+
+## Key Technologies
+
+- **Build Tool**: Vite 7 (SWC plugin for fast compilation).
+- **Language**: TypeScript.
+- **Charts**: `lightweight-charts` (TradingView style) and `react-chartjs-2`.
+- **Forms**: `react-hook-form` + `zod` for validation.
+- **Data Fetching**: Likely `axios` or standard `fetch` (check `src/shared` for API clients).
+
+## Development Workflow
+
+### Commands
+
+- **Start Dev Server**:
+  ```bash
+  npm run dev:frontend
+  ```
+  _Runs on port 5173 by default._
+- **Build for Production**:
+  ```bash
+  npm run build
+  ```
+  _Output is generated in `dist/`._
+- **Lint & Format**:
+  ```bash
+  npm run lint
+  npm run format
+  ```
+
+### Conventions
+
+- **Components**: PascalCase (e.g., `StockChart.tsx`).
+- **Hooks**: camelCase, prefixed with `use` (e.g., `useMarketData.ts`).
+- **Slices**: Redux slices should be located within their respective feature folder.
+- **Strict Mode**: React Strict Mode is enabled.
+
+## Directory Map
+
+```text
+frontend/
+├── src/
+│   ├── app/            # Redux store and app-wide configs
+│   ├── features/       # Feature modules (The core logic)
+│   ├── shared/         # Reusable UI components and utils
+│   ├── landing/        # Landing page specific code
+│   ├── App.tsx         # Root component/Router setup
+│   └── main.tsx        # Entry point
+├── public/             # Static assets
+├── vite.config.ts      # Vite configuration
+└── tailwind.config.js  # Tailwind configuration
+```

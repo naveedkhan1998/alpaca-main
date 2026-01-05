@@ -8,7 +8,11 @@ interface AssetState {
   sortField: string;
   sortDirection: 'asc' | 'desc';
   assetClassFilter: string;
+  exchangeFilter: string;
   tradableFilter: string;
+  marginableFilter: string;
+  shortableFilter: string;
+  fractionableFilter: string;
   quickFilterText: string;
   viewMode: 'table' | 'grid';
   density: 'comfortable' | 'compact';
@@ -21,7 +25,11 @@ const initialState: AssetState = {
   sortField: 'symbol',
   sortDirection: 'asc',
   assetClassFilter: '',
+  exchangeFilter: '',
   tradableFilter: '',
+  marginableFilter: '',
+  shortableFilter: '',
+  fractionableFilter: '',
   quickFilterText: '',
   viewMode: 'table',
   density: 'comfortable',
@@ -53,8 +61,20 @@ const assetSlice = createSlice({
     setAssetClassFilter: (state, action: PayloadAction<string>) => {
       state.assetClassFilter = action.payload;
     },
+    setExchangeFilter: (state, action: PayloadAction<string>) => {
+      state.exchangeFilter = action.payload;
+    },
     setTradableFilter: (state, action: PayloadAction<string>) => {
       state.tradableFilter = action.payload;
+    },
+    setMarginableFilter: (state, action: PayloadAction<string>) => {
+      state.marginableFilter = action.payload;
+    },
+    setShortableFilter: (state, action: PayloadAction<string>) => {
+      state.shortableFilter = action.payload;
+    },
+    setFractionableFilter: (state, action: PayloadAction<string>) => {
+      state.fractionableFilter = action.payload;
     },
     setQuickFilterText: (state, action: PayloadAction<string>) => {
       state.quickFilterText = action.payload;
@@ -67,7 +87,11 @@ const assetSlice = createSlice({
     },
     clearFilters: state => {
       state.assetClassFilter = '';
+      state.exchangeFilter = '';
       state.tradableFilter = '';
+      state.marginableFilter = '';
+      state.shortableFilter = '';
+      state.fractionableFilter = '';
       state.quickFilterText = '';
       state.currentPage = 0;
     },
@@ -80,7 +104,11 @@ export const {
   setPageSize,
   setSort,
   setAssetClassFilter,
+  setExchangeFilter,
   setTradableFilter,
+  setMarginableFilter,
+  setShortableFilter,
+  setFractionableFilter,
   setQuickFilterText,
   setViewMode,
   setDensity,

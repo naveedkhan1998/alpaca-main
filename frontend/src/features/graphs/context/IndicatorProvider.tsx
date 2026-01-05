@@ -25,8 +25,8 @@ import {
   toggleIndicatorVisibility,
   updateIndicatorLabel,
 } from '../graphSlice';
-import IndicatorSelector from '../components/IndicatorSelector';
-import IndicatorConfigDialog from '../components/IndicatorConfigDialog';
+import IndicatorSelector from '../components/controls/IndicatorSelector';
+import IndicatorConfigDialog from '../components/controls/IndicatorConfigDialog';
 import {
   getDefaultConfig,
   getIndicator,

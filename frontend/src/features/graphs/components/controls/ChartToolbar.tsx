@@ -12,7 +12,7 @@ import {
   selectAutoRefresh,
   selectReplayEnabled,
   setReplayEnabled,
-} from '../graphSlice';
+} from '../../graphSlice';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -44,7 +44,7 @@ import {
 } from 'react-icons/hi';
 import type { SeriesType } from 'lightweight-charts';
 import { timeframeOptions } from '@/lib/constants';
-import { useIndicatorUI } from '../context';
+import { useIndicatorUI } from '../../context';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 const chartTypeOptions: {

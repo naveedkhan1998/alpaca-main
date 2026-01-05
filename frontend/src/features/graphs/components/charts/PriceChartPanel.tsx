@@ -1,3 +1,10 @@
+/**
+ * PriceChartPanel.tsx
+ *
+ * Component rendering the main price chart panel using lightweight-charts.
+ * Handles chart initialization, series creation, data updates, legend display,
+ * overlay indicators, volume overlay, and responsive resizing.
+ */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useRef, useCallback, memo } from 'react';
 import {
@@ -16,15 +23,15 @@ import {
 } from 'lightweight-charts';
 
 import { useAppSelector } from 'src/app/hooks';
-import { selectAutoRefresh, selectChartType } from '../graphSlice';
-import { getBaseChartOptions } from '../lib/chartOptions';
-import { createSeriesForType } from '../lib/createSeries';
-import { useResizeObserver } from '../hooks/useResizeObserver';
+import { selectAutoRefresh, selectChartType } from '../../graphSlice';
+import { getBaseChartOptions } from '../../lib/chartOptions';
+import { createSeriesForType } from '../../lib/createSeries';
+import { useResizeObserver } from '../../hooks/useResizeObserver';
 import { useIsMobile } from '@/hooks/useMobile';
-import { useIndicatorUI } from '../context';
-import type { CalculatedIndicator } from '../lib/indicators';
+import { useIndicatorUI } from '../../context';
+import type { CalculatedIndicator } from '../../lib/indicators';
 
-interface MainChartProps {
+interface PriceChartPanelProps {
   seriesData: (BarData | LineData | HistogramData)[];
   volumeData?: HistogramData<Time>[];
   showVolume?: boolean;
@@ -74,7 +81,7 @@ const areDataPointsEqual = (
   return false;
 };
 
-const MainChart: React.FC<MainChartProps> = memo(
+const PriceChartPanel: React.FC<PriceChartPanelProps> = memo(
   ({
     seriesData,
     volumeData,
@@ -993,6 +1000,6 @@ const MainChart: React.FC<MainChartProps> = memo(
   }
 );
 
-MainChart.displayName = 'MainChart';
+PriceChartPanel.displayName = 'PriceChartPanel';
 
-export default MainChart;
+export default PriceChartPanel;

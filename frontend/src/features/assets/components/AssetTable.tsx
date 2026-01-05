@@ -13,6 +13,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   Table,
   TableBody,
   TableCell,
@@ -26,14 +32,20 @@ import {
   ChevronRight,
   Eye,
   Heart,
-  Search,
+  TrendingUp,
 } from 'lucide-react';
 import { useGetAssetsQuery } from '@/api/assetService';
 import { Asset, GetAssetsParams } from '@/types/common-types';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useIsMobile } from '@/hooks/useMobile';
 
-import { setCurrentPage, setPageSize, setSort } from '../assetSlice';
+import {
+  setCurrentPage,
+  setPageSize,
+  setSort,
+  setQuickFilterText,
+  setAssetClassFilter,
+} from '../assetSlice';
 import { SortableHeader } from './SortableHeader';
 import { AddToWatchlistDialog } from './AddToWatchlistDialog';
 import { AssetToolbar } from './AssetToolbar';
@@ -53,7 +65,11 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
     sortField,
     sortDirection,
     assetClassFilter,
+    exchangeFilter,
     tradableFilter,
+    marginableFilter,
+    shortableFilter,
+    fractionableFilter,
     quickFilterText,
     viewMode,
     density,
@@ -71,9 +87,13 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
       offset: currentPage * pageSize,
       ordering: sortDirection === 'desc' ? `-${sortField}` : sortField,
     };
-    if (debouncedQuickFilter) params.search = debouncedQuickFilter;
+    if (debouncedQuickFilter) params.q = debouncedQuickFilter;
     if (assetClassFilter) params.asset_class = assetClassFilter;
+    if (exchangeFilter) params.exchange = exchangeFilter;
     if (tradableFilter) params.tradable = tradableFilter === 'true';
+    if (marginableFilter) params.marginable = marginableFilter === 'true';
+    if (shortableFilter) params.shortable = shortableFilter === 'true';
+    if (fractionableFilter) params.fractionable = fractionableFilter === 'true';
     return params;
   }, [
     currentPage,
@@ -82,7 +102,11 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
     sortDirection,
     debouncedQuickFilter,
     assetClassFilter,
+    exchangeFilter,
     tradableFilter,
+    marginableFilter,
+    shortableFilter,
+    fractionableFilter,
   ]);
 
   const { data, isLoading, error, refetch } = useGetAssetsQuery(queryParams);
@@ -191,22 +215,26 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
               />
             ))
           ) : (
-            <div className="py-8 text-center col-span-full">
-              <Search className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="font-medium">No instruments found</p>
-              <p className="text-sm text-muted-foreground">
+            <div className="flex flex-col items-center justify-center py-12 text-center col-span-full">
+              <div className="flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-muted/50">
+                <TrendingUp className="w-8 h-8 text-muted-foreground/50" />
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">
+                No assets found
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground/70">
                 Try adjusting your search or filters
               </p>
             </div>
           )}
         </div>
       ) : (
-        <div className="border rounded-lg">
-          <Table>
+        <div className="border rounded-lg overflow-x-auto">
+          <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <SortableHeader
-                  className={`${headerCellClass} font-medium`}
+                  className={`${headerCellClass} font-medium w-[100px]`}
                   field="symbol"
                   sortField={sortField}
                   sortDirection={sortDirection}
@@ -215,7 +243,7 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
                   Symbol
                 </SortableHeader>
                 <SortableHeader
-                  className={`${headerCellClass} font-medium`}
+                  className={`${headerCellClass} font-medium w-[250px]`}
                   field="name"
                   sortField={sortField}
                   sortDirection={sortDirection}
@@ -224,7 +252,7 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
                   Name
                 </SortableHeader>
                 <SortableHeader
-                  className={`${headerCellClass} font-medium`}
+                  className={`${headerCellClass} font-medium w-[120px]`}
                   field="asset_class"
                   sortField={sortField}
                   sortDirection={sortDirection}
@@ -233,7 +261,7 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
                   Class
                 </SortableHeader>
                 <SortableHeader
-                  className={`${headerCellClass} font-medium`}
+                  className={`${headerCellClass} font-medium w-[100px]`}
                   field="exchange"
                   sortField={sortField}
                   sortDirection={sortDirection}
@@ -241,8 +269,13 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
                 >
                   Exchange
                 </SortableHeader>
+                <TableHead
+                  className={`${headerCellClass} font-medium w-[140px]`}
+                >
+                  Attrs
+                </TableHead>
                 <SortableHeader
-                  className={`${headerCellClass} font-medium`}
+                  className={`${headerCellClass} font-medium w-[120px]`}
                   field="tradable"
                   sortField={sortField}
                   sortDirection={sortDirection}
@@ -250,7 +283,9 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
                 >
                   Status
                 </SortableHeader>
-                <TableHead className={`${headerCellClass} font-medium w-20`}>
+                <TableHead
+                  className={`${headerCellClass} font-medium w-[80px]`}
+                >
                   Actions
                 </TableHead>
               </TableRow>
@@ -275,6 +310,12 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
                       <Skeleton className="w-16 h-4" />
                     </TableCell>
                     <TableCell className={bodyCellClass}>
+                      <div className="flex gap-1">
+                        <Skeleton className="w-4 h-4" />
+                        <Skeleton className="w-4 h-4" />
+                      </div>
+                    </TableCell>
+                    <TableCell className={bodyCellClass}>
                       <Skeleton className="w-12 h-5 rounded-full" />
                     </TableCell>
                     <TableCell className={bodyCellClass}>
@@ -286,58 +327,101 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
                 assets.map(asset => (
                   <TableRow
                     key={asset.id}
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
                     onClick={() => navigate(`/instruments/${asset.id}`)}
                   >
                     <TableCell
-                      className={`${bodyCellClass} font-medium font-mono`}
+                      className={`${bodyCellClass} font-medium font-mono text-primary`}
                     >
                       {asset.symbol}
                     </TableCell>
-                    <TableCell className={`${bodyCellClass} max-w-xs`}>
-                      <span className="truncate" title={asset.name}>
+                    <TableCell className={`${bodyCellClass} max-w-[250px]`}>
+                      <div
+                        className="truncate font-medium text-foreground/90"
+                        title={asset.name}
+                      >
                         {asset.name}
-                      </span>
+                      </div>
                     </TableCell>
                     <TableCell className={bodyCellClass}>
                       <Badge
                         variant="secondary"
-                        className={`text-xs ${getAssetClassColor(asset.asset_class)}`}
+                        className={`text-xs whitespace-nowrap ${getAssetClassColor(asset.asset_class)}`}
                       >
                         {asset.asset_class.replace('_', ' ')}
                       </Badge>
                     </TableCell>
                     <TableCell
-                      className={`${bodyCellClass} text-muted-foreground`}
+                      className={`${bodyCellClass} text-muted-foreground text-xs uppercase`}
                     >
                       {asset.exchange}
                     </TableCell>
                     <TableCell className={bodyCellClass}>
+                      <div className="flex gap-1.5 flex-wrap">
+                        {asset.marginable && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center justify-center w-5 h-5 rounded-sm bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-[10px] font-bold cursor-help">
+                                  M
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>Marginable</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                        {asset.shortable && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center justify-center w-5 h-5 rounded-sm bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 text-[10px] font-bold cursor-help">
+                                  S
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>Shortable</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                        {asset.fractionable && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center justify-center w-5 h-5 rounded-sm bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 text-[10px] font-bold cursor-help">
+                                  F
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>Fractionable</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className={bodyCellClass}>
                       <Badge
                         variant={asset.tradable ? 'default' : 'secondary'}
-                        className="text-xs"
+                        className={`text-xs whitespace-nowrap ${!asset.tradable && 'opacity-50'}`}
                       >
-                        {asset.tradable ? 'Tradable' : 'No Trade'}
+                        {asset.tradable ? 'Active' : 'Halted'}
                       </Badge>
                     </TableCell>
                     <TableCell className={bodyCellClass}>
                       <div className="flex items-center gap-1">
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
                           onClick={e => handleAddToWatchlist(asset, e)}
-                          className="p-0 w-7 h-7"
+                          className="w-8 h-8 hover:text-primary"
                         >
                           <Heart className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
                           onClick={e => {
                             e.stopPropagation();
                             navigate(`/instruments/${asset.id}`);
                           }}
-                          className="p-0 w-7 h-7"
+                          className="w-8 h-8 hover:text-primary"
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -347,12 +431,30 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center">
-                    <Search className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="font-medium">No instruments found</p>
-                    <p className="text-sm text-muted-foreground">
-                      Try adjusting your search or filters
-                    </p>
+                  <TableCell colSpan={7}>
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <div className="flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-muted/50">
+                        <TrendingUp className="w-8 h-8 text-muted-foreground/50" />
+                      </div>
+                      <p className="text-lg font-medium text-foreground">
+                        No assets found
+                      </p>
+                      <p className="mt-2 text-sm text-muted-foreground max-w-xs mx-auto">
+                        We couldn't find any assets matching your filters. Try
+                        adjusting your search criteria.
+                      </p>
+                      <Button
+                        variant="outline"
+                        className="mt-6"
+                        onClick={() => {
+                          dispatch(setQuickFilterText(''));
+                          dispatch(setAssetClassFilter(''));
+                          // clear other filters if needed via dispatch(clearFilters())
+                        }}
+                      >
+                        Clear Filters
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               )}
