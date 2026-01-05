@@ -269,7 +269,9 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
                 >
                   Exchange
                 </SortableHeader>
-                <TableHead className={`${headerCellClass} font-medium w-[140px]`}>
+                <TableHead
+                  className={`${headerCellClass} font-medium w-[140px]`}
+                >
                   Attrs
                 </TableHead>
                 <SortableHeader
@@ -281,7 +283,9 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
                 >
                   Status
                 </SortableHeader>
-                <TableHead className={`${headerCellClass} font-medium w-[80px]`}>
+                <TableHead
+                  className={`${headerCellClass} font-medium w-[80px]`}
+                >
                   Actions
                 </TableHead>
               </TableRow>
@@ -332,7 +336,10 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
                       {asset.symbol}
                     </TableCell>
                     <TableCell className={`${bodyCellClass} max-w-[250px]`}>
-                      <div className="truncate font-medium text-foreground/90" title={asset.name}>
+                      <div
+                        className="truncate font-medium text-foreground/90"
+                        title={asset.name}
+                      >
                         {asset.name}
                       </div>
                     </TableCell>
@@ -433,10 +440,11 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
                         No assets found
                       </p>
                       <p className="mt-2 text-sm text-muted-foreground max-w-xs mx-auto">
-                        We couldn't find any assets matching your filters. Try adjusting your search criteria.
+                        We couldn't find any assets matching your filters. Try
+                        adjusting your search criteria.
                       </p>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="mt-6"
                         onClick={() => {
                           dispatch(setQuickFilterText(''));

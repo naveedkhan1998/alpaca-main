@@ -36,8 +36,8 @@ import type {
   SelectParameter,
   BooleanParameter,
   IndicatorConfig,
-} from '../lib/indicators/types';
-import { getDefaultConfig } from '../lib/indicators';
+} from '../../lib/indicators/types';
+import { getDefaultConfig } from '../../lib/indicators';
 
 interface IndicatorConfigDialogProps {
   /** The indicator instance being configured */

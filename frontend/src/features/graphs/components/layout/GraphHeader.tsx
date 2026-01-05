@@ -33,7 +33,7 @@ import {
   selectShowVolume,
   setAutoRefresh,
   setShowVolume,
-} from '../graphSlice';
+} from '../../graphSlice';
 import { Asset } from '@/types/common-types';
 import { ModeToggle } from '@/components/ModeToggle';
 import { useIsMobile } from '@/hooks/useMobile';

@@ -150,8 +150,7 @@ export const AssetsPage: React.FC = () => {
 
     const next = new URLSearchParams();
     // Persist core filters
-    if (assetState.quickFilterText)
-      next.set('q', assetState.quickFilterText);
+    if (assetState.quickFilterText) next.set('q', assetState.quickFilterText);
     if (assetState.assetClassFilter)
       next.set('asset_class', assetState.assetClassFilter);
     if (assetState.tradableFilter)
