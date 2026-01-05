@@ -1,82 +1,74 @@
-# Gemini Code Understanding
+# Backend Context (Django API)
 
-This document provides a high-level overview of the Django project, its structure, and key components.
+## Overview
+This is a **Django 5.2** project using **Django Rest Framework (DRF)** to serve as the API layer for the Alpaca Wrapper application. It handles user authentication, market data streaming, paper trading logic, and background tasks.
 
-## Project Overview
+## Architecture
 
-This project is a Django-based backend application that serves as a wrapper for the Alpaca API, providing functionalities for managing user accounts, handling financial instrument data, and interacting with the Alpaca API for real-time trading data.
+### Django Apps (`/apps`)
+The project is modularized into distinct apps found in the `apps/` directory:
+*   **`account`**: User authentication, profile management, and custom user models.
+*   **`core`**: Core utilities, base models, shared helpers, and system-wide services.
+*   **`home`**: likely for landing page or general app data.
+*   **`paper_trading`**: The core logic for the paper trading simulation engine.
 
-The project is structured into several Django apps, each responsible for a specific set of features. It uses Django REST Framework for building RESTful APIs, Celery for asynchronous task processing, and Redis for caching and as a message broker.
+### Configuration (`/main/settings`)
+Settings are split to ensure separation of concerns:
+*   **`base.py`**: Common settings (apps, middleware, templates).
+*   **`local.py`**: Local development overrides (debug mode, local DB).
+*   **`production.py`**: Production security, S3 storage, logging.
+*   **`test.py`**: Settings optimized for running tests (faster password hashers, in-memory DBs).
 
-### Core Technologies
+### Key Technologies
+*   **Web Framework**: Django 5.2
+*   **API**: Django Rest Framework 3.16 + SimpleJWT (Auth)
+*   **Async/Real-time**: Django Channels (WebSockets)
+*   **Task Queue**: Celery 5.5 + Redis (Broker & Backend)
+*   **Database**: PostgreSQL (via `psycopg2-binary`)
+*   **Package Manager**: `uv` is used for fast dependency resolution.
 
-- **Backend Framework:** Django
-- **API:** Django REST Framework
-- **Asynchronous Tasks:** Celery
-- **Database:** PostgreSQL
-- **Caching & Message Broker:** Redis
-- **Real-time Communication:** Django Channels (with Daphne)
-- **Authentication:** Simple JWT for token-based authentication
+## Development Workflow
 
-## Project Structure
+### Dependency Management
+Dependencies are defined in `pyproject.toml`.
+*   **Install/Sync**: The root `npm install` handles python deps via scripts, or use `uv pip sync requirements.txt`.
 
-The project follows a standard Django project layout with a few customizations.
+### Database Migrations
+Always run migrations when modifying `models.py`.
+*   **Create Migrations (Local):**
+    ```bash
+    npm run makemigrations:local
+    ```
+    *This runs `manage.py makemigrations` using your local python environment.*
+*   **Apply Migrations (Docker):**
+    ```bash
+    npm run migrate
+    ```
+    *This runs `manage.py migrate` inside the running backend container.*
 
-- **`main/`**: The main Django project directory.
-  - **`settings/`**: Contains the different settings files for the project (`base.py`, `local.py`, `production.py`).
-  - **`urls.py`**: The root URL configuration for the project.
-  - **`asgi.py` & `wsgi.py`**: Entry points for ASGI and WSGI compatible web servers.
-  - **`celery.py`**: Celery application instance.
-- **`apps/`**: This directory contains the individual Django applications.
-  - **`account/`**: Manages user authentication, registration, profile management, and password reset functionalities.
-  - **`core/`**: The core application of the project. It handles interactions with the Alpaca API, manages financial instruments, subscriptions, and candle data.
-  - **`home/`**: A basic application, likely for a landing page or general-purpose views.
-- **`scripts/`**: Contains shell scripts for running various components of the project, such as the backend server, Celery workers, and Celery Beat.
-- **`pyproject.toml`**: Defines project metadata and dependencies.
-- **`requirements.txt`**: Lists the Python dependencies for the project.
-- **`Dockerfile.dev`**: Docker configuration for setting up a development environment.
+### Running Tests
+Tests are located in `tests.py` within apps or `tests/` directories.
+*   **Run All Tests:**
+    ```bash
+    npm run test
+    ```
+    *(Or `pytest` directly if in the virtual environment)*
 
-### Important Note on Project Naming
+## Code Style & Conventions
+*   **Formatting**: The code is strictly formatted with **Black**.
+*   **Linting**: **Ruff** is used to enforce quality standards.
+*   **Imports**: Sorted by `isort` (configured via Ruff).
+*   **Typing**: Type hints are encouraged for complex logic.
 
-The main Django project directory is named `main` instead of the conventional `config`. This naming choice ensures compatibility with the project's dependencies.
-
-## Key Functionalities
-
-### User Management (`apps/account`)
-
-- **User Registration:** `UserRegistrationView`
-- **User Login:** `UserLoginView`
-- **User Profile:** `UserProfileView`
-- **Password Management:** `UserChangePassword`, `SendPasswordResetEmailView`, `UserPasswordResetView`
-
-### Core Trading Functionalities (`apps/core`)
-
-- **Alpaca Account Management:** `AlpacaAccountViewSet` allows users to manage their Alpaca API credentials.
-- **Alpaca API Interaction:** The `alpaca` module within the `core` app likely contains the logic for interacting with the Alpaca API.
-- **Instrument Management:** `InstrumentViewSet` provides an endpoint to search for financial instruments.
-- **Subscriptions:** `SubscribedInstrumentsViewSet` allows users to subscribe to instruments for real-time data.
-- **Candle Data:** `CandleViewSet` provides historical candle data for subscribed instruments and supports resampling to different timeframes.
-- **WebSocket Communication:** The application uses WebSockets (likely through Django Channels) to stream real-time data. The `websocket_start` task initiates the WebSocket connection.
-
-### Asynchronous Tasks
-
-The project uses Celery to handle long-running tasks in the background. Key tasks include:
-
-- **`load_instrument_candles`**: Fetches historical candle data for an instrument.
-- **`resample_candles`**: Resamples candle data to a different timeframe.
-- **`websocket_start`**: Starts the WebSocket connection for real-time data.
-
-## Getting Started
-
-To run the project, you would typically need to:
-
-1.  Install the dependencies from `requirements.txt`.
-2.  Set up the necessary environment variables (e.g., database credentials, secret key).
-3.  Run the Django development server.
-4.  Start the Celery worker and Celery Beat for asynchronous tasks.
-
-The provided shell scripts in the `scripts/` directory can be used to automate these processes.
-
-## Testing
-
-Pytest has been setup, we can run tests by running uv run pytest
+## Directory Map
+```text
+backend/
+├── apps/               # Business logic modules
+├── main/               # Project configuration
+│   ├── asgi.py         # Entry point for WebSockets (Channels)
+│   ├── wsgi.py         # Entry point for WSGI
+│   └── settings/       # Split settings
+├── scripts/            # Shell scripts for Docker entrypoints
+├── Dockerfile.dev      # Dev container definition
+└── pyproject.toml      # Project metadata and dependencies
+```
