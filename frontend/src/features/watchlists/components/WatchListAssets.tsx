@@ -12,13 +12,18 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertTriangle } from 'lucide-react';
 import { useGetWatchListByIdQuery } from '@/api/watchlistService';
+import { Asset } from '@/types/common-types';
 
 interface WatchListAssetsProps {
   watchlistId: number;
+  onAssetSelect?: (asset: Asset) => void;
+  selectedAssetId?: number;
 }
 
 export const WatchListAssets: React.FC<WatchListAssetsProps> = ({
   watchlistId,
+  onAssetSelect,
+  selectedAssetId,
 }) => {
   const {
     data: watchlist,
@@ -74,43 +79,65 @@ export const WatchListAssets: React.FC<WatchListAssetsProps> = ({
         <TableHeader>
           <TableRow>
             <TableHead>Symbol</TableHead>
-            <TableHead>Name</TableHead>
             <TableHead>Class</TableHead>
-            <TableHead>Exchange</TableHead>
+            {!selectedAssetId && (
+              <>
+                <TableHead>Name</TableHead>
+
+                <TableHead>Exchange</TableHead>
+              </>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {watchlist.assets.map(watchlistAsset => (
-            <TableRow
-              key={watchlistAsset.id}
-              onClick={() =>
-                navigate(`/graphs/${watchlistAsset.asset.id}`, {
-                  state: { obj: watchlistAsset.asset },
-                })
-              }
-              className="cursor-pointer"
-            >
-              <TableCell className="font-mono font-medium">
-                {watchlistAsset.asset.symbol}
-              </TableCell>
-              <TableCell className="max-w-[200px]">
-                <div className="truncate" title={watchlistAsset.asset.name}>
-                  {watchlistAsset.asset.name}
-                </div>
-              </TableCell>
-              <TableCell>
-                <Badge
-                  variant="secondary"
-                  className={`text-xs ${getAssetClassColor(watchlistAsset.asset.asset_class)}`}
-                >
-                  {watchlistAsset.asset.asset_class.replace('_', ' ')}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {watchlistAsset.asset.exchange}
-              </TableCell>
-            </TableRow>
-          ))}
+          {watchlist.assets.map(watchlistAsset => {
+            const isSelected = selectedAssetId === watchlistAsset.asset.id;
+            return (
+              <TableRow
+                key={watchlistAsset.id}
+                onClick={() => {
+                  if (onAssetSelect) {
+                    onAssetSelect(watchlistAsset.asset);
+                  } else {
+                    navigate(`/graphs/${watchlistAsset.asset.id}`, {
+                      state: { obj: watchlistAsset.asset },
+                    });
+                  }
+                }}
+                className={`cursor-pointer transition-colors ${
+                  isSelected ? 'bg-muted border-l-2 border-l-primary' : ''
+                }`}
+              >
+                <TableCell className="font-mono font-medium">
+                  {watchlistAsset.asset.symbol}
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant="secondary"
+                    className={`text-xs ${getAssetClassColor(watchlistAsset.asset.asset_class)}`}
+                  >
+                    {watchlistAsset.asset.asset_class.replace('_', ' ')}
+                  </Badge>
+                </TableCell>
+                {!selectedAssetId && (
+                  <>
+                    <TableCell className="max-w-[200px]">
+                      <div
+                        className="truncate"
+                        title={watchlistAsset.asset.name}
+                      >
+                        {watchlistAsset.asset.name}
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-muted-foreground">
+                      {watchlistAsset.asset.exchange}
+                    </TableCell>
+                  </>
+                )}
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

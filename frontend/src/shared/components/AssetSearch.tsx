@@ -6,6 +6,7 @@ import {
   Loader2,
   X,
   AlertTriangle,
+  Check,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -34,6 +35,20 @@ interface AssetSearchProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isMobile?: boolean;
+  /**
+   * If provided, clicking the add button will call this callback instead of opening the generic "Add to Watchlist" dialog.
+   * Use this when you already have a target watchlist context.
+   */
+  onAssetSelect?: (asset: Asset) => void;
+  /**
+   * Label for the action button. Defaults to "Add to Watchlist".
+   */
+  actionLabel?: string;
+  /**
+   * Set of asset IDs that are already added to the target context.
+   * If an asset ID is in this set, the button will show as "Added" and be disabled.
+   */
+  existingAssetIds?: Set<number>;
 }
 
 const getAssetClassColor = (assetClass: string) => {
@@ -68,7 +83,9 @@ const getAssetClassColor = (assetClass: string) => {
 const AssetSearchItem: React.FC<{
   asset: Asset;
   onAddToWatchlist: (asset: Asset) => void;
-}> = ({ asset, onAddToWatchlist }) => {
+  actionLabel?: string;
+  isAdded?: boolean;
+}> = ({ asset, onAddToWatchlist, actionLabel, isAdded }) => {
   const config = getAssetClassColor(asset.asset_class);
 
   return (
@@ -101,15 +118,26 @@ const AssetSearchItem: React.FC<{
 
         <Button
           size="sm"
-          variant="ghost"
+          variant={isAdded ? 'secondary' : 'ghost'}
+          disabled={isAdded}
           onClick={e => {
             e.stopPropagation();
             onAddToWatchlist(asset);
           }}
-          className="gap-2 transition-colors hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20"
+          className={`gap-2 transition-colors ${
+            isAdded
+              ? 'opacity-70 cursor-not-allowed'
+              : 'hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20'
+          }`}
         >
-          <Heart className="w-4 h-4" />
-          <span className="hidden sm:inline">Add to Watchlist</span>
+          {isAdded ? (
+            <Check className="w-4 h-4" />
+          ) : (
+            <Heart className="w-4 h-4" />
+          )}
+          <span className="hidden sm:inline">
+            {isAdded ? 'Added' : actionLabel || 'Add to Watchlist'}
+          </span>
         </Button>
       </div>
 
@@ -127,6 +155,9 @@ export const AssetSearch: React.FC<AssetSearchProps> = ({
   open,
   onOpenChange,
   isMobile = false,
+  onAssetSelect,
+  actionLabel,
+  existingAssetIds,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
@@ -156,11 +187,16 @@ export const AssetSearch: React.FC<AssetSearchProps> = ({
 
   const handleAddToWatchlist = useCallback(
     (asset: Asset) => {
+      if (onAssetSelect) {
+        onAssetSelect(asset);
+        return;
+      }
+
       if (!requireAuth('add assets to watchlists')) return;
       setSelectedAsset(asset);
       setShowWatchlistDialog(true);
     },
-    [requireAuth]
+    [requireAuth, onAssetSelect]
   );
 
   const handleClose = useCallback(() => {
@@ -266,6 +302,8 @@ export const AssetSearch: React.FC<AssetSearchProps> = ({
                     key={asset.id}
                     asset={asset}
                     onAddToWatchlist={handleAddToWatchlist}
+                    actionLabel={actionLabel}
+                    isAdded={existingAssetIds?.has(asset.id)}
                   />
                 ))}
               </div>
@@ -304,7 +342,7 @@ export const AssetSearch: React.FC<AssetSearchProps> = ({
             <DialogHeader className="px-4 pt-4 pb-0">
               <DialogTitle className="flex items-center gap-2">
                 <Search className="w-5 h-5" />
-                Quick Asset Search
+                {actionLabel || 'Add Asset to Watchlist'}
               </DialogTitle>
             </DialogHeader>
             {content}
@@ -328,7 +366,7 @@ export const AssetSearch: React.FC<AssetSearchProps> = ({
           <DrawerHeader className="px-4 pb-0">
             <DrawerTitle className="flex items-center gap-2">
               <Search className="w-5 h-5" />
-              Quick Asset Search
+              {actionLabel || 'Add Asset to Watchlist'}
             </DrawerTitle>
           </DrawerHeader>
           {content}
