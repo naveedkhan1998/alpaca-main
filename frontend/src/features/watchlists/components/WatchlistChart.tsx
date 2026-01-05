@@ -40,12 +40,12 @@ export const WatchlistChart: React.FC<WatchlistChartProps> = ({ assetId }) => {
   const mainChartRef = useRef<ITimeScaleApi<Time> | null>(null);
 
   if (loadingInitial) {
-    return <Skeleton className="w-full h-[400px] rounded-lg" />;
+    return <Skeleton className="w-full h-full rounded-lg" />;
   }
 
   return (
     <IndicatorProvider>
-      <div className="w-full h-[400px] border rounded-lg overflow-hidden bg-card relative">
+      <div className="relative w-full h-full overflow-hidden border rounded-lg bg-card">
         <PriceChartPanel
           seriesData={seriesData}
           volumeData={volumeData}

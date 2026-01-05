@@ -119,7 +119,7 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
   const hasAssets = watchlist.assets && watchlist.assets.length > 0;
 
   return (
-    <div className="flex flex-col h-full space-y-4">
+    <div className="flex flex-col h-full p-4 space-y-4 border rounded-lg">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 shrink-0">
         <div className="min-w-0">

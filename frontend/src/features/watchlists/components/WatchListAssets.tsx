@@ -74,7 +74,7 @@ export const WatchListAssets: React.FC<WatchListAssetsProps> = ({
   };
 
   return (
-    <div className="overflow-hidden border rounded-md">
+    <div className="overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
