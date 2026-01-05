@@ -44,6 +44,7 @@ interface PriceChartPanelProps {
   // Replay state for legend filtering
   isReplayEnabled?: boolean;
   replayStep?: number;
+  chartTypeOverride?: SeriesType;
 }
 
 // Memoized chart options to avoid recreation
@@ -94,8 +95,10 @@ const PriceChartPanel: React.FC<PriceChartPanelProps> = memo(
     hasMoreData,
     isReplayEnabled = false,
     replayStep = 0,
+    chartTypeOverride,
   }) => {
-    const chartType = useAppSelector(selectChartType);
+    const reduxChartType = useAppSelector(selectChartType);
+    const chartType = chartTypeOverride || reduxChartType;
     const autoRefresh = useAppSelector(selectAutoRefresh);
     const isMobile = useIsMobile();
     const { openConfig, removeIndicator } = useIndicatorUI();

@@ -83,22 +83,9 @@ export const WatchlistsPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
           {/* Sidebar (List) */}
           <div
-            className={`md:col-span-5 lg:col-span-4 ${selectedWatchlist ? 'hidden md:block' : 'block'}`}
+            className={`md:col-span-4 lg:col-span-3 ${selectedWatchlist ? 'hidden md:block' : 'block'}`}
           >
             <div className="p-4 border rounded-lg">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium">Your Watchlists</h3>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    if (!requireAuth('create watchlists')) return;
-                    setCreateOpen(true);
-                  }}
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
               <div className="space-y-3">
                 <div className="relative">
                   <Search className="absolute w-4 h-4 -translate-y-1/2 pointer-events-none left-3 top-1/2 text-muted-foreground" />
@@ -195,7 +182,7 @@ export const WatchlistsPage: React.FC = () => {
 
           {/* Detail Pane */}
           <div
-            className={`md:col-span-7 lg:col-span-8 ${selectedWatchlist ? 'block' : 'hidden md:block'}`}
+            className={`md:col-span-8 lg:col-span-9 ${selectedWatchlist ? 'block' : 'hidden md:block'}`}
           >
             {selectedWatchlist ? (
               <WatchListDetail

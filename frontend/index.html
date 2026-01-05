@@ -117,314 +117,6 @@
         }
       })();
     </script>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-      html,
-      body {
-        margin: 0;
-        min-height: 100%;
-      }
-      body {
-        background-color: hsl(var(--background));
-      }
-      html.is-app-route #landing-root {
-        display: none;
-      }
-      #app-root {
-        min-height: 100dvh;
-      }
-      #app-root[hidden] {
-        display: none !important;
-      }
-      #landing-root {
-        font-family: 'DM Sans', 'Plus Jakarta Sans', sans-serif;
-      }
-      #landing-root h1,
-      #landing-root h2,
-      #landing-root h3 {
-        font-family: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
-        letter-spacing: -0.02em;
-      }
-      #landing-root .text-muted-foreground {
-        color: hsl(var(--foreground) / 0.72);
-      }
-      .dark #landing-root .text-muted-foreground {
-        color: hsl(var(--foreground) / 0.78);
-      }
-      #landing-root .bg-primary\/10 {
-        background-color: hsl(var(--primary) / 0.12);
-      }
-      .dark #landing-root .bg-primary\/10 {
-        background-color: hsl(var(--primary) / 0.2);
-      }
-      #landing-root .border-primary\/30 {
-        border-color: hsl(var(--primary) / 0.4);
-      }
-      .dark #landing-root .border-primary\/30 {
-        border-color: hsl(var(--primary) / 0.55);
-      }
-      .landing-backdrop {
-        background:
-          radial-gradient(
-            1000px circle at 10% -10%,
-            hsl(var(--primary) / 0.18),
-            transparent 55%
-          ),
-          radial-gradient(
-            900px circle at 90% 0%,
-            hsl(var(--primary) / 0.1),
-            transparent 60%
-          ),
-          linear-gradient(
-            180deg,
-            hsl(var(--background)) 0%,
-            hsl(var(--muted) / 0.35) 100%
-          );
-      }
-      .dark .landing-backdrop {
-        background:
-          radial-gradient(
-            1000px circle at 10% -10%,
-            hsl(var(--primary) / 0.28),
-            transparent 60%
-          ),
-          radial-gradient(
-            900px circle at 90% 0%,
-            hsl(var(--primary) / 0.18),
-            transparent 65%
-          ),
-          linear-gradient(
-            180deg,
-            hsl(var(--background)) 0%,
-            hsl(var(--card) / 0.7) 100%
-          );
-      }
-      .landing-surface {
-        background: linear-gradient(
-          180deg,
-          hsl(var(--background) / 0.92) 0%,
-          hsl(var(--background) / 0.78) 100%
-        );
-        border-color: hsl(var(--border) / 0.7);
-        box-shadow: 0 1px 0 hsl(var(--foreground) / 0.04);
-      }
-      .dark .landing-surface {
-        background: linear-gradient(
-          180deg,
-          hsl(var(--background) / 0.9) 0%,
-          hsl(var(--background) / 0.6) 100%
-        );
-        border-color: hsl(var(--border) / 0.85);
-        box-shadow:
-          0 1px 0 hsl(var(--foreground) / 0.08),
-          0 12px 32px -28px hsl(var(--primary) / 0.6);
-      }
-      .landing-fab {
-        background: hsl(var(--card) / 0.85);
-        border: 1px solid hsl(var(--border) / 0.65);
-        box-shadow: 0 14px 30px -20px hsl(var(--foreground) / 0.3);
-      }
-      .dark .landing-fab {
-        background: hsl(var(--card) / 0.75);
-        border: 1px solid hsl(var(--border) / 0.9);
-        box-shadow: 0 16px 35px -24px hsl(var(--primary) / 0.45);
-      }
-
-      @keyframes float {
-        0%,
-        100% {
-          transform: translateY(0px);
-        }
-        50% {
-          transform: translateY(-20px);
-        }
-      }
-
-      @keyframes pulse-glow {
-        0%,
-        100% {
-          opacity: 0.5;
-        }
-        50% {
-          opacity: 1;
-        }
-      }
-
-      @keyframes slide-up {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .animate-float {
-        animation: float 6s ease-in-out infinite;
-      }
-
-      .animate-pulse-glow {
-        animation: pulse-glow 3s ease-in-out infinite;
-      }
-
-      .animate-slide-up {
-        animation: slide-up 0.8s ease-out forwards;
-      }
-
-      .grid-pattern {
-        background-image:
-          linear-gradient(
-            to right,
-            hsl(var(--border) / 0.18) 1px,
-            transparent 1px
-          ),
-          linear-gradient(
-            to bottom,
-            hsl(var(--border) / 0.18) 1px,
-            transparent 1px
-          );
-        background-size: 40px 40px;
-      }
-
-      .dark .grid-pattern {
-        background-image:
-          linear-gradient(
-            to right,
-            hsl(var(--border) / 0.28) 1px,
-            transparent 1px
-          ),
-          linear-gradient(
-            to bottom,
-            hsl(var(--border) / 0.28) 1px,
-            transparent 1px
-          );
-      }
-
-      /* Better card backgrounds for light mode */
-      .card-bg {
-        background: linear-gradient(
-          145deg,
-          hsl(var(--card)) 0%,
-          hsl(var(--muted) / 0.6) 100%
-        );
-        border: 1px solid hsl(var(--border) / 0.75);
-        box-shadow:
-          0 18px 45px -32px hsl(var(--foreground) / 0.18),
-          inset 0 1px 0 hsl(var(--foreground) / 0.04);
-      }
-
-      .dark .card-bg {
-        background: linear-gradient(
-          145deg,
-          hsl(var(--card)) 0%,
-          hsl(var(--secondary)) 100%
-        );
-        border: 1px solid hsl(var(--border) / 0.9);
-        box-shadow:
-          0 22px 55px -36px hsl(var(--primary) / 0.3),
-          inset 0 1px 0 hsl(var(--foreground) / 0.08);
-      }
-
-      /* Enhanced section backgrounds for light mode */
-      .section-bg {
-        background: linear-gradient(
-          180deg,
-          hsl(var(--background)) 0%,
-          hsl(var(--muted) / 0.5) 100%
-        );
-      }
-
-      .dark .section-bg {
-        background: linear-gradient(
-          180deg,
-          hsl(var(--background)) 0%,
-          hsl(var(--card) / 0.7) 100%
-        );
-      }
-
-      /* Mobile menu toggle */
-      .mobile-menu {
-        display: none;
-      }
-
-      .mobile-menu.active {
-        display: block;
-      }
-
-      /* Thick glassy border effect for hero image */
-      .hero-image-container {
-        position: relative;
-        padding: 10px;
-        background: linear-gradient(
-          135deg,
-          hsl(var(--primary) / 0.28) 0%,
-          hsl(var(--primary) / 0.12) 50%,
-          hsl(var(--primary) / 0.28) 100%
-        );
-        border-radius: 1.5rem;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        box-shadow: 0 30px 80px -40px hsl(var(--primary) / 0.35);
-      }
-
-      /* Light mode adjustments for hero image border */
-      .light .hero-image-container {
-        background: linear-gradient(
-          135deg,
-          hsl(var(--primary) / 0.22) 0%,
-          hsl(var(--primary) / 0.12) 50%,
-          hsl(var(--primary) / 0.22) 100%
-        );
-        box-shadow: 0 26px 70px -45px hsl(var(--foreground) / 0.14);
-      }
-
-      .dark .hero-image-container {
-        background: linear-gradient(
-          135deg,
-          hsl(var(--primary) / 0.38) 0%,
-          hsl(var(--primary) / 0.2) 50%,
-          hsl(var(--primary) / 0.38) 100%
-        );
-        box-shadow: 0 30px 80px -45px hsl(var(--primary) / 0.45);
-      }
-
-      .hero-image-inner {
-        position: relative;
-        background: hsl(var(--card) / 0.9);
-        backdrop-filter: saturate(150%) blur(16px);
-        -webkit-backdrop-filter: saturate(150%) blur(16px);
-        border: 2px solid hsl(var(--border) / 0.7);
-        border-radius: 1.25rem;
-        padding: 4px;
-        box-shadow:
-          0 0 0 1px hsl(var(--border) / 0.25),
-          inset 0 0 25px hsl(var(--primary) / 0.08),
-          0 24px 70px -18px hsl(var(--foreground) / 0.25);
-      }
-
-      /* Light mode adjustments for hero image inner */
-      .light .hero-image-inner {
-        background: hsl(var(--card));
-        border: 2px solid hsl(var(--border));
-        box-shadow:
-          0 0 0 1px hsl(var(--border) / 0.35),
-          inset 0 0 25px hsl(var(--primary) / 0.04),
-          0 24px 70px -20px hsl(var(--foreground) / 0.12);
-      }
-
-      .dark .hero-image-inner {
-        background: hsl(var(--card) / 0.95);
-        border: 2px solid hsl(var(--border) / 0.95);
-        box-shadow:
-          0 0 0 1px hsl(var(--border) / 0.4),
-          inset 0 0 30px hsl(var(--primary) / 0.12),
-          0 24px 70px -20px hsl(var(--primary) / 0.35);
-      }
-    </style>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -452,6 +144,7 @@
   </head>
   <body class="font-sans antialiased bg-background text-foreground">
     <div id="landing-root" class="relative min-h-screen overflow-hidden">
+      <!-- Background Effects -->
       <div class="absolute inset-0 landing-backdrop"></div>
       <div
         class="absolute inset-0 opacity-25 grid-pattern dark:opacity-40"
@@ -471,29 +164,31 @@
               <img
                 src="/android-chrome-192x192.png"
                 alt="Alpaca Trading Logo"
-                class="w-8 h-8 rounded-md sm:w-9 sm:h-9"
+                class="w-8 h-8 rounded-md sm:w-9 sm:h-9 shadow-sm"
               />
-              <span class="text-lg font-bold sm:text-xl">Alpaca Trading</span>
+              <span class="text-lg font-bold sm:text-xl tracking-tight"
+                >Alpaca Wrapper</span
+              >
             </div>
-            <!-- Desktop navigation with blog link -->
+            <!-- Desktop navigation -->
             <div class="items-center hidden gap-6 md:flex lg:gap-8">
               <a
                 href="https://mnaveedk.com/blog/real-time-trading-infra"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-sm transition text-muted-foreground hover:text-foreground"
+                class="text-sm font-medium transition text-muted-foreground hover:text-foreground"
                 >Blog</a
               >
               <a
                 href="https://github.com/naveedkhan1998/alpaca-main"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-sm transition text-muted-foreground hover:text-foreground"
+                class="text-sm font-medium transition text-muted-foreground hover:text-foreground"
                 >Docs</a
               >
               <a
                 href="/app"
-                class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold transition rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
+                class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold transition shadow-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-md"
               >
                 Launch App
               </a>
@@ -501,7 +196,7 @@
             <!-- Mobile menu button -->
             <button
               id="mobile-menu-btn"
-              class="p-2 transition rounded-lg md:hidden hover:bg-primary/10"
+              class="p-2 transition rounded-lg md:hidden hover:bg-primary/10 active:scale-95 touch-target"
               aria-label="Toggle menu"
             >
               <svg
@@ -521,24 +216,24 @@
           </div>
           <!-- Mobile menu -->
           <div id="mobile-menu" class="pb-4 mobile-menu md:hidden">
-            <div class="flex flex-col gap-3">
+            <div class="flex flex-col gap-2 pt-2">
               <a
                 href="https://mnaveedk.com/blog/real-time-trading-infra"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="py-2 text-sm transition text-muted-foreground hover:text-foreground"
+                class="px-4 py-3 text-sm font-medium transition rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 >Blog</a
               >
               <a
                 href="https://github.com/naveedkhan1998/alpaca-main"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="py-2 text-sm transition text-muted-foreground hover:text-foreground"
+                class="px-4 py-3 text-sm font-medium transition rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 >Docs</a
               >
               <a
                 href="/app"
-                class="inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition mt-2"
+                class="mx-4 mt-2 inline-flex items-center justify-center px-4 py-3 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition shadow-sm"
               >
                 Launch App
               </a>
@@ -550,7 +245,7 @@
       <!-- Floating Theme Toggle -->
       <button
         id="theme-toggle"
-        class="fixed z-50 p-3 transition-all duration-200 rounded-full bottom-6 right-4 backdrop-blur-sm landing-fab hover:shadow-xl hover:scale-105 md:bottom-8 md:right-6"
+        class="fixed z-50 p-3 transition-all duration-200 rounded-full bottom-6 right-4 backdrop-blur-sm landing-fab hover:shadow-xl hover:scale-105 md:bottom-8 md:right-6 touch-target"
         aria-label="Toggle theme"
       >
         <svg
@@ -584,50 +279,58 @@
       </button>
 
       <!-- Hero Section -->
-      <!-- Improved mobile spacing and typography -->
       <section
-        class="relative z-10 px-4 pt-12 pb-16 sm:pt-16 lg:pt-20 sm:pb-24 lg:pb-32 sm:px-6 lg:px-8"
+        class="relative z-10 px-4 pt-12 pb-16 sm:pt-20 lg:pt-24 sm:pb-24 lg:pb-32 sm:px-6 lg:px-8"
       >
         <div class="mx-auto max-w-7xl">
           <div class="max-w-4xl mx-auto text-center animate-slide-up">
-            <p
-              class="mb-4 text-xs font-semibold tracking-[0.3em] text-muted-foreground uppercase sm:mb-6"
+            <div
+              class="inline-flex items-center gap-2 px-3 py-1 mb-6 text-xs font-semibold tracking-wider uppercase border rounded-full bg-background/50 backdrop-blur-sm border-border text-muted-foreground sm:mb-8"
             >
-              Open Source / Public Demo / Self-Host Ready
-            </p>
+              <span class="relative flex h-2 w-2">
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"
+                ></span>
+                <span
+                  class="relative inline-flex rounded-full h-2 w-2 bg-success"
+                ></span>
+              </span>
+              Public Demo Live
+            </div>
 
             <!-- Main Headline -->
             <h1
-              class="mb-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl lg:text-7xl sm:mb-6 text-balance"
+              class="mb-6 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl md:text-6xl lg:text-7xl text-balance"
             >
-              The complete platform to build
+              Build your
               <span
-                class="text-transparent bg-gradient-to-r from-primary to-primary/60 bg-clip-text"
+                class="text-transparent bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text"
               >
-                market data app
+                trading engine
               </span>
+              on a modern stack
             </h1>
 
             <!-- Subheadline -->
             <p
-              class="px-4 mb-8 text-base leading-relaxed sm:text-lg md:text-xl lg:text-2xl text-muted-foreground sm:mb-12 text-balance"
+              class="max-w-2xl mx-auto mb-8 text-lg leading-relaxed sm:text-xl text-muted-foreground sm:mb-12 text-balance"
             >
-              Open-source Django + React stack for Alpaca market data,
-              streaming, and backtesting. Channels, Celery, TradingView charts,
-              and Docker Compose included.
+              The complete open-source boilerplate for Alpaca market data.
+              Django 5, React 19, and Docker Compose—pre-configured for
+              streaming, backtesting, and production.
             </p>
 
             <!-- CTA Buttons -->
             <div
-              class="flex flex-col items-center justify-center gap-3 px-4 mb-6 sm:flex-row sm:gap-4 sm:mb-8"
+              class="flex flex-col items-center justify-center gap-3 px-4 mb-8 sm:flex-row sm:gap-4 sm:mb-10"
             >
               <a
                 href="/app"
-                class="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition shadow-lg hover:shadow-xl hover:-translate-y-0.5 duration-200"
+                class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-bold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition shadow-lg hover:shadow-xl hover:-translate-y-0.5 duration-200"
               >
-                Try Live Demo
+                Launch Demo
                 <svg
-                  class="w-4 h-4 ml-2 sm:w-5 sm:h-5"
+                  class="w-5 h-5 ml-2"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -644,10 +347,10 @@
                 href="https://github.com/naveedkhan1998/alpaca-main"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl border-2 border-primary/30 dark:border-primary/50 bg-background/70 dark:bg-card/60 text-foreground hover:border-primary/70 hover:bg-primary/10 transition hover:-translate-y-0.5 duration-200"
+                class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-bold rounded-xl border-2 border-border/60 bg-background/50 backdrop-blur-sm text-foreground hover:border-foreground/20 hover:bg-background/80 transition hover:-translate-y-0.5 duration-200"
               >
                 <svg
-                  class="w-4 h-4 mr-2 sm:w-5 sm:h-5"
+                  class="w-5 h-5 mr-2"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
@@ -655,115 +358,50 @@
                     d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
                   />
                 </svg>
-                View on GitHub
+                Star on GitHub
               </a>
             </div>
-            <div class="px-4 mb-10 text-center sm:mb-12">
-              <a
-                href="/app/graphs/1282"
-                class="text-sm font-semibold underline transition text-primary underline-offset-4 hover:text-foreground"
-              >
-                View the AAPL sample graph
-              </a>
-              <p class="mt-2 text-xs sm:text-sm text-muted-foreground">
-                Read-only guest mode. Log in to save watchlists and enable live
-                updates.
-              </p>
+
+            <div
+              class="flex items-center justify-center gap-1 text-sm text-muted-foreground"
+            >
+              <span class="flex h-2 w-2 rounded-full bg-green-500 mr-2"></span>
+              <span>No account required for guest mode</span>
             </div>
           </div>
         </div>
       </section>
 
       <!-- Visual Demo Section -->
-      <!-- Added thick glassy border to hero image and improved mobile spacing -->
       <section
         class="relative z-10 px-4 pb-16 sm:pb-24 lg:pb-32 sm:px-6 lg:px-8"
       >
         <div class="mx-auto max-w-7xl">
-          <div class="shadow-2xl hero-image-container animate-float">
-            <div class="hero-image-inner">
-              <div
-                alt="Alpaca API Wrapper Dashboard"
-                class="w-full rounded-lg bg-[url('/alpaca-main-hero.png')] dark:bg-[url('/alpaca-main-hero-dark.png')] bg-cover bg-center h-64 sm:h-80 md:h-96 lg:h-[500px] xl:h-[600px]"
+          <div class="shadow-2xl hero-image-container animate-float group">
+            <div class="hero-image-inner overflow-hidden">
+              <!-- SEO Friendly Images -->
+              <img
+                src="/alpaca-main-hero.png"
+                alt="Alpaca Wrapper Dashboard Light Mode"
+                class="w-full h-auto object-cover block dark:hidden transition-transform duration-700 group-hover:scale-105"
+                width="1200"
+                height="800"
+                loading="eager"
+              />
+              <img
+                src="/alpaca-main-hero-dark.png"
+                alt="Alpaca Wrapper Dashboard Dark Mode"
+                class="w-full h-auto object-cover hidden dark:block transition-transform duration-700 group-hover:scale-105"
+                width="1200"
+                height="800"
+                loading="eager"
               />
             </div>
           </div>
         </div>
       </section>
 
-      <!-- New blog section highlighting the implementation blog post -->
-      <section
-        class="relative z-10 px-4 py-12 sm:py-16 lg:py-20 sm:px-6 lg:px-8"
-      >
-        <div class="max-w-4xl mx-auto">
-          <!-- Updated card background for better light mode support -->
-          <div
-            class="relative p-6 overflow-hidden rounded-2xl card-bg backdrop-blur-sm sm:p-8 lg:p-10"
-          >
-            <div class="absolute inset-0 grid-pattern opacity-10"></div>
-            <div
-              class="relative z-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6"
-            >
-              <div
-                class="flex items-center justify-center flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-primary/10"
-              >
-                <svg
-                  class="w-6 h-6 sm:w-7 sm:h-7 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-              </div>
-              <div class="flex-1">
-                <h3 class="mb-2 text-lg font-semibold sm:text-xl">
-                  Deep Dive: Implementation Guide
-                </h3>
-                <p
-                  class="mb-3 text-sm sm:text-base text-muted-foreground sm:mb-4"
-                >
-                  Learn how this real-time trading infrastructure was built from
-                  the ground up. Detailed walkthrough of architecture decisions,
-                  WebSocket streaming, and production deployment.
-                </p>
-                <a
-                  href="https://mnaveedk.com/blog/real-time-trading-infra"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex items-center text-sm font-semibold transition sm:text-base text-primary hover:text-primary/80"
-                >
-                  Read the blog post
-                  <svg
-                    class="w-4 h-4 ml-2 sm:w-5 sm:h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M17 8l4 4m0 0l-4 4m4-4H3"
-                    />
-                  </svg>
-                </a>
-                <p class="mt-2 text-xs italic sm:text-sm text-muted-foreground">
-                  More implementation guides and tutorials coming soon
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <!-- Features Section -->
-      <!-- Improved mobile grid layout and spacing -->
       <section
         id="features"
         class="relative z-10 px-4 py-16 sm:py-24 lg:py-32 sm:px-6 lg:px-8"
@@ -771,13 +409,13 @@
         <div class="mx-auto max-w-7xl">
           <div class="mb-12 text-center sm:mb-16 lg:mb-20">
             <h2 class="mb-4 text-3xl font-bold sm:text-4xl md:text-5xl sm:mb-6">
-              Everything you need to ship
+              Everything needed to ship
             </h2>
             <p
               class="max-w-2xl px-4 mx-auto text-base sm:text-lg lg:text-xl text-muted-foreground"
             >
-              Stream, store, and visualize Alpaca market data with a
-              production-ready Django + React stack
+              A battle-tested architecture that handles the hard parts of
+              financial data apps.
             </p>
           </div>
 
@@ -785,7 +423,6 @@
             class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-6 lg:gap-8"
           >
             <!-- Feature 1 -->
-            <!-- Updated all feature cards with new card-bg class -->
             <div
               class="relative p-8 transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-primary/50 hover:-translate-y-1"
             >
@@ -809,8 +446,7 @@
               <h3 class="mb-3 text-xl font-semibold">Real-Time Streaming</h3>
               <p class="leading-relaxed text-muted-foreground">
                 Dedicated WebSocket service ingests Alpaca ticks and builds
-                1-minute candles live. Celery resamples into higher timeframes
-                with auto-reconnect and recovery logic.
+                1-minute candles live using Redis and Celery.
               </p>
             </div>
 
@@ -835,13 +471,10 @@
                   />
                 </svg>
               </div>
-              <h3 class="mb-3 text-xl font-semibold">
-                Historical Data Pipelines
-              </h3>
+              <h3 class="mb-3 text-xl font-semibold">Data Pipelines</h3>
               <p class="leading-relaxed text-muted-foreground">
                 Automatic OHLCV backfills and caching for watchlist assets.
-                Query rich data with Django ORM and extend for research,
-                notebooks, or custom endpoints.
+                Extend easily with Django ORM.
               </p>
             </div>
 
@@ -866,11 +499,10 @@
                   />
                 </svg>
               </div>
-              <h3 class="mb-3 text-xl font-semibold">Interactive Analysis</h3>
+              <h3 class="mb-3 text-xl font-semibold">Interactive Charts</h3>
               <p class="leading-relaxed text-muted-foreground">
-                TradingView-style charts with multi-timeframe data, indicators,
-                and live updates. Built with React for a familiar trading
-                workflow.
+                TradingView-style lightweight charts with multi-timeframe data,
+                technical indicators, and live updates.
               </p>
             </div>
 
@@ -895,11 +527,10 @@
                   />
                 </svg>
               </div>
-              <h3 class="mb-3 text-xl font-semibold">Dockerized Stack</h3>
+              <h3 class="mb-3 text-xl font-semibold">Dockerized</h3>
               <p class="leading-relaxed text-muted-foreground">
-                Docker Compose brings up Django API, Postgres, Redis, Celery,
-                Channels WebSockets, and Flower. Launch with one command and hot
-                reload everywhere.
+                Full stack infrastructure with Postgres, Redis, Celery, and
+                Flower defined in Docker Compose.
               </p>
             </div>
 
@@ -924,10 +555,10 @@
                   />
                 </svg>
               </div>
-              <h3 class="mb-3 text-xl font-semibold">Watchlist Management</h3>
+              <h3 class="mb-3 text-xl font-semibold">Watchlists</h3>
               <p class="leading-relaxed text-muted-foreground">
-                Create and manage watchlists in the UI, sync assets, and keep
-                everything organized for research, alerts, or automation.
+                Manage personal watchlists, sync assets, and organize your
+                research workflows efficiently.
               </p>
             </div>
 
@@ -952,20 +583,17 @@
                   />
                 </svg>
               </div>
-              <h3 class="mb-3 text-xl font-semibold">Developer Experience</h3>
+              <h3 class="mb-3 text-xl font-semibold">Modern Tooling</h3>
               <p class="leading-relaxed text-muted-foreground">
-                NX monorepo with unified commands, Vite HMR, uv for Python deps,
-                and batteries-included tooling with Ruff, Black, Prettier,
-                Pytest, and Vitest.
+                NX monorepo, Vite HMR, uv for Python, and batteries-included
+                linting/formatting setup.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Stack Section -->
-      <!-- Improved mobile layout for stack section -->
-      <!-- Updated section background for better light mode support -->
+      <!-- Tech Stack Section -->
       <section
         id="stack"
         class="relative z-10 px-4 py-16 sm:py-24 lg:py-32 sm:px-6 lg:px-8 section-bg"
@@ -973,12 +601,12 @@
         <div class="mx-auto max-w-7xl">
           <div class="mb-12 text-center sm:mb-16 lg:mb-20">
             <h2 class="mb-4 text-3xl font-bold sm:text-4xl md:text-5xl sm:mb-6">
-              Built with modern tools
+              Production-Grade Stack
             </h2>
             <p
               class="max-w-2xl px-4 mx-auto text-base sm:text-lg lg:text-xl text-muted-foreground"
             >
-              Production-grade stack you can self-host, inspect, and extend
+              Built with industry-standard tools for reliability and scale.
             </p>
           </div>
 
@@ -986,12 +614,15 @@
             class="grid items-center gap-8 md:grid-cols-2 sm:gap-10 lg:gap-12"
           >
             <div class="space-y-6 sm:space-y-8">
-              <div class="flex items-start gap-4">
+              <!-- Item 1 -->
+              <div
+                class="flex items-start gap-4 p-4 rounded-xl transition hover:bg-muted/30"
+              >
                 <div
-                  class="flex items-center justify-center flex-shrink-0 w-10 h-10 mt-1 rounded-lg bg-primary/10"
+                  class="flex items-center justify-center flex-shrink-0 w-12 h-12 rounded-lg bg-primary/10"
                 >
                   <svg
-                    class="w-5 h-5 text-primary"
+                    class="w-6 h-6 text-primary"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1005,22 +636,23 @@
                   </svg>
                 </div>
                 <div>
-                  <h3 class="mb-2 text-lg font-semibold">
-                    Backend Infrastructure
-                  </h3>
-                  <p class="text-muted-foreground">
-                    Django REST API, Channels WebSocket, Celery workers, Redis
-                    cache, and PostgreSQL database behind Docker Compose.
+                  <h3 class="mb-1 text-lg font-bold">Backend</h3>
+                  <p class="text-sm leading-relaxed text-muted-foreground">
+                    Django 5 + DRF for a robust API, with Channels for WebSocket
+                    streaming and Celery for async tasks.
                   </p>
                 </div>
               </div>
 
-              <div class="flex items-start gap-4">
+              <!-- Item 2 -->
+              <div
+                class="flex items-start gap-4 p-4 rounded-xl transition hover:bg-muted/30"
+              >
                 <div
-                  class="flex items-center justify-center flex-shrink-0 w-10 h-10 mt-1 rounded-lg bg-primary/10"
+                  class="flex items-center justify-center flex-shrink-0 w-12 h-12 rounded-lg bg-primary/10"
                 >
                   <svg
-                    class="w-5 h-5 text-primary"
+                    class="w-6 h-6 text-primary"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1034,23 +666,23 @@
                   </svg>
                 </div>
                 <div>
-                  <h3 class="mb-2 text-lg font-semibold">
-                    Frontend Experience
-                  </h3>
-                  <p class="text-muted-foreground">
-                    Vite + React with TradingView charting, watchlists, and
-                    real-time visuals powered by RTK Query and WebSocket
-                    connections.
+                  <h3 class="mb-1 text-lg font-bold">Frontend</h3>
+                  <p class="text-sm leading-relaxed text-muted-foreground">
+                    React 19 + Vite 7 providing a blazing fast SPA experience
+                    with TradingView charts and RTK Query.
                   </p>
                 </div>
               </div>
 
-              <div class="flex items-start gap-4">
+              <!-- Item 3 -->
+              <div
+                class="flex items-start gap-4 p-4 rounded-xl transition hover:bg-muted/30"
+              >
                 <div
-                  class="flex items-center justify-center flex-shrink-0 w-10 h-10 mt-1 rounded-lg bg-primary/10"
+                  class="flex items-center justify-center flex-shrink-0 w-12 h-12 rounded-lg bg-primary/10"
                 >
                   <svg
-                    class="w-5 h-5 text-primary"
+                    class="w-6 h-6 text-primary"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1064,114 +696,69 @@
                   </svg>
                 </div>
                 <div>
-                  <h3 class="mb-2 text-lg font-semibold">Monorepo Workflow</h3>
-                  <p class="text-muted-foreground">
-                    NX orchestration, smart scripts, and uv-based Python
-                    installs keep the stack consistent while you iterate.
+                  <h3 class="mb-1 text-lg font-bold">DevOps</h3>
+                  <p class="text-sm leading-relaxed text-muted-foreground">
+                    Docker Compose for orchestration, NX for monorepo
+                    management, and GitHub Actions for CI.
                   </p>
                 </div>
               </div>
             </div>
 
             <div class="relative">
-              <!-- Updated stack card with new card-bg class -->
               <div
-                class="p-6 shadow-xl rounded-2xl card-bg backdrop-blur-sm sm:p-8"
+                class="p-8 shadow-2xl rounded-2xl card-bg backdrop-blur-sm border border-primary/20"
               >
-                <div class="space-y-6">
+                <div class="space-y-8">
                   <div>
                     <div
-                      class="mb-3 text-sm font-semibold text-muted-foreground"
+                      class="mb-3 text-xs font-bold tracking-wider text-muted-foreground uppercase"
                     >
-                      BACKEND
+                      Backend
                     </div>
                     <div class="flex flex-wrap gap-2">
-                      <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
-                        >Django</span
-                      >
-                      <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
-                        >Celery</span
-                      >
-                      <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
-                        >Redis</span
-                      >
-                      <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
-                        >PostgreSQL</span
-                      >
-                      <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
-                        >Channels</span
-                      >
+                      <span class="badge-pill">Django 5</span>
+                      <span class="badge-pill">Celery</span>
+                      <span class="badge-pill">Redis</span>
+                      <span class="badge-pill">Postgres</span>
+                      <span class="badge-pill">Channels</span>
                     </div>
                   </div>
 
                   <div>
                     <div
-                      class="mb-3 text-sm font-semibold text-muted-foreground"
+                      class="mb-3 text-xs font-bold tracking-wider text-muted-foreground uppercase"
                     >
-                      FRONTEND
+                      Frontend
                     </div>
                     <div class="flex flex-wrap gap-2">
-                      <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
-                        >React</span
-                      >
-                      <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
-                        >Vite</span
-                      >
-                      <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
-                        >TradingView</span
-                      >
-                      <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
-                        >RTK Query</span
-                      >
-                    </div>
-                  </div>
-
-                  <div>
-                    <div
-                      class="mb-3 text-sm font-semibold text-muted-foreground"
-                    >
-                      DEVOPS
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                      <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
-                        >Docker</span
-                      >
-                      <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
-                        >NX</span
-                      >
-                      <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
-                        >uv</span
-                      >
-                      <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
-                        >Pytest</span
-                      >
-                      <span
-                        class="px-3 py-1 text-sm font-medium rounded-lg bg-primary/10 text-primary"
-                        >Vitest</span
-                      >
+                      <span class="badge-pill">React 19</span>
+                      <span class="badge-pill">Vite 7</span>
+                      <span class="badge-pill">TypeScript</span>
+                      <span class="badge-pill">Tailwind</span>
+                      <span class="badge-pill">Redux</span>
                     </div>
                   </div>
 
                   <div class="pt-6 border-t border-border/40">
-                    <div class="mb-2 text-sm font-semibold">Quick Start</div>
+                    <div class="mb-2 text-sm font-semibold">
+                      Ready to start?
+                    </div>
                     <div
-                      class="p-4 font-mono text-sm rounded-lg bg-background/90 dark:bg-card/60 text-muted-foreground"
+                      class="flex items-center justify-between p-3 font-mono text-xs rounded-lg bg-background/50 text-muted-foreground border border-border/50"
                     >
-                      <div>$ npm install</div>
-                      <div>$ npm run dev</div>
+                      <span>$ npm install && npm run dev</span>
+                      <div class="flex gap-1.5">
+                        <div
+                          class="w-2.5 h-2.5 rounded-full bg-red-500/80"
+                        ></div>
+                        <div
+                          class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"
+                        ></div>
+                        <div
+                          class="w-2.5 h-2.5 rounded-full bg-green-500/80"
+                        ></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1182,73 +769,102 @@
       </section>
 
       <!-- Screenshots Section -->
-      <!-- Improved mobile grid for screenshots -->
       <section
         class="relative z-10 px-4 py-16 sm:py-24 lg:py-32 sm:px-6 lg:px-8"
       >
         <div class="mx-auto max-w-7xl">
           <div class="mb-12 text-center sm:mb-16 lg:mb-20">
             <h2 class="mb-4 text-3xl font-bold sm:text-4xl md:text-5xl sm:mb-6">
-              See it in action
+              Visual & Interactive
             </h2>
             <p
               class="max-w-2xl px-4 mx-auto text-base sm:text-lg lg:text-xl text-muted-foreground"
             >
-              Production-ready UI with real-time data, watchlists, and charts
+              A dashboard that feels like a native application.
             </p>
           </div>
 
-          <div
-            class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-6 lg:gap-8"
-          >
-            <!-- Updated screenshot cards with new card-bg class -->
+          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+            <!-- Screenshot 1 -->
             <div
-              class="relative w-full overflow-hidden transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-primary/50"
+              class="relative w-full overflow-hidden transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-primary/50 hover:shadow-lg"
             >
               <div
-                class="w-full h-48 bg-[url('/alpaca-main-watchlist.png')] dark:bg-[url('/alpaca-main-watchlist-dark.png')] bg-cover bg-center rounded-t-2xl"
-              ></div>
-              <div
-                class="p-6 bg-background/90 dark:bg-card/70 backdrop-blur-sm"
+                class="aspect-video w-full overflow-hidden rounded-t-2xl bg-muted/20"
               >
-                <h3 class="mb-2 text-lg font-semibold">Watchlist Management</h3>
+                <img
+                  src="/alpaca-main-watchlist.png"
+                  class="w-full h-full object-cover block dark:hidden transition-transform duration-500 group-hover:scale-105"
+                  alt="Watchlist Light"
+                  loading="lazy"
+                />
+                <img
+                  src="/alpaca-main-watchlist-dark.png"
+                  class="w-full h-full object-cover hidden dark:block transition-transform duration-500 group-hover:scale-105"
+                  alt="Watchlist Dark"
+                  loading="lazy"
+                />
+              </div>
+              <div class="p-6">
+                <h3 class="mb-2 text-lg font-bold">Watchlists</h3>
                 <p class="text-sm text-muted-foreground">
-                  Create watchlists, add assets, and backfill history for fast
-                  research workflows.
+                  Organize assets, track performance, and get instant quotes.
                 </p>
               </div>
             </div>
 
+            <!-- Screenshot 2 -->
             <div
-              class="relative w-full overflow-hidden transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-primary/50"
+              class="relative w-full overflow-hidden transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-primary/50 hover:shadow-lg"
             >
               <div
-                class="w-full h-48 bg-[url('/alpaca-main-hero.png')] dark:bg-[url('/alpaca-main-hero-dark.png')] bg-cover bg-center rounded-t-2xl"
-              ></div>
-              <div
-                class="p-6 bg-background/90 dark:bg-card/70 backdrop-blur-sm"
+                class="aspect-video w-full overflow-hidden rounded-t-2xl bg-muted/20"
               >
-                <h3 class="mb-2 text-lg font-semibold">Real-Time Charts</h3>
+                <img
+                  src="/alpaca-main-hero.png"
+                  class="w-full h-full object-cover block dark:hidden transition-transform duration-500 group-hover:scale-105"
+                  alt="Chart Light"
+                  loading="lazy"
+                />
+                <img
+                  src="/alpaca-main-hero-dark.png"
+                  class="w-full h-full object-cover hidden dark:block transition-transform duration-500 group-hover:scale-105"
+                  alt="Chart Dark"
+                  loading="lazy"
+                />
+              </div>
+              <div class="p-6">
+                <h3 class="mb-2 text-lg font-bold">Advanced Charts</h3>
                 <p class="text-sm text-muted-foreground">
-                  Multi-timeframe TradingView charts with live updates and
-                  indicator-ready data.
+                  TradingView integration with custom indicators and drawings.
                 </p>
               </div>
             </div>
 
+            <!-- Screenshot 3 -->
             <div
-              class="relative w-full overflow-hidden transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-primary/50"
+              class="relative w-full overflow-hidden transition-all duration-300 group rounded-2xl card-bg backdrop-blur-sm hover:border-primary/50 hover:shadow-lg"
             >
               <div
-                class="w-full h-48 bg-[url('/alpaca-main-asset.png')] dark:bg-[url('/alpaca-main-asset-dark.png')] bg-cover bg-center rounded-t-2xl"
-              ></div>
-              <div
-                class="p-6 bg-background/90 dark:bg-card/70 backdrop-blur-sm"
+                class="aspect-video w-full overflow-hidden rounded-t-2xl bg-muted/20"
               >
-                <h3 class="mb-2 text-lg font-semibold">Asset Discovery</h3>
+                <img
+                  src="/alpaca-main-asset.png"
+                  class="w-full h-full object-cover block dark:hidden transition-transform duration-500 group-hover:scale-105"
+                  alt="Asset Light"
+                  loading="lazy"
+                />
+                <img
+                  src="/alpaca-main-asset-dark.png"
+                  class="w-full h-full object-cover hidden dark:block transition-transform duration-500 group-hover:scale-105"
+                  alt="Asset Dark"
+                  loading="lazy"
+                />
+              </div>
+              <div class="p-6">
+                <h3 class="mb-2 text-lg font-bold">Asset Discovery</h3>
                 <p class="text-sm text-muted-foreground">
-                  Search and filter assets with instant results and detailed
-                  metadata.
+                  Fast search and filtering across thousands of instruments.
                 </p>
               </div>
             </div>
@@ -1257,59 +873,39 @@
       </section>
 
       <!-- CTA Section -->
-      <!-- Improved mobile spacing for CTA -->
       <section
         class="relative z-10 px-4 py-16 sm:py-24 lg:py-32 sm:px-6 lg:px-8"
       >
         <div class="max-w-4xl mx-auto">
-          <!-- Updated CTA card with better light mode support -->
           <div
-            class="relative p-8 overflow-hidden text-center border rounded-2xl sm:rounded-3xl border-border/60 bg-gradient-to-br from-primary/10 via-card/70 to-primary/10 dark:from-primary/20 dark:via-card/60 dark:to-primary/20 backdrop-blur-sm sm:p-12 md:p-16"
+            class="relative p-8 overflow-hidden text-center border rounded-3xl border-border/60 bg-gradient-to-br from-primary/5 via-card to-primary/5 backdrop-blur-md sm:p-16"
           >
-            <div class="absolute inset-0 grid-pattern opacity-20"></div>
+            <div class="absolute inset-0 grid-pattern opacity-30"></div>
             <div class="relative z-10">
-              <h2
-                class="mb-4 text-3xl font-bold sm:text-4xl md:text-5xl sm:mb-6"
-              >
-                Ready to build your stack?
+              <h2 class="mb-6 text-3xl font-extrabold sm:text-4xl md:text-5xl">
+                Ready to deploy?
               </h2>
-              <p
-                class="max-w-2xl px-4 mx-auto mb-8 text-base sm:text-lg lg:text-xl text-muted-foreground sm:mb-10"
-              >
-                Launch the demo, fork the repo, and self-host with Docker
-                Compose. Shape it into a research lab, trading bot, or data
-                pipeline.
+              <p class="max-w-xl mx-auto mb-10 text-lg text-muted-foreground">
+                Clone the repository, configure your keys, and launch your
+                trading platform in minutes.
               </p>
               <div
-                class="flex flex-col items-center justify-center gap-3 px-4 sm:flex-row sm:gap-4"
+                class="flex flex-col items-center justify-center gap-4 sm:flex-row"
               >
                 <a
                   href="/app"
-                  class="inline-flex items-center justify-center w-full px-6 py-3 text-sm font-semibold transition shadow-lg sm:w-auto sm:px-8 sm:py-4 sm:text-base rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+                  class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-bold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition shadow-lg"
                 >
-                  Launch the App
-                  <svg
-                    class="w-4 h-4 ml-2 sm:w-5 sm:h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    />
-                  </svg>
+                  View Demo
                 </a>
                 <a
                   href="https://github.com/naveedkhan1998/alpaca-main"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="inline-flex items-center justify-center w-full px-6 py-3 text-sm font-semibold transition border-2 sm:w-auto sm:px-8 sm:py-4 sm:text-base rounded-xl border-primary/30 dark:border-primary/50 bg-background/70 dark:bg-card/60 hover:border-primary/70 hover:bg-primary/10"
+                  class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-bold rounded-xl border-2 border-border/60 bg-background/50 text-foreground hover:bg-background/80 transition"
                 >
                   <svg
-                    class="w-4 h-4 mr-2 sm:w-5 sm:h-5"
+                    class="w-5 h-5 mr-2"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
@@ -1317,7 +913,7 @@
                       d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
                     />
                   </svg>
-                  Star on GitHub
+                  GitHub
                 </a>
               </div>
             </div>
@@ -1325,101 +921,129 @@
         </div>
       </section>
 
-      <!-- Footer -->
-      <!-- Improved mobile footer layout and added blog link -->
-      <footer class="relative z-10 border-t backdrop-blur-xl landing-surface">
-        <div class="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8 sm:py-12">
+      <!-- About & Disclaimer -->
+      <section
+        class="relative z-10 px-4 py-16 sm:px-6 lg:px-8 bg-muted/30 border-t border-border/40"
+      >
+        <div class="mx-auto max-w-3xl text-center">
+          <h2 class="mb-6 text-2xl font-bold sm:text-3xl">
+            About & Disclaimer
+          </h2>
           <div
-            class="grid gap-6 mb-6 sm:grid-cols-2 md:grid-cols-4 sm:gap-8 sm:mb-8"
+            class="space-y-4 text-sm leading-relaxed sm:text-base text-muted-foreground"
           >
+            <p>
+              This project is named <strong>"Alpaca API Wrapper"</strong> to
+              reflect its purpose: providing a robust, open-source boilerplate
+              for developers to build applications using the
+              <a
+                href="https://alpaca.markets"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-medium underline transition text-primary hover:text-primary/80"
+                >Alpaca Markets API</a
+              >.
+            </p>
+            <div
+              class="p-5 text-left border rounded-xl bg-background/50 border-border/50 backdrop-blur-sm sm:text-center"
+            >
+              <p class="font-semibold text-foreground mb-1">
+                ⚠️ Independent Open Source Project
+              </p>
+              <p>
+                I am <strong>not affiliated</strong> with, endorsed by, or
+                sponsored by AlpacaDB, Inc. This is
+                <strong>not a commercial product</strong>. It is a free,
+                open-source educational project created to demonstrate how to
+                build real-time trading infrastructure using their public API.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="relative z-10 border-t backdrop-blur-xl landing-surface">
+        <div class="px-4 py-12 mx-auto max-w-7xl sm:px-6 lg:px-8">
+          <div class="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
             <div class="sm:col-span-2">
-              <div class="flex items-center gap-2 mb-3 sm:mb-4">
+              <div class="flex items-center gap-2 mb-4">
                 <img
                   src="/android-chrome-192x192.png"
-                  alt="Alpaca Trading Logo"
-                  class="w-8 h-8 rounded-md sm:w-9 sm:h-9"
+                  alt="Logo"
+                  class="w-8 h-8 rounded-md"
                 />
-                <span class="text-lg font-bold sm:text-xl">Alpaca Trading</span>
+                <span class="text-xl font-bold">Alpaca Wrapper</span>
               </div>
-              <p
-                class="max-w-md mb-3 text-sm sm:text-base text-muted-foreground sm:mb-4"
-              >
-                Open-source Alpaca API boilerplate for market data, backtesting,
-                and trading bots with Django, React, and TradingView.
-              </p>
-              <p class="text-xs sm:text-sm text-muted-foreground">
-                Special thanks to Alpaca for their generous free tier that
-                powers this project.
+              <p class="max-w-sm text-sm text-muted-foreground leading-relaxed">
+                Open-source market data boilerplate. <br />
+                MIT Licensed. Free for personal and commercial use.
               </p>
             </div>
 
             <div>
-              <div class="mb-3 text-sm font-semibold sm:mb-4">Resources</div>
-              <ul class="space-y-2 text-sm text-muted-foreground">
+              <h4
+                class="mb-4 text-sm font-bold tracking-wider uppercase text-foreground"
+              >
+                Project
+              </h4>
+              <ul class="space-y-3 text-sm text-muted-foreground">
                 <li>
                   <a
                     href="https://github.com/naveedkhan1998/alpaca-main"
                     target="_blank"
-                    rel="noopener noreferrer"
-                    class="transition hover:text-foreground"
-                    >Documentation</a
+                    class="hover:text-primary transition"
+                    >Source Code</a
                   >
                 </li>
                 <li>
                   <a
-                    href="https://mnaveedk.com/blog/real-time-trading-infra"
+                    href="https://github.com/naveedkhan1998/alpaca-main/blob/main/LICENSE"
                     target="_blank"
-                    rel="noopener noreferrer"
-                    class="transition hover:text-foreground"
-                    >Blog</a
+                    class="hover:text-primary transition"
+                    >License</a
                   >
                 </li>
                 <li>
                   <a
-                    href="https://github.com/naveedkhan1998/alpaca-main"
+                    href="https://mnaveedk.com/blog"
                     target="_blank"
-                    rel="noopener noreferrer"
-                    class="transition hover:text-foreground"
-                    >GitHub</a
-                  >
-                </li>
-                <li>
-                  <a href="#features" class="transition hover:text-foreground"
-                    >Features</a
-                  >
-                </li>
-                <li>
-                  <a href="#stack" class="transition hover:text-foreground"
-                    >Tech Stack</a
+                    class="hover:text-primary transition"
+                    >Author's Blog</a
                   >
                 </li>
               </ul>
             </div>
 
             <div>
-              <div class="mb-3 text-sm font-semibold sm:mb-4">Connect</div>
-              <ul class="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a href="/app" class="transition hover:text-foreground"
-                    >Launch App</a
-                  >
-                </li>
+              <h4
+                class="mb-4 text-sm font-bold tracking-wider uppercase text-foreground"
+              >
+                Community
+              </h4>
+              <ul class="space-y-3 text-sm text-muted-foreground">
                 <li>
                   <a
                     href="https://github.com/naveedkhan1998/alpaca-main/issues"
                     target="_blank"
-                    rel="noopener noreferrer"
-                    class="transition hover:text-foreground"
-                    >Report Issue</a
+                    class="hover:text-primary transition"
+                    >Report a Bug</a
                   >
                 </li>
                 <li>
                   <a
                     href="https://github.com/naveedkhan1998/alpaca-main/discussions"
                     target="_blank"
-                    rel="noopener noreferrer"
-                    class="transition hover:text-foreground"
+                    class="hover:text-primary transition"
                     >Discussions</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://alpaca.markets/docs/"
+                    target="_blank"
+                    class="hover:text-primary transition"
+                    >Alpaca API Docs</a
                   >
                 </li>
               </ul>
@@ -1427,15 +1051,16 @@
           </div>
 
           <div
-            class="flex flex-col items-center justify-between gap-4 pt-6 text-xs border-t sm:pt-8 border-border/40 md:flex-row sm:text-sm text-muted-foreground"
+            class="pt-8 mt-12 border-t border-border/40 flex flex-col sm:flex-row justify-between items-center gap-4"
           >
-            <p>© 2025 Alpaca API Wrapper. Built by Naveed Khan.</p>
-            <div class="flex items-center gap-6">
+            <p class="text-xs text-muted-foreground">
+              © 2025 Alpaca API Wrapper. Built by Naveed Khan.
+            </p>
+            <div class="flex gap-4">
               <a
                 href="https://github.com/naveedkhan1998/alpaca-main"
                 target="_blank"
-                rel="noopener noreferrer"
-                class="transition hover:text-foreground"
+                class="text-muted-foreground hover:text-foreground transition"
               >
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path
@@ -1449,7 +1074,9 @@
       </footer>
     </div>
 
+    <!-- App Root -->
     <div id="app-root" hidden></div>
+
     <noscript>
       <style>
         #app-root {
@@ -1459,62 +1086,43 @@
       <div
         style="
           max-width: 600px;
-          margin: 1.5rem auto;
-          padding: 1rem 1.25rem;
-          border-radius: 12px;
-          background: hsl(var(--card));
-          color: hsl(var(--card-foreground));
-          border: 1px solid hsl(var(--border) / 0.6);
+          margin: 2rem auto;
+          padding: 2rem;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          font-family: sans-serif;
         "
       >
-        JavaScript is required to launch the interactive Alpaca API Wrapper app,
-        but the landing content and documentation links remain available without
-        it.
+        <strong>JavaScript Required</strong>
+        <p>Please enable JavaScript to use the interactive application.</p>
       </div>
     </noscript>
+
     <script type="module" src="/src/main.tsx"></script>
-    <!-- Mobile menu toggle script -->
+
+    <!-- Interactive Scripts for Landing Page -->
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
+      // Mobile Menu Toggle
+      document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
 
-        if (mobileMenuBtn && mobileMenu) {
-          mobileMenuBtn.addEventListener('click', function () {
-            mobileMenu.classList.toggle('active');
-          });
-
-          // Close menu when clicking on a link
-          const menuLinks = mobileMenu.querySelectorAll('a');
-          menuLinks.forEach(link => {
-            link.addEventListener('click', function () {
-              mobileMenu.classList.remove('active');
-            });
+        if (btn && menu) {
+          btn.addEventListener('click', () => {
+            menu.classList.toggle('active');
           });
         }
       });
-    </script>
-    <!-- Theme toggle script -->
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        const themeToggle = document.getElementById('theme-toggle');
+
+      // Theme Toggle Logic
+      document.addEventListener('DOMContentLoaded', () => {
+        const toggleBtn = document.getElementById('theme-toggle');
         const sunIcon = document.getElementById('theme-icon-sun');
         const moonIcon = document.getElementById('theme-icon-moon');
         const storageKey = 'vite-ui-theme';
         const root = document.documentElement;
 
-        // Function to get current theme
-        function getCurrentTheme() {
-          const savedTheme = localStorage.getItem(storageKey);
-          if (savedTheme === 'light' || savedTheme === 'dark') {
-            return savedTheme;
-          }
-          // Default to light theme
-          return 'light';
-        }
-
-        // Function to update icon visibility
-        function updateIcon(theme) {
+        function updateIcons(theme) {
           if (theme === 'light') {
             sunIcon.classList.remove('hidden');
             moonIcon.classList.add('hidden');
@@ -1524,26 +1132,33 @@
           }
         }
 
-        // Function to apply theme
-        function applyTheme(theme) {
+        // Initial Icon State
+        const currentTheme = localStorage.getItem(storageKey) || 'light';
+        updateIcons(currentTheme);
+
+        toggleBtn.addEventListener('click', () => {
+          const current = localStorage.getItem(storageKey) || 'light';
+          const next = current === 'light' ? 'dark' : 'light';
+
           root.classList.remove('light', 'dark');
-          root.classList.add(theme);
-          updateIcon(theme);
-        }
-
-        // Initialize theme on load
-        const initialTheme = localStorage.getItem(storageKey) || 'light';
-        applyTheme(initialTheme);
-
-        // Handle theme toggle click
-        themeToggle.addEventListener('click', function () {
-          const currentTheme = localStorage.getItem(storageKey) || 'light';
-          const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
-
-          localStorage.setItem(storageKey, nextTheme);
-          applyTheme(nextTheme);
+          root.classList.add(next);
+          localStorage.setItem(storageKey, next);
+          updateIcons(next);
         });
       });
     </script>
+    <style>
+      /* Inline utility needed for specific pill styling only */
+      .badge-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        background-color: hsl(var(--primary) / 0.1);
+        color: hsl(var(--primary));
+      }
+    </style>
   </body>
 </html>

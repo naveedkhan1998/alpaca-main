@@ -309,3 +309,296 @@
     min-width: 44px;
   }
 }
+
+/* 
+  ----------------------------------------
+  Landing Page Specific Styles 
+  ----------------------------------------
+  Moved from index.html for cleaner separation
+*/
+
+#landing-root {
+  font-family: 'DM Sans', 'Plus Jakarta Sans', sans-serif;
+}
+
+#landing-root h1,
+#landing-root h2,
+#landing-root h3 {
+  font-family: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Landing Utilities that reuse CSS variables but need specific opacity/calc */
+#landing-root .text-muted-foreground {
+  color: hsl(var(--foreground) / 0.72);
+}
+
+.dark #landing-root .text-muted-foreground {
+  color: hsl(var(--foreground) / 0.78);
+}
+
+#landing-root .bg-primary\/10 {
+  background-color: hsl(var(--primary) / 0.12);
+}
+
+.dark #landing-root .bg-primary\/10 {
+  background-color: hsl(var(--primary) / 0.2);
+}
+
+#landing-root .border-primary\/30 {
+  border-color: hsl(var(--primary) / 0.4);
+}
+
+.dark #landing-root .border-primary\/30 {
+  border-color: hsl(var(--primary) / 0.55);
+}
+
+/* Complex Gradients & Effects */
+.landing-backdrop {
+  background:
+    radial-gradient(
+      1000px circle at 10% -10%,
+      hsl(var(--primary) / 0.18),
+      transparent 55%
+    ),
+    radial-gradient(
+      900px circle at 90% 0%,
+      hsl(var(--primary) / 0.1),
+      transparent 60%
+    ),
+    linear-gradient(
+      180deg,
+      hsl(var(--background)) 0%,
+      hsl(var(--muted) / 0.35) 100%
+    );
+}
+
+.dark .landing-backdrop {
+  background:
+    radial-gradient(
+      1000px circle at 10% -10%,
+      hsl(var(--primary) / 0.28),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px circle at 90% 0%,
+      hsl(var(--primary) / 0.18),
+      transparent 65%
+    ),
+    linear-gradient(
+      180deg,
+      hsl(var(--background)) 0%,
+      hsl(var(--card) / 0.7) 100%
+    );
+}
+
+.landing-surface {
+  background: linear-gradient(
+    180deg,
+    hsl(var(--background) / 0.92) 0%,
+    hsl(var(--background) / 0.78) 100%
+  );
+  border-color: hsl(var(--border) / 0.7);
+  box-shadow: 0 1px 0 hsl(var(--foreground) / 0.04);
+}
+
+.dark .landing-surface {
+  background: linear-gradient(
+    180deg,
+    hsl(var(--background) / 0.9) 0%,
+    hsl(var(--background) / 0.6) 100%
+  );
+  border-color: hsl(var(--border) / 0.85);
+  box-shadow:
+    0 1px 0 hsl(var(--foreground) / 0.08),
+    0 12px 32px -28px hsl(var(--primary) / 0.6);
+}
+
+.landing-fab {
+  background: hsl(var(--card) / 0.85);
+  border: 1px solid hsl(var(--border) / 0.65);
+  box-shadow: 0 14px 30px -20px hsl(var(--foreground) / 0.3);
+}
+
+.dark .landing-fab {
+  background: hsl(var(--card) / 0.75);
+  border: 1px solid hsl(var(--border) / 0.9);
+  box-shadow: 0 16px 35px -24px hsl(var(--primary) / 0.45);
+}
+
+/* Animations */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.8s ease-out forwards;
+}
+
+/* Background Patterns */
+.grid-pattern {
+  background-image:
+    linear-gradient(to right, hsl(var(--border) / 0.18) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border) / 0.18) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.dark .grid-pattern {
+  background-image:
+    linear-gradient(to right, hsl(var(--border) / 0.28) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border) / 0.28) 1px, transparent 1px);
+}
+
+/* Card Backgrounds */
+.card-bg {
+  background: linear-gradient(
+    145deg,
+    hsl(var(--card)) 0%,
+    hsl(var(--muted) / 0.6) 100%
+  );
+  border: 1px solid hsl(var(--border) / 0.75);
+  box-shadow:
+    0 18px 45px -32px hsl(var(--foreground) / 0.18),
+    inset 0 1px 0 hsl(var(--foreground) / 0.04);
+}
+
+.dark .card-bg {
+  background: linear-gradient(
+    145deg,
+    hsl(var(--card)) 0%,
+    hsl(var(--secondary)) 100%
+  );
+  border: 1px solid hsl(var(--border) / 0.9);
+  box-shadow:
+    0 22px 55px -36px hsl(var(--primary) / 0.3),
+    inset 0 1px 0 hsl(var(--foreground) / 0.08);
+}
+
+/* Section Backgrounds */
+.section-bg {
+  background: linear-gradient(
+    180deg,
+    hsl(var(--background)) 0%,
+    hsl(var(--muted) / 0.5) 100%
+  );
+}
+
+.dark .section-bg {
+  background: linear-gradient(
+    180deg,
+    hsl(var(--background)) 0%,
+    hsl(var(--card) / 0.7) 100%
+  );
+}
+
+/* Mobile Menu */
+.mobile-menu {
+  display: none;
+}
+
+.mobile-menu.active {
+  display: block;
+}
+
+/* Hero Image Container */
+.hero-image-container {
+  position: relative;
+  padding: 10px;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--primary) / 0.28) 0%,
+    hsl(var(--primary) / 0.12) 50%,
+    hsl(var(--primary) / 0.28) 100%
+  );
+  border-radius: 1.5rem;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 30px 80px -40px hsl(var(--primary) / 0.35);
+}
+
+.light .hero-image-container {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--primary) / 0.22) 0%,
+    hsl(var(--primary) / 0.12) 50%,
+    hsl(var(--primary) / 0.22) 100%
+  );
+  box-shadow: 0 26px 70px -45px hsl(var(--foreground) / 0.14);
+}
+
+.dark .hero-image-container {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--primary) / 0.38) 0%,
+    hsl(var(--primary) / 0.2) 50%,
+    hsl(var(--primary) / 0.38) 100%
+  );
+  box-shadow: 0 30px 80px -45px hsl(var(--primary) / 0.45);
+}
+
+.hero-image-inner {
+  position: relative;
+  background: hsl(var(--card) / 0.9);
+  backdrop-filter: saturate(150%) blur(16px);
+  -webkit-backdrop-filter: saturate(150%) blur(16px);
+  border: 2px solid hsl(var(--border) / 0.7);
+  border-radius: 1.25rem;
+  padding: 4px;
+  box-shadow:
+    0 0 0 1px hsl(var(--border) / 0.25),
+    inset 0 0 25px hsl(var(--primary) / 0.08),
+    0 24px 70px -18px hsl(var(--foreground) / 0.25);
+}
+
+.light .hero-image-inner {
+  background: hsl(var(--card));
+  border: 2px solid hsl(var(--border));
+  box-shadow:
+    0 0 0 1px hsl(var(--border) / 0.35),
+    inset 0 0 25px hsl(var(--primary) / 0.04),
+    0 24px 70px -20px hsl(var(--foreground) / 0.12);
+}
+
+.dark .hero-image-inner {
+  background: hsl(var(--card) / 0.95);
+  border: 2px solid hsl(var(--border) / 0.95);
+  box-shadow:
+    0 0 0 1px hsl(var(--border) / 0.4),
+    inset 0 0 30px hsl(var(--primary) / 0.12),
+    0 24px 70px -20px hsl(var(--primary) / 0.35);
+}
