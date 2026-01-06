@@ -16,15 +16,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  HiPlay,
-  HiPause,
-  HiRefresh,
-  HiChevronLeft,
-  HiChevronRight,
-  HiChevronDoubleLeft,
-  HiChevronDoubleRight,
-  HiX,
-} from 'react-icons/hi';
+  Play,
+  Pause,
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  X,
+} from 'lucide-react';
 
 interface ReplayControlsProps {
   enabled: boolean;
@@ -86,19 +86,22 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
     return (
       <div
         className={cn(
-          'flex items-center gap-2 px-3 py-1.5 bg-muted/30 border-b border-border/50',
+          'flex items-center gap-2 px-4 py-2 bg-background border-b border-border/40',
           className
         )}
       >
         {/* Replay indicator */}
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          <span className="hidden text-xs font-medium text-muted-foreground sm:inline">
-            Replay
+        <div className="flex items-center gap-2 mr-2">
+          <div className="relative flex h-2.5 w-2.5">
+            <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-primary"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+          </div>
+          <span className="text-xs font-semibold text-foreground">
+            Replay Mode
           </span>
         </div>
 
-        <div className="w-px h-4 bg-border/50" />
+        <div className="w-px h-4 mx-1 bg-border/50" />
 
         {/* Play/Pause */}
         <TooltipProvider delayDuration={300}>
@@ -109,12 +112,17 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
                 variant={playing ? 'default' : 'ghost'}
                 onClick={onPlayPause}
                 disabled={disableReplayControls}
-                className="rounded-full h-7 w-7"
+                className={cn(
+                  'rounded-full h-8 w-8 transition-all',
+                  playing
+                    ? 'shadow-md'
+                    : 'hover:bg-primary/10 hover:text-primary'
+                )}
               >
                 {playing ? (
-                  <HiPause className="w-3.5 h-3.5" />
+                  <Pause className="w-4 h-4 fill-current" />
                 ) : (
-                  <HiPlay className="w-3.5 h-3.5 ml-0.5" />
+                  <Play className="w-4 h-4 fill-current ml-0.5" />
                 )}
               </Button>
             </TooltipTrigger>
@@ -133,9 +141,9 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
                 variant="ghost"
                 onClick={onRestart}
                 disabled={disableReplayControls}
-                className="rounded-full h-7 w-7"
+                className="w-8 h-8 rounded-full hover:text-primary"
               >
-                <HiRefresh className="w-3.5 h-3.5" />
+                <RotateCcw className="w-4 h-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="text-xs">
@@ -144,7 +152,7 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
           </Tooltip>
         </TooltipProvider>
 
-        <div className="w-px h-4 bg-border/50" />
+        <div className="w-px h-4 mx-1 bg-border/50" />
 
         {/* Step Navigation */}
         <div className="flex items-center gap-0.5">
@@ -157,9 +165,9 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
                   variant="ghost"
                   onClick={() => onSeek(Math.max(1, sliderValue - 10))}
                   disabled={disableReplayControls || sliderValue <= 1}
-                  className="h-7 w-7"
+                  className="w-8 h-8 hover:text-primary"
                 >
-                  <HiChevronDoubleLeft className="w-3.5 h-3.5" />
+                  <ChevronsLeft className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
@@ -177,9 +185,9 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
                   variant="ghost"
                   onClick={() => onSeek(Math.max(1, sliderValue - 1))}
                   disabled={disableReplayControls || sliderValue <= 1}
-                  className="h-7 w-7"
+                  className="w-8 h-8 hover:text-primary"
                 >
-                  <HiChevronLeft className="w-3.5 h-3.5" />
+                  <ChevronLeft className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
@@ -197,9 +205,9 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
                   variant="ghost"
                   onClick={() => onSeek(Math.min(totalSteps, sliderValue + 1))}
                   disabled={disableReplayControls || sliderValue >= totalSteps}
-                  className="h-7 w-7"
+                  className="w-8 h-8 hover:text-primary"
                 >
-                  <HiChevronRight className="w-3.5 h-3.5" />
+                  <ChevronRight className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
@@ -217,9 +225,9 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
                   variant="ghost"
                   onClick={() => onSeek(Math.min(totalSteps, sliderValue + 10))}
                   disabled={disableReplayControls || sliderValue >= totalSteps}
-                  className="h-7 w-7"
+                  className="w-8 h-8 hover:text-primary"
                 >
-                  <HiChevronDoubleRight className="w-3.5 h-3.5" />
+                  <ChevronsRight className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
@@ -229,11 +237,11 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
           </TooltipProvider>
         </div>
 
-        <div className="w-px h-4 bg-border/50" />
+        <div className="w-px h-4 mx-1 bg-border/50" />
 
         {/* Progress Slider */}
-        <div className="flex items-center gap-2 flex-1 min-w-[100px] max-w-[400px]">
-          <span className="text-xs font-mono text-muted-foreground min-w-[2rem] text-right tabular-nums">
+        <div className="flex items-center gap-3 flex-1 min-w-[100px] max-w-[400px]">
+          <span className="text-xs font-mono text-muted-foreground min-w-[2.5rem] text-right tabular-nums">
             {sliderValue}
           </span>
           <Slider
@@ -243,9 +251,9 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
             value={sliderValue > 0 ? [sliderValue] : [1]}
             onValueChange={values => onSeek(values[0])}
             disabled={disableReplayControls}
-            className="flex-1"
+            className="flex-1 cursor-pointer"
           />
-          <span className="text-xs font-mono text-muted-foreground min-w-[2rem] tabular-nums">
+          <span className="text-xs font-mono text-muted-foreground min-w-[2.5rem] tabular-nums">
             {totalSteps}
           </span>
         </div>
@@ -257,7 +265,7 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
               size="sm"
               variant="outline"
               disabled={disableReplayControls}
-              className="h-7 px-2 text-xs font-mono min-w-[44px]"
+              className="h-7 px-2 text-xs font-mono min-w-[44px] ml-2"
             >
               {formatSpeedLabel(speed)}
             </Button>
@@ -283,14 +291,14 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
           <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2 ml-2">
                   <Switch
                     checked={animate}
                     onCheckedChange={onAnimateToggle}
                     disabled={disableReplayControls}
                     className="h-4 w-7 data-[state=checked]:bg-primary"
                   />
-                  <span className="hidden text-xs text-muted-foreground lg:inline">
+                  <span className="hidden text-xs font-medium lg:inline text-muted-foreground">
                     Animate
                   </span>
                 </div>
@@ -304,7 +312,7 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
 
         {/* Loading indicator */}
         {isLoadingMore && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 ml-2">
             {[0, 1, 2].map(i => (
               <div
                 key={i}
@@ -316,23 +324,25 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
         )}
 
         {/* Close */}
-        <TooltipProvider delayDuration={300}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => onToggle(false)}
-                className="rounded-full h-7 w-7 text-muted-foreground hover:text-foreground"
-              >
-                <HiX className="w-3.5 h-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs">
-              Exit Replay (Esc)
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div className="flex justify-end flex-1">
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => onToggle(false)}
+                  className="w-8 h-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                Exit Replay (Esc)
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
     );
   }
@@ -342,7 +352,7 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
     return (
       <div
         className={cn(
-          'flex flex-col gap-2 p-3 bg-background/95 backdrop-blur-sm border-t border-border',
+          'flex flex-col gap-3 p-4 bg-background border-t border-border shadow-2xl',
           className
         )}
       >
@@ -393,18 +403,6 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Animate Toggle */}
-          {onAnimateToggle && (
-            <div className="flex items-center gap-1">
-              <Switch
-                checked={animate}
-                onCheckedChange={onAnimateToggle}
-                disabled={disableReplayControls}
-                className="h-5 w-9 data-[state=checked]:bg-primary"
-              />
-            </div>
-          )}
         </div>
 
         {/* Controls Row */}
@@ -416,52 +414,52 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
               variant="ghost"
               onClick={() => onSeek(Math.max(1, sliderValue - 10))}
               disabled={disableReplayControls || sliderValue <= 1}
-              className="h-9 w-9"
+              className="w-10 h-10"
             >
-              <HiChevronDoubleLeft className="w-4 h-4" />
+              <ChevronsLeft className="w-5 h-5" />
             </Button>
             <Button
               size="icon"
               variant="ghost"
               onClick={() => onSeek(Math.max(1, sliderValue - 1))}
               disabled={disableReplayControls || sliderValue <= 1}
-              className="h-9 w-9"
+              className="w-10 h-10"
             >
-              <HiChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5" />
             </Button>
           </div>
 
           {/* Center: Play/Pause & Restart */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <Button
               size="icon"
               variant="ghost"
               onClick={onRestart}
               disabled={disableReplayControls}
-              className="h-9 w-9"
+              className="w-10 h-10 text-muted-foreground hover:text-foreground"
             >
-              <HiRefresh className="w-4 h-4" />
+              <RotateCcw className="w-5 h-5" />
             </Button>
             <Button
               size="icon"
               variant={playing ? 'default' : 'secondary'}
               onClick={onPlayPause}
               disabled={disableReplayControls}
-              className="rounded-full shadow h-11 w-11"
+              className="w-12 h-12 rounded-full shadow-lg"
             >
               {playing ? (
-                <HiPause className="w-5 h-5" />
+                <Pause className="w-6 h-6 fill-current" />
               ) : (
-                <HiPlay className="w-5 h-5 ml-0.5" />
+                <Play className="w-6 h-6 fill-current ml-0.5" />
               )}
             </Button>
             {isLoadingMore ? (
-              <div className="flex items-center justify-center h-9 w-9">
+              <div className="flex items-center justify-center w-10 h-10">
                 <div className="flex gap-0.5">
                   {[0, 1, 2].map(i => (
                     <div
                       key={i}
-                      className="w-1 h-1 rounded-full bg-primary animate-bounce"
+                      className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce"
                       style={{ animationDelay: `${i * 100}ms` }}
                     />
                   ))}
@@ -472,9 +470,9 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
                 size="icon"
                 variant="ghost"
                 onClick={() => onToggle(false)}
-                className="h-9 w-9 text-muted-foreground"
+                className="w-10 h-10 text-muted-foreground hover:text-destructive"
               >
-                <HiX className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </Button>
             )}
           </div>
@@ -486,18 +484,18 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
               variant="ghost"
               onClick={() => onSeek(Math.min(totalSteps, sliderValue + 1))}
               disabled={disableReplayControls || sliderValue >= totalSteps}
-              className="h-9 w-9"
+              className="w-10 h-10"
             >
-              <HiChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-5 h-5" />
             </Button>
             <Button
               size="icon"
               variant="ghost"
               onClick={() => onSeek(Math.min(totalSteps, sliderValue + 10))}
               disabled={disableReplayControls || sliderValue >= totalSteps}
-              className="h-9 w-9"
+              className="w-10 h-10"
             >
-              <HiChevronDoubleRight className="w-4 h-4" />
+              <ChevronsRight className="w-5 h-5" />
             </Button>
           </div>
         </div>
@@ -507,7 +505,7 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
 
   // Popover variant - for desktop header dropdown
   return (
-    <div className={cn('p-3 space-y-3', className)}>
+    <div className={cn('p-4 space-y-4 min-w-[280px]', className)}>
       {/* Header with Toggle */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -519,7 +517,7 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
           <span className="text-sm font-medium">Replay Mode</span>
         </div>
         {enabled && (
-          <span className="font-mono text-xs text-muted-foreground tabular-nums">
+          <span className="px-2 py-1 font-mono text-xs rounded text-muted-foreground tabular-nums bg-muted">
             {sliderValue}/{totalSteps}
           </span>
         )}
@@ -528,7 +526,7 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
       {enabled && (
         <>
           {/* Progress Slider */}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <Slider
               min={1}
               max={Math.max(totalSteps, 1)}
@@ -539,14 +537,16 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
               className="cursor-pointer"
             />
             {currentLabel && (
-              <p className="text-xs text-center truncate text-muted-foreground">
-                {currentLabel}
-              </p>
+              <div className="flex justify-center">
+                <span className="text-[10px] font-mono text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">
+                  {currentLabel}
+                </span>
+              </div>
             )}
           </div>
 
           {/* Controls */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pt-1">
             {/* Playback Controls */}
             <div className="flex items-center gap-1">
               <Button
@@ -554,9 +554,9 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
                 variant="ghost"
                 onClick={onRestart}
                 disabled={disableReplayControls}
-                className="w-8 h-8"
+                className="w-8 h-8 hover:text-primary"
               >
-                <HiRefresh className="w-4 h-4" />
+                <RotateCcw className="w-4 h-4" />
               </Button>
               <Button
                 size="icon"
@@ -565,19 +565,19 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
                 disabled={disableReplayControls || sliderValue <= 1}
                 className="w-8 h-8"
               >
-                <HiChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-4 h-4" />
               </Button>
               <Button
                 size="icon"
                 variant={playing ? 'default' : 'secondary'}
                 onClick={onPlayPause}
                 disabled={disableReplayControls}
-                className="h-9 w-9"
+                className="rounded-full h-9 w-9"
               >
                 {playing ? (
-                  <HiPause className="w-4 h-4" />
+                  <Pause className="w-4 h-4 fill-current" />
                 ) : (
-                  <HiPlay className="w-4 h-4 ml-0.5" />
+                  <Play className="w-4 h-4 fill-current ml-0.5" />
                 )}
               </Button>
               <Button
@@ -587,7 +587,7 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
                 disabled={disableReplayControls || sliderValue >= totalSteps}
                 className="w-8 h-8"
               >
-                <HiChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
 
@@ -598,7 +598,7 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
                   size="sm"
                   variant="outline"
                   disabled={disableReplayControls}
-                  className="h-8 px-2 font-mono text-xs"
+                  className="px-2 font-mono text-xs h-7"
                 >
                   {formatSpeedLabel(speed)}
                 </Button>
@@ -622,22 +622,22 @@ const ReplayControls: React.FC<ReplayControlsProps> = ({
 
           {/* Animate Toggle */}
           {onAnimateToggle && (
-            <div className="flex items-center justify-between pt-1 border-t border-border/50">
+            <div className="flex items-center justify-between pt-3 border-t border-border/50">
               <span className="text-xs text-muted-foreground">
-                Animate candle formation
+                Smooth Animation
               </span>
               <Switch
                 checked={animate}
                 onCheckedChange={onAnimateToggle}
                 disabled={disableReplayControls}
-                className="data-[state=checked]:bg-primary"
+                className="h-4 w-7 data-[state=checked]:bg-primary"
               />
             </div>
           )}
 
           {/* Loading Indicator */}
           {isLoadingMore && (
-            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center justify-center gap-2 pt-2 text-xs text-muted-foreground">
               <div className="flex gap-1">
                 {[0, 1, 2].map(i => (
                   <div

@@ -27,7 +27,6 @@ import { selectAutoRefresh, selectChartType } from '../../graphSlice';
 import { getBaseChartOptions } from '../../lib/chartOptions';
 import { createSeriesForType } from '../../lib/createSeries';
 import { useResizeObserver } from '../../hooks/useResizeObserver';
-import { useIsMobile } from '@/hooks/useMobile';
 import { useIndicatorUI } from '../../context';
 import type { CalculatedIndicator } from '../../lib/indicators';
 
@@ -100,7 +99,6 @@ const PriceChartPanel: React.FC<PriceChartPanelProps> = memo(
     const reduxChartType = useAppSelector(selectChartType);
     const chartType = chartTypeOverride || reduxChartType;
     const autoRefresh = useAppSelector(selectAutoRefresh);
-    const isMobile = useIsMobile();
     const { openConfig, removeIndicator } = useIndicatorUI();
     const mainChartContainerRef = useRef<HTMLDivElement | null>(null);
     const mainChartRef = useRef<IChartApi | null>(null);
@@ -121,7 +119,6 @@ const PriceChartPanel: React.FC<PriceChartPanelProps> = memo(
     const legendContainerRef = useRef<HTMLDivElement | null>(null);
     const priceSectionRef = useRef<HTMLDivElement | null>(null);
     const overlaySectionRef = useRef<HTMLDivElement | null>(null);
-    const loadingIndicatorRef = useRef<HTMLDivElement | null>(null);
     const onLoadMoreDataRef = useRef(onLoadMoreData);
     const isLoadingMoreRef = useRef(isLoadingMore);
     // Keep seriesData in ref for crosshair callback to avoid stale closure
@@ -215,44 +212,27 @@ const PriceChartPanel: React.FC<PriceChartPanelProps> = memo(
 
         if (isOHLC && 'open' in data) {
           const { open, high, low, close } = data as BarData;
-          const priceItems = isMobile
-            ? [
-                { label: 'O', value: open.toFixed(2), color: '#3B82F6' },
-                { label: 'H', value: high.toFixed(2), color: '#26a69a' },
-                { label: 'L', value: low.toFixed(2), color: '#ef5350' },
-                { label: 'C', value: close.toFixed(2), color: '#F59E0B' },
-                ...(showVolumeRef.current && volume !== undefined
-                  ? [
-                      {
-                        label: 'V',
-                        value: formatVolume(volume),
-                        color: '#7c3aed',
-                      },
-                    ]
-                  : []),
-              ]
-            : [
-                { label: 'Open', value: open.toFixed(2), color: '#3B82F6' },
-                { label: 'High', value: high.toFixed(2), color: '#26a69a' },
-                { label: 'Low', value: low.toFixed(2), color: '#ef5350' },
-                { label: 'Close', value: close.toFixed(2), color: '#F59E0B' },
-                ...(showVolumeRef.current && volume !== undefined
-                  ? [
-                      {
-                        label: 'Vol',
-                        value: formatVolume(volume),
-                        color: '#7c3aed',
-                      },
-                    ]
-                  : []),
-              ];
+          const isUp = close >= open;
 
-          // Build HTML string instead of creating elements
+          const priceItems = [
+            { label: 'O', value: open.toFixed(2) },
+            { label: 'H', value: high.toFixed(2) },
+            { label: 'L', value: low.toFixed(2) },
+            { label: 'C', value: close.toFixed(2) },
+          ];
+
+          if (showVolumeRef.current && volume !== undefined) {
+            priceItems.push({ label: 'V', value: formatVolume(volume) });
+          }
+
+          // Build HTML string
           const html = priceItems
-            .map(({ label, value, color }) =>
-              isMobile
-                ? `<div class="flex items-center gap-0.5"><span class="text-xs font-bold tracking-wide uppercase" style="color: ${color}">${label}</span><span class="text-xs font-bold text-foreground">${value}</span></div>`
-                : `<div class="flex items-center gap-1"><span class="text-xs font-medium tracking-wide uppercase text-muted-foreground">${label}</span><span class="text-sm font-bold" style="color: ${color}">${value}</span></div>`
+            .map(
+              ({ label, value }) =>
+                `<div class="flex items-baseline gap-1">
+                 <span class="text-muted-foreground font-semibold">${label}</span>
+                 <span class="font-mono ${label === 'C' ? (isUp ? 'text-success' : 'text-destructive') : 'text-foreground'}">${value}</span>
+               </div>`
             )
             .join('');
 
@@ -261,13 +241,16 @@ const PriceChartPanel: React.FC<PriceChartPanelProps> = memo(
           }
         } else if ('value' in data) {
           const value = (data as LineData).value;
-          const html = `<span class="text-sm font-bold text-foreground">${value.toFixed(2)}</span>`;
+          const html = `<div class="flex items-baseline gap-1">
+            <span class="text-muted-foreground font-semibold">Value</span>
+            <span class="font-mono text-foreground">${value.toFixed(2)}</span>
+          </div>`;
           if (priceSection.innerHTML !== html) {
             priceSection.innerHTML = html;
           }
         }
       },
-      [chartType, isMobile]
+      [chartType]
     );
 
     // Keep updateLegend in ref for crosshair callback
@@ -417,23 +400,25 @@ const PriceChartPanel: React.FC<PriceChartPanelProps> = memo(
         }
 
         // Build the indicator item - compact inline style with settings and remove icons on right
-        const settingsIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path fill-rule="evenodd" d="M8.34 1.804A1 1 0 019.32 1h1.36a1 1 0 01.98.804l.21 1.042a5.5 5.5 0 011.46.843l1.01-.344a1 1 0 011.19.447l.68 1.178a1 1 0 01-.21 1.25l-.8.703a5.5 5.5 0 010 1.686l.8.704a1 1 0 01.21 1.25l-.68 1.177a1 1 0 01-1.19.448l-1.01-.345a5.5 5.5 0 01-1.46.844l-.21 1.041a1 1 0 01-.98.804H9.32a1 1 0 01-.98-.804l-.21-1.041a5.5 5.5 0 01-1.46-.844l-1.01.345a1 1 0 01-1.19-.448l-.68-1.177a1 1 0 01.21-1.25l.8-.704a5.5 5.5 0 010-1.686l-.8-.703a1 1 0 01-.21-1.25l.68-1.178a1 1 0 011.19-.447l1.01.344a5.5 5.5 0 011.46-.843l.21-1.042zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>`;
-        const removeIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>`;
+        const settingsIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>`;
+        const removeIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`;
 
         overlayItems.push(`
-            <div class="inline-flex items-center gap-1 group/ind">
-              <span class="font-semibold text-muted-foreground">${displayLabel}</span>
+            <div class="inline-flex items-center gap-1.5 group/ind px-1.5 py-0.5 rounded hover:bg-muted/50 transition-colors pointer-events-auto">
+              <span class="font-medium text-foreground">${displayLabel}</span>
               ${valueHtml}
-              <button 
-                class="p-0.5 rounded hover:bg-primary/20 text-muted-foreground hover:text-primary transition-all cursor-pointer" 
-                data-config-id="${instance.instanceId}"
-                title="Configure ${displayLabel}"
-              >${settingsIconSvg}</button>
-              <button 
-                class="p-0.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-all cursor-pointer" 
-                data-remove-id="${instance.instanceId}"
-                title="Remove ${displayLabel}"
-              >${removeIconSvg}</button>
+              <div class="flex items-center opacity-0 group-hover/ind:opacity-100 transition-opacity ml-1">
+                <button 
+                  class="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors cursor-pointer" 
+                  data-config-id="${instance.instanceId}"
+                  title="Configure ${displayLabel}"
+                >${settingsIconSvg}</button>
+                <button 
+                  class="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors cursor-pointer" 
+                  data-remove-id="${instance.instanceId}"
+                  title="Remove ${displayLabel}"
+                >${removeIconSvg}</button>
+              </div>
             </div>
           `);
       });
@@ -510,19 +495,19 @@ const PriceChartPanel: React.FC<PriceChartPanelProps> = memo(
       // Create legend with reusable DOM structure
       const legendContainer = document.createElement('div');
       legendContainer.className =
-        'absolute px-3 py-2 border rounded-lg top-2 left-2 bg-card/95 border-border/50';
-      legendContainer.style.zIndex = '20';
+        'absolute px-3 py-2 border rounded-md top-2 left-2 bg-background/80 backdrop-blur-md border-border/50 shadow-sm transition-all duration-200 select-none pointer-events-none z-20';
 
       // OHLC section - reuse element
       const priceSection = document.createElement('div');
-      priceSection.className = 'flex items-center gap-3 text-sm font-bold';
+      priceSection.className =
+        'flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium';
       legendContainer.appendChild(priceSection);
       priceSectionRef.current = priceSection;
 
       // Overlay indicators section - inside the legend but as a separate row
       const overlaySection = document.createElement('div');
       overlaySection.className =
-        'flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs';
+        'flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs border-t border-border/50 pt-1.5 empty:hidden';
       overlaySection.style.display = 'none';
       legendContainer.appendChild(overlaySection);
       overlaySectionRef.current = overlaySection;
@@ -564,16 +549,6 @@ const PriceChartPanel: React.FC<PriceChartPanelProps> = memo(
           rafId = null;
         });
       });
-
-      // Add loading indicator
-      const loadingIndicator = document.createElement('div');
-      loadingIndicator.className =
-        'absolute px-3 py-2 text-xs font-medium border rounded-lg shadow-lg bottom-2 right-2 text-primary bg-card/95 border-border/50';
-      loadingIndicator.textContent = 'Loading history...';
-      loadingIndicator.style.display = 'none';
-      loadingIndicator.style.zIndex = '10';
-      containerEl.appendChild(loadingIndicator);
-      loadingIndicatorRef.current = loadingIndicator;
 
       // Create initial series and set data if available
       // This ensures data is displayed even if it arrived before chart initialization
@@ -986,18 +961,14 @@ const PriceChartPanel: React.FC<PriceChartPanelProps> = memo(
       updateOverlayLegendRef.current({} as MouseEventParams<Time>);
     }, [overlayIndicators, mode]);
 
-    // Show/hide loading indicator
-    useEffect(() => {
-      if (loadingIndicatorRef.current && !autoRefresh) {
-        loadingIndicatorRef.current.style.display = isLoadingMore
-          ? 'block'
-          : 'none';
-      }
-    }, [isLoadingMore, autoRefresh]);
-
     return (
-      <div ref={mainChartContainerRef} className="relative w-full h-full">
-        {/* Chart will be rendered here */}
+      <div ref={mainChartContainerRef} className="relative w-full h-full group">
+        {isLoadingMore && !autoRefresh && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-background/80 backdrop-blur px-4 py-2 rounded-full border border-border shadow-lg flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-medium">Loading history...</span>
+          </div>
+        )}
       </div>
     );
   }

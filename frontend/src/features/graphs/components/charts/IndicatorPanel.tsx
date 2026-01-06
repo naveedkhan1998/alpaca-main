@@ -133,7 +133,7 @@ const IndicatorPanel: React.FC<IndicatorPanelProps> = memo(
         // Create legend container
         const legend = document.createElement('div');
         legend.className =
-          'absolute z-10 flex items-center gap-2 px-2 py-1 text-xs border rounded-lg top-2 left-2 bg-card/95 border-border/50';
+          'absolute z-10 flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-1.5 text-xs font-medium border rounded-md shadow-sm top-2 left-2 bg-background/80 backdrop-blur-md border-border/50 transition-all duration-200 empty:hidden pointer-events-none select-none';
         containerEl.appendChild(legend);
         legendRef.current = legend;
 
@@ -193,7 +193,7 @@ const IndicatorPanel: React.FC<IndicatorPanelProps> = memo(
         if (!legendRef.current) return;
 
         const parts: string[] = [
-          `<span class="font-semibold">${displayLabel}</span>`,
+          `<span class="font-bold text-foreground tracking-tight mr-1">${displayLabel}</span>`,
         ];
 
         seriesRefs.current.forEach((series, key) => {
@@ -204,16 +204,24 @@ const IndicatorPanel: React.FC<IndicatorPanelProps> = memo(
             const color =
               (instance.config[`${key}Color`] as string) ||
               outputDef?.defaultColor ||
-              '#888';
+              'currentColor';
+
+            // Format value based on magnitude
+            const val = Number(data.value);
+            const formattedVal =
+              Math.abs(val) < 1 ? val.toFixed(4) : val.toFixed(2);
+
             parts.push(
-              `<span style="color: ${color}">${label}: ${Number(data.value).toFixed(2)}</span>`
+              `<div class="flex items-center gap-1.5">
+                 <div class="w-1.5 h-1.5 rounded-full" style="background-color: ${color}"></div>
+                 <span class="text-muted-foreground">${label}:</span>
+                 <span class="font-mono text-foreground" style="color: ${color}">${formattedVal}</span>
+               </div>`
             );
           }
         });
 
-        const html = parts.join(
-          ' <span class="text-muted-foreground">|</span> '
-        );
+        const html = parts.join('');
         if (legendRef.current.innerHTML !== html) {
           legendRef.current.innerHTML = html;
         }
@@ -474,7 +482,7 @@ const IndicatorPanel: React.FC<IndicatorPanelProps> = memo(
       // Update legend with last values
       if (legendRef.current) {
         const parts: string[] = [
-          `<span class="font-semibold">${displayLabel}</span>`,
+          `<span class="font-bold text-foreground tracking-tight mr-1">${displayLabel}</span>`,
         ];
 
         seriesRefs.current.forEach((_series, key) => {
@@ -483,7 +491,9 @@ const IndicatorPanel: React.FC<IndicatorPanelProps> = memo(
           const color =
             (instance.config[`${key}Color`] as string) ||
             outputDef?.defaultColor ||
-            '#888';
+            'currentColor';
+
+          let value: number | undefined;
 
           // Get last value
           if (output.type === 'line') {
@@ -492,9 +502,7 @@ const IndicatorPanel: React.FC<IndicatorPanelProps> = memo(
               const lastPoint =
                 dataArr.length > 0 ? dataArr[dataArr.length - 1] : undefined;
               if (lastPoint) {
-                parts.push(
-                  `<span style="color: ${color}">${label}: ${lastPoint.value.toFixed(2)}</span>`
-                );
+                value = lastPoint.value;
               }
             }
           } else if (output.type === 'multi-line') {
@@ -507,17 +515,25 @@ const IndicatorPanel: React.FC<IndicatorPanelProps> = memo(
                   ? seriesData[seriesData.length - 1]
                   : undefined;
               if (lastPoint && 'value' in lastPoint) {
-                parts.push(
-                  `<span style="color: ${color}">${label}: ${Number(lastPoint.value).toFixed(2)}</span>`
-                );
+                value = lastPoint.value;
               }
             }
           }
+
+          if (value !== undefined) {
+            const formattedVal =
+              Math.abs(value) < 1 ? value.toFixed(4) : value.toFixed(2);
+            parts.push(
+              `<div class="flex items-center gap-1.5">
+                 <div class="w-1.5 h-1.5 rounded-full" style="background-color: ${color}"></div>
+                 <span class="text-muted-foreground">${label}:</span>
+                 <span class="font-mono text-foreground" style="color: ${color}">${formattedVal}</span>
+               </div>`
+            );
+          }
         });
 
-        const html = parts.join(
-          ' <span class="text-muted-foreground">|</span> '
-        );
+        const html = parts.join('');
         if (legendRef.current.innerHTML !== html) {
           legendRef.current.innerHTML = html;
         }
