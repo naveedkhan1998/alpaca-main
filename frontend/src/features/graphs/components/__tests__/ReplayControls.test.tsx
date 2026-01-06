@@ -192,7 +192,6 @@ describe('ReplayControls', () => {
       const playButton = screen.getByTestId('button-secondary');
       expect(playButton).toBeDisabled();
     });
-
   });
 
   describe('popover variant (desktop)', () => {
@@ -270,7 +269,6 @@ describe('ReplayControls', () => {
       // The speed dropdown button shows current speed
       expect(screen.getByText('2×')).toBeInTheDocument();
     });
-
 
     it('shows loading state when isLoadingMore is true', () => {
       render(
