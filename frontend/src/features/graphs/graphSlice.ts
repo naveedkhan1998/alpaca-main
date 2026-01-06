@@ -57,7 +57,7 @@ const initialState: GraphState = {
     speed: 1,
     currentStep: 0,
     totalSteps: 0,
-    animate: false,
+    animate: true,
     animationProgress: 1,
   },
 };

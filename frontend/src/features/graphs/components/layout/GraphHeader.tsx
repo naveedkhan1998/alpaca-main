@@ -11,19 +11,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-
 import { Helmet } from '@dr.pogodin/react-helmet';
 import {
-  HiArrowLeft,
-  HiArrowsExpand,
-  HiChartBar,
-  HiDotsVertical,
-  HiDownload,
-  HiPause,
-  HiPlay,
-  HiRefresh,
-  HiX,
-} from 'react-icons/hi';
+  ArrowLeft,
+  Maximize2,
+  Minimize2,
+  MoreVertical,
+  Download,
+  Play,
+  Pause,
+  RotateCw,
+  TrendingUp,
+  TrendingDown,
+  BarChart2,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
 import { getIsGuest } from 'src/features/auth/authSlice';
@@ -38,9 +39,12 @@ import { Asset } from '@/types/common-types';
 import { ModeToggle } from '@/components/ModeToggle';
 import { useIsMobile } from '@/hooks/useMobile';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { cn } from '@/lib/utils';
 
 interface GraphHeaderProps {
   obj: Asset;
+  lastPrice?: number;
+  previousClose?: number;
   handleDownload: () => void;
   refetch: () => void;
   toggleFullscreen: () => void;
@@ -64,6 +68,8 @@ interface GraphHeaderProps {
 
 const GraphHeader: React.FC<GraphHeaderProps> = ({
   obj,
+  lastPrice,
+  previousClose,
   handleDownload,
   refetch,
   toggleFullscreen,
@@ -85,31 +91,81 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
     onPlayPause: playPauseReplay,
   } = replayControls;
 
+  // Calculate price change
+  const priceChange =
+    lastPrice !== undefined && previousClose !== undefined
+      ? lastPrice - previousClose
+      : 0;
+  const priceChangePercent =
+    previousClose && previousClose !== 0
+      ? (priceChange / previousClose) * 100
+      : 0;
+  const isPositive = priceChange >= 0;
+
   return (
-    <header className="sticky top-0 z-30 border-b bg-background">
+    <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <Helmet>
-        <title>{obj?.name} - Alpaca</title>
+        <title>
+          {obj?.symbol} {lastPrice ? `$${lastPrice.toFixed(2)}` : ''} - Alpaca
+        </title>
       </Helmet>
-      <div className={`flex items-center h-14 px-4`}>
+      <div className="flex items-center h-14 px-4 gap-4">
         {/* Left Section - Navigation & Title */}
-        <div className="flex items-center flex-1 gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
-            className="w-8 h-8"
+            className="w-8 h-8 shrink-0 text-muted-foreground hover:text-foreground"
           >
-            <HiArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4" />
           </Button>
 
-          <div>
-            <h1 className="text-sm font-semibold font-mono">
-              {obj?.symbol || 'Chart'}
-            </h1>
-            {!isMobile && obj?.name && (
-              <p className="text-xs text-muted-foreground truncate max-w-[200px]">
-                {obj.name}
-              </p>
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="flex flex-col">
+              <div className="flex items-baseline gap-2">
+                <h1 className="text-lg font-bold tracking-tight font-mono leading-none">
+                  {obj?.symbol || 'Chart'}
+                </h1>
+                <span className="text-xs font-medium text-muted-foreground truncate hidden sm:inline-block max-w-[150px]">
+                  {obj?.exchange}
+                </span>
+              </div>
+              {!isMobile && obj?.name && (
+                <p className="text-[10px] text-muted-foreground truncate max-w-[200px] leading-tight">
+                  {obj.name}
+                </p>
+              )}
+            </div>
+
+            {/* Price Display */}
+            {lastPrice !== undefined && (
+              <div className="hidden sm:flex flex-col items-end border-l pl-4 border-border/50">
+                <span
+                  className={cn(
+                    'text-lg font-bold font-mono leading-none tracking-tight',
+                    isPositive ? 'text-success' : 'text-destructive'
+                  )}
+                >
+                  ${lastPrice.toFixed(2)}
+                </span>
+                <div
+                  className={cn(
+                    'flex items-center gap-1 text-[10px] font-medium leading-tight',
+                    isPositive ? 'text-success' : 'text-destructive'
+                  )}
+                >
+                  {isPositive ? (
+                    <TrendingUp className="w-3 h-3" />
+                  ) : (
+                    <TrendingDown className="w-3 h-3" />
+                  )}
+                  <span>
+                    {priceChange > 0 ? '+' : ''}
+                    {priceChange.toFixed(2)} ({priceChangePercent.toFixed(2)}%)
+                  </span>
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -122,15 +178,22 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                 <Button
                   variant={replayEnabled ? 'secondary' : 'ghost'}
                   size="sm"
-                  className="h-8 gap-2"
+                  className={cn(
+                    'h-8 gap-2 transition-all',
+                    replayEnabled &&
+                      'bg-primary/10 text-primary hover:bg-primary/20'
+                  )}
                   onClick={() => toggleReplay(!replayEnabled)}
                 >
-                  <HiPlay
-                    className={`w-4 h-4 ${replayEnabled ? 'text-primary' : ''}`}
+                  <Play
+                    className={cn(
+                      'w-3.5 h-3.5',
+                      replayEnabled && 'fill-current'
+                    )}
                   />
                   {!isMobile && (
-                    <span className="text-xs">
-                      {replayEnabled ? 'Replay On' : 'Replay'}
+                    <span className="text-xs font-medium">
+                      {replayEnabled ? 'Replay Mode' : 'Replay'}
                     </span>
                   )}
                 </Button>
@@ -143,26 +206,29 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
 
           {/* Quick play/pause when replay is active */}
           {replayEnabled && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="w-8 h-8 ml-1"
-              onClick={playPauseReplay}
-            >
-              {replayPlaying ? (
-                <HiPause className="w-4 h-4 text-primary" />
-              ) : (
-                <HiPlay className="w-4 h-4" />
-              )}
-            </Button>
+            <div className="flex items-center gap-1 ml-1 animate-in fade-in slide-in-from-left-2 duration-200">
+              <div className="w-px h-4 bg-border mx-1" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-8 h-8 hover:text-primary"
+                onClick={playPauseReplay}
+              >
+                {replayPlaying ? (
+                  <Pause className="w-4 h-4 fill-current" />
+                ) : (
+                  <Play className="w-4 h-4 fill-current" />
+                )}
+              </Button>
+            </div>
           )}
         </div>
 
         {/* Right Section - Other Controls */}
-        <div className="flex items-center justify-end flex-1 gap-1">
+        <div className="flex items-center justify-end gap-1 shrink-0">
           <TooltipProvider>
             {!isMobile && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 mr-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -172,12 +238,17 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                         if (!requireAuth('enable live updates')) return;
                         dispatch(setAutoRefresh(!autoRefresh));
                       }}
-                      className="w-8 h-8"
+                      className={cn(
+                        'w-8 h-8 transition-colors',
+                        autoRefresh
+                          ? 'bg-success text-success-foreground hover:bg-success/90'
+                          : 'text-muted-foreground hover:text-foreground'
+                      )}
                     >
                       {autoRefresh ? (
-                        <HiPause className="w-4 h-4" />
+                        <Pause className="w-4 h-4" />
                       ) : (
-                        <HiPlay className="w-4 h-4" />
+                        <Play className="w-4 h-4" />
                       )}
                     </Button>
                   </TooltipTrigger>
@@ -185,8 +256,8 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                     {isGuest
                       ? 'Log in to enable live updates'
                       : autoRefresh
-                        ? 'Pause Live'
-                        : 'Enable Live'}
+                        ? 'Pause Live Data'
+                        : 'Enable Live Data'}
                   </TooltipContent>
                 </Tooltip>
                 <Tooltip>
@@ -195,9 +266,9 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                       variant="ghost"
                       size="icon"
                       onClick={refetch}
-                      className="w-8 h-8"
+                      className="w-8 h-8 text-muted-foreground hover:text-foreground"
                     >
-                      <HiRefresh className="w-4 h-4" />
+                      <RotateCw className="w-4 h-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className="text-xs">Refresh</TooltipContent>
@@ -208,12 +279,12 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
                       variant="ghost"
                       size="icon"
                       onClick={toggleFullscreen}
-                      className="w-8 h-8"
+                      className="w-8 h-8 text-muted-foreground hover:text-foreground"
                     >
                       {isFullscreen ? (
-                        <HiX className="w-4 h-4" />
+                        <Minimize2 className="w-4 h-4" />
                       ) : (
-                        <HiArrowsExpand className="w-4 h-4" />
+                        <Maximize2 className="w-4 h-4" />
                       )}
                     </Button>
                   </TooltipTrigger>
@@ -225,23 +296,29 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
             )}
           </TooltipProvider>
 
+          <div className="h-4 w-px bg-border/50 hidden sm:block mx-1" />
+
           <ModeToggle />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="w-8 h-8">
-                <HiDotsVertical className="w-4 h-4" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-8 h-8 text-muted-foreground hover:text-foreground"
+              >
+                <MoreVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem
                 onClick={() => dispatch(setShowVolume(!showVolume))}
               >
-                <HiChartBar className="w-4 h-4 mr-2" />
+                <BarChart2 className="w-4 h-4 mr-2" />
                 {showVolume ? 'Hide' : 'Show'} Volume
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleDownload}>
-                <HiDownload className="w-4 h-4 mr-2" />
+                <Download className="w-4 h-4 mr-2" />
                 Export CSV
               </DropdownMenuItem>
             </DropdownMenuContent>

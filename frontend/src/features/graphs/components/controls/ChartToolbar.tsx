@@ -32,16 +32,17 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import {
-  HiClock,
-  HiChartBar,
-  HiChartSquareBar,
-  HiPresentationChartLine,
-  HiTrendingUp,
-  HiBeaker,
-  HiOutlineChartPie,
-  HiAdjustments,
-  HiChevronDown,
-} from 'react-icons/hi';
+  Clock,
+  BarChart2,
+  BarChart,
+  AreaChart,
+  LineChart,
+  Activity,
+  ChevronDown,
+  LayoutTemplate,
+  Settings2,
+  FunctionSquare,
+} from 'lucide-react';
 import type { SeriesType } from 'lightweight-charts';
 import { timeframeOptions } from '@/lib/constants';
 import { useIndicatorUI } from '../../context';
@@ -55,23 +56,23 @@ const chartTypeOptions: {
   {
     value: 'Candlestick',
     label: 'Candlesticks',
-    icon: <HiChartBar className="w-4 h-4" />,
+    icon: <BarChart2 className="w-4 h-4" />,
   },
-  { value: 'Line', label: 'Line', icon: <HiTrendingUp className="w-4 h-4" /> },
+  { value: 'Line', label: 'Line', icon: <LineChart className="w-4 h-4" /> },
   {
     value: 'Area',
     label: 'Area',
-    icon: <HiPresentationChartLine className="w-4 h-4" />,
+    icon: <AreaChart className="w-4 h-4" />,
   },
   {
     value: 'Bar',
     label: 'Bars',
-    icon: <HiChartSquareBar className="w-4 h-4" />,
+    icon: <BarChart className="w-4 h-4" />,
   },
   {
     value: 'Baseline',
     label: 'Baseline',
-    icon: <HiBeaker className="w-4 h-4" />,
+    icon: <Activity className="w-4 h-4" />,
   },
 ];
 
@@ -79,19 +80,19 @@ const presetOptions = [
   {
     id: 'classic',
     label: 'Classic',
-    icon: <HiChartBar className="w-4 h-4" />,
+    icon: <BarChart2 className="w-4 h-4" />,
     description: 'Candlesticks + Volume',
   },
   {
     id: 'clean',
     label: 'Clean',
-    icon: <HiTrendingUp className="w-4 h-4" />,
+    icon: <LineChart className="w-4 h-4" />,
     description: 'Line chart only',
   },
   {
     id: 'baseline',
     label: 'Baseline',
-    icon: <HiBeaker className="w-4 h-4" />,
+    icon: <Activity className="w-4 h-4" />,
     description: 'Baseline chart',
   },
 ];
@@ -134,17 +135,19 @@ export default function ChartToolbar() {
 
   return (
     <>
-      <div className="flex items-center gap-1 p-2 overflow-x-auto border-b bg-muted/30">
-        <div className="flex items-center flex-shrink-0 gap-1">
+      <div className="flex items-center gap-2 p-2 px-4 overflow-x-auto border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        {/* Left Group: View Controls */}
+        <div className="flex items-center gap-1">
           {/* Presets Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 px-2 gap-1.5">
-                <HiAdjustments className="w-4 h-4" />
-                <span className="hidden text-xs font-medium sm:inline">
-                  Presets
-                </span>
-                <HiChevronDown className="w-3 h-3" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 gap-1.5 text-muted-foreground hover:text-foreground"
+              >
+                <LayoutTemplate className="w-4 h-4" />
+                <HiChevronDown className="w-3 h-3 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
@@ -156,7 +159,7 @@ export default function ChartToolbar() {
                   onClick={() =>
                     applyPreset(preset.id as 'classic' | 'clean' | 'baseline')
                   }
-                  className="flex items-center gap-2 hover:bg-accent/80 focus:bg-accent/80"
+                  className="flex items-center gap-2"
                 >
                   {preset.icon}
                   <div className="flex flex-col">
@@ -170,18 +173,22 @@ export default function ChartToolbar() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Separator orientation="vertical" className="hidden h-6 sm:block" />
+          <div className="w-px h-4 bg-border/50 mx-1" />
 
           {/* Timeframe Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 px-2 gap-1.5">
-                <HiClock className="w-4 h-4" />
-                <span className="text-xs font-medium">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 gap-1.5 font-medium"
+              >
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs">
                   {timeframeOptions.find(t => t.value === timeframe)?.label ||
                     `${timeframe}m`}
                 </span>
-                <HiChevronDown className="w-3 h-3" />
+                <ChevronDown className="w-3 h-3 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-32">
@@ -191,15 +198,13 @@ export default function ChartToolbar() {
                 <DropdownMenuItem
                   key={tf.value}
                   onClick={() => dispatch(setTimeframe(tf.value))}
-                  className={`hover:bg-accent/80 focus:bg-accent/80 ${timeframe === tf.value ? 'bg-accent' : ''}`}
+                  className={timeframe === tf.value ? 'bg-accent' : ''}
                 >
                   {tf.label}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <Separator orientation="vertical" className="hidden h-6 sm:block" />
 
           {/* Chart Style Dropdown */}
           <DropdownMenu>
@@ -209,7 +214,7 @@ export default function ChartToolbar() {
                 <span className="hidden text-xs font-medium sm:inline">
                   {chartTypeOptions.find(t => t.value === chartType)?.label}
                 </span>
-                <HiChevronDown className="w-3 h-3" />
+                <ChevronDown className="w-3 h-3 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-40">
@@ -219,7 +224,7 @@ export default function ChartToolbar() {
                 <DropdownMenuItem
                   key={type.value}
                   onClick={() => dispatch(setChartType(type.value))}
-                  className={`flex items-center gap-2 hover:bg-accent/80 focus:bg-accent/80 ${chartType === type.value ? 'bg-accent' : ''}`}
+                  className={chartType === type.value ? 'bg-accent' : ''}
                 >
                   {type.icon}
                   {type.label}
@@ -227,75 +232,92 @@ export default function ChartToolbar() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
 
-          <Separator orientation="vertical" className="hidden h-6 sm:block" />
+        <div className="w-px h-4 bg-border/50 mx-1" />
 
+        {/* Center/Right Group: Analysis */}
+        <div className="flex items-center gap-1">
           {/* Indicators Button */}
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 px-2 gap-1.5 relative"
+            className="h-8 px-2 gap-1.5 relative text-muted-foreground hover:text-foreground"
             onClick={openSelector}
           >
-            <HiOutlineChartPie className="w-4 h-4" />
+            <FunctionSquare className="w-4 h-4" />
             <span className="hidden text-xs font-medium sm:inline">
               Indicators
             </span>
             {instances.length > 0 && (
               <Badge
                 variant="secondary"
-                className="absolute -top-1 -right-1 h-4 w-4 p-0 text-[10px] flex items-center justify-center bg-primary text-primary-foreground"
+                className="absolute -top-1 -right-1 h-4 w-4 p-0 text-[10px] flex items-center justify-center bg-primary text-primary-foreground shadow-sm"
               >
                 {instances.length}
               </Badge>
             )}
           </Button>
 
-          <Separator orientation="vertical" className="hidden h-6 sm:block" />
-
           {/* Settings Popover */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 px-2 gap-1.5">
-                <HiAdjustments className="w-4 h-4" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 gap-1.5 text-muted-foreground hover:text-foreground"
+              >
+                <Settings2 className="w-4 h-4" />
                 <span className="hidden text-xs font-medium sm:inline">
                   Settings
                 </span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-56">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="show-volume" className="text-sm">
-                    Show Volume
-                  </Label>
-                  <Switch
-                    id="show-volume"
-                    checked={showVolume}
-                    onCheckedChange={show => dispatch(setShowVolume(show))}
-                  />
+            <PopoverContent align="end" className="w-60">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-muted-foreground">
+                    Display
+                  </h4>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="show-volume" className="text-sm">
+                      Show Volume
+                    </Label>
+                    <Switch
+                      id="show-volume"
+                      checked={showVolume}
+                      onCheckedChange={show => dispatch(setShowVolume(show))}
+                    />
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="candle-replay" className="text-sm">
-                    Candle Replay
-                  </Label>
-                  <Switch
-                    id="candle-replay"
-                    checked={replayEnabled}
-                    onCheckedChange={value => dispatch(setReplayEnabled(value))}
-                  />
-                </div>
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-muted-foreground">
+                    Features
+                  </h4>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="candle-replay" className="text-sm">
+                      Candle Replay
+                    </Label>
+                    <Switch
+                      id="candle-replay"
+                      checked={replayEnabled}
+                      onCheckedChange={value =>
+                        dispatch(setReplayEnabled(value))
+                      }
+                    />
+                  </div>
 
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="auto-refresh" className="text-sm">
-                    Live Data
-                  </Label>
-                  <Switch
-                    id="auto-refresh"
-                    checked={autoRefresh}
-                    onCheckedChange={handleAutoRefreshChange}
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="auto-refresh" className="text-sm">
+                      Live Data
+                    </Label>
+                    <Switch
+                      id="auto-refresh"
+                      checked={autoRefresh}
+                      onCheckedChange={handleAutoRefreshChange}
+                    />
+                  </div>
                 </div>
 
                 {instances.length > 0 && (
@@ -303,9 +325,9 @@ export default function ChartToolbar() {
                     <Separator />
                     <Button
                       size="sm"
-                      variant="ghost"
+                      variant="destructive"
                       onClick={clearAll}
-                      className="w-full text-destructive hover:text-destructive"
+                      className="w-full"
                     >
                       Clear All Indicators
                     </Button>
@@ -314,16 +336,20 @@ export default function ChartToolbar() {
               </div>
             </PopoverContent>
           </Popover>
-
-          {/* Live Data Indicator */}
-          {autoRefresh && (
-            <div className="flex items-center gap-1.5 px-2 py-1 text-xs text-success">
-              <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-              LIVE
-            </div>
-          )}
         </div>
+
+        {/* Live Data Indicator */}
+        {autoRefresh && (
+          <div className="ml-auto flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold tracking-wider text-success uppercase border border-success/20 rounded-full bg-success/5">
+            <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+            LIVE
+          </div>
+        )}
       </div>
     </>
   );
+}
+
+function HiChevronDown(props: React.SVGProps<SVGSVGElement>) {
+  return <ChevronDown {...props} />;
 }

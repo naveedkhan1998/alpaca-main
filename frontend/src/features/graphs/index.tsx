@@ -151,6 +151,23 @@ const GraphsPage: React.FC = () => {
     timeframe,
   });
 
+  // Calculate price data for header
+  const lastPrice = candles.length > 0 ? candles[0].close : undefined;
+
+  // Find previous day's close
+  const previousClose = useMemo(() => {
+    if (candles.length < 2) return undefined;
+
+    const latestDate = new Date(candles[0].timestamp).toLocaleDateString();
+
+    // Find the first candle that has a different date string
+    const prevDayCandle = candles.find(
+      c => new Date(c.timestamp).toLocaleDateString() !== latestDate
+    );
+
+    return prevDayCandle ? prevDayCandle.close : candles[1].close; // Fallback to previous candle if no prev day found (e.g. not enough history)
+  }, [candles]);
+
   // Desktop inline replay controls
   const desktopReplayControls =
     shouldRenderReplayControls && !isMobile ? (
@@ -346,6 +363,8 @@ const GraphsPage: React.FC = () => {
         {/* Header */}
         <GraphHeader
           obj={asset}
+          lastPrice={lastPrice}
+          previousClose={previousClose}
           handleDownload={handleDownload}
           toggleFullscreen={toggleFullscreen}
           refetch={handleRefetch}

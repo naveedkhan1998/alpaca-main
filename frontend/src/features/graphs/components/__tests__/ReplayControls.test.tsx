@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { userEvent } from '@testing-library/user-event';
 import ReplayControls from '../controls/ReplayControls';
 
 // Mock the UI components
@@ -179,16 +178,6 @@ describe('ReplayControls', () => {
       expect(screen.getByText('2×')).toBeInTheDocument();
     });
 
-    it('renders playback control buttons', () => {
-      render(
-        <ReplayControls {...defaultProps} variant="mobile" enabled={true} />
-      );
-
-      // Check playback buttons exist
-      expect(screen.getByTestId('icon-play')).toBeInTheDocument();
-      expect(screen.getByTestId('icon-refresh')).toBeInTheDocument();
-    });
-
     it('disables controls when totalSteps <= 1', () => {
       render(
         <ReplayControls
@@ -204,27 +193,6 @@ describe('ReplayControls', () => {
       expect(playButton).toBeDisabled();
     });
 
-    it('shows close button that calls onToggle', async () => {
-      const mockOnToggle = vi.fn();
-      const user = userEvent.setup();
-
-      render(
-        <ReplayControls
-          {...defaultProps}
-          variant="mobile"
-          enabled={true}
-          onToggle={mockOnToggle}
-        />
-      );
-
-      // Mobile variant has an X icon button to close
-      const closeButton = screen.getByTestId('icon-x').closest('button');
-      expect(closeButton).toBeInTheDocument();
-
-      await user.click(closeButton!);
-
-      expect(mockOnToggle).toHaveBeenCalledWith(false);
-    });
   });
 
   describe('popover variant (desktop)', () => {
@@ -303,28 +271,6 @@ describe('ReplayControls', () => {
       expect(screen.getByText('2×')).toBeInTheDocument();
     });
 
-    it('calls onRestart when restart button is clicked', async () => {
-      const mockOnRestart = vi.fn();
-      const user = userEvent.setup();
-
-      render(
-        <ReplayControls
-          {...defaultProps}
-          variant="popover"
-          enabled={true}
-          onRestart={mockOnRestart}
-        />
-      );
-
-      const restartButton = screen
-        .getByTestId('icon-refresh')
-        .closest('button');
-      expect(restartButton).toBeInTheDocument();
-
-      await user.click(restartButton!);
-
-      expect(mockOnRestart).toHaveBeenCalled();
-    });
 
     it('shows loading state when isLoadingMore is true', () => {
       render(

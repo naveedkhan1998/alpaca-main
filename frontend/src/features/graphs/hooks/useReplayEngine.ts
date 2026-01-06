@@ -190,8 +190,7 @@ export function useReplayEngine({
   const effectiveReplayIndex = useMemo(() => {
     if (!isReplayEnabled) return totalSeriesCount;
     if (totalSeriesCount === 0) return 0;
-    const step = replayStep >= totalSeriesCount ? 1 : replayStep;
-    return Math.min(Math.max(step, 1), totalSeriesCount);
+    return Math.min(Math.max(replayStep, 1), totalSeriesCount);
   }, [isReplayEnabled, replayStep, totalSeriesCount]);
 
   const indicatorDisplayIndex = useMemo(() => {

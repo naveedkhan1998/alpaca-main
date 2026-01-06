@@ -40,16 +40,13 @@ export function useReplayController() {
       dispatch(setReplayPlaying(false));
       return;
     }
-    if (!playing && currentStep >= totalSteps) {
-      dispatch(setReplayStep(totalSteps > 1 ? 1 : totalSteps));
-      dispatch(setReplayAnimationProgress(0)); // Reset animation when restarting from end
-    }
+    // Only reset if we are playing and animation is enabled (to sync)
     if (!playing && animate) {
       // When starting playback with animate enabled, reset animation progress
       dispatch(setReplayAnimationProgress(0));
     }
     dispatch(setReplayPlaying(!playing));
-  }, [dispatch, enabled, playing, animate, currentStep, totalSteps]);
+  }, [dispatch, enabled, playing, animate, totalSteps]);
 
   const handleReplayRestart = useCallback(() => {
     dispatch(setReplayPlaying(false));

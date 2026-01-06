@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { HiRefresh } from 'react-icons/hi';
+import { RotateCcw } from 'lucide-react';
 import type {
   IndicatorInstance,
   IndicatorDefinition,
@@ -280,7 +280,7 @@ const IndicatorConfigDialog: React.FC<IndicatorConfigDialogProps> = ({
               className="gap-2"
               type="button"
             >
-              <HiRefresh className="w-4 h-4" />
+              <RotateCcw className="w-4 h-4" />
               Reset to Default
             </Button>
             <Button
