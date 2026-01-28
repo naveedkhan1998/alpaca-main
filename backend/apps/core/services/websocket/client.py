@@ -357,7 +357,17 @@ class WebsocketClient:
                 if time.time_ns() - start_ns > MAX_NS:
                     break
             logger.debug("Processing %d messages", len(messages))
-            self._process_batch(messages)
+
+            # Retry loop to ensure data consistency
+            processed = False
+            while not processed and self.running:
+                try:
+                    self._process_batch(messages)
+                    processed = True
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning(f"Batch processing failed: {exc}. Retrying in 1s...")
+                    close_old_connections()
+                    time.sleep(1)
         logger.debug("batch_processor stopped")
 
     def _process_batch(self, messages: list[dict]):

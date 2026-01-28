@@ -445,6 +445,53 @@ class TestWebsocketClient:
             assert len(called_messages) == 1
             assert called_messages[0] == msg
 
+    @pytest.mark.django_db
+    def test_batch_processor_loop_retries_on_exception(self):
+        """Test batch processor retries processing on failure."""
+        msg = {"T": "t", "S": "AAPL", "p": 150.0}
+        self.client.message_buffer.put(msg)
+        self.client.running = True
+
+        with (
+            patch.object(self.client, "_process_batch") as mock_process,
+            patch("time.sleep") as mock_sleep,
+            patch(
+                "apps.core.services.websocket.client.close_old_connections"
+            ) as mock_close_conn,
+            patch("apps.core.services.websocket.client.logger") as mock_logger,
+        ):
+            # First call raises Exception, second call succeeds
+            mock_process.side_effect = [Exception("DB Error"), None]
+
+            # Sleep side effect:
+            # 1. First sleep(1) is the retry backoff.
+            # 2. Second sleep(1) is the main loop idle wait (buffer empty).
+            sleep_calls = [0]
+
+            def sleep_side_effect(secs):
+                sleep_calls[0] += 1
+                if sleep_calls[0] >= 2:
+                    self.client.running = False
+
+            mock_sleep.side_effect = sleep_side_effect
+
+            self.client._batch_processor_loop()
+
+            # Verify it retried
+            assert mock_process.call_count == 2
+
+            # Verify both calls attempted to process the SAME message
+            call_args_list = mock_process.call_args_list
+            assert call_args_list[0][0][0][0] == msg
+            assert call_args_list[1][0][0][0] == msg
+
+            # Verify warning was logged instead of exception
+            mock_logger.warning.assert_called()
+            assert "Retrying" in mock_logger.warning.call_args[0][0]
+
+            # Verify connection reset was called
+            mock_close_conn.assert_called()
+
     def test_process_batch_empty(self):
         """Test processing empty batch."""
         self.client._process_batch([])
