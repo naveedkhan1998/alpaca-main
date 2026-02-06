@@ -15,11 +15,11 @@ Usage:
     key = cache_keys.websocket(user_id).unsubscriptions()
 """
 
-from enum import Enum
+from enum import StrEnum
 from typing import Final
 
 
-class AuthProvider(str, Enum):
+class AuthProvider(StrEnum):
     """Supported authentication providers."""
 
     EMAIL = "email"
