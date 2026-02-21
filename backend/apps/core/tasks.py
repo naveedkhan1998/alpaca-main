@@ -900,17 +900,10 @@ def refresh_asset_minute_data(task_id: int):
                 f"Pruned {pruned} minute candles older than {window_days}d for {symbol}"
             )
 
-        # Determine what we already have
-        last_1t = (
-            MinuteCandle.objects.filter(asset_id=asset.id)
-            .order_by("-timestamp")
-            .first()
-        )
-        fetch_start = (
-            last_1t.timestamp + timedelta(minutes=1)
-            if last_1t and last_1t.timestamp > start_date
-            else start_date
-        )
+        # Always fetch the full window to fill any gaps in existing data.
+        # bulk_insert with ignore_conflicts=True makes this idempotent —
+        # existing candles are simply skipped at the DB level.
+        fetch_start = start_date
 
         created_total = 0
         if fetch_start < end_date:
@@ -1057,16 +1050,9 @@ def refresh_asset_full_data(task_id: int):
         # --- Step 1: Prune + fetch minute candles ---
         MinuteCandle.objects.filter(asset=asset, timestamp__lt=start_date).delete()
 
-        last_1t = (
-            MinuteCandle.objects.filter(asset_id=asset.id)
-            .order_by("-timestamp")
-            .first()
-        )
-        fetch_start = (
-            last_1t.timestamp + timedelta(minutes=1)
-            if last_1t and last_1t.timestamp > start_date
-            else start_date
-        )
+        # Always fetch the full window to fill any gaps in existing data.
+        # bulk_insert with ignore_conflicts=True makes this idempotent.
+        fetch_start = start_date
 
         created_total = 0
         if fetch_start < end_date:
