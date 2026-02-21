@@ -16,11 +16,11 @@ describe('Card Components', () => {
       const card = screen.getByTestId('card');
       expect(card).toBeInTheDocument();
       expect(card).toHaveClass(
-        'rounded-xl',
+        'rounded-md',
         'border',
         'bg-card',
         'text-card-foreground',
-        'shadow'
+        'shadow-sm'
       );
     });
 
@@ -50,7 +50,7 @@ describe('Card Components', () => {
       render(<CardHeader data-testid="header">Header content</CardHeader>);
       const header = screen.getByTestId('header');
       expect(header).toBeInTheDocument();
-      expect(header).toHaveClass('flex', 'flex-col', 'space-y-1.5', 'p-6');
+      expect(header).toHaveClass('flex', 'flex-col', 'space-y-1.5', 'p-4');
     });
   });
 
@@ -85,7 +85,7 @@ describe('Card Components', () => {
       render(<CardContent data-testid="content">Content</CardContent>);
       const content = screen.getByTestId('content');
       expect(content).toBeInTheDocument();
-      expect(content).toHaveClass('p-6', 'pt-0');
+      expect(content).toHaveClass('p-4', 'pt-0');
     });
   });
 
@@ -94,7 +94,7 @@ describe('Card Components', () => {
       render(<CardFooter data-testid="footer">Footer content</CardFooter>);
       const footer = screen.getByTestId('footer');
       expect(footer).toBeInTheDocument();
-      expect(footer).toHaveClass('flex', 'items-center', 'p-6', 'pt-0');
+      expect(footer).toHaveClass('flex', 'items-center', 'p-4', 'pt-0');
     });
   });
 
