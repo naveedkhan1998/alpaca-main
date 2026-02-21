@@ -34,8 +34,8 @@ export const PageHeader: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <div className={`mb-2 ${className}`}>
-    <h1 className="text-xl font-semibold tracking-tight sm:text-2xl text-foreground">
+  <div className={`mb-1 ${className}`}>
+    <h1 className="text-[15px] font-semibold tracking-tight sm:text-base text-foreground">
       {children}
     </h1>
   </div>
@@ -45,14 +45,16 @@ export const PageSubHeader: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <div className={`text-sm text-muted-foreground ${className}`}>{children}</div>
+  <div className={`text-[12px] text-muted-foreground ${className}`}>
+    {children}
+  </div>
 );
 
 export const PageActions: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <div className={`flex flex-wrap items-center gap-2 ${className}`}>
+  <div className={`flex flex-wrap items-center gap-1.5 ${className}`}>
     {children}
   </div>
 );
@@ -110,11 +112,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   const getContainerClasses = () => {
     switch (effectiveVariant) {
       case 'clean':
-        return 'mx-auto w-full max-w-[1400px] px-4 py-4 sm:px-6 sm:py-6';
+        return 'mx-auto w-full max-w-[1600px] px-3 py-3 sm:px-4 sm:py-4';
       case 'full-width':
-        return 'w-full px-4 py-4 sm:px-6 sm:py-6';
+        return 'w-full px-3 py-3 sm:px-4 sm:py-4';
       default:
-        return 'mx-auto w-full max-w-[1400px] px-4 py-4 sm:px-6 sm:py-6';
+        return 'mx-auto w-full max-w-[1600px] px-3 py-3 sm:px-4 sm:py-4';
     }
   };
 
@@ -167,15 +169,15 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               {guestBanner}
               {/* Header Section */}
               {(header || subheader || actions) && (
-                <div className="mb-6">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex-1 space-y-2">
+                <div className="mb-4">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="flex-1 space-y-1">
                       {header}
                       {subheader}
                     </div>
                     {actions && (
                       <div className="flex-shrink-0">
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-1.5">
                           {actions}
                         </div>
                       </div>
@@ -199,26 +201,30 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset
-          className={`md:rounded-md shadow border m-auto h-[100dvh] md:max-h-[calc(100dvh-1rem)] flex flex-col ${className}`}
+          className={`md:rounded shadow-sm border border-border/50 m-auto h-[100dvh] md:max-h-[calc(100dvh-1rem)] flex flex-col bg-background ${className}`}
         >
           {/* Header with sidebar trigger */}
-          <header className="sticky top-0 z-10 flex items-center h-16 gap-2 px-4 transition-[width,height] ease-linear shrink-0 border-b bg-background/95 backdrop-blur-[0.099rem] supports-[backdrop-filter]:bg-background/60">
-            <SidebarTrigger className="-ml-1" />
+          <header className="sticky top-0 z-10 flex items-center h-12 gap-2 px-3 transition-[width,height] ease-linear shrink-0 border-b border-border/60 bg-card/95 backdrop-blur-sm supports-[backdrop-filter]:bg-card/80">
+            <SidebarTrigger className="w-6 h-6 -ml-1" />
             <Separator orientation="vertical" className="h-6 mr-2" />
             <div className="flex items-center justify-between flex-1 gap-2">
-              <h2 className="text-lg font-semibold">{pageTitle}</h2>
+              <h2 className="text-[13px] font-semibold tracking-tight text-foreground/90">
+                {pageTitle}
+              </h2>
               {/* search button cntrl + k to open */}
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className="gap-1.5 h-7 text-[11px] px-2 border-border/60 bg-background/50 hover:bg-primary/5 hover:border-primary/30"
                 onClick={() => setIsAssetSearchOpen(true)}
               >
-                <Search className="w-4 h-4" />
-                <span className="hidden sm:inline">Search Assets</span>
-                <span className="hidden text-xs sm:inline text-muted-foreground">
-                  (Ctrl + K)
+                <Search className="w-3 h-3 text-muted-foreground" />
+                <span className="hidden sm:inline text-muted-foreground">
+                  Search
                 </span>
+                <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-border/60 bg-muted/50 px-1 font-mono text-[10px] text-muted-foreground">
+                  <span className="text-[9px]">⌘</span>K
+                </kbd>
               </Button>
             </div>
           </header>
@@ -231,20 +237,20 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 
           {/* Scrollable content area */}
           <div className="flex-1 overflow-auto scrollbar-hidden">
-            <div className="flex-1 w-full bg-background">
+            <div className="w-full min-h-full">
               <div className={getContainerClasses()}>
                 {guestBanner}
                 {/* Header Section */}
                 {(header || subheader || actions) && (
-                  <div className="mb-6">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="flex-1 space-y-2">
+                  <div className="mb-4">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="flex-1 space-y-1">
                         {header}
                         {subheader}
                       </div>
                       {actions && (
                         <div className="flex-shrink-0">
-                          <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-1.5">
                             {actions}
                           </div>
                         </div>

@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Sparkles,
   ChevronRight,
+  Activity,
 } from 'lucide-react';
 import Login from './components/Login';
 import Registration from './components/Registration';
@@ -25,176 +26,87 @@ const LoginRegPage: React.FC = () => {
 
   const features = [
     {
-      icon: <LineChart className="w-5 h-5" />,
-      title: 'Real-Time Streaming',
-      description:
-        'Dedicated WebSocket service ingests Alpaca ticks and builds 1-minute candles live.',
+      icon: <LineChart className="w-4 h-4" />,
+      title: 'Real-time Streaming',
+      description: 'WebSocket feeds for live market data',
     },
     {
-      icon: <BarChart4 className="w-5 h-5" />,
-      title: 'Historical Data Pipelines',
-      description:
-        'Automatic OHLCV backfills and caching for watchlist assets, ready for research.',
+      icon: <BarChart4 className="w-4 h-4" />,
+      title: 'TradingView Charts',
+      description: 'Professional charting with indicators',
     },
     {
-      icon: <Shield className="w-5 h-5" />,
-      title: 'Interactive Analysis',
-      description:
-        'TradingView-style charts with indicators, multi-timeframe data, and live updates.',
+      icon: <Shield className="w-4 h-4" />,
+      title: 'Django REST API',
+      description: 'Robust Python/Django backend',
     },
     {
-      icon: <Clock className="w-5 h-5" />,
-      title: 'Dockerized Stack',
-      description:
-        'Docker Compose brings up Django API, Postgres, Redis, Celery, and Channels.',
+      icon: <Clock className="w-4 h-4" />,
+      title: 'Docker Ready',
+      description: 'Containerized deployment',
     },
     {
-      icon: <Sparkles className="w-5 h-5" />,
-      title: 'Public Demo Modes',
-      description:
-        'Guest mode is read-only and rate-limited; register to unlock real-time features.',
+      icon: <Sparkles className="w-4 h-4" />,
+      title: 'Free Tier',
+      description: 'Start with 30 assets at no cost',
     },
-  ];
-
-  const stats = [
-    { label: 'Open source', value: 'MIT' },
-    { label: 'Demo access', value: 'Guest or Full' },
-    { label: 'Self-host ready', value: 'Docker Compose' },
   ];
 
   return (
-    <div className="relative h-[100dvh] overflow-hidden bg-background font-['DM_Sans']">
-      {/* Atmosphere glow */}
+    <div className="relative h-[100dvh] overflow-hidden bg-background">
+      {/* Terminal grid background */}
       <div
-        className="absolute inset-0 opacity-80"
+        className="absolute inset-0 opacity-[0.02] dark:opacity-[0.04]"
         style={{
           backgroundImage: `
-            radial-gradient(1100px circle at 10% 10%, hsl(var(--primary) / 0.16), transparent 55%),
-            radial-gradient(900px circle at 90% 0%, hsl(var(--chart-2) / 0.14), transparent 55%),
-            radial-gradient(800px circle at 85% 85%, hsl(var(--primary) / 0.12), transparent 60%)
+            linear-gradient(to right, hsl(var(--primary)) 1px, transparent 1px),
+            linear-gradient(to bottom, hsl(var(--primary)) 1px, transparent 1px)
           `,
+          backgroundSize: '48px 48px',
         }}
       />
 
-      {/* Modern Grid Background */}
-      <div
-        className="absolute inset-0 opacity-[0.2] dark:opacity-[0.08]"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
-            linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px)
-          `,
-          backgroundSize: '56px 56px',
-        }}
-      />
-
-      {/* Animated gradient orbs */}
-      <div className="fixed inset-0 pointer-events-none">
-        <motion.div
-          className="absolute w-[520px] h-[520px] rounded-full bg-primary/15 blur-[110px]"
-          animate={{
-            x: [0, 100, 0],
-            y: [0, -100, 0],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: 'easeInOut',
-          }}
-          style={{ top: '10%', left: '10%' }}
-        />
-        <motion.div
-          className="absolute w-[620px] h-[620px] rounded-full bg-chart-2/15 blur-[130px]"
-          animate={{
-            x: [0, -100, 0],
-            y: [0, 100, 0],
-          }}
-          transition={{
-            duration: 25,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: 'easeInOut',
-          }}
-          style={{ bottom: '10%', right: '10%' }}
-        />
-      </div>
-
-      {/* Floating particles */}
-      <div className="fixed inset-0 pointer-events-none">
-        {[...Array(15)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 rounded-full bg-primary/30"
-            initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
-            }}
-            animate={{
-              y: [0, -100, 0],
-              opacity: [0, 1, 0],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Number.POSITIVE_INFINITY,
-              delay: Math.random() * 2,
-              ease: 'easeInOut',
-            }}
-          />
-        ))}
-      </div>
+      {/* Glow accent */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
 
       <div className="relative w-full h-full">
         <motion.div
           className="w-full h-full"
-          initial={{ opacity: 0, y: 30, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.6, type: 'spring' }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, type: 'spring', stiffness: 200 }}
         >
-          <Card className="grid w-full h-full grid-cols-1 overflow-hidden border-0 rounded-none shadow-none lg:grid-cols-3 bg-card/95 backdrop-blur-xl lg:border-0">
-            {/* Left Panel - Features - Now takes 2/3 of screen */}
-            <div
-              className="relative hidden col-span-2 p-10 overflow-y-auto lg:block"
-              style={{
-                backgroundImage: `
-                  linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.92) 45%, hsl(var(--chart-2) / 0.7) 100%)
-                `,
-              }}
-            >
-              <div className="pointer-events-none absolute inset-0 opacity-40">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.2),transparent_45%)]" />
-              </div>
-              <div className="max-w-2xl space-y-5">
-                {/* Logo/Brand Section */}
+          <Card className="grid w-full h-full grid-cols-1 overflow-hidden border-0 rounded-none shadow-none lg:grid-cols-5 bg-background">
+            {/* Left Panel - Features - Takes 3/5 of screen */}
+            <div className="relative hidden col-span-3 p-8 overflow-y-auto border-r lg:flex lg:flex-col lg:justify-center bg-card border-border/40">
+              {/* Subtle radial glow */}
+              <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
+
+              <div className="relative max-w-lg space-y-6">
+                {/* Logo/Brand */}
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -16 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="space-y-4"
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                  className="space-y-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex items-center justify-center rounded size-8 bg-primary/10 ring-1 ring-primary/20">
                       <img
                         src="/android-chrome-192x192.png"
-                        alt="Alpaca"
-                        className="w-12 h-12 shadow-lg rounded-xl ring-2 ring-white/20"
-                      />
-                      <motion.div
-                        className="absolute -inset-1 bg-white/10 rounded-xl blur"
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{
-                          duration: 2,
-                          repeat: Number.POSITIVE_INFINITY,
-                        }}
+                        alt="Alpaca Logo"
+                        className="size-8"
                       />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-white font-['Plus_Jakarta_Sans'] tracking-tight">
+                      <h3 className="text-sm font-bold text-foreground">
                         Alpaca Trading
                       </h3>
                       <Badge
-                        variant="secondary"
-                        className="mt-1 text-white border-0 bg-white/20"
+                        variant="outline"
+                        className="mt-0.5 text-[10px] h-4 font-mono border-primary/30 text-primary"
                       >
-                        <Sparkles className="w-3 h-3 mr-1" />
+                        <Activity className="w-2.5 h-2.5 mr-0.5" />
                         Open Source
                       </Badge>
                     </div>
@@ -203,167 +115,147 @@ const LoginRegPage: React.FC = () => {
 
                 {/* Main Heading */}
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -16 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                  className="space-y-3"
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                  className="space-y-2"
                 >
-                  <p className="text-[0.6rem] font-semibold tracking-[0.28em] text-white/70 uppercase">
-                    Open Source / Public Demo / Self-Host Ready
-                  </p>
-                  <h1 className="text-3xl font-semibold leading-snug text-white font-['Plus_Jakarta_Sans'] tracking-tight">
-                    Build a real-time market data platform
+                  <h1 className="text-2xl font-bold leading-tight tracking-tight text-foreground">
+                    Market Data
+                    <span className="text-primary"> Streaming</span> Platform
                   </h1>
-                  <p className="text-sm leading-relaxed text-white/80">
-                    Django + React stack for Alpaca streaming, backtesting, and
-                    TradingView charts.
+                  <p className="text-[13px] leading-relaxed text-muted-foreground">
+                    Full-stack starter kit for building real-time trading
+                    dashboards with Django, React, and TradingView
                   </p>
+                  <div className="flex items-center gap-1.5 pt-1">
+                    <TrendingUp className="w-3.5 h-3.5 text-primary/60" />
+                    <span className="text-[11px] font-mono text-muted-foreground/70">
+                      Powered by Alpaca API
+                    </span>
+                  </div>
                 </motion.div>
 
-                {/* Features List */}
+                {/* Features List - Compact */}
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                  className="grid gap-3 sm:grid-cols-2"
+                  transition={{ duration: 0.4, delay: 0.3 }}
+                  className="space-y-2"
                 >
                   {features.map((feature, index) => (
                     <motion.div
                       key={index}
-                      initial={{ opacity: 0, x: -20 }}
+                      initial={{ opacity: 0, x: -12 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
-                      className="flex items-start gap-3 p-3 transition-all duration-300 border cursor-pointer rounded-2xl bg-white/10 backdrop-blur-sm border-white/10 hover:bg-white/15 group"
+                      transition={{ duration: 0.3, delay: 0.3 + index * 0.06 }}
+                      className="flex items-center gap-3 p-2.5 transition-all duration-150 border rounded cursor-pointer bg-background/50 border-border/40 hover:border-primary/30 hover:bg-primary/[0.03] group"
                     >
-                      <div className="p-2 rounded-lg bg-white/10 text-white group-hover:scale-110 transition-transform duration-300">
+                      <div className="p-1.5 rounded bg-primary/8 text-primary group-hover:bg-primary/12 transition-colors">
                         {feature.icon}
                       </div>
-                      <div className="flex-1 space-y-1">
-                        <h3 className="text-sm font-semibold text-white transition-transform duration-300 group-hover:translate-x-1">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-[12px] font-semibold text-foreground group-hover:text-primary transition-colors">
                           {feature.title}
                         </h3>
-                        <p className="text-xs leading-relaxed text-white/70">
+                        <p className="text-[11px] text-muted-foreground/70">
                           {feature.description}
                         </p>
                       </div>
-                      <ChevronRight className="w-4 h-4 transition-opacity duration-300 opacity-0 text-white/50 group-hover:opacity-100" />
+                      <ChevronRight className="w-3 h-3 transition-opacity duration-200 opacity-0 text-primary/40 group-hover:opacity-100" />
                     </motion.div>
                   ))}
                 </motion.div>
 
-                {/* Stats strip */}
+                {/* Info Card */}
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.8 }}
-                  className="grid gap-2 sm:grid-cols-3"
+                  transition={{ duration: 0.4, delay: 0.7 }}
+                  className="relative p-4 overflow-hidden border rounded bg-muted/30 border-border/40"
                 >
-                  {stats.map(stat => (
-                    <div
-                      key={stat.label}
-                      className="rounded-2xl border border-white/15 bg-white/10 px-3 py-2"
-                    >
-                      <div className="text-[0.6rem] uppercase tracking-[0.2em] text-white/60">
-                        {stat.label}
-                      </div>
-                      <div className="text-base font-semibold text-white font-['Plus_Jakarta_Sans']">
-                        {stat.value}
-                      </div>
+                  <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-primary/70" />
+                      <span className="text-[11px] font-semibold text-foreground/80">
+                        Open Source Starter Kit
+                      </span>
                     </div>
-                  ))}
-                </motion.div>
-
-                {/* Compact Info Row */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.9 }}
-                  className="flex flex-wrap items-center gap-3 text-xs text-white/70"
-                >
-                  <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5">
-                    <Sparkles className="w-4 h-4 text-white/80" />
-                    Open-source starter kit
-                  </div>
-                  <div className="inline-flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-white/80" />
-                    Powered by Alpaca API
+                    <p className="text-[11px] leading-relaxed text-muted-foreground/70">
+                      Production-ready foundation for market data applications
+                      with real-time WebSocket streaming and Docker deployment.
+                    </p>
                   </div>
                 </motion.div>
               </div>
             </div>
 
-            {/* Right Panel - Auth Forms */}
-            <div className="relative flex items-start justify-center px-4 py-6 overflow-y-auto [@media(min-height:1080px)]:items-center col-span-full lg:col-span-1 lg:p-6 bg-background/50 backdrop-blur-sm safe-top safe-bottom">
-              <div className="w-full max-w-md space-y-6 lg:space-y-8">
-                <motion.div
-                  className="rounded-3xl border border-border/70 bg-card/80 px-6 py-6 shadow-[0_35px_120px_-70px_hsl(var(--primary)/0.6)] backdrop-blur-xl sm:px-8 lg:py-8"
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
+            {/* Right Panel - Auth Forms - 2/5 */}
+            <div className="relative flex items-start justify-center px-4 py-6 overflow-y-auto [@media(min-height:1080px)]:items-center col-span-full lg:col-span-2 lg:p-5 bg-background safe-top safe-bottom">
+              <div className="w-full max-w-sm space-y-4 lg:space-y-5">
+                <Tabs
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                  className="space-y-3 lg:space-y-4"
                 >
-                  <Tabs
-                    value={activeTab}
-                    onValueChange={setActiveTab}
-                    className="space-y-4 lg:space-y-6"
-                  >
-                    <TabsList className="grid w-full grid-cols-2 p-1 border bg-muted/60 backdrop-blur-sm border-border/60">
-                      <TabsTrigger
-                        value="login"
-                        className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300"
-                      >
-                        <LockIcon className="w-4 h-4 mr-2" />
-                        Login
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="registration"
-                        className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300"
-                      >
-                        <UserPlusIcon className="w-4 h-4 mr-2" />
-                        Register
-                      </TabsTrigger>
-                    </TabsList>
+                  <TabsList className="grid w-full grid-cols-2 p-0.5 h-8 bg-muted/50 border border-border/50">
+                    <TabsTrigger
+                      value="login"
+                      className="text-[12px] h-7 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all duration-200"
+                    >
+                      <LockIcon className="w-3 h-3 mr-1.5" />
+                      Login
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="registration"
+                      className="text-[12px] h-7 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all duration-200"
+                    >
+                      <UserPlusIcon className="w-3 h-3 mr-1.5" />
+                      Register
+                    </TabsTrigger>
+                  </TabsList>
 
-                    <AnimatePresence mode="wait">
-                      <TabsContent value="login">
-                        <motion.div
-                          key="login"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <Login />
-                        </motion.div>
-                      </TabsContent>
+                  <AnimatePresence mode="wait">
+                    <TabsContent value="login">
+                      <motion.div
+                        key="login"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <Login />
+                      </motion.div>
+                    </TabsContent>
 
-                      <TabsContent value="registration">
-                        <motion.div
-                          key="registration"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <Registration />
-                        </motion.div>
-                      </TabsContent>
-                    </AnimatePresence>
-                  </Tabs>
-                </motion.div>
+                    <TabsContent value="registration">
+                      <motion.div
+                        key="registration"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <Registration />
+                      </motion.div>
+                    </TabsContent>
+                  </AnimatePresence>
+                </Tabs>
 
                 <motion.div
-                  className="pt-2 text-center"
+                  className="pt-3 mt-3 text-center border-t border-border/30"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6 }}
+                  transition={{ delay: 0.5 }}
                 >
-                  <p className="text-xs leading-relaxed text-muted-foreground">
+                  <p className="text-[10px] leading-relaxed text-muted-foreground/60">
                     By using this service, you agree to use it responsibly and
                     in accordance with Alpaca's terms of service.
                   </p>
-                  <div className="flex items-center justify-center gap-2 mt-3">
-                    <Shield className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
+                  <div className="flex items-center justify-center gap-1.5 mt-2">
+                    <Shield className="w-3 h-3 text-primary/40" />
+                    <span className="text-[10px] font-mono text-muted-foreground/50">
                       Secured connection
                     </span>
                   </div>

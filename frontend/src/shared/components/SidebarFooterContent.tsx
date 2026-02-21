@@ -17,54 +17,52 @@ const SidebarFooterContent: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-1.5">
       {/* Expanded View */}
       {state === 'expanded' && (
         <>
-          {/* Logo and Copyright */}
           <SidebarMenu>
             <SidebarMenuItem>
-              <div className="flex items-center gap-3 px-2 py-2">
+              <div className="flex items-center gap-2 px-2 py-1.5">
                 <div className="relative flex-shrink-0">
                   <img
                     src="/android-chrome-192x192.png"
                     alt="Logo"
-                    className="w-8 h-8 rounded-lg shadow-sm ring-2 ring-border/40"
+                    className="rounded size-8 ring-1 ring-border/30"
                   />
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-xs font-semibold text-foreground">
+                  <span className="text-[11px] font-semibold text-sidebar-foreground">
                     Alpaca Trading
                   </span>
-                  <span className="text-[10px] text-muted-foreground">
-                    © {currentYear} MNK
+                  <span className="text-[9px] font-mono text-sidebar-foreground/50">
+                    &copy; {currentYear} MNK
                   </span>
                 </div>
               </div>
             </SidebarMenuItem>
           </SidebarMenu>
 
-          {/* Links */}
           <SidebarMenu>
             <SidebarMenuItem>
-              <div className="flex items-center justify-around px-2 py-1 text-xs font-medium">
+              <div className="flex items-center justify-around px-2 py-0.5 text-[10px] font-mono">
                 <Link
                   to="/privacy"
-                  className="transition-all text-muted-foreground hover:text-foreground hover:underline underline-offset-4"
+                  className="transition-colors text-sidebar-foreground/40 hover:text-sidebar-primary"
                 >
                   Privacy
                 </Link>
-                <span className="text-border">•</span>
+                <span className="text-sidebar-foreground/20">&middot;</span>
                 <Link
                   to="/terms"
-                  className="transition-all text-muted-foreground hover:text-foreground hover:underline underline-offset-4"
+                  className="transition-colors text-sidebar-foreground/40 hover:text-sidebar-primary"
                 >
                   Terms
                 </Link>
-                <span className="text-border">•</span>
+                <span className="text-sidebar-foreground/20">&middot;</span>
                 <Link
                   to="/contact"
-                  className="transition-all text-muted-foreground hover:text-foreground hover:underline underline-offset-4"
+                  className="transition-colors text-sidebar-foreground/40 hover:text-sidebar-primary"
                 >
                   Support
                 </Link>
@@ -74,7 +72,7 @@ const SidebarFooterContent: React.FC = () => {
         </>
       )}
 
-      {/* Collapsed View - Just Logo with Tooltip */}
+      {/* Collapsed View */}
       {state === 'collapsed' && (
         <SidebarMenu>
           <SidebarMenuItem>
@@ -83,19 +81,21 @@ const SidebarFooterContent: React.FC = () => {
                 <TooltipTrigger asChild>
                   <Link
                     to="/"
-                    className="flex items-center justify-center w-full py-2"
+                    className="flex items-center justify-center w-full py-1.5"
                   >
                     <img
                       src="/android-chrome-192x192.png"
                       alt="Logo"
-                      className="w-6 h-6 rounded-md shadow-sm ring-2 ring-border/40"
+                      className="rounded size-8 ring-1 ring-border/30"
                     />
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent side="right">
-                  <div className="text-xs">
+                  <div className="text-[11px]">
                     <p className="font-semibold">Alpaca Trading</p>
-                    <p className="text-muted-foreground">© {currentYear} MNK</p>
+                    <p className="font-mono text-muted-foreground">
+                      &copy; {currentYear} MNK
+                    </p>
                   </div>
                 </TooltipContent>
               </Tooltip>
