@@ -57,14 +57,14 @@
     "format": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "uv run black .",
+        "command": "uvx black .",
         "cwd": "backend"
       }
     },
     "format-check": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "uv run black --check .",
+        "command": "uvx black --check .",
         "cwd": "backend"
       }
     },
