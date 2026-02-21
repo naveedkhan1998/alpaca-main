@@ -57,19 +57,22 @@ import { removeToken } from '@/api/auth';
 import SidebarFooterContent from './SidebarFooterContent';
 import { clearGuestMode } from '@/lib/guestMode';
 
-const navItems = [
+const marketNavItems = [
   {
     path: '/',
     label: 'Watchlists',
     icon: TrendingUp,
-    description: 'Manage your watchlists',
+    description: 'Track instruments',
   },
   {
     path: '/instruments',
     label: 'Instruments',
     icon: BarChart3,
-    description: 'Trading instruments',
+    description: 'Browse assets',
   },
+];
+
+const systemNavItems = [
   {
     path: '/contact',
     label: 'Support',
@@ -121,31 +124,65 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
 
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
 
+  const renderNavGroup = (label: string, items: typeof marketNavItems) => (
+    <SidebarGroup>
+      <SidebarGroupLabel className="px-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40">
+        {label}
+      </SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map(item => {
+            const isActive = location.pathname === item.path;
+            return (
+              <SidebarMenuItem key={item.path}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive}
+                  tooltip={item.label}
+                  className={`h-8 px-2.5 text-[13px] transition-all duration-150 ${
+                    isActive
+                      ? 'bg-primary/10 text-primary border-l-2 border-primary font-medium'
+                      : 'hover:bg-sidebar-accent/60 text-sidebar-foreground/70 hover:text-sidebar-foreground border-l-2 border-transparent'
+                  }`}
+                >
+                  <Link to={item.path} className="flex items-center gap-2.5">
+                    <item.icon className="w-3.5 h-3.5 shrink-0" />
+                    <span>{item.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+
   return (
     <Sidebar collapsible="icon" variant="floating" {...props}>
-      <SidebarHeader className="border-b border-sidebar-border">
+      <SidebarHeader className="border-b border-sidebar-border/60">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
               asChild
-              className="hover:bg-sidebar-accent"
+              className="h-12 hover:bg-sidebar-accent/50"
             >
-              <Link to="/" className="flex items-center gap-3">
-                <div className="flex items-center justify-center rounded-lg size-8 bg-primary/10">
+              <Link to="/" className="flex items-center gap-2.5">
+                <div className="flex items-center justify-center rounded size-7 bg-primary/15 ring-1 ring-primary/20">
                   <img
                     src="/android-chrome-192x192.png"
-                    alt="Alpaca"
-                    className="w-5 h-5"
+                    alt="Alpaca Logo"
+                    className="object-contain size-8"
                   />
                 </div>
                 {state === 'expanded' && (
                   <div className="flex flex-col flex-1 text-left">
-                    <span className="text-sm font-semibold truncate">
-                      Alpaca Trading
+                    <span className="text-[13px] font-bold tracking-tight text-sidebar-foreground">
+                      Alpaca
                     </span>
-                    <span className="text-xs truncate text-sidebar-foreground/70">
-                      Dashboard
+                    <span className="text-[10px] font-mono text-primary/70">
+                      Terminal v2.0
                     </span>
                   </div>
                 )}
@@ -155,86 +192,59 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-2 text-xs font-medium text-sidebar-foreground/70">
-            Navigation
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map(item => {
-                const isActive = location.pathname === item.path;
-                return (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive}
-                      tooltip={item.label}
-                      className="h-10 px-3"
-                    >
-                      <Link to={item.path} className="flex items-center gap-3">
-                        <item.icon className="w-4 h-4" />
-                        <span className="text-sm">{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      <SidebarContent className="py-1">
+        {renderNavGroup('Market', marketNavItems)}
+        {renderNavGroup('System', systemNavItems)}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border">
+      <SidebarFooter className="border-t border-sidebar-border/60">
         {/* Footer Links and Copyright */}
         <SidebarFooterContent />
 
-        {/* Theme Toggle and Health Status Row */}
-        {state === 'expanded' && (
-          <div className="w-full px-2 py-2 space-y-1">
-            <button
-              onClick={toggleTheme}
-              className="group flex w-full items-center gap-2 rounded-full border border-border/60 bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:border-primary/30 hover:bg-muted/50 hover:text-foreground"
-            >
-              <span className="relative flex items-center justify-center w-4 h-4">
-                <Sun className="w-4 h-4 transition-all scale-100 rotate-0 dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute w-4 h-4 transition-all scale-0 rotate-90 dark:rotate-0 dark:scale-100" />
-              </span>
-              <span className="flex items-center gap-1">
-                {theme === 'dark' ? 'Dark' : 'Light'}
-                <span className="text-[10px] uppercase tracking-wide text-muted-foreground/70">
-                  mode
+        {/* Theme Toggle */}
+        <SidebarMenu>
+          <SidebarMenuItem>
+            {state === 'expanded' ? (
+              <SidebarMenuButton
+                onClick={toggleTheme}
+                tooltip="Toggle theme"
+                className="h-8 px-2.5 text-[11px] text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+              >
+                {theme === 'dark' ? (
+                  <Moon className="w-3.5 h-3.5 shrink-0" />
+                ) : (
+                  <Sun className="w-3.5 h-3.5 shrink-0" />
+                )}
+                <span className="font-mono">
+                  {theme === 'dark' ? 'DARK' : 'LIGHT'}
                 </span>
-              </span>
-            </button>
-            <HealthStatus />
-          </div>
-        )}
+              </SidebarMenuButton>
+            ) : (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SidebarMenuButton
+                      onClick={toggleTheme}
+                      className="flex items-center justify-center text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                    >
+                      {theme === 'dark' ? (
+                        <Moon className="w-3.5 h-3.5" />
+                      ) : (
+                        <Sun className="w-3.5 h-3.5" />
+                      )}
+                    </SidebarMenuButton>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p className="text-xs">Toggle theme</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </SidebarMenuItem>
+        </SidebarMenu>
 
-        {state === 'collapsed' && (
-          <div className="flex flex-col items-center w-full gap-1 px-2 py-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={toggleTheme}
-                    className="flex items-center justify-center transition-all border rounded-full h-9 w-9 border-border/60 bg-muted/30 text-muted-foreground hover:border-primary/30 hover:bg-muted/50 hover:text-foreground"
-                  >
-                    <span className="relative flex items-center justify-center w-4 h-4">
-                      <Sun className="w-4 h-4 transition-all scale-100 rotate-0 dark:-rotate-90 dark:scale-0" />
-                      <Moon className="absolute w-4 h-4 transition-all scale-0 rotate-90 dark:rotate-0 dark:scale-100" />
-                    </span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>Toggle theme</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <HealthStatus compact />
-          </div>
-        )}
+        {/* Health Status Dropdown */}
+        <HealthStatus compact={state === 'collapsed'} />
 
         {isAuthenticated ? (
           <SidebarMenu>
@@ -243,42 +253,42 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton
                     size="lg"
-                    className="h-12 hover:bg-sidebar-accent data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                    className="h-10 hover:bg-sidebar-accent/50 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
-                    <Avatar className="w-8 h-8 rounded-lg">
-                      <AvatarFallback className="text-xs font-semibold rounded-lg bg-primary/10">
+                    <Avatar className="rounded size-8">
+                      <AvatarFallback className="text-[10px] font-bold rounded bg-primary/15 text-primary">
                         {userInitials}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col flex-1 text-left">
-                      <span className="text-sm font-medium truncate">
+                      <span className="text-[12px] font-medium truncate">
                         {user?.name || 'User'}
                       </span>
-                      <span className="text-xs truncate text-sidebar-foreground/70">
+                      <span className="text-[10px] truncate text-sidebar-foreground/50 font-mono">
                         {user?.email}
                       </span>
                     </div>
-                    <ChevronsUpDown className="ml-auto size-4 text-sidebar-foreground/70" />
+                    <ChevronsUpDown className="ml-auto size-3.5 text-sidebar-foreground/40" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
-                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                  className="w-[--radix-dropdown-menu-trigger-width] min-w-52 rounded-md"
                   side="bottom"
                   align="end"
                   sideOffset={4}
                 >
                   <DropdownMenuLabel className="p-0 font-normal">
-                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                      <Avatar className="w-8 h-8 rounded-lg">
-                        <AvatarFallback className="text-xs font-semibold rounded-lg bg-primary/10">
+                    <div className="flex items-center gap-2 px-2 py-2 text-sm text-left">
+                      <Avatar className="rounded w-7 h-7">
+                        <AvatarFallback className="text-[10px] font-bold rounded bg-primary/15 text-primary">
                           {userInitials}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col flex-1 text-left">
-                        <span className="text-sm font-medium truncate">
+                        <span className="text-[12px] font-medium truncate">
                           {user?.name || 'User'}
                         </span>
-                        <span className="text-xs truncate text-muted-foreground">
+                        <span className="text-[11px] truncate text-muted-foreground font-mono">
                           {user?.email}
                         </span>
                       </div>
@@ -289,18 +299,18 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
                     <DropdownMenuItem asChild>
                       <Link
                         to="/profile"
-                        className="flex items-center gap-2 cursor-pointer"
+                        className="flex items-center gap-2 cursor-pointer text-[13px]"
                       >
-                        <User className="w-4 h-4" />
+                        <User className="w-3.5 h-3.5" />
                         <span>Profile</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link
                         to="/accounts"
-                        className="flex items-center gap-2 cursor-pointer"
+                        className="flex items-center gap-2 cursor-pointer text-[13px]"
                       >
-                        <Settings className="w-4 h-4" />
+                        <Settings className="w-3.5 h-3.5" />
                         <span>Accounts</span>
                       </Link>
                     </DropdownMenuItem>
@@ -308,9 +318,9 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={signOut}
-                    className="cursor-pointer text-destructive focus:text-destructive"
+                    className="cursor-pointer text-destructive focus:text-destructive text-[13px]"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="w-3.5 h-3.5" />
                     <span>Log out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -323,7 +333,7 @@ export const AppSidebar: React.FC<React.ComponentProps<typeof Sidebar>> = ({
               <SidebarMenuButton
                 size="lg"
                 onClick={handleLogin}
-                className="h-12 gap-2 hover:bg-sidebar-accent"
+                className="h-10 hover:bg-sidebar-accent/50 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               >
                 <div className="flex items-center justify-center rounded-lg size-8 bg-primary/10">
                   <LogIn className="w-4 h-4 text-primary" />

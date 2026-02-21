@@ -59,8 +59,8 @@ export const WatchListsList: React.FC<WatchListsListProps> = ({
   if (watchlists.length === 0) {
     return (
       <div className="py-12 text-center">
-        <Building2 className="w-16 h-16 mx-auto text-muted-foreground" />
-        <h3 className="mt-4 text-lg font-semibold">No watchlists yet</h3>
+        <Building2 className="w-10 h-10 mx-auto text-muted-foreground" />
+        <h3 className="mt-3 text-sm font-semibold">No watchlists yet</h3>
         <p className="mt-2 text-muted-foreground">
           Create your first watchlist to start organizing your favorite assets.
         </p>
@@ -78,9 +78,9 @@ export const WatchListsList: React.FC<WatchListsListProps> = ({
   }
 
   return (
-    <div className="space-y-5 sm:space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-base font-semibold sm:text-lg text-foreground">
+        <h2 className="text-sm font-semibold text-foreground">
           Your Watchlists
           <span className="ml-2 text-sm text-muted-foreground">
             ({watchlists.length})
@@ -103,7 +103,7 @@ export const WatchListsList: React.FC<WatchListsListProps> = ({
           >
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-semibold sm:text-lg">
+                <CardTitle className="text-sm font-semibold">
                   {watchlist.name}
                 </CardTitle>
                 <Badge variant={watchlist.is_active ? 'default' : 'secondary'}>

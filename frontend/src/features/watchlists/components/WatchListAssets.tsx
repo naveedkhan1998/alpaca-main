@@ -63,11 +63,11 @@ export const WatchListAssets: React.FC<WatchListAssetsProps> = ({
   const getAssetClassColor = (assetClass: string) => {
     switch (assetClass) {
       case 'us_equity':
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
+        return 'bg-primary/10 text-primary';
       case 'us_option':
-        return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300';
+        return 'bg-violet-500/10 text-violet-600 dark:text-violet-400';
       case 'crypto':
-        return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300';
+        return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
       default:
         return 'bg-muted text-muted-foreground';
     }

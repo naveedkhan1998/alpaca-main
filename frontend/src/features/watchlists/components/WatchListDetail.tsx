@@ -124,7 +124,7 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
       <div className="flex items-start justify-between gap-3 shrink-0">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold truncate">{watchlist.name}</h2>
+            <h2 className="text-sm font-semibold truncate">{watchlist.name}</h2>
             {!watchlist.is_active && (
               <Badge variant="secondary">Inactive</Badge>
             )}
@@ -199,11 +199,11 @@ export const WatchListDetail: React.FC<WatchListDetailProps> = ({
             />
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center p-10 border border-dashed rounded-md xl:col-span-12 bg-muted/10">
-            <div className="p-4 mb-4 rounded-full bg-muted/30">
-              <Plus className="w-8 h-8 text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center p-6 border border-dashed rounded-md xl:col-span-12 bg-muted/10">
+            <div className="p-3 mb-3 rounded-md bg-muted/30">
+              <Plus className="w-6 h-6 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold">Watchlist is empty</h3>
+            <h3 className="text-sm font-semibold">Watchlist is empty</h3>
             <p className="max-w-sm mb-6 text-sm text-center text-muted-foreground">
               Start tracking markets by adding assets to this watchlist.
             </p>

@@ -184,11 +184,12 @@ export const AssetsPage: React.FC = () => {
             size="sm"
             onClick={handleSyncAssets}
             disabled={isSyncing || syncStatus?.is_syncing}
+            className="h-7 text-[12px] px-2.5"
           >
             <RefreshCcw
-              className={`w-4 h-4 ${isSyncing || syncStatus?.is_syncing ? 'animate-spin' : ''}`}
+              className={`w-3 h-3 ${isSyncing || syncStatus?.is_syncing ? 'animate-spin' : ''}`}
             />
-            <span className="hidden ml-2 sm:inline">
+            <span className="hidden ml-1.5 sm:inline">
               {isSyncing || syncStatus?.is_syncing ? 'Syncing...' : 'Sync'}
             </span>
           </Button>
@@ -197,15 +198,17 @@ export const AssetsPage: React.FC = () => {
     >
       {/* Sync Status */}
       {(syncStatus?.needs_sync || syncStatus?.is_syncing) && (
-        <div className="flex items-center gap-3 p-3 mb-4 text-sm border rounded-lg bg-muted/50">
+        <div className="flex items-center gap-2 px-2.5 py-1.5 mb-3 text-[11px] border rounded bg-muted/30 border-border/50">
           {syncStatus.is_syncing ? (
             <>
-              <RefreshCcw className="w-4 h-4 animate-spin text-muted-foreground" />
-              <span className="text-muted-foreground">Syncing assets...</span>
+              <RefreshCcw className="w-3 h-3 animate-spin text-primary/60" />
+              <span className="font-mono text-muted-foreground">
+                Syncing assets...
+              </span>
             </>
           ) : (
             <>
-              <AlertTriangle className="w-4 h-4 text-muted-foreground" />
+              <AlertTriangle className="w-3 h-3 text-muted-foreground" />
               <span className="text-muted-foreground">
                 {syncStatus.total_assets === 0
                   ? 'No assets found. Click Sync to fetch data.'

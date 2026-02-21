@@ -147,6 +147,8 @@ postgres/
 /frontend/build/
 /frontend/coverage/
 /frontend/.vite/
+/frontend/reports/
+/backend/reports/
 
 .cursor\rules\nx-rules.mdc
 .github\instructions\nx.instructions.md

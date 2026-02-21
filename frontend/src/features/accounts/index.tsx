@@ -27,10 +27,10 @@ const AccountsPage = () => {
   if (isAlpacaAccountLoading) {
     return (
       <div className="flex items-center justify-center h-[100dvh]">
-        <div className="space-y-4 text-center">
-          <Loader2 className="w-12 h-12 mx-auto animate-spin text-primary" />
-          <p className="text-muted-foreground">
-            Loading account information...
+        <div className="space-y-3 text-center">
+          <Loader2 className="w-8 h-8 mx-auto animate-spin text-primary/60" />
+          <p className="text-[12px] text-muted-foreground/60 font-mono">
+            Loading account...
           </p>
         </div>
       </div>
@@ -50,27 +50,25 @@ const AccountsPage = () => {
           <Button
             onClick={handleSync}
             disabled={isSyncing}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto h-7 text-[12px] px-2.5"
             size="sm"
           >
             <RefreshCcw
-              className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`}
+              className={`w-3 h-3 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`}
             />
-            {isSyncing ? 'Syncing Assets...' : 'Sync Assets'}
+            {isSyncing ? 'Syncing...' : 'Sync'}
           </Button>
         </PageActions>
       }
     >
       <PageContent>
-        <div className="space-y-6">
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-          >
-            <AlpacaStatusCard />
-          </motion.div>
-        </div>
+        <motion.div
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.05, duration: 0.2 }}
+        >
+          <AlpacaStatusCard />
+        </motion.div>
       </PageContent>
     </PageLayout>
   );

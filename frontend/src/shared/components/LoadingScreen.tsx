@@ -81,10 +81,10 @@ const LoadingScreen = () => {
 
   // Get computed colors from CSS variables
   const [colors, setColors] = useState({
-    primary: 'hsl(221 83% 53%)',
-    primaryDark: 'hsl(217 91% 60%)',
-    muted: 'hsl(220 15% 95%)',
-    mutedDark: 'hsl(222 47% 9%)',
+    primary: 'hsl(187 72% 44%)',
+    primaryDark: 'hsl(187 80% 48%)',
+    muted: 'hsl(210 20% 95%)',
+    mutedDark: 'hsl(220 18% 8%)',
   });
 
   useEffect(() => {
@@ -94,20 +94,20 @@ const LoadingScreen = () => {
       const isDark = root.classList.contains('dark');
 
       setColors({
-        primary: isDark ? 'hsl(217 91% 60%)' : 'hsl(221 83% 53%)',
-        primaryDark: 'hsl(217 91% 60%)',
-        muted: isDark ? 'hsl(222 47% 9%)' : 'hsl(220 15% 95%)',
-        mutedDark: 'hsl(222 47% 9%)',
+        primary: isDark ? 'hsl(187 80% 48%)' : 'hsl(187 72% 44%)',
+        primaryDark: 'hsl(187 80% 48%)',
+        muted: isDark ? 'hsl(220 18% 8%)' : 'hsl(210 20% 95%)',
+        mutedDark: 'hsl(220 18% 8%)',
       });
 
       // Listen for theme changes
       const observer = new MutationObserver(() => {
         const isDark = root.classList.contains('dark');
         setColors({
-          primary: isDark ? 'hsl(217 91% 60%)' : 'hsl(221 83% 53%)',
-          primaryDark: 'hsl(217 91% 60%)',
-          muted: isDark ? 'hsl(222 47% 9%)' : 'hsl(220 15% 95%)',
-          mutedDark: 'hsl(222 47% 9%)',
+          primary: isDark ? 'hsl(187 80% 48%)' : 'hsl(187 72% 44%)',
+          primaryDark: 'hsl(187 80% 48%)',
+          muted: isDark ? 'hsl(220 18% 8%)' : 'hsl(210 20% 95%)',
+          mutedDark: 'hsl(220 18% 8%)',
         });
       });
 
@@ -287,7 +287,7 @@ const LoadingScreen = () => {
         y={120}
         width={120}
         height={120}
-        colors={['#FF6B6B', '#FFE66D', '#4ECDC4']}
+        colors={['#0891b2', '#06b6d4', '#22d3ee']}
         pattern="wave"
         duration={8}
         delay={0}
@@ -297,7 +297,7 @@ const LoadingScreen = () => {
         y={240}
         width={120}
         height={120}
-        colors={['#C7F0BD', '#A0CED9', '#83B5D1']}
+        colors={['#67e8f9', '#a5f3fc', '#0e7490']}
         pattern="pulse"
         duration={10}
         delay={1}
@@ -307,7 +307,7 @@ const LoadingScreen = () => {
         y={360}
         width={120}
         height={120}
-        colors={['#F7B2BD', '#B2F7EF']}
+        colors={['#06b6d4', '#14b8a6']}
         pattern="flow"
         duration={9}
         delay={2}
@@ -317,7 +317,7 @@ const LoadingScreen = () => {
         y={540}
         width={120}
         height={120}
-        colors={['#D4A5A5', '#A5D4D4', '#D4D4A5']}
+        colors={['#0e7490', '#155e75', '#164e63']}
         pattern="matrix"
         duration={7}
         delay={0.5}
@@ -327,7 +327,7 @@ const LoadingScreen = () => {
         y={720}
         width={120}
         height={120}
-        colors={['#A8DADC', '#C3F0CA']}
+        colors={['#22d3ee', '#2dd4bf']}
         pattern="spiral"
         duration={11}
         delay={1.5}
@@ -337,7 +337,7 @@ const LoadingScreen = () => {
         y={960}
         width={120}
         height={120}
-        colors={['#FFD1BA', '#BAE1FF', '#FFBAE1']}
+        colors={['#67e8f9', '#a5f3fc', '#cffafe']}
         pattern="matrix"
         duration={12}
         delay={0.8}
@@ -351,8 +351,8 @@ const LoadingScreen = () => {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
         >
-          <Card className="border-2 shadow-2xl border-primary/20 bg-card/95 backdrop-blur-xl">
-            <div className="p-8 space-y-6">
+          <Card className="border shadow-2xl border-primary/20 bg-card/95 backdrop-blur-xl">
+            <div className="p-6 space-y-5">
               {/* Icon and Phase Message */}
               <div className="flex flex-col items-center space-y-4 text-center">
                 <AnimatePresence mode="wait">
@@ -364,14 +364,14 @@ const LoadingScreen = () => {
                     exit={{ scale: 0, rotate: 180 }}
                     transition={{ duration: 0.5, type: 'spring' }}
                   >
-                    <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 ring-2 ring-primary/30">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-md bg-gradient-to-br from-primary/20 to-accent/20 ring-1 ring-primary/30">
                       {loadingPhases[currentPhase]?.icon &&
                         createElement(loadingPhases[currentPhase].icon!, {
-                          className: 'w-8 h-8 text-primary',
+                          className: 'w-6 h-6 text-primary',
                         })}
                     </div>
                     <motion.div
-                      className="absolute opacity-50 -inset-2 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur-lg -z-10"
+                      className="absolute rounded-md opacity-50 -inset-2 bg-gradient-to-r from-primary/20 to-accent/20 blur-lg -z-10"
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{
                         duration: 2,
@@ -390,7 +390,7 @@ const LoadingScreen = () => {
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <h2 className="flex items-center justify-center text-2xl font-bold text-foreground">
+                    <h2 className="flex items-center justify-center text-lg font-semibold text-foreground">
                       {loadingPhases[currentPhase]?.message || 'Initializing'}
                       <span className="inline-block w-8 text-left text-primary">
                         {dots}
@@ -440,7 +440,7 @@ const LoadingScreen = () => {
 
                 <div className="flex items-center justify-between">
                   <motion.p
-                    className="text-lg font-bold text-primary"
+                    className="font-mono text-base font-bold text-primary"
                     animate={{ opacity: [0.7, 1, 0.7] }}
                     transition={{
                       duration: 2,

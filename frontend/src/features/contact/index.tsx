@@ -89,12 +89,15 @@ const ContactPage = () => {
     text: string;
     href?: string;
   }) => (
-    <div className="flex items-center space-x-3 text-sm">
-      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
-        <Icon className="w-5 h-5 text-primary" />
+    <div className="flex items-center space-x-2.5 text-[12px]">
+      <div className="flex items-center justify-center rounded w-7 h-7 bg-primary/10">
+        <Icon className="w-3.5 h-3.5 text-primary" />
       </div>
       {href ? (
-        <a href={href} className="text-muted-foreground hover:text-primary">
+        <a
+          href={href}
+          className="transition-colors text-muted-foreground hover:text-primary"
+        >
           {text}
         </a>
       ) : (
@@ -105,46 +108,42 @@ const ContactPage = () => {
 
   return (
     <PageLayout
-      header={<PageHeader>Get in Touch</PageHeader>}
+      header={<PageHeader>Contact</PageHeader>}
       subheader={
-        <PageSubHeader>
-          Whether you're looking to collaborate, hire, or just connect—drop a
-          message and I'll respond shortly.
-        </PageSubHeader>
+        <PageSubHeader>Drop a message and I'll respond shortly.</PageSubHeader>
       }
     >
       <PageContent>
-        <div className="space-y-8">
-          <div className="grid gap-8 md:grid-cols-2">
+        <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
             <Card className="border-border/40">
-              <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-                <CardDescription>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-[13px]">
+                  Contact Information
+                </CardTitle>
+                <CardDescription className="text-[11px]">
                   You can also reach me through these channels:
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4">
                 <ContactItem icon={Mail} text="Email available on request" />
-                <ContactItem
-                  icon={Phone}
-                  text="Phone number available upon request"
-                />
+                <ContactItem icon={Phone} text="Phone available upon request" />
                 <ContactItem
                   icon={MapPin}
-                  text="Open to remote or hybrid roles in Canada & worldwide"
+                  text="Remote or hybrid — Canada & worldwide"
                 />
               </CardContent>
             </Card>
 
             <Card className="border-border/40">
-              <CardHeader>
-                <CardTitle>Send a Message</CardTitle>
-                <CardDescription>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-[13px]">Send a Message</CardTitle>
+                <CardDescription className="text-[11px]">
                   Fill out this form to contact me directly.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-3">
                   {/* Honeypot field: leave blank */}
                   <div aria-hidden="true" className="hidden">
                     <label htmlFor="company">Company (leave blank)</label>
@@ -159,8 +158,13 @@ const ContactPage = () => {
                       className="hidden"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="name"
+                      className="text-[11px] uppercase tracking-wider text-muted-foreground"
+                    >
+                      Name
+                    </Label>
                     <Input
                       id="name"
                       name="name"
@@ -168,10 +172,16 @@ const ContactPage = () => {
                       onChange={handleChange}
                       placeholder="Enter your name"
                       required
+                      className="h-8 text-[12px]"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="email"
+                      className="text-[11px] uppercase tracking-wider text-muted-foreground"
+                    >
+                      Email
+                    </Label>
                     <Input
                       id="email"
                       name="email"
@@ -180,10 +190,16 @@ const ContactPage = () => {
                       onChange={handleChange}
                       placeholder="Enter your email"
                       required
+                      className="h-8 text-[12px]"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Message</Label>
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="message"
+                      className="text-[11px] uppercase tracking-wider text-muted-foreground"
+                    >
+                      Message
+                    </Label>
                     <Textarea
                       id="message"
                       name="message"
@@ -191,22 +207,22 @@ const ContactPage = () => {
                       onChange={handleChange}
                       placeholder="Type your message here..."
                       required
-                      className="min-h-[120px]"
+                      className="min-h-[100px] text-[12px]"
                     />
                   </div>
                   <Button
                     type="submit"
-                    className="w-full"
+                    className="w-full h-8 text-[12px]"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
                         Sending...
                       </>
                     ) : (
                       <>
-                        <Send className="w-4 h-4 mr-2" />
+                        <Send className="w-3 h-3 mr-1.5" />
                         Send Message
                       </>
                     )}

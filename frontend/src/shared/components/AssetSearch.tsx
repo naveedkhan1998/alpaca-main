@@ -55,27 +55,25 @@ const getAssetClassColor = (assetClass: string) => {
   switch (assetClass) {
     case 'us_equity':
       return {
-        badge:
-          'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-        gradient: 'from-blue-500 to-indigo-500',
+        badge: 'bg-primary/10 text-primary border-primary/20',
+        gradient: 'from-primary to-accent',
       };
     case 'us_option':
       return {
         badge:
-          'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 border-purple-200 dark:border-purple-800',
-        gradient: 'from-purple-500 to-fuchsia-500',
+          'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20',
+        gradient: 'from-violet-500 to-purple-500',
       };
     case 'crypto':
       return {
         badge:
-          'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300 border-orange-200 dark:border-orange-800',
-        gradient: 'from-orange-500 to-amber-500',
+          'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+        gradient: 'from-amber-500 to-orange-500',
       };
     default:
       return {
-        badge:
-          'bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-300 border-gray-200 dark:border-gray-800',
-        gradient: 'from-gray-500 to-slate-500',
+        badge: 'bg-muted text-muted-foreground border-border',
+        gradient: 'from-muted-foreground to-muted-foreground',
       };
   }
 };
@@ -127,7 +125,7 @@ const AssetSearchItem: React.FC<{
           className={`gap-2 transition-colors ${
             isAdded
               ? 'opacity-70 cursor-not-allowed'
-              : 'hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20'
+              : 'hover:text-primary hover:bg-primary/10'
           }`}
         >
           {isAdded ? (

@@ -149,17 +149,21 @@ export default {
         'gradient-conic':
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
         shimmer:
-          'linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.1) 50%, transparent 75%)',
+          'linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.08) 50%, transparent 75%)',
         'shimmer-dark':
-          'linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.05) 50%, transparent 75%)',
+          'linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.04) 50%, transparent 75%)',
         'trading-gradient':
-          'linear-gradient(135deg, hsl(var(--primary) / 0.08) 0%, hsl(var(--accent) / 0.08) 100%)',
+          'linear-gradient(135deg, hsl(var(--primary) / 0.06) 0%, hsl(var(--accent) / 0.06) 100%)',
         'surface-gradient':
-          'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--muted) / 0.5) 100%)',
+          'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--muted) / 0.3) 100%)',
         'premium-gradient':
           'linear-gradient(135deg, hsl(var(--gradient-start)) 0%, hsl(var(--gradient-end)) 100%)',
         'glass-gradient':
           'linear-gradient(135deg, hsl(var(--card) / 0.8) 0%, hsl(var(--card) / 0.4) 100%)',
+        'terminal-gradient':
+          'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
+        'glow-gradient':
+          'radial-gradient(ellipse at center, hsl(var(--primary) / 0.12) 0%, transparent 70%)',
       },
       fontFamily: {
         mono: [
@@ -177,6 +181,7 @@ export default {
           'Roboto',
           'sans-serif',
         ],
+        display: ['Plus Jakarta Sans', 'Inter', '-apple-system', 'sans-serif'],
       },
       spacing: {
         18: '4.5rem',

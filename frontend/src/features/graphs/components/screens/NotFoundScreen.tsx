@@ -63,16 +63,16 @@ const NotFoundScreen = () => {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5, type: 'spring' }}
       >
-        <div className="p-8 text-center border-2 shadow-2xl rounded-2xl bg-card/95 backdrop-blur-xl border-border/50">
+        <div className="p-6 text-center border rounded-md shadow-sm bg-card/95 backdrop-blur-xl border-border/50">
           {/* Icon with Animation */}
           <motion.div
-            className="relative mx-auto mb-8"
+            className="relative mx-auto mb-6"
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', duration: 0.8, delay: 0.2 }}
           >
-            <div className="relative flex items-center justify-center w-24 h-24 mx-auto border-2 rounded-full bg-gradient-to-br from-primary/10 to-accent/20 border-primary/20">
-              <BarChart3 className="w-12 h-12 text-primary" />
+            <div className="relative flex items-center justify-center w-16 h-16 mx-auto border rounded-md bg-gradient-to-br from-primary/10 to-accent/20 border-primary/20">
+              <BarChart3 className="w-8 h-8 text-primary" />
             </div>
             <motion.div
               className="absolute rounded-full -inset-2 bg-primary/10 blur-xl -z-10"
@@ -88,7 +88,7 @@ const NotFoundScreen = () => {
               }}
               transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
             >
-              <div className="p-2 rounded-lg bg-primary/20 backdrop-blur-sm">
+              <div className="p-2 rounded-md bg-primary/20 backdrop-blur-sm">
                 <TrendingUp className="w-4 h-4 text-primary" />
               </div>
             </motion.div>
@@ -103,7 +103,7 @@ const NotFoundScreen = () => {
           >
             <h1
               id="nf-title"
-              className="text-2xl font-bold text-transparent bg-gradient-to-r from-foreground via-primary to-foreground/70 bg-clip-text"
+              className="text-lg font-bold text-transparent bg-gradient-to-r from-foreground via-primary to-foreground/70 bg-clip-text"
             >
               No Data Available
             </h1>
@@ -115,7 +115,7 @@ const NotFoundScreen = () => {
 
           {/* Suggestions */}
           <motion.div
-            className="p-4 mt-6 border rounded-xl bg-muted/30 border-border/50"
+            className="p-3 mt-5 border rounded-md bg-muted/30 border-border/50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
@@ -148,14 +148,14 @@ const NotFoundScreen = () => {
 
           {/* Action Buttons */}
           <motion.div
-            className="flex flex-col gap-2 mt-6 sm:flex-row"
+            className="flex flex-col gap-2 mt-5 sm:flex-row"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
           >
             <Button
               onClick={() => navigate(-1)}
-              className="flex-1 transition-all duration-300 shadow-lg h-11 bg-primary hover:bg-primary/90 hover:shadow-xl group"
+              className="flex-1 transition-all duration-300 shadow-lg h-9 bg-primary hover:bg-primary/90 hover:shadow-xl group"
             >
               <ArrowLeft className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:-translate-x-1" />
               Go Back
@@ -163,7 +163,7 @@ const NotFoundScreen = () => {
             <Button
               variant="outline"
               onClick={() => window.location.reload()}
-              className="flex-1 transition-all duration-300 h-11 border-border/50 hover:border-border group"
+              className="flex-1 transition-all duration-300 h-9 border-border/50 hover:border-border group"
             >
               <RefreshCw className="w-4 h-4 mr-2 transition-transform duration-500 group-hover:rotate-180" />
               Reload

@@ -4,137 +4,137 @@
 
 @layer base {
   :root {
-    /* Light Mode - Clean Professional */
-    --background: 0 0% 99%;
-    --foreground: 240 10% 4%;
+    /* Light Mode - Terminal Professional */
+    --background: 210 20% 97%;
+    --foreground: 220 20% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 4%;
+    --card-foreground: 220 20% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 4%;
+    --popover-foreground: 220 20% 10%;
 
-    /* Primary: Subtle Professional Blue */
-    --primary: 221 83% 53%;
+    /* Primary: Teal / Cyan */
+    --primary: 187 72% 44%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary/Neutrals */
-    --secondary: 240 5% 96%;
-    --secondary-foreground: 240 6% 10%;
+    /* Secondary */
+    --secondary: 210 14% 93%;
+    --secondary-foreground: 220 14% 16%;
 
-    --muted: 240 5% 96%;
-    --muted-foreground: 240 4% 46%;
+    --muted: 210 14% 93%;
+    --muted-foreground: 215 12% 48%;
 
-    /* Accent: Same as primary for consistency */
-    --accent: 240 5% 96%;
-    --accent-foreground: 240 6% 10%;
+    /* Accent: Brighter Cyan */
+    --accent: 187 60% 92%;
+    --accent-foreground: 187 72% 22%;
 
     /* Semantic Colors */
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 0%;
 
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
-    --ring: 221 83% 53%;
+    --border: 214 14% 86%;
+    --input: 214 14% 86%;
+    --ring: 187 72% 44%;
 
     /* Chart palette (light) */
-    --chart-1: 221 83% 53%;
-    --chart-2: 142 71% 45%;
-    --chart-3: 0 84% 60%;
+    --chart-1: 187 72% 44%;
+    --chart-2: 160 84% 39%;
+    --chart-3: 0 72% 51%;
     --chart-4: 38 92% 50%;
-    --chart-5: 262 80% 50%;
+    --chart-5: 270 67% 55%;
 
-    --radius: 0.5rem;
+    --radius: 0.375rem;
 
     /* Sidebar */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 6% 10%;
-    --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 5% 96%;
-    --sidebar-accent-foreground: 240 6% 10%;
-    --sidebar-border: 240 6% 90%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-background: 220 20% 12%;
+    --sidebar-foreground: 210 20% 88%;
+    --sidebar-primary: 187 72% 50%;
+    --sidebar-primary-foreground: 220 20% 4%;
+    --sidebar-accent: 220 15% 18%;
+    --sidebar-accent-foreground: 210 20% 92%;
+    --sidebar-border: 220 14% 20%;
+    --sidebar-ring: 187 72% 44%;
 
     --vh: 1vh;
 
-    /* Trading-specific colors - TradingView style */
-    --profit: 168 76% 42%;
-    --loss: 4 85% 60%;
-    --candle-up: 168 76% 42%;
-    --candle-down: 4 85% 60%;
+    /* Trading-specific colors */
+    --profit: 160 84% 39%;
+    --loss: 0 72% 51%;
+    --candle-up: 160 84% 39%;
+    --candle-down: 0 72% 51%;
     --trading-card: 0 0% 100%;
-    --trading-border: 240 6% 90%;
+    --trading-border: 214 14% 86%;
   }
 
   .dark {
-    /* Dark Mode - Clean Professional */
-    --background: 240 10% 4%;
-    --foreground: 0 0% 95%;
+    /* Dark Mode - Dense Trading Terminal */
+    --background: 220 18% 5%;
+    --foreground: 210 20% 92%;
 
-    --card: 240 10% 6%;
-    --card-foreground: 0 0% 95%;
+    --card: 220 16% 8%;
+    --card-foreground: 210 20% 92%;
 
-    --popover: 240 10% 6%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 220 16% 10%;
+    --popover-foreground: 210 20% 92%;
 
-    /* Primary: Clear Blue */
-    --primary: 217 91% 60%;
-    --primary-foreground: 240 10% 4%;
+    /* Primary: Vibrant Cyan/Teal */
+    --primary: 187 80% 48%;
+    --primary-foreground: 220 18% 5%;
 
-    --secondary: 240 4% 16%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 220 14% 14%;
+    --secondary-foreground: 210 20% 88%;
 
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 220 14% 12%;
+    --muted-foreground: 215 12% 55%;
 
-    /* Accent */
-    --accent: 240 4% 16%;
-    --accent-foreground: 0 0% 95%;
+    /* Accent: Teal tinted */
+    --accent: 220 14% 14%;
+    --accent-foreground: 187 80% 60%;
 
     --destructive: 0 62% 55%;
     --destructive-foreground: 0 0% 95%;
 
-    --success: 142 70% 45%;
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 95%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 0%;
 
-    --border: 240 4% 16%;
-    --input: 240 4% 16%;
-    --ring: 217 91% 60%;
+    --border: 220 14% 16%;
+    --input: 220 14% 16%;
+    --ring: 187 80% 48%;
 
     /* Chart palette (dark) */
-    --chart-1: 217 91% 60%;
-    --chart-2: 142 70% 50%;
+    --chart-1: 187 80% 55%;
+    --chart-2: 160 84% 44%;
     --chart-3: 0 70% 55%;
     --chart-4: 38 92% 55%;
-    --chart-5: 262 80% 60%;
+    --chart-5: 270 67% 60%;
 
-    /* Sidebar */
-    --sidebar-background: 240 10% 4%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 240 10% 4%;
-    --sidebar-accent: 240 4% 16%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 240 4% 16%;
-    --sidebar-ring: 217 91% 60%;
+    /* Sidebar - Darker contrast panel */
+    --sidebar-background: 220 20% 4%;
+    --sidebar-foreground: 210 20% 82%;
+    --sidebar-primary: 187 80% 48%;
+    --sidebar-primary-foreground: 220 18% 5%;
+    --sidebar-accent: 220 16% 12%;
+    --sidebar-accent-foreground: 210 20% 92%;
+    --sidebar-border: 220 14% 12%;
+    --sidebar-ring: 187 80% 48%;
 
-    /* Dark mode trading colors - TradingView style */
-    --profit: 168 76% 42%;
-    --loss: 4 85% 60%;
-    --candle-up: 168 76% 42%;
-    --candle-down: 4 85% 60%;
-    --trading-card: 240 10% 6%;
-    --trading-border: 240 4% 16%;
+    /* Trading colors - bright for dark backgrounds */
+    --profit: 160 84% 39%;
+    --loss: 0 72% 55%;
+    --candle-up: 160 84% 39%;
+    --candle-down: 0 72% 55%;
+    --trading-card: 220 16% 8%;
+    --trading-border: 220 14% 16%;
   }
 
   @layer base {
@@ -142,16 +142,16 @@
       @apply border-border;
     }
     body {
-      @apply bg-background text-foreground;
+      @apply bg-background text-foreground antialiased;
       font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+      font-size: 13px;
+      line-height: 1.5;
       /* Mobile viewport fixes */
       overscroll-behavior: none;
       -webkit-overflow-scrolling: touch;
-      /* Prevent zoom on input focus on iOS */
       -webkit-text-size-adjust: 100%;
     }
 
-    /* Better mobile viewport handling */
     html {
       height: 100%;
     }
@@ -162,45 +162,53 @@
     }
   }
 
-  /* Modern scrollbar styling */
+  /* Thin scrollbars - terminal style */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 4px;
-    transition: all 0.2s ease;
+    background: hsl(var(--primary) / 0.2);
+    border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
+    background: hsl(var(--primary) / 0.4);
   }
 
   ::-webkit-scrollbar-track {
-    background: hsl(var(--muted) / 0.2);
+    background: transparent;
   }
 
   .scrollbar-hidden {
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
   .scrollbar-hidden::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, and Opera */
+    display: none;
   }
 
-  /* Simple card styling */
+  /* Terminal card with subtle glow */
   .glass-card {
     background: hsl(var(--card));
     border: 1px solid hsl(var(--border));
+    box-shadow:
+      0 0 0 1px hsl(var(--border) / 0.5),
+      0 1px 3px hsl(var(--background) / 0.3);
+  }
+
+  .dark .glass-card {
+    box-shadow:
+      0 0 0 1px hsl(var(--border) / 0.5),
+      0 0 20px -8px hsl(var(--primary) / 0.08);
   }
 
   /* Chart Container */
   .chart-container {
-    @apply relative overflow-hidden rounded-lg border border-border bg-card;
+    @apply relative overflow-hidden rounded border border-border bg-card;
   }
 
   /* Status Indicators */
@@ -229,50 +237,80 @@
     @apply text-warning;
   }
 
-  /* Enhanced Data Tables */
+  /* Dense Data Tables */
   .data-table {
     @apply border-separate border-spacing-0;
+    font-size: 12px;
   }
 
   .data-table th {
-    @apply font-semibold border-b bg-muted/50 text-muted-foreground border-border;
+    @apply font-semibold border-b bg-muted/30 text-muted-foreground border-border uppercase text-[11px] tracking-wider;
+    padding: 6px 10px;
   }
 
   .data-table td {
-    @apply border-b border-border/50;
+    @apply border-b border-border/30;
+    padding: 5px 10px;
   }
 
   .data-table tr:hover {
-    background-color: hsl(var(--muted) / 0.3);
-    transition: background-color 0.15s ease;
+    background-color: hsl(var(--primary) / 0.04);
+    transition: background-color 0.1s ease;
   }
 
-  /* Price Change Indicators */
+  .dark .data-table tr:hover {
+    background-color: hsl(var(--primary) / 0.06);
+  }
+
+  /* Price Change Indicators - Compact */
   .price-up {
-    padding: 0.375rem 0.625rem;
+    padding: 0.2rem 0.5rem;
     font-weight: 600;
-    border-radius: 0.375rem;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    border-radius: 0.25rem;
     color: hsl(var(--success));
-    background-color: hsl(var(--success) / 0.12);
-    transition: all 0.2s ease;
+    background-color: hsl(var(--success) / 0.1);
   }
 
   .price-down {
-    padding: 0.375rem 0.625rem;
+    padding: 0.2rem 0.5rem;
     font-weight: 600;
-    border-radius: 0.375rem;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    border-radius: 0.25rem;
     color: hsl(var(--destructive));
-    background-color: hsl(var(--destructive) / 0.12);
-    transition: all 0.2s ease;
+    background-color: hsl(var(--destructive) / 0.1);
   }
 
   .price-unchanged {
-    padding: 0.375rem 0.625rem;
+    padding: 0.2rem 0.5rem;
     font-weight: 600;
-    border-radius: 0.375rem;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    border-radius: 0.25rem;
     color: hsl(var(--muted-foreground));
-    background-color: hsl(var(--muted) / 0.5);
-    transition: all 0.2s ease;
+    background-color: hsl(var(--muted) / 0.3);
+  }
+
+  /* Terminal panel divider */
+  .terminal-divider {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--primary) / 0.3),
+      transparent
+    );
+  }
+
+  /* Glow accent for active elements */
+  .glow-accent {
+    box-shadow: 0 0 12px -3px hsl(var(--primary) / 0.4);
+  }
+
+  .dark .glow-accent {
+    box-shadow: 0 0 16px -4px hsl(var(--primary) / 0.3);
   }
 }
 
@@ -314,7 +352,6 @@
   ----------------------------------------
   Landing Page Specific Styles 
   ----------------------------------------
-  Moved from index.html for cleaner separation
 */
 
 #landing-root {
@@ -325,105 +362,104 @@
 #landing-root h2,
 #landing-root h3 {
   font-family: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
-/* Landing Utilities that reuse CSS variables but need specific opacity/calc */
 #landing-root .text-muted-foreground {
-  color: hsl(var(--foreground) / 0.72);
+  color: hsl(var(--foreground) / 0.65);
 }
 
 .dark #landing-root .text-muted-foreground {
-  color: hsl(var(--foreground) / 0.78);
+  color: hsl(var(--foreground) / 0.7);
 }
 
 #landing-root .bg-primary\/10 {
-  background-color: hsl(var(--primary) / 0.12);
+  background-color: hsl(var(--primary) / 0.1);
 }
 
 .dark #landing-root .bg-primary\/10 {
-  background-color: hsl(var(--primary) / 0.2);
+  background-color: hsl(var(--primary) / 0.15);
 }
 
 #landing-root .border-primary\/30 {
-  border-color: hsl(var(--primary) / 0.4);
+  border-color: hsl(var(--primary) / 0.3);
 }
 
 .dark #landing-root .border-primary\/30 {
-  border-color: hsl(var(--primary) / 0.55);
+  border-color: hsl(var(--primary) / 0.4);
 }
 
-/* Complex Gradients & Effects */
+/* Terminal-inspired landing backdrop */
 .landing-backdrop {
   background:
     radial-gradient(
-      1000px circle at 10% -10%,
-      hsl(var(--primary) / 0.18),
-      transparent 55%
+      1200px circle at 20% -15%,
+      hsl(var(--primary) / 0.1),
+      transparent 50%
     ),
     radial-gradient(
-      900px circle at 90% 0%,
-      hsl(var(--primary) / 0.1),
-      transparent 60%
+      800px circle at 80% 10%,
+      hsl(var(--primary) / 0.06),
+      transparent 55%
     ),
     linear-gradient(
       180deg,
       hsl(var(--background)) 0%,
-      hsl(var(--muted) / 0.35) 100%
+      hsl(var(--muted) / 0.2) 100%
     );
 }
 
 .dark .landing-backdrop {
   background:
     radial-gradient(
-      1000px circle at 10% -10%,
-      hsl(var(--primary) / 0.28),
-      transparent 60%
+      1200px circle at 20% -15%,
+      hsl(var(--primary) / 0.15),
+      transparent 55%
     ),
     radial-gradient(
-      900px circle at 90% 0%,
-      hsl(var(--primary) / 0.18),
-      transparent 65%
+      800px circle at 80% 10%,
+      hsl(187 80% 48% / 0.1),
+      transparent 60%
     ),
     linear-gradient(
       180deg,
       hsl(var(--background)) 0%,
-      hsl(var(--card) / 0.7) 100%
+      hsl(var(--card) / 0.5) 100%
     );
 }
 
 .landing-surface {
   background: linear-gradient(
     180deg,
-    hsl(var(--background) / 0.92) 0%,
-    hsl(var(--background) / 0.78) 100%
+    hsl(var(--background) / 0.95) 0%,
+    hsl(var(--background) / 0.85) 100%
   );
-  border-color: hsl(var(--border) / 0.7);
-  box-shadow: 0 1px 0 hsl(var(--foreground) / 0.04);
+  border-color: hsl(var(--border) / 0.6);
+  box-shadow: 0 1px 0 hsl(var(--foreground) / 0.03);
 }
 
 .dark .landing-surface {
   background: linear-gradient(
     180deg,
-    hsl(var(--background) / 0.9) 0%,
-    hsl(var(--background) / 0.6) 100%
+    hsl(var(--card) / 0.9) 0%,
+    hsl(var(--card) / 0.6) 100%
   );
-  border-color: hsl(var(--border) / 0.85);
+  border-color: hsl(var(--border));
   box-shadow:
-    0 1px 0 hsl(var(--foreground) / 0.08),
-    0 12px 32px -28px hsl(var(--primary) / 0.6);
+    0 1px 0 hsl(var(--foreground) / 0.06),
+    0 0 30px -12px hsl(var(--primary) / 0.2);
 }
 
 .landing-fab {
-  background: hsl(var(--card) / 0.85);
-  border: 1px solid hsl(var(--border) / 0.65);
-  box-shadow: 0 14px 30px -20px hsl(var(--foreground) / 0.3);
+  background: hsl(var(--card) / 0.9);
+  border: 1px solid hsl(var(--border) / 0.5);
+  box-shadow: 0 12px 24px -16px hsl(var(--foreground) / 0.2);
 }
 
 .dark .landing-fab {
-  background: hsl(var(--card) / 0.75);
-  border: 1px solid hsl(var(--border) / 0.9);
-  box-shadow: 0 16px 35px -24px hsl(var(--primary) / 0.45);
+  background: hsl(var(--card) / 0.8);
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 0 24px -8px hsl(var(--primary) / 0.2);
 }
 
 /* Animations */
@@ -470,31 +506,25 @@
   animation: slide-up 0.8s ease-out forwards;
 }
 
-/* Background Patterns */
+/* Background Patterns - Tighter grid for terminal feel */
 .grid-pattern {
   background-image:
-    linear-gradient(to right, hsl(var(--border) / 0.18) 1px, transparent 1px),
-    linear-gradient(to bottom, hsl(var(--border) / 0.18) 1px, transparent 1px);
-  background-size: 40px 40px;
+    linear-gradient(to right, hsl(var(--border) / 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border) / 0.12) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
 .dark .grid-pattern {
   background-image:
-    linear-gradient(to right, hsl(var(--border) / 0.28) 1px, transparent 1px),
-    linear-gradient(to bottom, hsl(var(--border) / 0.28) 1px, transparent 1px);
+    linear-gradient(to right, hsl(var(--primary) / 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--primary) / 0.06) 1px, transparent 1px);
 }
 
-/* Card Backgrounds */
+/* Card Backgrounds - Terminal aesthetic */
 .card-bg {
-  background: linear-gradient(
-    145deg,
-    hsl(var(--card)) 0%,
-    hsl(var(--muted) / 0.6) 100%
-  );
-  border: 1px solid hsl(var(--border) / 0.75);
-  box-shadow:
-    0 18px 45px -32px hsl(var(--foreground) / 0.18),
-    inset 0 1px 0 hsl(var(--foreground) / 0.04);
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 1px 3px hsl(var(--foreground) / 0.06);
 }
 
 .dark .card-bg {
@@ -503,26 +533,22 @@
     hsl(var(--card)) 0%,
     hsl(var(--secondary)) 100%
   );
-  border: 1px solid hsl(var(--border) / 0.9);
+  border: 1px solid hsl(var(--border));
   box-shadow:
-    0 22px 55px -36px hsl(var(--primary) / 0.3),
-    inset 0 1px 0 hsl(var(--foreground) / 0.08);
+    0 0 0 1px hsl(var(--border) / 0.5),
+    0 0 24px -10px hsl(var(--primary) / 0.1);
 }
 
 /* Section Backgrounds */
 .section-bg {
-  background: linear-gradient(
-    180deg,
-    hsl(var(--background)) 0%,
-    hsl(var(--muted) / 0.5) 100%
-  );
+  background: hsl(var(--background));
 }
 
 .dark .section-bg {
   background: linear-gradient(
     180deg,
     hsl(var(--background)) 0%,
-    hsl(var(--card) / 0.7) 100%
+    hsl(var(--card) / 0.4) 100%
   );
 }
 
@@ -538,67 +564,59 @@
 /* Hero Image Container */
 .hero-image-container {
   position: relative;
-  padding: 10px;
+  padding: 8px;
   background: linear-gradient(
     135deg,
-    hsl(var(--primary) / 0.28) 0%,
-    hsl(var(--primary) / 0.12) 50%,
-    hsl(var(--primary) / 0.28) 100%
+    hsl(var(--primary) / 0.2) 0%,
+    hsl(var(--primary) / 0.08) 50%,
+    hsl(var(--primary) / 0.2) 100%
   );
-  border-radius: 1.5rem;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 30px 80px -40px hsl(var(--primary) / 0.35);
+  border-radius: 1rem;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 0 40px -16px hsl(var(--primary) / 0.25);
 }
 
 .light .hero-image-container {
   background: linear-gradient(
     135deg,
-    hsl(var(--primary) / 0.22) 0%,
-    hsl(var(--primary) / 0.12) 50%,
-    hsl(var(--primary) / 0.22) 100%
+    hsl(var(--primary) / 0.14) 0%,
+    hsl(var(--primary) / 0.06) 50%,
+    hsl(var(--primary) / 0.14) 100%
   );
-  box-shadow: 0 26px 70px -45px hsl(var(--foreground) / 0.14);
+  box-shadow: 0 20px 50px -30px hsl(var(--foreground) / 0.1);
 }
 
 .dark .hero-image-container {
   background: linear-gradient(
     135deg,
-    hsl(var(--primary) / 0.38) 0%,
-    hsl(var(--primary) / 0.2) 50%,
-    hsl(var(--primary) / 0.38) 100%
+    hsl(var(--primary) / 0.25) 0%,
+    hsl(var(--primary) / 0.1) 50%,
+    hsl(var(--primary) / 0.25) 100%
   );
-  box-shadow: 0 30px 80px -45px hsl(var(--primary) / 0.45);
+  box-shadow: 0 0 50px -20px hsl(var(--primary) / 0.3);
 }
 
 .hero-image-inner {
   position: relative;
-  background: hsl(var(--card) / 0.9);
-  backdrop-filter: saturate(150%) blur(16px);
-  -webkit-backdrop-filter: saturate(150%) blur(16px);
-  border: 2px solid hsl(var(--border) / 0.7);
-  border-radius: 1.25rem;
+  background: hsl(var(--card) / 0.95);
+  backdrop-filter: saturate(150%) blur(12px);
+  -webkit-backdrop-filter: saturate(150%) blur(12px);
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.75rem;
   padding: 4px;
-  box-shadow:
-    0 0 0 1px hsl(var(--border) / 0.25),
-    inset 0 0 25px hsl(var(--primary) / 0.08),
-    0 24px 70px -18px hsl(var(--foreground) / 0.25);
+  box-shadow: 0 0 0 1px hsl(var(--border) / 0.3);
 }
 
 .light .hero-image-inner {
   background: hsl(var(--card));
-  border: 2px solid hsl(var(--border));
-  box-shadow:
-    0 0 0 1px hsl(var(--border) / 0.35),
-    inset 0 0 25px hsl(var(--primary) / 0.04),
-    0 24px 70px -20px hsl(var(--foreground) / 0.12);
+  border: 1px solid hsl(var(--border));
 }
 
 .dark .hero-image-inner {
   background: hsl(var(--card) / 0.95);
-  border: 2px solid hsl(var(--border) / 0.95);
+  border: 1px solid hsl(var(--border));
   box-shadow:
-    0 0 0 1px hsl(var(--border) / 0.4),
-    inset 0 0 30px hsl(var(--primary) / 0.12),
-    0 24px 70px -20px hsl(var(--primary) / 0.35);
+    0 0 0 1px hsl(var(--border) / 0.3),
+    inset 0 0 20px hsl(var(--primary) / 0.06);
 }
