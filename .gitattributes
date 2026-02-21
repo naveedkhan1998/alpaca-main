@@ -6,3 +6,6 @@
 
 # Keep Python files LF so Black output is stable across OSes
 *.py text eol=lf
+
+# Explicitly enforce LF for CI-sensitive Django entrypoint
+backend/manage.py text eol=lf
