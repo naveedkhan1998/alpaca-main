@@ -98,9 +98,9 @@ jobs:
         run: |
           set +e
           mkdir -p reports
-          npx eslint .
+          npx eslint . --no-warn-ignored
           eslint_exit=$?
-          npx eslint . -f @microsoft/eslint-formatter-sarif -o reports/eslint.sarif
+          npx eslint . --no-warn-ignored -f @microsoft/eslint-formatter-sarif -o reports/eslint.sarif
           exit $eslint_exit
 
       - name: Upload ESLint SARIF
@@ -142,9 +142,9 @@ jobs:
         run: |
           set +e
           mkdir -p reports
-          uvx ruff check .
+          uv run ruff check .
           ruff_exit=$?
-          uvx ruff check . --output-format sarif > reports/ruff.sarif
+          uv run ruff check . --output-format sarif > reports/ruff.sarif
           exit $ruff_exit
 
       - name: Upload Ruff SARIF
