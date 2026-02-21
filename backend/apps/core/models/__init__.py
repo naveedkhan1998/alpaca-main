@@ -17,6 +17,7 @@ from apps.core.models.candles import (
     Candle,  # Legacy model for backward compatibility
     MinuteCandle,
 )
+from apps.core.models.data_refresh import DataRefreshBatch, DataRefreshTask
 from apps.core.models.ticks import Tick
 from main.const import AGGREGATED_TIMEFRAME_CHOICES, TIMEFRAME_CHOICES
 
@@ -37,4 +38,7 @@ __all__ = [
     "Candle",  # Legacy
     "TIMEFRAME_CHOICES",
     "AGGREGATED_TIMEFRAME_CHOICES",
+    # Data refresh tracking
+    "DataRefreshBatch",
+    "DataRefreshTask",
 ]

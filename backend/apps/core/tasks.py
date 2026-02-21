@@ -11,6 +11,7 @@ from apps.core.models import (
     AggregatedCandle,
     Asset,
     Candle,
+    DataRefreshTask,
     MinuteCandle,
     WatchListAsset,
 )
@@ -854,3 +855,294 @@ def _is_market_hours(dt: datetime) -> bool:
     if et.weekday() > 4:
         return False
     return time(9, 30) <= et.time() < time(16, 0)
+
+
+# ---------------------------------------------------------------------------
+# Admin-triggered data refresh tasks
+# ---------------------------------------------------------------------------
+
+
+@shared_task(name="refresh_asset_minute_data")
+def refresh_asset_minute_data(task_id: int):
+    """
+    Fetch 1-minute candle data for a single asset within the configured
+    rolling window (HISTORIC_DATA_LOADING_LIMIT days from today).
+
+    Deletes candles older than the window, then back-fills any gaps.
+    Updates the DataRefreshTask record with progress.
+    """
+    try:
+        refresh_task = DataRefreshTask.objects.select_related("batch", "asset").get(
+            id=task_id
+        )
+    except DataRefreshTask.DoesNotExist:
+        logger.error(f"DataRefreshTask {task_id} not found")
+        return
+
+    asset = refresh_task.asset
+    symbol = asset.symbol
+    refresh_task.mark_running()
+
+    window_days = refresh_task.batch.data_window_days
+    repo = CandleRepository()
+    service = alpaca_service
+
+    try:
+        end_date = timezone.now()
+        start_date = end_date - timedelta(days=window_days)
+
+        # Prune candles outside the rolling window
+        pruned = MinuteCandle.objects.filter(
+            asset=asset, timestamp__lt=start_date
+        ).delete()[0]
+        if pruned:
+            logger.info(
+                f"Pruned {pruned} minute candles older than {window_days}d for {symbol}"
+            )
+
+        # Determine what we already have
+        last_1t = (
+            MinuteCandle.objects.filter(asset_id=asset.id)
+            .order_by("-timestamp")
+            .first()
+        )
+        fetch_start = (
+            last_1t.timestamp + timedelta(minutes=1)
+            if last_1t and last_1t.timestamp > start_date
+            else start_date
+        )
+
+        created_total = 0
+        if fetch_start < end_date:
+            current_end = end_date
+            while current_end > fetch_start:
+                r_start = max(fetch_start, current_end - timedelta(days=10))
+                start_str = r_start.strftime("%Y-%m-%dT%H:%M:%SZ")
+                end_str = current_end.strftime("%Y-%m-%dT%H:%M:%SZ")
+                try:
+                    resp = service.get_historic_bars(
+                        symbol=symbol,
+                        start=start_str,
+                        end=end_str,
+                        sort="desc",
+                        asset_class=asset.asset_class,
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"API error for {symbol} 1T {r_start}->{current_end}: {e}"
+                    )
+                    current_end = r_start
+                    continue
+
+                bars = (resp or {}).get("bars") or []
+                candles = []
+                for bar in bars:
+                    ts = datetime.fromisoformat(bar["t"].replace("Z", "+00:00"))
+                    if asset.asset_class != "crypto" and not _is_market_hours(ts):
+                        continue
+                    candles.append(
+                        {
+                            "asset_id": asset.id,
+                            "timestamp": ts,
+                            "open": float(bar["o"]),
+                            "high": float(bar["h"]),
+                            "low": float(bar["l"]),
+                            "close": float(bar["c"]),
+                            "volume": int(bar.get("v", 0)),
+                            "trade_count": bar.get("n"),
+                            "vwap": bar.get("vw"),
+                        }
+                    )
+
+                if candles:
+                    repo.bulk_insert_minute_candles(candles, ignore_conflicts=True)
+                    created_total += len(candles)
+
+                current_end = r_start
+
+        logger.info(f"Refresh: fetched {created_total} 1T candles for {symbol}")
+        refresh_task.mark_completed(candles_fetched=created_total)
+
+    except Exception as e:
+        logger.error(f"Error refreshing minute data for {symbol}: {e}", exc_info=True)
+        refresh_task.mark_failed(error_message=str(e)[:1000])
+
+
+@shared_task(name="refresh_asset_timeframe_data")
+def refresh_asset_timeframe_data(task_id: int):
+    """
+    Rebuild aggregated candle data for a single asset from its minute candles.
+    Covers the rolling window defined in the batch.
+    """
+    try:
+        refresh_task = DataRefreshTask.objects.select_related("batch", "asset").get(
+            id=task_id
+        )
+    except DataRefreshTask.DoesNotExist:
+        logger.error(f"DataRefreshTask {task_id} not found")
+        return
+
+    asset = refresh_task.asset
+    symbol = asset.symbol
+    refresh_task.mark_running()
+
+    window_days = refresh_task.batch.data_window_days
+    repo = CandleRepository()
+
+    try:
+        end_date = timezone.now()
+        start_date = end_date - timedelta(days=window_days)
+
+        # Prune aggregated candles outside the rolling window
+        pruned = AggregatedCandle.objects.filter(
+            asset=asset, timestamp__lt=start_date
+        ).delete()[0]
+        if pruned:
+            logger.info(
+                f"Pruned {pruned} aggregated candles older than {window_days}d for {symbol}"
+            )
+
+        timeframes_built = 0
+        for tf, _delta in const.TF_LIST:
+            if tf == const.TF_1T:
+                continue
+            try:
+                affected = repo.aggregate_to_timeframe(
+                    asset_id=asset.id,
+                    timeframe=tf,
+                    start=start_date,
+                    end=end_date,
+                )
+                if affected > 0:
+                    timeframes_built += 1
+                    logger.info(f"Refresh: built {affected} {tf} candles for {symbol}")
+            except Exception as e:
+                logger.error(f"Error aggregating {tf} for {symbol}: {e}", exc_info=True)
+
+        refresh_task.mark_completed(timeframes_built=timeframes_built)
+
+    except Exception as e:
+        logger.error(
+            f"Error refreshing timeframe data for {symbol}: {e}", exc_info=True
+        )
+        refresh_task.mark_failed(error_message=str(e)[:1000])
+
+
+@shared_task(name="refresh_asset_full_data")
+def refresh_asset_full_data(task_id: int):
+    """
+    Full refresh: fetch 1-min data then rebuild all timeframe aggregations.
+    Combines both steps in a single Celery task per asset.
+    """
+    try:
+        refresh_task = DataRefreshTask.objects.select_related("batch", "asset").get(
+            id=task_id
+        )
+    except DataRefreshTask.DoesNotExist:
+        logger.error(f"DataRefreshTask {task_id} not found")
+        return
+
+    asset = refresh_task.asset
+    symbol = asset.symbol
+    refresh_task.mark_running()
+
+    window_days = refresh_task.batch.data_window_days
+    repo = CandleRepository()
+    service = alpaca_service
+
+    try:
+        end_date = timezone.now()
+        start_date = end_date - timedelta(days=window_days)
+
+        # --- Step 1: Prune + fetch minute candles ---
+        MinuteCandle.objects.filter(asset=asset, timestamp__lt=start_date).delete()
+
+        last_1t = (
+            MinuteCandle.objects.filter(asset_id=asset.id)
+            .order_by("-timestamp")
+            .first()
+        )
+        fetch_start = (
+            last_1t.timestamp + timedelta(minutes=1)
+            if last_1t and last_1t.timestamp > start_date
+            else start_date
+        )
+
+        created_total = 0
+        if fetch_start < end_date:
+            current_end = end_date
+            while current_end > fetch_start:
+                r_start = max(fetch_start, current_end - timedelta(days=10))
+                start_str = r_start.strftime("%Y-%m-%dT%H:%M:%SZ")
+                end_str = current_end.strftime("%Y-%m-%dT%H:%M:%SZ")
+                try:
+                    resp = service.get_historic_bars(
+                        symbol=symbol,
+                        start=start_str,
+                        end=end_str,
+                        sort="desc",
+                        asset_class=asset.asset_class,
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"API error for {symbol} 1T {r_start}->{current_end}: {e}"
+                    )
+                    current_end = r_start
+                    continue
+
+                bars = (resp or {}).get("bars") or []
+                candles = []
+                for bar in bars:
+                    ts = datetime.fromisoformat(bar["t"].replace("Z", "+00:00"))
+                    if asset.asset_class != "crypto" and not _is_market_hours(ts):
+                        continue
+                    candles.append(
+                        {
+                            "asset_id": asset.id,
+                            "timestamp": ts,
+                            "open": float(bar["o"]),
+                            "high": float(bar["h"]),
+                            "low": float(bar["l"]),
+                            "close": float(bar["c"]),
+                            "volume": int(bar.get("v", 0)),
+                            "trade_count": bar.get("n"),
+                            "vwap": bar.get("vw"),
+                        }
+                    )
+
+                if candles:
+                    repo.bulk_insert_minute_candles(candles, ignore_conflicts=True)
+                    created_total += len(candles)
+
+                current_end = r_start
+
+        # --- Step 2: Prune + rebuild aggregated candles ---
+        AggregatedCandle.objects.filter(asset=asset, timestamp__lt=start_date).delete()
+
+        timeframes_built = 0
+        for tf, _delta in const.TF_LIST:
+            if tf == const.TF_1T:
+                continue
+            try:
+                affected = repo.aggregate_to_timeframe(
+                    asset_id=asset.id,
+                    timeframe=tf,
+                    start=start_date,
+                    end=end_date,
+                )
+                if affected > 0:
+                    timeframes_built += 1
+            except Exception as e:
+                logger.error(f"Error aggregating {tf} for {symbol}: {e}", exc_info=True)
+
+        logger.info(
+            f"Full refresh for {symbol}: {created_total} 1T candles, "
+            f"{timeframes_built} timeframes rebuilt"
+        )
+        refresh_task.mark_completed(
+            candles_fetched=created_total, timeframes_built=timeframes_built
+        )
+
+    except Exception as e:
+        logger.error(f"Error in full refresh for {symbol}: {e}", exc_info=True)
+        refresh_task.mark_failed(error_message=str(e)[:1000])
