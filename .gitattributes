@@ -1,2 +1,5 @@
 # Always use LF in shell scripts
 *.sh text eol=lf
+
+# Keep Python files LF so Black output is stable across OSes
+*.py text eol=lf

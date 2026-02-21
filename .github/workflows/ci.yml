@@ -142,9 +142,9 @@ jobs:
         run: |
           set +e
           mkdir -p reports
-          uv run ruff check .
+          uvx ruff check .
           ruff_exit=$?
-          uv run ruff check . --output-format sarif > reports/ruff.sarif
+          uvx ruff check . --output-format sarif > reports/ruff.sarif
           exit $ruff_exit
 
       - name: Upload Ruff SARIF
