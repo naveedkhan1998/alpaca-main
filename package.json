@@ -28,8 +28,8 @@
     "backend:shell": "docker compose exec -it backend sh"
   },
   "devDependencies": {
-    "@nx/docker": "^22.3.3",
-    "@nx/js": "^22.3.3",
-    "nx": "21.5.3"
+    "@nx/docker": "^22.5.3",
+    "@nx/js": "^22.5.3",
+    "nx": "22.5.3"
   }
 }
