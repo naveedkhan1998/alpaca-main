@@ -714,7 +714,7 @@ class AssetViewSet(PublicReadOnlyMixin, viewsets.ReadOnlyModelViewSet):
                 f"Error fetching option bars for {symbol}: {e}", exc_info=True
             )
             return Response(
-                {"msg": f"Error fetching option bars: {e}"},
+                {"msg": "Error fetching option bars"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
