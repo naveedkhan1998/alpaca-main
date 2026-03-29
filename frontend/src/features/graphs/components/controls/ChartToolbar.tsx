@@ -42,13 +42,11 @@ import {
   LayoutTemplate,
   Settings2,
   FunctionSquare,
-  TrendingUp,
 } from 'lucide-react';
 import type { SeriesType } from 'lightweight-charts';
 import { timeframeOptions } from '@/lib/constants';
 import { useIndicatorUI } from '../../context';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
-import type { Asset } from '@/types/common-types';
 
 const chartTypeOptions: {
   value: SeriesType;
@@ -99,13 +97,7 @@ const presetOptions = [
   },
 ];
 
-export default function ChartToolbar({
-  asset,
-  onOptionsClick,
-}: {
-  asset?: Asset;
-  onOptionsClick?: () => void;
-}) {
+export default function ChartToolbar() {
   const dispatch = useAppDispatch();
   const timeframe = useAppSelector(selectTimeframe);
   const chartType = useAppSelector(selectChartType);
@@ -266,21 +258,6 @@ export default function ChartToolbar({
               </Badge>
             )}
           </Button>
-
-          {/* Options Button (equity only) */}
-          {asset?.asset_class === 'us_equity' && onOptionsClick && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 gap-1.5 text-muted-foreground hover:text-foreground"
-              onClick={onOptionsClick}
-            >
-              <TrendingUp className="w-4 h-4" />
-              <span className="hidden text-xs font-medium sm:inline">
-                Options
-              </span>
-            </Button>
-          )}
 
           {/* Settings Popover */}
           <Popover>

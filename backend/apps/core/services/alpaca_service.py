@@ -159,59 +159,5 @@ class AlpacaService:
             url = f"{self.data_base_url}/v2/stocks/{symbol}/bars"
             return self._make_request("GET", url, params=params)
 
-    def get_option_snapshots(
-        self,
-        underlying_symbol: str,
-        feed: str = "indicative",
-        expiration_date_gte: str | None = None,
-        expiration_date_lte: str | None = None,
-        option_type: Literal["call", "put"] | None = None,
-        limit: int = 200,
-        page_token: str | None = None,
-    ) -> dict:
-        """Fetch option chain snapshots (quotes + greeks) for an underlying symbol."""
-        params: dict = {"feed": feed, "limit": limit}
-        if expiration_date_gte:
-            params["expiration_date_gte"] = expiration_date_gte
-        if expiration_date_lte:
-            params["expiration_date_lte"] = expiration_date_lte
-        if option_type:
-            params["type"] = option_type
-        if page_token:
-            params["page_token"] = page_token
-
-        url = f"{self.data_base_url}/v1beta1/options/snapshots/{underlying_symbol}"
-        return self._make_request("GET", url, params=params)
-
-    def get_option_bars(
-        self,
-        symbols: str | list[str],
-        timeframe: str = "1Day",
-        start: str | None = None,
-        end: str | None = None,
-        limit: int = 1000,
-        page_token: str | None = None,
-        sort: Literal["asc", "desc"] = "asc",
-    ) -> dict:
-        """Fetch historical OHLCV bars for option contract symbols."""
-        if isinstance(symbols, list):
-            symbols = ",".join(symbols)
-
-        params: dict = {
-            "symbols": symbols,
-            "timeframe": timeframe,
-            "limit": limit,
-            "sort": sort,
-        }
-        if start:
-            params["start"] = start
-        if end:
-            params["end"] = end
-        if page_token:
-            params["page_token"] = page_token
-
-        url = f"{self.data_base_url}/v1beta1/options/bars"
-        return self._make_request("GET", url, params=params)
-
 
 alpaca_service = AlpacaService()
