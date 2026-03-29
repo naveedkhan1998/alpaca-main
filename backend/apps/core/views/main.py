@@ -663,7 +663,7 @@ class AssetViewSet(PublicReadOnlyMixin, viewsets.ReadOnlyModelViewSet):
                 f"Error fetching option chain for {asset.symbol}: {e}", exc_info=True
             )
             return Response(
-                {"msg": f"Error fetching option chain: {e}"},
+                {"msg": "Error fetching option chain"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
