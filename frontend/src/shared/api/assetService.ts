@@ -6,6 +6,10 @@ import {
   Candle,
   CompactCandlesResponse,
   GetCandlesV3Params,
+  OptionChainResponse,
+  OptionBarsResponse,
+  GetOptionChainParams,
+  GetOptionBarsParams,
 } from '@/types/common-types';
 import { baseApi } from './baseApi';
 
@@ -268,6 +272,48 @@ const assetApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Asset', 'SyncStatus'],
     }),
+
+    /**
+     * Fetch the options chain snapshots (quotes + greeks) for an underlying equity asset.
+     */
+    getOptionChain: builder.query<
+      { msg: string; data: OptionChainResponse },
+      GetOptionChainParams
+    >({
+      query: ({ id, expiration_date_gte, expiration_date_lte, type, limit = 200, page_token }) => {
+        const params = new URLSearchParams();
+        if (expiration_date_gte) params.append('expiration_date_gte', expiration_date_gte);
+        if (expiration_date_lte) params.append('expiration_date_lte', expiration_date_lte);
+        if (type) params.append('type', type);
+        params.append('limit', limit.toString());
+        if (page_token) params.append('page_token', page_token);
+        return {
+          url: `core/assets/${id}/option_chain/?${params.toString()}`,
+          method: 'GET',
+        };
+      },
+      providesTags: (_result, _error, { id }) => [{ type: 'Asset', id }],
+      keepUnusedDataFor: 60,
+    }),
+
+    /**
+     * Fetch historical OHLCV bars for a specific option contract symbol.
+     */
+    getOptionBars: builder.query<
+      { msg: string; data: OptionBarsResponse },
+      GetOptionBarsParams
+    >({
+      query: ({ symbol, timeframe = '1Day', start, end, limit = 1000 }) => {
+        const params = new URLSearchParams({ symbol, timeframe, limit: limit.toString() });
+        if (start) params.append('start', start);
+        if (end) params.append('end', end);
+        return {
+          url: `core/assets/option_bars/?${params.toString()}`,
+          method: 'GET',
+        };
+      },
+      keepUnusedDataFor: 60,
+    }),
   }),
 });
 
@@ -283,5 +329,9 @@ export const {
   useLazyGetAssetCandlesV3Query,
   useGetSyncStatusQuery,
   useSyncAssetsMutation,
+  useGetOptionChainQuery,
+  useLazyGetOptionChainQuery,
+  useGetOptionBarsQuery,
+  useLazyGetOptionBarsQuery,
 } = assetApi;
 export { assetApi };

@@ -30,6 +30,7 @@ import ChartToolbar from './components/controls/ChartToolbar';
 import GraphPanelLayout from './components/layout/GraphPanelLayout';
 import { IndicatorProvider } from './context';
 import { useGetAssetByIdQuery } from '@/api/assetService';
+import OptionsChainPanel from './components/options/OptionsChainPanel';
 import {
   setAutoRefresh,
   selectTimeframe,
@@ -76,6 +77,7 @@ const GraphsPage: React.FC = () => {
   const seriesType = useAppSelector(selectSeriesType);
   const showControls = useAppSelector(selectShowControls);
   const isGuest = useAppSelector(getIsGuest);
+  const [showOptionsPanel, setShowOptionsPanel] = useState(false);
 
   // Replay Controller (UI Actions)
   const {
@@ -377,7 +379,14 @@ const GraphsPage: React.FC = () => {
           className="flex flex-col h-full overflow-hidden bg-background"
         >
           {/* Chart Toolbar */}
-          <ChartToolbar />
+          <ChartToolbar
+            asset={asset}
+            onOptionsClick={
+              asset?.asset_class === 'us_equity'
+                ? () => setShowOptionsPanel(true)
+                : undefined
+            }
+          />
 
           {/* Desktop Replay Controls */}
           {desktopReplayControls}
@@ -406,6 +415,15 @@ const GraphsPage: React.FC = () => {
           {mobileReplayControls}
         </div>
       </div>
+
+      {/* Options Chain Panel (equity only) */}
+      {asset?.asset_class === 'us_equity' && (
+        <OptionsChainPanel
+          asset={asset}
+          open={showOptionsPanel}
+          onOpenChange={setShowOptionsPanel}
+        />
+      )}
     </IndicatorProvider>
   );
 };
