@@ -41,9 +41,11 @@ describe('environment helpers', () => {
     expect(localStorage.getItem('isLocalhost')).toBe('false');
   });
 
-  it('getApiBaseUrl returns default when not set', () => {
+  it('getApiBaseUrl returns default or configured URL', () => {
     const url = getApiBaseUrl();
-    expect(url).toMatch(/http:\/\/localhost:8000\/api/);
+    const expected =
+      import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+    expect(url).toBe(expected);
   });
 
   it('getCeleryWorkerUrls yields defaults when env not set', () => {

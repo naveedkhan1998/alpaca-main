@@ -19,7 +19,7 @@ def get_timeframe(request):
     Important as this field is passed to raw SQL queries."""
     try:
         tf = int(request.query_params.get("tf", 1))
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         raise ValidationError(
             "Timeframe (tf) must be a number between 1 and 1440."
         ) from None

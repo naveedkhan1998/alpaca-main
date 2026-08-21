@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16.0
+    image: postgres:17.4
     container_name: alpaca-postgres
     env_file:
       - ./.envs/.env
@@ -15,7 +15,7 @@ services:
       retries: 5
 
   redis:
-    image: redis:7.2.4-alpine
+    image: redis:7.4-alpine
     container_name: alpaca-redis
     restart: always
     healthcheck:

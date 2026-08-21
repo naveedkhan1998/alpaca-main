@@ -35,10 +35,10 @@ function checkCommand(command, name, args = ['--version']) {
 function checkNodeVersion() {
   const version = process.version;
   const major = parseInt(version.split('.')[0].slice(1));
-  if (major < 18) {
+  if (major < 20) {
     ui.errorBox(
       `Node.js version ${version} is too old`,
-      ['Required: Node.js >= 18'],
+      ['Required: Node.js >= 20'],
       ['node --version', 'npm run install']
     );
     process.exit(1);

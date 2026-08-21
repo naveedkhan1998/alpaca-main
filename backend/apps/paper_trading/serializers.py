@@ -70,7 +70,7 @@ class PaperTradeSerializer(serializers.ModelSerializer):
             return None
         try:
             return Decimal(str(value))
-        except (InvalidOperation, TypeError):
+        except InvalidOperation, TypeError:
             return None
 
     def get_unrealized_pl(self, obj: PaperTrade):

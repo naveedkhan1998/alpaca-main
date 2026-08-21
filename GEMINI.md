@@ -8,11 +8,11 @@ The system is fully Dockerized and includes real-time capabilities via WebSocket
 ## Architecture
 
 ### Backend (`/backend`)
-*   **Framework:** Django 5.2 + Django REST Framework 3.16
+*   **Framework:** Django 6.0 + Django REST Framework 3.18
 *   **Real-time:** Django Channels (WebSockets) using Redis
 *   **Async Tasks:** Celery + Celery Beat (Scheduler)
-*   **Database:** PostgreSQL
-*   **Cache/Broker:** Redis
+*   **Database:** PostgreSQL 17
+*   **Cache/Broker:** Redis 7.4
 *   **Package Manager:** `uv` (inferred from `pyproject.toml` structure/speed) or standard pip.
 
 ### Frontend (`/frontend`)
@@ -30,7 +30,7 @@ The system is fully Dockerized and includes real-time capabilities via WebSocket
 ## Getting Started
 
 ### Prerequisites
-*   **Node.js** (v18+) & **npm**
+*   **Node.js** (v20+) & **npm**
 *   **Docker** & **Docker Compose**
 *   **Alpaca API Credentials** (Key & Secret)
 
@@ -99,9 +99,9 @@ The system is fully Dockerized and includes real-time capabilities via WebSocket
 
 ## Tech Stack Details
 
-*   **Python:** 3.13+
-*   **Django:** 5.2.x
+*   **Python:** 3.14+
+*   **Django:** 6.0.x
 *   **React:** 19.x
 *   **Vite:** 7.x
 *   **Tailwind:** 3.4.x
-*   **Celery:** 5.5.x
+*   **Celery:** 5.6.x

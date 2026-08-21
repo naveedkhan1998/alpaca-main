@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ReplayControls from '../controls/ReplayControls';
@@ -29,30 +30,33 @@ vi.mock('@/components/ui/switch', () => ({
 }));
 
 vi.mock('@/components/ui/button', () => ({
-  Button: ({
-    children,
-    onClick,
-    disabled,
-    variant,
-    size,
-    className,
-  }: {
-    children: React.ReactNode;
-    onClick?: () => void;
-    disabled?: boolean;
-    variant?: string;
-    size?: string;
-    className?: string;
-  }) => (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      data-testid={`button-${variant || 'default'}`}
-      data-size={size}
-      className={className}
-    >
-      {children}
-    </button>
+  Button: forwardRef<
+    HTMLButtonElement,
+    {
+      children: React.ReactNode;
+      onClick?: () => void;
+      disabled?: boolean;
+      variant?: string;
+      size?: string;
+      className?: string;
+    }
+  >(
+    (
+      { children, onClick, disabled, variant, size, className, ...props },
+      ref
+    ) => (
+      <button
+        ref={ref}
+        onClick={onClick}
+        disabled={disabled}
+        data-testid={`button-${variant || 'default'}`}
+        data-size={size}
+        className={className}
+        {...props}
+      >
+        {children}
+      </button>
+    )
   ),
 }));
 

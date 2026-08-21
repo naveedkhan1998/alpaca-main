@@ -1,9 +1,9 @@
-"""
-Cache utilities for accessing Redis client and other cache operations.
-"""
+from typing import TYPE_CHECKING
 
 from django.core.cache import cache
-import redis
+
+if TYPE_CHECKING:
+    import redis
 
 
 def get_redis_client(alias: str = "default") -> redis.Redis:

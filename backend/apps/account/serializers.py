@@ -123,7 +123,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def get_avatar(obj):
         try:
             return obj.avatar.url
-        except (AttributeError, ValueError):
+        except AttributeError, ValueError:
             return None
 
     avatar = serializers.SerializerMethodField("get_avatar")

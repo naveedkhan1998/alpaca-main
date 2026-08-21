@@ -1,5 +1,5 @@
 ########## Base (unchanged) ##########
-ARG PY_TAG=3.13
+ARG PY_TAG=3.14
 FROM python:${PY_TAG}-slim-bookworm AS base
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
