@@ -1,420 +1,212 @@
-# Alpaca API Wrapper
+<div align="center">
 
-> **🎉 This project uses NX for monorepo management!**
->
-> **Quick Start:**
->
-> ```bash
-> npm install    # Install all dependencies with prerequisite checks
-> npm run dev    # Start development (frontend + backend)
-> ```
+# Alpaca Main
 
-**Alpaca API Wrapper** is a Django-based starter project for building your own stock market analysis tools, backtesting engines, or trading bots. It leverages the Alpaca API for real-time market data and provides a full-stack, Dockerized environment.
+### Build your market tool. Not the plumbing.
 
-Use it as a foundation for **backtesting, live-trading bots, research notebooks, or data pipelines**—with built-in support for watchlists, historical and real-time data, and a dedicated WebSocket service for streaming market data.
+A full-stack, open-source starter for market dashboards, research tools, and trading applications.
 
-🌐 **Live Demo:**  
-👉 <https://alpaca.mnaveedk.com>
+[![MIT License](https://img.shields.io/github/license/naveedkhan1998/alpaca-main)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/naveedkhan1998/alpaca-main?style=flat)](https://github.com/naveedkhan1998/alpaca-main/stargazers)
+[![Django + React](https://img.shields.io/badge/stack-Django%20%2B%20React-0c4b33)](#under-the-hood)
 
-Try it instantly as an **anonymous user**, or **sign up** to unlock the full real-time experience.
+**[Explore the live demo](https://alpaca.mnaveedk.com)** · **[Run it locally](#quick-start)** · **[Build on it](#make-it-yours)** · **[Report an issue](https://github.com/naveedkhan1998/alpaca-main/issues)**
 
----
+</div>
 
-## 🚀 Live Demo (Anonymous vs Registered)
+![Alpaca Main chart with candlesticks, volume, moving averages, and historical replay controls](frontend/public/alpaca-main-hero-dark.png)
 
-The hosted demo is designed to let you experience the project quickly **and** keep infrastructure costs sustainable.
+You have an idea for a market screener, a research dashboard, or a trading workflow. Before you can build it, you need authentication, watchlists, historical data, streaming, candle storage, background jobs, and a UI.
 
-### Anonymous Demo (No Account Required)
+**Alpaca Main gives you that starting point.** It brings a Django API, React frontend, Alpaca market-data integration, and Dockerized backend services together in one extensible codebase. Fork it, keep what you need, and build the part that makes your project different.
 
-Anonymous access is intentionally **limited** to prevent abuse and protect API workloads.
+This started as a personal open-source project and unexpectedly became the foundation for real client work. The goal here is still the same: give other developers a useful head start.
 
-**Anonymous users can:**
+**MIT licensed. Free to use, modify, and build commercial products on.**
 
-- Browse **historical market data**
-- View existing **example watchlists**
-- Explore the UI and overall architecture
-- Refresh pages to fetch the latest available data snapshot
+## What you can build
 
-**Anonymous limitations (intentional):**
+| Your idea | The head start |
+| --- | --- |
+| **A personal market terminal** | Watchlists, asset search, interactive charts, and streaming updates |
+| **A research or screening tool** | Historical OHLCV storage, multiple timeframes, and background jobs |
+| **A strategy research interface** | Chart replay and indicators, with room for your own backtesting engine |
+| **A custom trading application** | Accounts, API structure, async workers, and a frontend to extend |
+| **A market-data pipeline** | Alpaca ingestion, paginated backfills, PostgreSQL persistence, and Redis caching |
 
-- ⏱ **Rate limited** (~30 requests/min)
-- 🔒 **Read-only**
-- ❌ No creating/modifying watchlists
-- ❌ No adding/removing assets
-- ❌ No real-time streaming updates
+This is a **boilerplate and working reference application**, not a packaged profitable strategy or a turnkey live-trading system. You bring the domain logic, execution controls, and deployment requirements.
 
-### Registered Demo (Full Experience)
+## What is already here
 
-If you **sign up**, you get the **full power** of the app on the demo platform.
+- **Charts worth building on.** Candlesticks, volume, historical replay, and configurable indicators including moving averages, RSI, MACD, Bollinger Bands, and VWAP.
+- **Your own market workspace.** Search assets, organize watchlists, and explore historical and live data through the React UI.
+- **Market-data handling beyond a basic API call.** Paginated history, bounded retries, decimal candle storage, fractional crypto volumes, and automatic SIP-first selection with IEX fallback when SIP access is unavailable.
+- **Live candles that can correct themselves.** Timestamp-ordered provisional trade candles are replaced by Alpaca's authoritative minute bars and updated bars. Higher timeframes are rebuilt from stored minutes instead of repeatedly adding snapshots.
+- **A foundation for application features.** User accounts, JWT authentication, Django REST Framework endpoints, Django admin, and a paper-trading app to extend.
+- **Background work separated from the request path.** Celery workers and Beat scheduling, Redis cache/broker, and a dedicated market-data WebSocket service.
+- **A development stack you can inspect.** Docker Compose for backend services, Vite hot reload for the frontend, and Nx commands for development, linting, tests, and builds.
 
-**Registered users can:**
+For ingestion details and data-refresh behavior, see the [backend market-data documentation](backend/README.md#market-data-handling).
 
-- Create and manage watchlists
-- Add/remove assets
-- See asset data update in **real time** (streaming)
-- Explore the WebSocket + Celery pipeline as intended
+## Try it before you clone it
 
-> The goal is still the same: **experience it on the demo → clone it → run locally with your own API keys.**
+**[Open the live demo →](https://alpaca.mnaveedk.com)**
 
----
+| Access | What you can do |
+| --- | --- |
+| **Anonymous** | Explore historical charts and example watchlists without signing up |
+| **Registered** | Create watchlists, add or remove assets, and use real-time updates |
 
-## Table of Contents
+Anonymous access is read-only, has no live streaming, and is rate-limited to keep the shared demo sustainable. You do **not** need your own Alpaca credentials to try it.
 
-- [Alpaca API Wrapper](#alpaca-api-wrapper)
-  - [🚀 Live Demo (Anonymous vs Registered)](#-live-demo-anonymous-vs-registered)
-    - [Anonymous Demo (No Account Required)](#anonymous-demo-no-account-required)
-    - [Registered Demo (Full Experience)](#registered-demo-full-experience)
-  - [Table of Contents](#table-of-contents)
-  - [Features](#features)
-  - [Tech Stack](#tech-stack)
-  - [Architecture](#architecture)
-    - [Service Breakdown](#service-breakdown)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Running the Application](#running-the-application)
-    - [Quick Start (Recommended)](#quick-start-recommended)
-    - [Individual Services](#individual-services)
-    - [Access Points](#access-points)
-  - [Development Workflow](#development-workflow)
-    - [NX Monorepo Commands](#nx-monorepo-commands)
-    - [Hot Reload](#hot-reload)
-    - [Database Development](#database-development)
-    - [Running Tests](#running-tests)
-  - [Testing \& Monitoring](#testing--monitoring)
-    - [Flower dashboard](#flower-dashboard)
-  - [⭐ Supporting the Project](#-supporting-the-project)
-  - [Contributing](#contributing)
-    - [Development Guidelines](#development-guidelines)
-    - [Issues](#issues)
-  - [License](#license)
-    - [MIT License Summary](#mit-license-summary)
-  - [Acknowledgements](#acknowledgements)
-    - [Core Technologies](#core-technologies)
-    - [Infrastructure \& DevOps](#infrastructure--devops)
-    - [Development Tools](#development-tools)
-    - [Special Thanks](#special-thanks)
-  - [Contact](#contact)
-  - [to run with observibility](#to-run-with-observibility)
+For your own project, run it locally with your own credentials and data subscription.
 
----
+## Quick start
 
-## Features
+### 1. Get the prerequisites
 
-| Category                 | What you get                                                                 |
-| ------------------------ | ---------------------------------------------------------------------------- |
-| **Public Demo**          | Anonymous (read-only + rate limited) and Registered (full real-time) modes   |
-| **Watchlists**           | Create watchlists, add assets, and manage your market focus                  |
-| **Historical Data**      | Assets in watchlists fetch and cache historical OHLCV data automatically     |
-| **Real-Time Data**       | Assets in watchlists are subscribed to real-time Alpaca market feeds         |
-| **WebSocket Service**    | Dedicated Django management command runs in its own container, handling      |
-|                          | real-time tick processing and candle aggregation (1m and higher timeframes)  |
-| **Interactive Analysis** | Access and experiment with real-time and historical data for your watchlists |
-| **Session management**   | Secure session generation with your API key & secret                         |
-| **Task orchestration**   | Celery + Redis for async jobs & scheduling                                   |
-| **Dockerised stack**     | `docker compose up` and you're done                                          |
+- **Node.js 20.19+ or 22.12+** and npm, compatible with the Vite 7 frontend
+- **Docker with Docker Compose**, with the Docker daemon running
+- **[uv](https://docs.astral.sh/uv/getting-started/installation/)** for backend dependencies; the backend targets Python 3.14+
+- **An Alpaca API key and secret** for local market-data access
 
----
-
-## Tech Stack
-
-| Layer                 | Tech                                                                                                              |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| **Monorepo**          | NX · npm workspaces                                                                                               |
-| **Backend**           | Django · Django REST Framework                                                                                    |
-| **Async / broker**    | Celery · Redis                                                                                                    |
-| **Realtime**          | Django Channels (WebSockets)                                                                                      |
-| **Frontend**          | React · Vite                                                                                                      |
-| **Database**          | PostgreSQL                                                                                                        |
-| **Container / infra** | Docker · Docker Compose                                                                                           |
-| **Dev tooling**       | `uv` (deps) · `black` (format) · `ruff` (lint) · `pytest` (tests) · `vitest` (FE tests) · **Smart setup scripts** |
-
----
-
-## Architecture
-
-![Architecture Diagram](docs/architecture_diagram.png)
-
-### Service Breakdown
-
-| Service            | Purpose                 | Port | Environment | Notes                                 |
-| ------------------ | ----------------------- | ---- | ----------- | ------------------------------------- |
-| **NX**             | Monorepo orchestration  | N/A  | Local       | Task runner, caching, parallelization |
-| **Frontend**       | React SPA (Vite)        | 5173 | Local       | Hot module replacement enabled        |
-| **Backend**        | Django API + WebSockets | 8000 | Docker      | ASGI server with Channels             |
-| **PostgreSQL**     | Primary database        | 5432 | Docker      | Persistent data storage               |
-| **Redis**          | Cache + Message broker  | 6379 | Docker      | Celery task queue                     |
-| **Celery Workers** | Background tasks        | N/A  | Docker      | Async job processing                  |
-| **Celery Beat**    | Task scheduler          | N/A  | Docker      | Periodic task execution               |
-| **WebSocket**      | Real-time data stream   | N/A  | Docker      | Market data WebSocket service         |
-| **Flower**         | Task monitoring         | 5555 | Docker      | Celery dashboard                      |
-
-> **Infrastructure services** (backend, db, cache, broker, workers, beat, websocket, flower) are in **`docker-compose.yml`**.  
-> **Frontend runs locally** via NX for fast hot reload. **NX orchestrates** all tasks across the monorepo with **smart prerequisite checking**.
-
----
-
-## Prerequisites
-
-- **Node.js** (v18 or higher) & **npm** installed
-- **Docker** & **Docker Compose** installed
-- **uv** (Python package installer) installed
-- An **Alpaca API** key & secret
-- Create a `.envs/.env` file with your API credentials
-
-> **Note:** Alpaca API credentials are **not required** to try the hosted demo.  
-> They are only needed when running the project locally.
-> **Note:** The setup will automatically check for all prerequisites and guide you through any missing requirements.
-
----
-
-## Installation
+### 2. Clone and configure
 
 ```bash
 git clone https://github.com/naveedkhan1998/alpaca-main.git
 cd alpaca-main
-
-# Install everything automatically (NX + Frontend + Backend)
-npm install
+mkdir -p .envs
 ```
 
-**What happens during installation:**
+Create `.envs/.env` with your local configuration:
 
-- ✅ Checks for Node.js, Docker, and uv installation
-- ✅ Validates Alpaca API credentials in `.envs/.env`
-- ✅ Installs NX monorepo tooling
-- ✅ Installs frontend dependencies (~768 packages)
-- ✅ Installs and syncs backend dependencies (~72 Python packages)
-- ✅ Creates setup completion marker
-  
-> **Note:** If any prerequisites are missing, the installation will stop and provide clear instructions on what to install.
+```dotenv
+APCA_API_KEY=YOUR_ALPACA_KEY
+APCA_API_SECRET_KEY=YOUR_ALPACA_SECRET_KEY
 
----
+POSTGRES_DB=alpaca
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=CHOOSE_A_LOCAL_DATABASE_PASSWORD
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
 
-## Running the Application
+REDIS_URL=redis://redis:6379/0
+REDIS_CACHE_URL=redis://redis:6379/1
+SECRET_KEY=GENERATE_A_RANDOM_SECRET
+```
 
-### Quick Start (Recommended)
+Replace the placeholders before installing. Keep this file private: **never commit API credentials or secrets**. The `postgres` and `redis` hostnames above are for services inside Docker Compose.
+
+Stock data automatically checks SIP entitlement first and uses IEX if Alpaca explicitly denies SIP access. You do not need to configure a feed environment variable. Crypto and option history use their own endpoints; available data still depends on your Alpaca subscription.
+
+### 3. Install and launch
 
 ```bash
-# Install everything automatically
 npm install
-
-# Start all services (frontend + backend infrastructure)
 npm run dev
 ```
 
-This single command will:
+Installation checks prerequisites and credentials, then installs frontend and backend dependencies. Development runs the Vite frontend locally and starts backend infrastructure in Docker. The backend entrypoint applies migrations on startup.
 
-- 🚀 Start the frontend Vite dev server (with hot reload)
-- 🐳 Start Docker infrastructure (PostgreSQL, Redis, Backend API, Celery, WebSocket, Flower)
-- ⚡ Run both in parallel automatically via NX
+| Open | Purpose |
+| --- | --- |
+| [localhost:5173](http://localhost:5173) | Frontend |
+| [localhost:8000](http://localhost:8000) | Django backend |
+| [localhost:8000/admin/](http://localhost:8000/admin/) | Django admin |
+| [localhost:5555](http://localhost:5555) | Flower task monitoring |
 
-> **Note:** `npm install` includes prerequisite checks and will guide you if anything is missing.
+**Local-development warning:** the startup script creates a default admin account when the database has no users. Change its credentials before exposing the app. The supplied development configuration is not a hardened production deployment.
 
-### Individual Services
+## Make it yours
 
-```bash
-# Frontend only (requires backend infrastructure running)
-npm run dev:frontend
+The code is organized so you can extend the application without starting over:
 
-# Backend infrastructure only
-npm run dev:backend
+| Where | What to build |
+| --- | --- |
+| [`frontend/src/features/graphs/`](frontend/src/features/graphs/) | Custom indicators, chart controls, and research views |
+| [`frontend/src/features/`](frontend/src/features/) | New screens and feature-specific state |
+| [`frontend/src/shared/`](frontend/src/shared/) | Reusable UI components and API integration |
+| [`backend/apps/core/services/`](backend/apps/core/services/) | Market-data processing, persistence, and ingestion logic |
+| [`backend/apps/core/tasks.py`](backend/apps/core/tasks.py) | Scheduled scans, data jobs, and async workflows |
+| [`backend/apps/paper_trading/`](backend/apps/paper_trading/) | Your simulation and paper-trading workflows |
+| [`backend/apps/`](backend/apps/) | A new Django app for your own domain logic |
 
-# Or manually start Docker services
-npm run docker:up
+For example: add a scheduled screener in Celery, expose the results through a DRF endpoint, and build a feature page that opens matching assets in the existing chart interface.
+
+Keep private strategies and credentials separate from anything you publish. The infrastructure is reusable; your strategy does not have to be open source.
+
+## Under the hood
+
+| Layer | Tools |
+| --- | --- |
+| **Frontend** | React, TypeScript, Vite, Redux Toolkit, Tailwind CSS, Radix UI, Lightweight Charts |
+| **Backend** | Django, Django REST Framework, JWT authentication, Django Channels |
+| **Data** | Alpaca API, PostgreSQL candle storage, Redis caching |
+| **Jobs** | Celery workers, Celery Beat, Flower |
+| **Development** | Nx, Docker Compose, npm, uv |
+| **Quality** | pytest, Vitest, Ruff, Black, ESLint, Prettier |
+
+### How the data flows
+
+```text
+Alpaca REST API ──→ Celery historical-data jobs ──┐
+                                                ├──→ PostgreSQL + Redis
+Alpaca stream ────→ Market-data WebSocket service┘              │
+                                                              ↓
+                                                   Django API / Channels
+                                                              │
+                                                              ↓
+                                                   React charts + watchlists
 ```
 
-### Access Points
+The ingestion service, API server, workers, and scheduler run as separate services. That makes the project useful both as a starter and as a concrete example of a full-stack market-data application.
 
-Once everything is running, you can access:
+<details>
+<summary>View the architecture diagram</summary>
 
-- **Frontend Application**: [http://localhost:5173](http://localhost:5173) — React SPA with Vite HMR
-- **Backend API**: [http://localhost:8000](http://localhost:8000) — Django REST API
-- **Django Admin**: [http://localhost:8000/admin](http://localhost:8000/admin) — Admin interface
-- **Celery Flower**: [http://localhost:5555](http://localhost:5555) — Task monitoring dashboard
+![Alpaca Main architecture](docs/architecture_diagram.png)
 
-> **Note:** Frontend runs locally with Vite for fast hot reload. Backend services run in Docker for consistency.
+</details>
 
----
+## Everyday commands
 
-## Development Workflow
+Run these from the repository root:
 
-### NX Monorepo Commands
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Start frontend and backend infrastructure |
+| `npm run dev:frontend` | Start only the frontend; expects the backend to be running |
+| `npm run dev:backend` | Start backend infrastructure |
+| `npm run lint` / `npm run lint:fix` | Check or fix lint issues |
+| `npm run format` / `npm run format:check` | Format code or check formatting |
+| `npm run test` / `npm run test:coverage` | Run tests, optionally with coverage |
+| `npm run build` | Build the frontend for production |
+| `npm run makemigrations:local` | Generate Django migrations locally |
+| `npm run migrate` | Apply migrations in the backend container |
+| `npm run backend:shell` | Open a shell inside the backend container |
+| `npm run docker:logs` | Follow service logs |
+| `npm run docker:down` | Stop Docker services |
 
-All commands run via NX for intelligent caching and parallel execution:
-
-```bash
-# Development
-npm run dev              # Start both frontend + backend
-npm run dev:frontend     # Frontend only
-npm run dev:backend      # Backend only
-
-# Code Quality
-npm run lint             # Lint both projects
-npm run lint:fix         # Lint and auto-fix both projects
-npm run format           # Format both projects
-npm run format:check     # Check formatting without changes
-
-# Testing
-npm run test             # Test both projects
-npm run test:coverage    # Test both with coverage reports
-
-# Database Management
-npm run makemigrations       # Make migrations in Docker container
-npm run makemigrations:local # Make migrations locally (faster for development)
-npm run migrate              # Apply migrations in Docker container
-
-# Docker Management
-npm run docker:up        # Start Docker services
-npm run docker:down      # Stop Docker services
-npm run docker:logs      # View Docker logs
-npm run docker:clean     # Clean Docker volumes
-npm run backend:shell    # Shell into backend Docker container
-
-# Build
-npm run build            # Build frontend for production
-```
-
-### Hot Reload
-
-- **Frontend**: Vite dev server with instant HMR (Hot Module Replacement)
-- **Backend**: Code mounted as Docker volume, auto-reloads on changes
-
-### Database Development
-
-For faster development iterations, use local migration commands:
+Optional local log monitoring with Vector, Loki, and Grafana:
 
 ```bash
-# Make migrations locally (faster than Docker)
-npm run makemigrations:local
-
-# Apply migrations in container
-npm run migrate
-```
-
-> **Tip:** Use `makemigrations:local` during development for quicker feedback, then `migrate` to apply in the container.
-
-### Running Tests
-
-```bash
-# All tests with NX caching
-npm run test
-
-# Tests with coverage reports
-npm run test:coverage
-```
-
-> **Tip:** NX caches test results. Only changed projects and their dependents will re-run tests!
-
----
-
-## Testing & Monitoring
-
-### Flower dashboard
-
-Open **[http://localhost:5555](http://localhost:5555)** in your browser for task-level visibility.
-
-> **Tip:** Configure log-rotation (`logrotate`) inside the container—or mount `/var/log/celery` to your host—to keep log sizes under control.
-
----
-
-## ⭐ Supporting the Project
-
-If you tried the demo or pulled a release and found this useful, consider starring the repo ⭐
-It helps justify continued maintenance and makes the project easier to discover.
-
----
-
-## Contributing
-
-We welcome contributions! Here's how to get started:
-
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Make your changes** and ensure tests pass
-4. **Commit your changes**: `git commit -m 'Add amazing feature'`
-5. **Push to the branch**: `git push origin feature/amazing-feature`
-6. **Open a Pull Request**
-
-### Development Guidelines
-
-- Follow the existing code style (we use `black` for Python and `prettier` for JavaScript)
-- Add tests for new features
-- Update documentation as needed
-- Ensure all tests pass before submitting
-
-### Issues
-
-Found a bug or have a feature request? Please [open an issue](https://github.com/naveedkhan1998/alpaca-main/issues) with:
-
-- Clear description of the problem or feature
-- Steps to reproduce (for bugs)
-- Expected vs actual behavior
-- Your environment details
-
----
-
-## License
-
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
-### MIT License Summary
-
-- ✅ **Use** - Use the software for any purpose
-- ✅ **Modify** - Change the software to suit your needs
-- ✅ **Distribute** - Share the software with others
-- ✅ **Commercial use** - Use the software for commercial purposes
-- ❗ **Include license** - Include the original license when distributing
-
----
-
-## Acknowledgements
-
-This project wouldn't be possible without these amazing technologies and resources:
-
-### Core Technologies
-
-- [Alpaca API](https://alpaca.markets/) - The financial data API that powers this wrapper
-- [NX](https://nx.dev/) - Smart monorepo build system with intelligent caching and task orchestration
-- [Django](https://www.djangoproject.com/) & [Django REST Framework](https://www.django-rest-framework.org/) - Web framework and API toolkit
-- [Django Channels](https://channels.readthedocs.io/) - WebSocket support for Django
-- [Celery](https://docs.celeryproject.org/) - Distributed task queue
-- [Redis](https://redis.io/) - In-memory data structure store
-- [PostgreSQL](https://www.postgresql.org/) - Powerful, open source object-relational database
-- [React](https://reactjs.org/) & [Vite](https://vitejs.dev/) - Frontend framework and build tool
-
-### Infrastructure & DevOps
-
-- [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/) - Containerization platform
-- [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces) - Monorepo package management
-- [uv](https://github.com/astral-sh/uv) - Fast Python package installer
-
-### Development Tools
-
-- [Black](https://black.readthedocs.io/) - Python code formatter
-- [Ruff](https://github.com/astral-sh/ruff) - Fast Python linter
-- [pytest](https://docs.pytest.org/) - Python testing framework
-- [Vitest](https://vitest.dev/) - Vite-native testing framework
-
-### Special Thanks
-
-- The open source community for creating and maintaining these incredible tools
-- All contributors who have helped improve this project
-
-> **Disclaimer:** This project is not affiliated with Alpaca Markets. Use at your own risk and ensure compliance with Alpaca's terms of service.
-
----
-
-## Contact
-
-**Naveed Khan**
-📧 **Email:** [naveedkhan13041998@gmail.com](mailto:naveedkhan13041998@gmail.com)
-🐙 **GitHub:** [naveedkhan1998](https://github.com/naveedkhan1998)
-🌐 **Website:** [mnaveedk.com](https://mnaveedk.com)
-
----
-
-## to run with observibility
-
 docker compose -f docker-compose.yaml -f docker-compose.local.yaml up -d
+```
 
-Happy hacking & good trades! 🚀
+Grafana is available at [localhost:3000](http://localhost:3000). These are local-development services; review their configuration before deploying them.
+
+## Contribute or build something with it
+
+Bug fixes, better onboarding, new indicators, data-handling improvements, and focused tests are all welcome. Open an [issue](https://github.com/naveedkhan1998/alpaca-main/issues) with reproduction steps or a concrete proposal, or send a pull request.
+
+Follow the existing app boundaries and formatting conventions, add tests for behavior changes, and update related documentation. Include screenshots for UI changes.
+
+If this saves you time, **give it a star** so other developers can find it. If you build something public with it, share it in an issue; seeing what people make is the point.
+
+## License and author
+
+Created by **[Naveed Khan](https://github.com/naveedkhan1998)** · [mnaveedk.com](https://mnaveedk.com) · [Contact](mailto:naveedkhan13041998@gmail.com)
+
+Released under the [MIT License](LICENSE). Personal and commercial use are welcome; preserve the required copyright and license notice when distributing the software.
+
+Not affiliated with Alpaca Markets. This is developer tooling, not financial advice. Validate data, test your own logic, and implement appropriate safeguards before using any derived application with real money. Market-data access and redistribution remain subject to your provider's terms.

@@ -6,14 +6,15 @@ from django.utils import timezone
 import pytz
 
 
-def parse_tick_timestamp(ts_str: str) -> datetime:
-    """Parse an Alpaca ISO8601 timestamp to timezone-aware UTC minute precision."""
+def parse_tick_timestamp(ts_str: str, *, minute_precision: bool = True) -> datetime:
+    """Parse a UTC timestamp, optionally retaining trade ordering precision."""
     if ts_str.endswith("Z"):
         ts_str = ts_str[:-1] + "+00:00"
     ts = datetime.fromisoformat(ts_str)
     if ts.tzinfo is None:
         ts = timezone.make_aware(ts, pytz.UTC)
-    return ts.replace(second=0, microsecond=0)
+    ts = ts.astimezone(pytz.UTC)
+    return ts.replace(second=0, microsecond=0) if minute_precision else ts
 
 
 def floor_to_bucket(ts: datetime, delta: timedelta) -> datetime:

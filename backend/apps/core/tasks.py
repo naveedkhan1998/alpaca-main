@@ -1,27 +1,86 @@
 from datetime import datetime, time, timedelta
+from decimal import Decimal
 
 from celery import Task, shared_task
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.cache import cache
+from django.db import transaction
 from django.utils import timezone
 import pytz
 
 from apps.core.models import (
     AggregatedCandle,
     Asset,
-    Candle,
     DataRefreshTask,
     MinuteCandle,
     WatchListAsset,
 )
-from apps.core.services.candle_repository import CandleRepository
+from apps.core.services.candle_cache import candle_cache
+from apps.core.services.candle_persistence import CandlePersistence
 from main import const
 from main.cache_keys import cache_keys
 
 from .services.alpaca_service import alpaca_service
 
 logger = get_task_logger(__name__)
+
+
+def _load_historical_minutes(asset, start, end) -> int:
+    """Fetch all pages in bounded chunks and replace provisional candle data."""
+    repo = CandlePersistence()
+    total = 0
+    current_end = end
+    while current_end > start:
+        chunk_start = max(start, current_end - timedelta(days=10))
+        candles = []
+        for bar in alpaca_service.iter_historic_bars(
+            symbol=asset.symbol,
+            timeframe=const.TF_1T,
+            start=chunk_start.isoformat(),
+            end=current_end.isoformat(),
+            sort="desc",
+            asset_class=asset.asset_class,
+        ):
+            ts = datetime.fromisoformat(bar["t"].replace("Z", "+00:00"))
+            if not chunk_start <= ts < current_end:
+                continue
+            if asset.asset_class != "crypto" and not _is_market_hours(ts):
+                continue
+            candles.append(
+                {
+                    "asset_id": asset.id,
+                    "timestamp": ts,
+                    "open": Decimal(str(bar["o"])),
+                    "high": Decimal(str(bar["h"])),
+                    "low": Decimal(str(bar["l"])),
+                    "close": Decimal(str(bar["c"])),
+                    "volume": Decimal(str(bar.get("v", 0))),
+                    "trade_count": bar.get("n"),
+                    "vwap": bar.get("vw"),
+                }
+            )
+            if len(candles) == 1000:
+                total += repo.upsert_minutes(candles, mode="snapshot")
+                candles = []
+        if candles:
+            total += repo.upsert_minutes(candles, mode="snapshot")
+        current_end = chunk_start
+    return total
+
+
+def _rebuild_timeframes(asset, start, end) -> int:
+    """Replace the rolling window atomically, including obsolete bucket anchors."""
+    built = 0
+    with transaction.atomic():
+        AggregatedCandle.objects.filter(asset=asset).delete()
+        persistence = CandlePersistence()
+        for tf, _delta in const.TF_LIST:
+            if tf == const.TF_1T:
+                continue
+            if persistence.aggregate_to_timeframe(asset.id, tf, start, end):
+                built += 1
+    return built
 
 
 LOCK_TTL = 300  # 5 minutes
@@ -42,16 +101,7 @@ class SingleInstanceTask(Task):
             arg0 = args[0]
             try:
                 if self.name == "fetch_historical_data":
-                    # arg0 is watchlist_asset_id → resolve to asset_id to serialize per-asset
-                    wla = (
-                        WatchListAsset.objects.filter(id=arg0)
-                        .values("asset_id")
-                        .first()
-                    )
-                    if wla:
-                        key_suffix = f"asset-{wla['asset_id']}"
-                    else:
-                        key_suffix = f"watchlist-asset-{arg0}"
+                    key_suffix = f"asset-{arg0}"
                 elif self.name == "alpaca_sync" or self.name == "start_alpaca_stream":
                     key_suffix = f"account-{arg0}"
                 else:
@@ -321,86 +371,25 @@ def fetch_historical_data(asset_id: int):
         )
         return
 
-    repo = CandleRepository()
-
     try:
-        service = alpaca_service
+        cache.delete(cache_keys.backfill(asset.id).completed())
         end_date = timezone.now()
 
-        # Step 1: Fetch 1T bars and persist to MinuteCandle
-        try:
-            # Check last minute candle in new table
-            last_1t = (
-                MinuteCandle.objects.filter(asset_id=asset.id)
-                .order_by("-timestamp")
-                .first()
-            )
-            start_date_1t = (
-                last_1t.timestamp + timedelta(minutes=1)
-                if last_1t
-                else end_date - timedelta(days=settings.HISTORIC_DATA_LOADING_LIMIT)
-            )
-
-            if start_date_1t < end_date:
-                # Chunk by 10 days, walking backwards (newest first)
-                current_end, created_total = end_date, 0
-                while current_end > start_date_1t:
-                    r_start = max(start_date_1t, current_end - timedelta(days=10))
-                    start_str = r_start.strftime("%Y-%m-%dT%H:%M:%SZ")
-                    end_str = current_end.strftime("%Y-%m-%dT%H:%M:%SZ")
-                    try:
-                        resp = service.get_historic_bars(
-                            symbol=symbol,
-                            start=start_str,
-                            end=end_str,
-                            sort="desc",  # fetch latest first
-                            asset_class=asset.asset_class,
-                        )
-                    except Exception as e:
-                        logger.error(
-                            f"API error for {symbol} 1T {r_start}->{current_end}: {e}",
-                            exc_info=True,
-                        )
-                        current_end = r_start
-                        continue
-
-                    # Treat missing or null bars as no data
-                    bars = (resp or {}).get("bars") or []
-                    candles = []
-                    for bar in bars:
-                        ts = datetime.fromisoformat(bar["t"].replace("Z", "+00:00"))
-                        if not _is_market_hours(ts):
-                            continue
-                        candles.append(
-                            {
-                                "asset_id": asset.id,
-                                "timestamp": ts,
-                                "open": float(bar["o"]),
-                                "high": float(bar["h"]),
-                                "low": float(bar["l"]),
-                                "close": float(bar["c"]),
-                                "volume": int(bar.get("v", 0)),
-                                "trade_count": bar.get("n"),
-                                "vwap": bar.get("vw"),
-                            }
-                        )
-
-                    if candles:
-                        # Use repository for efficient bulk insert
-                        repo.bulk_insert_minute_candles(candles, ignore_conflicts=True)
-                        created_total += len(candles)
-                    current_end = r_start
-
-                logger.info(
-                    "Backfilled %d minute candles for %s (newest first)",
-                    created_total,
-                    symbol,
-                )
-        except Exception as e:
-            logger.error("Error backfilling 1T for %s: %s", symbol, e, exc_info=True)
+        last_1t = (
+            MinuteCandle.objects.filter(asset_id=asset.id)
+            .order_by("-timestamp")
+            .first()
+        )
+        window_start = end_date - timedelta(days=settings.HISTORIC_DATA_LOADING_LIMIT)
+        # Re-fetch the last minute: it may have been a partial realtime candle.
+        start_date_1t = (
+            max(window_start, last_1t.timestamp) if last_1t else window_start
+        )
+        created_total = _load_historical_minutes(asset, start_date_1t, end_date)
+        logger.info("Backfilled %d minute candles for %s", created_total, symbol)
 
         # Step 2: Aggregate from MinuteCandle to higher TFs using repository
-        for tf, delta in const.TF_LIST:
+        for tf, _delta in const.TF_LIST:
             if tf == const.TF_1T:
                 continue
             try:
@@ -413,13 +402,13 @@ def fetch_historical_data(asset_id: int):
 
                 # Determine start bucket to (re)build
                 start_ts = (
-                    last_tf.timestamp + delta
+                    last_tf.timestamp
                     if last_tf
                     else end_date - timedelta(days=settings.HISTORIC_DATA_LOADING_LIMIT)
                 )
 
                 # Use repository's SQL-based aggregation
-                affected = repo.aggregate_to_timeframe(
+                affected = CandlePersistence().aggregate_to_timeframe(
                     asset_id=asset.id,
                     timeframe=tf,
                     start=start_ts,
@@ -437,12 +426,16 @@ def fetch_historical_data(asset_id: int):
                 logger.error(
                     "Error resampling %s for %s: %s", tf, symbol, e, exc_info=True
                 )
+                raise
 
         # Mark backfill as complete
         completion_key = cache_keys.backfill(asset.id).completed()
         cache.set(completion_key, 1, timeout=86400 * 1)  # Keep for 1 day
         logger.info(f"Marked backfill complete for asset_id={asset.id} symbol={symbol}")
 
+    except Exception:
+        logger.exception("Historical backfill failed for %s", symbol)
+        raise
     finally:
         # Always release the lock and clear any queued marker
         queued_key = cache_keys.backfill(asset.id).queued()
@@ -460,11 +453,6 @@ def check_watchlist_candles():
     from django.utils import timezone
 
     now = timezone.now()
-
-    # Check if it's market hours
-    if not _is_market_hours(now):
-        logger.info("Not market hours, skipping watchlist candle check")
-        return
 
     logger.info("Starting watchlist candle check task")
 
@@ -484,6 +472,8 @@ def check_watchlist_candles():
     for wla in watchlist_assets:
         asset = wla.asset
         symbol = asset.symbol
+        if asset.asset_class != "crypto" and not _is_market_hours(now):
+            continue
 
         try:
             # Skip if backfill is currently running for this asset
@@ -536,9 +526,8 @@ def _find_missing_candle_periods(asset, start_date, end_date):
     # Get all existing 1T candles in the period, ordered by timestamp
 
     existing_candles = list(
-        Candle.objects.filter(
+        MinuteCandle.objects.filter(
             asset=asset,
-            timeframe=const.TF_1T,
             timestamp__gte=start_date,
             timestamp__lt=end_date,
         )
@@ -553,24 +542,31 @@ def _find_missing_candle_periods(asset, start_date, end_date):
     # Check for gaps between consecutive candles
     prev_ts = None
     for ts in existing_candles:
-        if prev_ts and _is_market_hours(prev_ts):
+        if prev_ts and (asset.asset_class == "crypto" or _is_market_hours(prev_ts)):
             # Calculate expected next timestamp (1 minute later)
             expected_next = prev_ts + timedelta(minutes=1)
 
             # If there's a gap and we're still in market hours, it's missing
-            if expected_next < ts and _is_market_hours(expected_next):
+            if expected_next < ts and (
+                asset.asset_class == "crypto" or _is_market_hours(expected_next)
+            ):
                 missing_periods.append((expected_next, ts))
 
         prev_ts = ts
 
     # Check if we need data before the first candle
     first_candle = existing_candles[0]
-    if start_date < first_candle and _is_market_hours(start_date):
+    if start_date < first_candle and (
+        asset.asset_class == "crypto" or _is_market_hours(start_date)
+    ):
         missing_periods.append((start_date, first_candle))
 
     # Check if we need data after the last candle
     last_candle = existing_candles[-1]
-    if last_candle < end_date and _is_market_hours(last_candle + timedelta(minutes=1)):
+    if last_candle < end_date and (
+        asset.asset_class == "crypto"
+        or _is_market_hours(last_candle + timedelta(minutes=1))
+    ):
         missing_periods.append((last_candle + timedelta(minutes=1), end_date))
 
     return missing_periods
@@ -581,78 +577,9 @@ def _fetch_missing_candles(asset, missing_periods):
     Fetch missing 1T candles from Alpaca for the given periods.
     Returns the number of candles fetched.
     """
-    service = alpaca_service
-    symbol = asset.symbol
     total_fetched = 0
-
     for start_period, end_period in missing_periods:
-        try:
-            # Fetch in chunks to avoid API limits
-            current_end = end_period
-            chunk_days = 7  # Fetch 1 week at a time
-
-            while current_end > start_period:
-                chunk_start = max(
-                    start_period, current_end - timedelta(days=chunk_days)
-                )
-
-                start_str = chunk_start.strftime("%Y-%m-%dT%H:%M:%SZ")
-                end_str = current_end.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-                try:
-                    resp = service.get_historic_bars(
-                        symbol=symbol,
-                        start=start_str,
-                        end=end_str,
-                        sort="desc",
-                        timeframe=const.TF_1T,
-                        asset_class=asset.asset_class,
-                    )
-                except Exception as e:
-                    logger.error(
-                        f"API error fetching {symbol} {chunk_start}->{current_end}: {e}"
-                    )
-                    current_end = chunk_start
-                    continue
-
-                bars = (resp or {}).get("bars") or []
-                candles = []
-
-                for bar in bars:
-                    ts = datetime.fromisoformat(bar["t"].replace("Z", "+00:00"))
-                    if not _is_market_hours(ts):
-                        continue
-
-                    candles.append(
-                        Candle(
-                            asset=asset,
-                            timestamp=ts,
-                            open=float(bar["o"]),
-                            high=float(bar["h"]),
-                            low=float(bar["l"]),
-                            close=float(bar["c"]),
-                            volume=float(bar.get("v", 0)),
-                            trade_count=bar.get("n"),
-                            vwap=bar.get("vw"),
-                            timeframe=const.TF_1T,
-                        )
-                    )
-
-                if candles:
-                    Candle.objects.bulk_create(candles, ignore_conflicts=True)
-                    total_fetched += len(candles)
-                    logger.debug(
-                        f"Fetched {len(candles)} candles for {symbol} in {chunk_start}->{current_end}"
-                    )
-
-                current_end = chunk_start
-
-        except Exception as e:
-            logger.error(
-                f"Error fetching missing candles for {symbol}: {e}", exc_info=True
-            )
-            continue
-
+        total_fetched += _load_historical_minutes(asset, start_period, end_period)
     return total_fetched
 
 
@@ -662,8 +589,6 @@ def _resample_higher_timeframes(asset, start_date, end_date):
     Uses similar logic to fetch_historical_data task.
     Only resamples if backfill is complete (following websocket service logic).
     """
-    from django.db import connection
-
     # Check if backfill is complete before resampling higher TFs
     # This follows the same logic as websocket_service._is_historical_backfill_complete
     if not _is_backfill_complete_for_asset(asset):
@@ -676,120 +601,11 @@ def _resample_higher_timeframes(asset, start_date, end_date):
         if tf == const.TF_1T:
             continue
 
-        try:
-            # Build buckets using SQL for efficiency
-            anchor = "1970-01-01 09:30:00-05:00"
+        from apps.core.services.websocket.utils import floor_to_bucket
 
-            with connection.cursor() as cur:
-                cur.execute(
-                    """
-                    WITH m1 AS (
-                        SELECT id, timestamp, open, high, low, close, volume
-                        FROM core_candle
-                        WHERE asset_id = %s AND timeframe = %s AND timestamp >= %s AND timestamp < %s
-                    ),
-                    binned AS (
-                        SELECT
-                            date_bin(INTERVAL %s, timestamp, TIMESTAMP %s) AS bucket,
-                            id,
-                            open, high, low, close, volume,
-                            row_number() OVER (PARTITION BY date_bin(INTERVAL %s, timestamp, TIMESTAMP %s) ORDER BY timestamp ASC) AS rn_open,
-                            row_number() OVER (PARTITION BY date_bin(INTERVAL %s, timestamp, TIMESTAMP %s) ORDER BY timestamp DESC) AS rn_close
-                        FROM m1
-                    ),
-                    agg AS (
-                        SELECT
-                            bucket,
-                            MIN(low) AS l,
-                            MAX(high) AS h,
-                            SUM(volume) AS v,
-                            ARRAY_AGG(id ORDER BY id) AS ids,
-                            MIN(CASE WHEN rn_open=1 THEN open END) AS o,
-                            MIN(CASE WHEN rn_close=1 THEN close END) AS c
-                        FROM binned
-                        GROUP BY bucket
-                    )
-                    SELECT bucket, o, h, l, c, v, ids
-                    FROM agg
-                    ORDER BY bucket DESC
-                    ;
-                    """,
-                    [
-                        asset.id,
-                        const.TF_1T,
-                        start_date,
-                        end_date,
-                        delta,
-                        anchor,
-                        delta,
-                        anchor,
-                        delta,
-                        anchor,
-                    ],
-                )
-                rows = cur.fetchall()
-
-            if not rows:
-                continue
-
-            # Upsert aggregated candles
-            buckets = [row[0] for row in rows]
-            existing = {
-                c.timestamp: c
-                for c in Candle.objects.filter(
-                    asset=asset, timeframe=tf, timestamp__in=buckets
-                )
-            }
-
-            to_create = []
-            to_update = []
-            for bucket, o, h, low_, c, v, ids in rows:
-                if bucket in existing:
-                    cobj = existing[bucket]
-                    cobj.open = float(o)
-                    cobj.high = float(h)
-                    cobj.low = float(low_)
-                    cobj.close = float(c)
-                    cobj.volume = int(v or 0)
-                    cobj.minute_candle_ids = list(ids) if ids else []
-                    to_update.append(cobj)
-                else:
-                    to_create.append(
-                        Candle(
-                            asset=asset,
-                            timeframe=tf,
-                            timestamp=bucket,
-                            open=float(o),
-                            high=float(h),
-                            low=float(low_),
-                            close=float(c),
-                            volume=int(v or 0),
-                            minute_candle_ids=list(ids) if ids else [],
-                        )
-                    )
-
-            if to_create:
-                Candle.objects.bulk_create(to_create, ignore_conflicts=True)
-            if to_update:
-                Candle.objects.bulk_update(
-                    to_update,
-                    [
-                        "open",
-                        "high",
-                        "low",
-                        "close",
-                        "volume",
-                        "minute_candle_ids",
-                    ],
-                )
-            logger.info(
-                f"Resampled {len(to_create)} new and updated {len(to_update)} {tf} candles for {asset.symbol}"
-            )
-
-        except Exception as e:
-            logger.error(
-                f"Error resampling {tf} for {asset.symbol}: {e}", exc_info=True
-            )
+        CandlePersistence().aggregate_to_timeframe(
+            asset.id, tf, floor_to_bucket(start_date, delta), end_date
+        )
 
 
 def _is_backfill_complete_for_asset(asset):
@@ -804,8 +620,7 @@ def _is_backfill_complete_for_asset(asset):
             return False
     except Exception as e:
         logger.warning(f"Failed to check cache for running backfill {running_key}: {e}")
-        # Assume not running if we can't check
-        pass
+        return False
 
     # Check if backfill has been explicitly marked as complete
     completion_key = cache_keys.backfill(asset.id).completed()
@@ -816,19 +631,14 @@ def _is_backfill_complete_for_asset(asset):
         logger.warning(
             f"Failed to check cache for backfill completion {completion_key}: {e}"
         )
-        # Assume not complete if we can't check
-        pass
+        return False
 
     # For assets without explicit completion flag, use heuristics
     # Check if we have sufficient historical 1T data coverage (at least 2 days of 1T data)
     now_dt = timezone.now()
     coverage_threshold = now_dt - timedelta(days=4)
 
-    earliest_1t = (
-        Candle.objects.filter(asset=asset, timeframe=const.TF_1T)
-        .order_by("timestamp")
-        .first()
-    )
+    earliest_1t = MinuteCandle.objects.filter(asset=asset).order_by("timestamp").first()
 
     if not earliest_1t or earliest_1t.timestamp > coverage_threshold:
         # Not enough historical coverage, let backfill handle higher TFs
@@ -838,7 +648,7 @@ def _is_backfill_complete_for_asset(asset):
     historical_threshold = now_dt.replace(
         hour=0, minute=0, second=0, microsecond=0
     ) - timedelta(days=1)
-    existing_historical_higher_tf = Candle.objects.filter(
+    existing_historical_higher_tf = AggregatedCandle.objects.filter(
         asset=asset,
         timeframe__in=[tf for tf in const.TF_CFG.keys() if tf != const.TF_1T],
         timestamp__lt=historical_threshold,
@@ -884,9 +694,6 @@ def refresh_asset_minute_data(task_id: int):
     refresh_task.mark_running()
 
     window_days = refresh_task.batch.data_window_days
-    repo = CandleRepository()
-    service = alpaca_service
-
     try:
         end_date = timezone.now()
         start_date = end_date - timedelta(days=window_days)
@@ -895,63 +702,13 @@ def refresh_asset_minute_data(task_id: int):
         pruned = MinuteCandle.objects.filter(
             asset=asset, timestamp__lt=start_date
         ).delete()[0]
+        candle_cache.invalidate(asset.id, const.TF_1T)
         if pruned:
             logger.info(
                 f"Pruned {pruned} minute candles older than {window_days}d for {symbol}"
             )
 
-        # Always fetch the full window to fill any gaps in existing data.
-        # bulk_insert with ignore_conflicts=True makes this idempotent —
-        # existing candles are simply skipped at the DB level.
-        fetch_start = start_date
-
-        created_total = 0
-        if fetch_start < end_date:
-            current_end = end_date
-            while current_end > fetch_start:
-                r_start = max(fetch_start, current_end - timedelta(days=10))
-                start_str = r_start.strftime("%Y-%m-%dT%H:%M:%SZ")
-                end_str = current_end.strftime("%Y-%m-%dT%H:%M:%SZ")
-                try:
-                    resp = service.get_historic_bars(
-                        symbol=symbol,
-                        start=start_str,
-                        end=end_str,
-                        sort="desc",
-                        asset_class=asset.asset_class,
-                    )
-                except Exception as e:
-                    logger.error(
-                        f"API error for {symbol} 1T {r_start}->{current_end}: {e}"
-                    )
-                    current_end = r_start
-                    continue
-
-                bars = (resp or {}).get("bars") or []
-                candles = []
-                for bar in bars:
-                    ts = datetime.fromisoformat(bar["t"].replace("Z", "+00:00"))
-                    if asset.asset_class != "crypto" and not _is_market_hours(ts):
-                        continue
-                    candles.append(
-                        {
-                            "asset_id": asset.id,
-                            "timestamp": ts,
-                            "open": float(bar["o"]),
-                            "high": float(bar["h"]),
-                            "low": float(bar["l"]),
-                            "close": float(bar["c"]),
-                            "volume": int(bar.get("v", 0)),
-                            "trade_count": bar.get("n"),
-                            "vwap": bar.get("vw"),
-                        }
-                    )
-
-                if candles:
-                    repo.bulk_insert_minute_candles(candles, ignore_conflicts=True)
-                    created_total += len(candles)
-
-                current_end = r_start
+        created_total = _load_historical_minutes(asset, start_date, end_date)
 
         logger.info(f"Refresh: fetched {created_total} 1T candles for {symbol}")
         refresh_task.mark_completed(candles_fetched=created_total)
@@ -980,37 +737,12 @@ def refresh_asset_timeframe_data(task_id: int):
     refresh_task.mark_running()
 
     window_days = refresh_task.batch.data_window_days
-    repo = CandleRepository()
 
     try:
         end_date = timezone.now()
         start_date = end_date - timedelta(days=window_days)
 
-        # Prune aggregated candles outside the rolling window
-        pruned = AggregatedCandle.objects.filter(
-            asset=asset, timestamp__lt=start_date
-        ).delete()[0]
-        if pruned:
-            logger.info(
-                f"Pruned {pruned} aggregated candles older than {window_days}d for {symbol}"
-            )
-
-        timeframes_built = 0
-        for tf, _delta in const.TF_LIST:
-            if tf == const.TF_1T:
-                continue
-            try:
-                affected = repo.aggregate_to_timeframe(
-                    asset_id=asset.id,
-                    timeframe=tf,
-                    start=start_date,
-                    end=end_date,
-                )
-                if affected > 0:
-                    timeframes_built += 1
-                    logger.info(f"Refresh: built {affected} {tf} candles for {symbol}")
-            except Exception as e:
-                logger.error(f"Error aggregating {tf} for {symbol}: {e}", exc_info=True)
+        timeframes_built = _rebuild_timeframes(asset, start_date, end_date)
 
         refresh_task.mark_completed(timeframes_built=timeframes_built)
 
@@ -1040,86 +772,17 @@ def refresh_asset_full_data(task_id: int):
     refresh_task.mark_running()
 
     window_days = refresh_task.batch.data_window_days
-    repo = CandleRepository()
-    service = alpaca_service
-
     try:
         end_date = timezone.now()
         start_date = end_date - timedelta(days=window_days)
 
         # --- Step 1: Prune + fetch minute candles ---
         MinuteCandle.objects.filter(asset=asset, timestamp__lt=start_date).delete()
+        candle_cache.invalidate(asset.id, const.TF_1T)
 
-        # Always fetch the full window to fill any gaps in existing data.
-        # bulk_insert with ignore_conflicts=True makes this idempotent.
-        fetch_start = start_date
+        created_total = _load_historical_minutes(asset, start_date, end_date)
 
-        created_total = 0
-        if fetch_start < end_date:
-            current_end = end_date
-            while current_end > fetch_start:
-                r_start = max(fetch_start, current_end - timedelta(days=10))
-                start_str = r_start.strftime("%Y-%m-%dT%H:%M:%SZ")
-                end_str = current_end.strftime("%Y-%m-%dT%H:%M:%SZ")
-                try:
-                    resp = service.get_historic_bars(
-                        symbol=symbol,
-                        start=start_str,
-                        end=end_str,
-                        sort="desc",
-                        asset_class=asset.asset_class,
-                    )
-                except Exception as e:
-                    logger.error(
-                        f"API error for {symbol} 1T {r_start}->{current_end}: {e}"
-                    )
-                    current_end = r_start
-                    continue
-
-                bars = (resp or {}).get("bars") or []
-                candles = []
-                for bar in bars:
-                    ts = datetime.fromisoformat(bar["t"].replace("Z", "+00:00"))
-                    if asset.asset_class != "crypto" and not _is_market_hours(ts):
-                        continue
-                    candles.append(
-                        {
-                            "asset_id": asset.id,
-                            "timestamp": ts,
-                            "open": float(bar["o"]),
-                            "high": float(bar["h"]),
-                            "low": float(bar["l"]),
-                            "close": float(bar["c"]),
-                            "volume": int(bar.get("v", 0)),
-                            "trade_count": bar.get("n"),
-                            "vwap": bar.get("vw"),
-                        }
-                    )
-
-                if candles:
-                    repo.bulk_insert_minute_candles(candles, ignore_conflicts=True)
-                    created_total += len(candles)
-
-                current_end = r_start
-
-        # --- Step 2: Prune + rebuild aggregated candles ---
-        AggregatedCandle.objects.filter(asset=asset, timestamp__lt=start_date).delete()
-
-        timeframes_built = 0
-        for tf, _delta in const.TF_LIST:
-            if tf == const.TF_1T:
-                continue
-            try:
-                affected = repo.aggregate_to_timeframe(
-                    asset_id=asset.id,
-                    timeframe=tf,
-                    start=start_date,
-                    end=end_date,
-                )
-                if affected > 0:
-                    timeframes_built += 1
-            except Exception as e:
-                logger.error(f"Error aggregating {tf} for {symbol}: {e}", exc_info=True)
+        timeframes_built = _rebuild_timeframes(asset, start_date, end_date)
 
         logger.info(
             f"Full refresh for {symbol}: {created_total} 1T candles, "

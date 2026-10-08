@@ -37,8 +37,12 @@ def request_backfill(
         )
         return False
 
-    # Queue the job
-    fetch_historical_data.delay(asset_id)
+    try:
+        fetch_historical_data.delay(asset_id)
+    except Exception:
+        cache.delete(key)
+        logger.exception("Failed to enqueue backfill for asset_id=%s", asset_id)
+        raise
     logger.info(
         "Backfill scheduled for asset_id=%s by %s",
         asset_id,

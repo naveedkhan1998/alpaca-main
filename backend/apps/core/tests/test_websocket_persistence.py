@@ -67,9 +67,7 @@ class TestCandlePersistence:
 
         mock_repo.upsert_minute_candles.return_value = 1
 
-        with patch(
-            "apps.core.services.websocket.persistence.candle_cache"
-        ) as mock_cache:
+        with patch("apps.core.services.candle_persistence.candle_cache") as mock_cache:
             persistence = CandlePersistence(_repo=mock_repo)
             result = persistence.upsert_minutes(candles, mode="delta")
 
@@ -96,9 +94,7 @@ class TestCandlePersistence:
 
         mock_repo.upsert_minute_candles.return_value = 1
 
-        with patch(
-            "apps.core.services.websocket.persistence.candle_cache"
-        ) as mock_cache:
+        with patch("apps.core.services.candle_persistence.candle_cache") as mock_cache:
             persistence = CandlePersistence(_repo=mock_repo)
             result = persistence.upsert_minutes(candles, mode="snapshot")
 
@@ -141,9 +137,7 @@ class TestCandlePersistence:
 
         mock_repo.upsert_minute_candles.return_value = 2
 
-        with patch(
-            "apps.core.services.websocket.persistence.candle_cache"
-        ) as mock_cache:
+        with patch("apps.core.services.candle_persistence.candle_cache") as mock_cache:
             persistence = CandlePersistence(_repo=mock_repo)
             result = persistence.upsert_minutes(candles)
 
@@ -189,9 +183,7 @@ class TestAggregatedCandlePersistence:
 
         mock_repo.upsert_aggregated_candles.return_value = 1
 
-        with patch(
-            "apps.core.services.websocket.persistence.candle_cache"
-        ) as mock_cache:
+        with patch("apps.core.services.candle_persistence.candle_cache") as mock_cache:
             persistence = CandlePersistence(_repo=mock_repo)
             result = persistence.upsert_aggregated(const.TF_1H, candles)
 
@@ -229,7 +221,7 @@ class TestAggregatedCandlePersistence:
 
         mock_repo.upsert_aggregated_candles.return_value = 1
 
-        with patch("apps.core.services.websocket.persistence.candle_cache"):
+        with patch("apps.core.services.candle_persistence.candle_cache"):
             persistence = CandlePersistence(_repo=mock_repo)
             persistence.upsert_aggregated("5T", candle_5t)
             persistence.upsert_aggregated(const.TF_1H, candle_1h)
@@ -285,9 +277,7 @@ class TestBulkInsertMinuteCandles:
 
         mock_repo.bulk_insert_minute_candles.return_value = 2
 
-        with patch(
-            "apps.core.services.websocket.persistence.candle_cache"
-        ) as mock_cache:
+        with patch("apps.core.services.candle_persistence.candle_cache") as mock_cache:
             persistence = CandlePersistence(_repo=mock_repo)
             result = persistence.bulk_insert_minutes(candles)
 
@@ -314,7 +304,7 @@ class TestBulkInsertMinuteCandles:
 
         mock_repo.bulk_insert_minute_candles.return_value = 0
 
-        with patch("apps.core.services.websocket.persistence.candle_cache"):
+        with patch("apps.core.services.candle_persistence.candle_cache"):
             persistence = CandlePersistence(_repo=mock_repo)
             _ = persistence.bulk_insert_minutes(candles, ignore_conflicts=False)
 
@@ -353,9 +343,7 @@ class TestCacheInvalidation:
 
         mock_repo.upsert_minute_candles.return_value = 1
 
-        with patch(
-            "apps.core.services.websocket.persistence.candle_cache"
-        ) as mock_cache:
+        with patch("apps.core.services.candle_persistence.candle_cache") as mock_cache:
             persistence = CandlePersistence(_repo=mock_repo)
             persistence.upsert_minutes(candles)
 
@@ -378,9 +366,7 @@ class TestCacheInvalidation:
 
         mock_repo.upsert_aggregated_candles.return_value = 1
 
-        with patch(
-            "apps.core.services.websocket.persistence.candle_cache"
-        ) as mock_cache:
+        with patch("apps.core.services.candle_persistence.candle_cache") as mock_cache:
             persistence = CandlePersistence(_repo=mock_repo)
             persistence.upsert_aggregated(const.TF_1H, candles)
 

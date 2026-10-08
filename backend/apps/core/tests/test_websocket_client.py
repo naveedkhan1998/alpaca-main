@@ -8,6 +8,15 @@ import pytest
 from apps.core.services.websocket.client import WebsocketClient
 
 
+@pytest.fixture(autouse=True)
+def selected_feed():
+    with patch(
+        "apps.core.services.websocket.client.AlpacaService.resolve_stock_feed",
+        return_value="iex",
+    ):
+        yield
+
+
 class TestWebsocketClient:
     """Test WebSocket client main functionality."""
 
@@ -115,12 +124,12 @@ class TestWebsocketClient:
 
     def test_on_message_stocks_success_authenticated(self):
         """Test stocks success message for authentication."""
-        with patch.object(self.client, "_update_subscriptions") as mock_update:
+        with patch.object(self.client, "_restore_subscriptions") as mock_update:
             msg = {"T": "success", "msg": "authenticated"}
             self.client.on_message_stocks(None, json.dumps(msg))
 
             assert self.client.authenticated is True
-            mock_update.assert_called_once()
+            mock_update.assert_called_once_with("stocks")
 
     def test_on_message_stocks_subscription(self):
         """Test stocks subscription message handling."""
@@ -261,10 +270,18 @@ class TestWebsocketClient:
             patch.object(self.client, "_sock_ready_crypto", return_value=True),
         ):
 
+            self.client._socket_authenticated["stocks"] = True
             self.client._send_subscription_stocks("subscribe", ["AAPL", "GOOGL"])
 
             mock_ws.send.assert_called_once_with(
-                json.dumps({"action": "subscribe", "trades": ["AAPL", "GOOGL"]})
+                json.dumps(
+                    {
+                        "action": "subscribe",
+                        "trades": ["AAPL", "GOOGL"],
+                        "bars": ["AAPL", "GOOGL"],
+                        "updatedBars": ["AAPL", "GOOGL"],
+                    }
+                )
             )
 
     def test_send_subscription_crypto_ready(self):
@@ -278,6 +295,7 @@ class TestWebsocketClient:
             patch.object(self.client, "_sock_ready_crypto", return_value=True),
         ):
 
+            self.client._socket_authenticated["crypto"] = True
             self.client._send_subscription_crypto("subscribe", ["BTC/USD"])
 
             mock_ws.send.assert_called_once_with(
@@ -356,6 +374,10 @@ class TestWebsocketClient:
         current_time = time.time()
 
         self.client.auth_start_time = current_time - 35  # Past timeout
+        self.client._socket_auth_started = {
+            "stocks": current_time - 35,
+            "crypto": current_time - 35,
+        }
         self.client.authenticated = False
         self.client.running = True  # Start running
 
@@ -440,8 +462,9 @@ class TestWebsocketClient:
 
             self.client._batch_processor_loop()
 
-            mock_process.assert_called_once()
-            called_messages = mock_process.call_args[0][0]
+            assert mock_process.call_args_list[0].args[0] == [msg]
+            mock_process.assert_any_call([])
+            called_messages = mock_process.call_args_list[0].args[0]
             assert len(called_messages) == 1
             assert called_messages[0] == msg
 
@@ -461,7 +484,7 @@ class TestWebsocketClient:
             patch("apps.core.services.websocket.client.logger") as mock_logger,
         ):
             # First call raises Exception, second call succeeds
-            mock_process.side_effect = [Exception("DB Error"), None]
+            mock_process.side_effect = [Exception("DB Error"), None, None]
 
             # Sleep side effect:
             # 1. First sleep(1) is the retry backoff.
@@ -478,7 +501,7 @@ class TestWebsocketClient:
             self.client._batch_processor_loop()
 
             # Verify it retried
-            assert mock_process.call_count == 2
+            assert mock_process.call_count == 3  # Retry followed by idle flush
 
             # Verify both calls attempted to process the SAME message
             call_args_list = mock_process.call_args_list
