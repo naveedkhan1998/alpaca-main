@@ -108,7 +108,7 @@ const SpotPriceBannerRow: React.FC<{ spotPrice: number }> = ({ spotPrice }) => (
           <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
           <span>SPOT ${spotPrice.toFixed(2)}</span>
         </div>
-        <span className="font-bold text-purple-400 dark:text-purple-300 text-[9px] uppercase tracking-wider">
+        <span className="font-bold text-chart-4 dark:text-chart-4 text-[9px] uppercase tracking-wider">
           PUTS ITM ↓
         </span>
       </div>
@@ -124,7 +124,7 @@ const buildCells = (
   const spreadInfo = getSpreadInfo(contract?.bid, contract?.ask);
   const toneClass = isCall
     ? 'text-emerald-500 dark:text-emerald-400'
-    : 'text-purple-400 dark:text-purple-300';
+    : 'text-chart-4 dark:text-chart-4';
 
   const muted = (value: string) => (
     <span className="text-muted-foreground/80">{value}</span>
@@ -491,7 +491,7 @@ const OptionsChainPanel: React.FC<OptionsChainPanelProps> = ({
                 <th className="bg-background" />
                 <th
                   colSpan={4}
-                  className="py-1.5 text-center text-[10px] font-mono font-extrabold text-purple-400 dark:text-purple-300 tracking-wider border-l border-border/20"
+                  className="py-1.5 text-center text-[10px] font-mono font-extrabold text-chart-4 dark:text-chart-4 tracking-wider border-l border-border/20"
                 >
                   PUTS DECK{' '}
                   <span className="text-[8.5px] font-normal opacity-80">
@@ -514,7 +514,7 @@ const OptionsChainPanel: React.FC<OptionsChainPanelProps> = ({
                 {putHeaders.map((header, index) => (
                   <th
                     key={`put-${header}-${index}`}
-                    className="py-2 px-1.5 text-left font-semibold text-purple-400 dark:text-purple-300"
+                    className="py-2 px-1.5 text-left font-semibold text-chart-4 dark:text-chart-4"
                   >
                     {header}
                   </th>
@@ -537,9 +537,9 @@ const OptionsChainPanel: React.FC<OptionsChainPanelProps> = ({
                       : 'hover:bg-muted/40';
                 const putBg =
                   hoveredContract === put?.symbol
-                    ? 'bg-purple-500/15 dark:bg-purple-500/20'
+                    ? 'bg-chart-4/15 dark:bg-chart-4/20'
                     : isItmPut
-                      ? 'bg-purple-500/10 dark:bg-purple-500/12'
+                      ? 'bg-chart-4/10 dark:bg-chart-4/12'
                       : 'hover:bg-muted/40';
 
                 const showBannerBefore =
@@ -652,12 +652,12 @@ const OptionsChainPanel: React.FC<OptionsChainPanelProps> = ({
                             {put && (
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between mb-1.5 px-1">
-                                  <span className="text-[10px] font-mono font-bold text-purple-400 dark:text-purple-300 uppercase tracking-wider">
+                                  <span className="text-[10px] font-mono font-bold text-chart-4 dark:text-chart-4 uppercase tracking-wider">
                                     Put ${strike.toFixed(2)}
                                   </span>
                                   <Badge
                                     variant="outline"
-                                    className="text-[8.5px] font-mono h-4 bg-purple-500/10 text-purple-400 border-purple-500/20 px-1.5"
+                                    className="text-[8.5px] font-mono h-4 bg-chart-4/10 text-chart-4 border-chart-4/20 px-1.5"
                                   >
                                     PUT
                                   </Badge>

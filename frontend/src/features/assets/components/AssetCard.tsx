@@ -3,24 +3,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Heart } from 'lucide-react';
 import { Asset } from '@/types/common-types';
+import { getAssetClassColor } from '@/lib/assetTheme';
 
 type Props = {
   asset: Asset;
   onSelect: (asset: Asset) => void;
   onWatchlist: (asset: Asset, e: React.MouseEvent) => void;
-};
-
-const getAssetClassColor = (assetClass: string) => {
-  switch (assetClass) {
-    case 'us_equity':
-      return 'bg-primary/10 text-primary';
-    case 'us_option':
-      return 'bg-violet-500/10 text-violet-600 dark:text-violet-400';
-    case 'crypto':
-      return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-    default:
-      return 'bg-muted text-muted-foreground';
-  }
 };
 
 export const AssetCard: React.FC<Props> = ({

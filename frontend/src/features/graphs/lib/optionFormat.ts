@@ -66,8 +66,8 @@ export const getSpreadInfo = (
     return {
       spread,
       pct,
-      color: 'text-blue-400',
-      bg: 'bg-blue-500/15',
+      color: 'text-chart-4',
+      bg: 'bg-chart-4/15',
       label,
       tier: 'normal',
     };
@@ -109,7 +109,7 @@ export const SPREAD_LEGEND = [
     color: 'bg-emerald-400',
     desc: 'Tight — liquid, easy fills',
   },
-  { tier: 'normal', pct: '3–10%', color: 'bg-blue-400', desc: 'Normal' },
+  { tier: 'normal', pct: '3–10%', color: 'bg-chart-4', desc: 'Normal' },
   {
     tier: 'wide',
     pct: '10–25%',

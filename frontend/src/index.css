@@ -4,156 +4,177 @@
 
 @layer base {
   :root {
-    /* Light Mode - Terminal Professional */
-    --background: 210 20% 97%;
-    --foreground: 220 20% 10%;
+    /* ------------------------------------------------------------------
+       TERMINAL AMBER — light ("paper")
+       Warm neutral greys + a single signature amber accent.
+       No cyan/violet gradients. Colour is a signal, not decoration.
+       ------------------------------------------------------------------ */
+    --background: 40 30% 97%;
+    --foreground: 28 18% 11%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
+    --card: 40 40% 99%;
+    --card-foreground: 28 18% 11%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
+    --popover: 40 40% 99%;
+    --popover-foreground: 28 18% 11%;
 
-    /* Primary: Teal / Cyan */
-    --primary: 187 72% 44%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 30 94% 46%;
+    --primary-foreground: 40 60% 99%;
 
-    /* Secondary */
-    --secondary: 210 14% 93%;
-    --secondary-foreground: 220 14% 16%;
+    --secondary: 38 22% 93%;
+    --secondary-foreground: 28 18% 14%;
 
-    --muted: 210 14% 93%;
-    --muted-foreground: 215 12% 48%;
+    --muted: 38 22% 93%;
+    --muted-foreground: 30 9% 40%;
 
-    /* Accent: Brighter Cyan */
-    --accent: 187 60% 92%;
-    --accent-foreground: 187 72% 22%;
+    --accent: 18 84% 48%;
+    --accent-foreground: 40 60% 99%;
 
-    /* Semantic Colors */
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 4 72% 48%;
+    --destructive-foreground: 40 60% 99%;
 
-    --success: 160 84% 39%;
-    --success-foreground: 0 0% 100%;
+    --success: 152 52% 32%;
+    --success-foreground: 40 60% 99%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 0%;
+    --warning: 38 92% 44%;
+    --warning-foreground: 28 25% 10%;
 
-    --border: 214 14% 86%;
-    --input: 214 14% 86%;
-    --ring: 187 72% 44%;
+    --border: 36 18% 87%;
+    --input: 36 18% 87%;
+    --ring: 30 94% 46%;
 
-    /* Chart palette (light) */
-    --chart-1: 187 72% 44%;
-    --chart-2: 160 84% 39%;
-    --chart-3: 0 72% 51%;
-    --chart-4: 38 92% 50%;
-    --chart-5: 270 67% 55%;
+    --chart-1: 30 94% 46%;
+    --chart-2: 152 52% 32%;
+    --chart-3: 4 72% 48%;
+    --chart-4: 198 42% 38%;
+    --chart-5: 18 84% 48%;
 
-    --radius: 0.375rem;
+    --radius: 0.5rem;
 
-    /* Sidebar */
-    --sidebar-background: 220 20% 12%;
-    --sidebar-foreground: 210 20% 88%;
-    --sidebar-primary: 187 72% 50%;
-    --sidebar-primary-foreground: 220 20% 4%;
-    --sidebar-accent: 220 15% 18%;
-    --sidebar-accent-foreground: 210 20% 92%;
-    --sidebar-border: 220 14% 20%;
-    --sidebar-ring: 187 72% 44%;
+    /* Sidebar reads as a distinct "rail" carved out of the page */
+    --sidebar-background: 38 24% 94%;
+    --sidebar-foreground: 28 16% 20%;
+    --sidebar-primary: 30 94% 44%;
+    --sidebar-primary-foreground: 40 60% 99%;
+    --sidebar-accent: 36 24% 89%;
+    --sidebar-accent-foreground: 28 18% 11%;
+    --sidebar-border: 36 18% 85%;
+    --sidebar-ring: 30 94% 46%;
 
     --vh: 1vh;
 
-    /* Trading-specific colors */
-    --profit: 160 84% 39%;
-    --loss: 0 72% 51%;
-    --candle-up: 160 84% 39%;
-    --candle-down: 0 72% 51%;
-    --trading-card: 0 0% 100%;
-    --trading-border: 214 14% 86%;
+    --profit: 152 52% 32%;
+    --loss: 4 72% 48%;
+    --candle-up: 152 52% 32%;
+    --candle-down: 4 72% 48%;
+    --trading-card: 40 40% 99%;
+    --trading-border: 36 18% 87%;
+
+    /* Shell geometry — single source of truth for the app chrome */
+    --topbar-height: 3.25rem;
+    --mobile-nav-height: 3.75rem;
+    --content-max: 1440px;
+    --rule: 36 18% 87%;
   }
 
   .dark {
-    /* Dark Mode - Dense Trading Terminal */
-    --background: 220 18% 5%;
-    --foreground: 210 20% 92%;
+    /* ------------------------------------------------------------------
+       TERMINAL AMBER — dark ("ink")
+       Near-black with a warm bias so amber sits naturally on it.
+       ------------------------------------------------------------------ */
+    --background: 30 10% 6%;
+    --foreground: 40 16% 92%;
 
-    --card: 220 16% 8%;
-    --card-foreground: 210 20% 92%;
+    --card: 30 9% 9%;
+    --card-foreground: 40 16% 92%;
 
-    --popover: 220 16% 10%;
-    --popover-foreground: 210 20% 92%;
+    --popover: 30 10% 10%;
+    --popover-foreground: 40 16% 92%;
 
-    /* Primary: Vibrant Cyan/Teal */
-    --primary: 187 80% 48%;
-    --primary-foreground: 220 18% 5%;
+    --primary: 36 100% 56%;
+    --primary-foreground: 30 30% 8%;
 
-    --secondary: 220 14% 14%;
-    --secondary-foreground: 210 20% 88%;
+    --secondary: 30 8% 14%;
+    --secondary-foreground: 40 16% 92%;
 
-    --muted: 220 14% 12%;
-    --muted-foreground: 215 12% 55%;
+    --muted: 30 8% 13%;
+    --muted-foreground: 36 10% 62%;
 
-    /* Accent: Teal tinted */
-    --accent: 220 14% 14%;
-    --accent-foreground: 187 80% 60%;
+    --accent: 22 92% 58%;
+    --accent-foreground: 30 30% 8%;
 
-    --destructive: 0 62% 55%;
-    --destructive-foreground: 0 0% 95%;
+    --destructive: 4 80% 60%;
+    --destructive-foreground: 30 30% 8%;
 
-    --success: 160 84% 39%;
-    --success-foreground: 0 0% 95%;
+    --success: 150 58% 45%;
+    --success-foreground: 30 30% 8%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 0%;
+    --warning: 40 96% 56%;
+    --warning-foreground: 30 30% 8%;
 
-    --border: 220 14% 16%;
-    --input: 220 14% 16%;
-    --ring: 187 80% 48%;
+    --border: 32 8% 17%;
+    --input: 32 8% 17%;
+    --ring: 36 100% 56%;
 
-    /* Chart palette (dark) */
-    --chart-1: 187 80% 55%;
-    --chart-2: 160 84% 44%;
-    --chart-3: 0 70% 55%;
-    --chart-4: 38 92% 55%;
-    --chart-5: 270 67% 60%;
+    --chart-1: 36 100% 56%;
+    --chart-2: 150 58% 45%;
+    --chart-3: 4 80% 60%;
+    --chart-4: 196 48% 55%;
+    --chart-5: 22 92% 58%;
 
-    /* Sidebar - Darker contrast panel */
-    --sidebar-background: 220 20% 4%;
-    --sidebar-foreground: 210 20% 82%;
-    --sidebar-primary: 187 80% 48%;
-    --sidebar-primary-foreground: 220 18% 5%;
-    --sidebar-accent: 220 16% 12%;
-    --sidebar-accent-foreground: 210 20% 92%;
-    --sidebar-border: 220 14% 12%;
-    --sidebar-ring: 187 80% 48%;
+    --sidebar-background: 30 10% 8%;
+    --sidebar-foreground: 40 14% 85%;
+    --sidebar-primary: 36 100% 56%;
+    --sidebar-primary-foreground: 30 30% 8%;
+    --sidebar-accent: 30 8% 14%;
+    --sidebar-accent-foreground: 40 16% 94%;
+    --sidebar-border: 32 8% 16%;
+    --sidebar-ring: 36 100% 56%;
 
-    /* Trading colors - bright for dark backgrounds */
-    --profit: 160 84% 39%;
-    --loss: 0 72% 55%;
-    --candle-up: 160 84% 39%;
-    --candle-down: 0 72% 55%;
-    --trading-card: 220 16% 8%;
-    --trading-border: 220 14% 16%;
+    --profit: 150 58% 45%;
+    --loss: 4 80% 60%;
+    --candle-up: 150 58% 45%;
+    --candle-down: 4 80% 60%;
+    --trading-card: 30 9% 9%;
+    --trading-border: 32 8% 17%;
+
+    --rule: 32 8% 17%;
   }
 
   @layer base {
     * {
       @apply border-border;
     }
+    html {
+      height: 100%;
+      scroll-behavior: smooth;
+    }
+
     body {
       @apply bg-background text-foreground antialiased;
-      font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-      font-size: 13px;
-      line-height: 1.5;
-      /* Mobile viewport fixes */
+      font-feature-settings: 'cv05', 'ss01', 'tnum';
+      font-family: Inter, 'Segoe UI', sans-serif;
+      font-size: 13.5px;
+      line-height: 1.55;
       overscroll-behavior: none;
       -webkit-overflow-scrolling: touch;
       -webkit-text-size-adjust: 100%;
     }
 
-    html {
-      height: 100%;
+    h1,
+    h2,
+    h3,
+    h4 {
+      font-family: 'Space Grotesk', Inter, sans-serif;
+      letter-spacing: -0.02em;
+    }
+
+    /* Numerals are tabular everywhere — prices must not jitter */
+    .tabular,
+    table,
+    time,
+    output {
+      font-variant-numeric: tabular-nums;
     }
 
     #root {
@@ -164,21 +185,31 @@
 
   /* Thin scrollbars - terminal style */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 10px;
+    height: 10px;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--primary) / 0.2);
-    border-radius: 3px;
+    background: hsl(var(--foreground) / 0.16);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--primary) / 0.4);
+    background: hsl(var(--foreground) / 0.3);
+    background-clip: content-box;
   }
 
   ::-webkit-scrollbar-track {
     background: transparent;
+  }
+
+  /* Focus is amber and unmistakable — accessibility is a feature */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 3px;
   }
 
   .scrollbar-hidden {
@@ -191,19 +222,15 @@
     display: none;
   }
 
-  /* Terminal card with subtle glow */
+  /* Flat panel. One hairline rule, no glow, no glass. */
   .glass-card {
     background: hsl(var(--card));
     border: 1px solid hsl(var(--border));
-    box-shadow:
-      0 0 0 1px hsl(var(--border) / 0.5),
-      0 1px 3px hsl(var(--background) / 0.3);
+    box-shadow: 0 1px 2px hsl(var(--foreground) / 0.04);
   }
 
   .dark .glass-card {
-    box-shadow:
-      0 0 0 1px hsl(var(--border) / 0.5),
-      0 0 20px -8px hsl(var(--primary) / 0.08);
+    box-shadow: none;
   }
 
   /* Chart Container */
@@ -304,13 +331,93 @@
     );
   }
 
-  /* Glow accent for active elements */
+  /* Accent emphasis without the neon glow */
   .glow-accent {
-    box-shadow: 0 0 12px -3px hsl(var(--primary) / 0.4);
+    box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.35);
   }
 
   .dark .glow-accent {
-    box-shadow: 0 0 16px -4px hsl(var(--primary) / 0.3);
+    box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.45);
+  }
+
+  /* ------------------------------------------------------------------
+     APP SHELL
+     Flat, ruled surfaces. Depth comes from hairlines and tonal steps,
+     never from blur or coloured glow.
+     ------------------------------------------------------------------ */
+  .app-shell {
+    background-color: hsl(var(--background));
+    background-image: linear-gradient(
+      to bottom,
+      hsl(var(--primary) / 0.025),
+      transparent 240px
+    );
+  }
+
+  /* Left navigation rail — one tonal step darker than the page */
+  .shell-rail {
+    background-color: hsl(var(--sidebar-background));
+    border-right: 1px solid hsl(var(--sidebar-border));
+  }
+
+  /* Sticky top bar — sits flush, separated only by a rule */
+  .shell-topbar {
+    background-color: hsl(var(--background) / 0.85);
+    border-bottom: 1px solid hsl(var(--border));
+    backdrop-filter: saturate(180%) blur(12px);
+    -webkit-backdrop-filter: saturate(180%) blur(12px);
+  }
+
+  /* Content panel */
+  .panel {
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+  }
+
+  .panel-header {
+    border-bottom: 1px solid hsl(var(--border));
+    padding: 0.625rem 0.875rem;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Signature mark: solid amber chip, ink glyph. Reads at 16px. */
+  .brand-mark {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    box-shadow: 0 1px 2px hsl(var(--foreground) / 0.18);
+  }
+
+  /* Hairline that carries the brand colour across the top of a surface */
+  .amber-rule {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--primary)),
+      hsl(var(--accent)) 45%,
+      transparent
+    );
+  }
+
+  /* Mobile bottom tab bar */
+  .shell-tabbar {
+    background-color: hsl(var(--background) / 0.92);
+    border-top: 1px solid hsl(var(--border));
+    backdrop-filter: saturate(180%) blur(14px);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+  }
+
+  /* Legacy alias kept so older screens keep rendering */
+  .app-shell-surface {
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+  }
+
+  .brand-badge {
+    background-color: hsl(var(--primary));
   }
 }
 
@@ -355,13 +462,13 @@
 */
 
 #landing-root {
-  font-family: 'DM Sans', 'Plus Jakarta Sans', sans-serif;
+  font-family: Inter, 'Segoe UI', sans-serif;
 }
 
 #landing-root h1,
 #landing-root h2,
 #landing-root h3 {
-  font-family: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
+  font-family: 'Space Grotesk', Inter, sans-serif;
   letter-spacing: -0.03em;
 }
 
@@ -418,7 +525,7 @@
     ),
     radial-gradient(
       800px circle at 80% 10%,
-      hsl(187 80% 48% / 0.1),
+      hsl(var(--accent) / 0.08),
       transparent 60%
     ),
     linear-gradient(

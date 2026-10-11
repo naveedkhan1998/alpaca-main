@@ -55,20 +55,18 @@ const getAssetClassColor = (assetClass: string) => {
   switch (assetClass) {
     case 'us_equity':
       return {
-        badge: 'bg-primary/10 text-primary border-primary/20',
-        gradient: 'from-primary to-accent',
+        badge: 'bg-foreground/[0.06] text-foreground/80 border-foreground/10',
+        gradient: 'from-foreground/40 to-foreground/20',
       };
     case 'us_option':
       return {
-        badge:
-          'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20',
-        gradient: 'from-violet-500 to-purple-500',
+        badge: 'bg-accent/10 text-accent border-accent/25',
+        gradient: 'from-accent to-accent/60',
       };
     case 'crypto':
       return {
-        badge:
-          'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-        gradient: 'from-amber-500 to-orange-500',
+        badge: 'bg-primary/10 text-primary border-primary/25',
+        gradient: 'from-primary to-accent',
       };
     default:
       return {

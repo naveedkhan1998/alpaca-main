@@ -30,6 +30,21 @@ const SIDEBAR_WIDTH_MOBILE = '18rem';
 const SIDEBAR_WIDTH_ICON = '3rem';
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
 
+/**
+ * The provider is remounted on every route change (each page renders its own
+ * PageLayout), so the open state has to be rehydrated from the cookie or the
+ * sidebar springs back open after navigating.
+ */
+function readStoredSidebarState(): boolean | null {
+  if (typeof document === 'undefined') return null;
+  const entry = document.cookie
+    .split('; ')
+    .find(row => row.startsWith(`${SIDEBAR_COOKIE_NAME}=`));
+  if (!entry) return null;
+  const value = entry.split('=')[1];
+  return value === 'true' ? true : value === 'false' ? false : null;
+}
+
 type SidebarContextProps = {
   state: 'expanded' | 'collapsed';
   open: boolean;
@@ -76,7 +91,11 @@ const SidebarProvider = React.forwardRef<
 
     // This is the internal state of the sidebar.
     // We use openProp and setOpenProp for control from outside the component.
-    const [_open, _setOpen] = React.useState(defaultOpen);
+    // A stored preference always wins over defaultOpen so the choice survives
+    // navigation between pages.
+    const [_open, _setOpen] = React.useState(
+      () => readStoredSidebarState() ?? defaultOpen
+    );
     const open = openProp ?? _open;
     const setOpen = React.useCallback(
       (value: boolean | ((value: boolean) => boolean)) => {
@@ -328,7 +347,7 @@ const SidebarInset = React.forwardRef<
     <main
       ref={ref}
       className={cn(
-        'relative flex w-full flex-1 flex-col bg-background',
+        'relative flex w-full min-w-0 flex-1 flex-col bg-background',
         'md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow',
         className
       )}

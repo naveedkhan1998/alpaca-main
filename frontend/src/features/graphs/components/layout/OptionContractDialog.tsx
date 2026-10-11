@@ -80,7 +80,7 @@ const OptionContractDialog: React.FC<OptionContractDialogProps> = ({
     {
       label: 'Gamma',
       value: contract.gamma != null ? contract.gamma.toFixed(4) : '—',
-      color: 'text-sky-400',
+      color: 'text-chart-4',
     },
     {
       label: 'Theta',
@@ -93,7 +93,7 @@ const OptionContractDialog: React.FC<OptionContractDialogProps> = ({
         contract.implied_volatility != null
           ? `${(contract.implied_volatility * 100).toFixed(1)}%`
           : '—',
-      color: 'text-purple-400',
+      color: 'text-chart-4',
     },
   ];
 
@@ -107,7 +107,7 @@ const OptionContractDialog: React.FC<OptionContractDialogProps> = ({
               className={`text-[10px] px-2 py-0.5 rounded-md font-mono font-bold ${
                 isCall
                   ? 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30 dark:text-emerald-400'
-                  : 'bg-purple-500/15 text-purple-500 border-purple-500/30 dark:text-purple-300'
+                  : 'bg-chart-4/15 text-chart-4 border-chart-4/30 dark:text-chart-4'
               }`}
             >
               {contract.option_type.toUpperCase()}
