@@ -52,6 +52,11 @@ import { AssetToolbar } from './AssetToolbar';
 import { AssetCard } from './AssetCard';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
+import {
+  getAssetClassColor,
+  assetAttrBadge,
+  getStatusBadgeClass,
+} from '@/lib/assetTheme';
 
 export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
   refetchTrigger,
@@ -129,19 +134,6 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
   const assets = data?.results || [];
   const totalCount = data?.count || 0;
   const totalPages = Math.ceil(totalCount / Math.max(1, pageSize));
-
-  const getAssetClassColor = (assetClass: string) => {
-    switch (assetClass) {
-      case 'us_equity':
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
-      case 'us_option':
-        return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300';
-      case 'crypto':
-        return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300';
-      default:
-        return 'bg-muted text-muted-foreground';
-    }
-  };
 
   const handleSort = useCallback(
     (field: string) => {
@@ -362,7 +354,9 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="flex items-center justify-center w-5 h-5 rounded-sm bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-[10px] font-bold cursor-help">
+                                <div
+                                  className={`flex items-center justify-center w-5 h-5 rounded-sm border ${assetAttrBadge.marginable} text-[10px] font-bold cursor-help`}
+                                >
                                   M
                                 </div>
                               </TooltipTrigger>
@@ -374,7 +368,9 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="flex items-center justify-center w-5 h-5 rounded-sm bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 text-[10px] font-bold cursor-help">
+                                <div
+                                  className={`flex items-center justify-center w-5 h-5 rounded-sm border ${assetAttrBadge.shortable} text-[10px] font-bold cursor-help`}
+                                >
                                   S
                                 </div>
                               </TooltipTrigger>
@@ -386,7 +382,9 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="flex items-center justify-center w-5 h-5 rounded-sm bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 text-[10px] font-bold cursor-help">
+                                <div
+                                  className={`flex items-center justify-center w-5 h-5 rounded-sm border ${assetAttrBadge.fractionable} text-[10px] font-bold cursor-help`}
+                                >
                                   F
                                 </div>
                               </TooltipTrigger>
@@ -398,8 +396,8 @@ export const AssetTable: React.FC<{ refetchTrigger?: number }> = ({
                     </TableCell>
                     <TableCell className={bodyCellClass}>
                       <Badge
-                        variant={asset.tradable ? 'default' : 'secondary'}
-                        className={`text-xs whitespace-nowrap ${!asset.tradable && 'opacity-50'}`}
+                        variant="outline"
+                        className={`text-xs whitespace-nowrap ${getStatusBadgeClass(asset.tradable)}`}
                       >
                         {asset.tradable ? 'Active' : 'Halted'}
                       </Badge>

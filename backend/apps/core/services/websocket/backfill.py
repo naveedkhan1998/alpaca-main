@@ -3,15 +3,17 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+import logging
 import time
 
 from django.core.cache import cache
 from django.utils import timezone
 
-from apps.core.models import Candle, WatchListAsset
+from apps.core.models import AggregatedCandle, MinuteCandle, WatchListAsset
 from apps.core.services.backfill_coordinator import request_backfill
-from main import const
 from main.cache_keys import cache_keys
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -29,7 +31,7 @@ class BackfillGuard:
         for asset_id in asset_ids:
             try:
                 latest_candle = (
-                    Candle.objects.filter(asset_id=asset_id, timeframe=const.TF_1T)
+                    MinuteCandle.objects.filter(asset_id=asset_id)
                     .order_by("-timestamp")
                     .first()
                 )
@@ -45,7 +47,7 @@ class BackfillGuard:
                     if self._maybe_schedule(asset_id, now_s):
                         scheduled.add(asset_id)
             except Exception:
-                # Be resilient in the streaming loop; log at call site
+                logger.exception("Failed to check backfill for asset_id=%s", asset_id)
                 continue
         return scheduled
 
@@ -60,11 +62,8 @@ class BackfillGuard:
             )
             if wla_ids:
                 # Use centralized coordinator for idempotent scheduling
-                try:
-                    request_backfill(asset_id, source="websocket-service")
-                finally:
-                    # Record local cooldown regardless of coordinator result
-                    self._last_request[asset_id] = now_s
+                request_backfill(asset_id, source="websocket-service")
+                self._last_request[asset_id] = now_s
                 return True
         return False
 
@@ -76,14 +75,18 @@ class BackfillGuard:
         Prevents creating partial higher timeframe candles that would interfere
         with proper offline backfill.
         """
-        # If running flag present, treat as not complete
+        # Queued work also owns the history until it completes.
         running_key = cache_keys.backfill(asset_id).running()
         try:
-            if cache.get(running_key):
+            if cache.get(running_key) or cache.get(
+                cache_keys.backfill(asset_id).queued()
+            ):
                 return False
         except Exception:
-            # If cache fails, assume not running and continue heuristic checks
-            pass
+            logger.exception(
+                "Unable to check backfill ownership for asset_id=%s", asset_id
+            )
+            return False
 
         # If explicit completion flag is set, allow
         completion_key = cache_keys.backfill(asset_id).completed()
@@ -91,11 +94,13 @@ class BackfillGuard:
             if cache.get(completion_key):
                 return True
         except Exception:
-            # If cache fails, fall through to heuristics
-            pass
+            logger.exception(
+                "Unable to check backfill completion for asset_id=%s", asset_id
+            )
+            return False
 
         latest_1t = (
-            Candle.objects.filter(asset_id=asset_id, timeframe=const.TF_1T)
+            MinuteCandle.objects.filter(asset_id=asset_id)
             .order_by("-timestamp")
             .first()
         )
@@ -105,9 +110,7 @@ class BackfillGuard:
         now_dt = timezone.now()
         coverage_threshold = now_dt - timedelta(days=4)
         earliest_1t = (
-            Candle.objects.filter(asset_id=asset_id, timeframe=const.TF_1T)
-            .order_by("timestamp")
-            .first()
+            MinuteCandle.objects.filter(asset_id=asset_id).order_by("timestamp").first()
         )
         if not earliest_1t or earliest_1t.timestamp > coverage_threshold:
             return False
@@ -116,7 +119,7 @@ class BackfillGuard:
         historical_threshold = now_dt.replace(
             hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(days=1)
-        exists = Candle.objects.filter(
+        exists = AggregatedCandle.objects.filter(
             asset_id=asset_id, timeframe=timeframe, timestamp__lt=historical_threshold
         ).exists()
         return exists

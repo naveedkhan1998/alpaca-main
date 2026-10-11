@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Helmet } from '@dr.pogodin/react-helmet';
-import { Search } from 'lucide-react';
+import { Search, Info } from 'lucide-react';
 import { AppSidebar } from './AppSidebar';
 import {
   SidebarProvider,
@@ -10,6 +10,8 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { AssetSearch } from './AssetSearch';
+import { ModeToggle } from './ModeToggle';
+import { MobileTabBar } from './MobileTabBar';
 import { useIsMobile } from '@/hooks/useMobile';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import {
@@ -34,27 +36,27 @@ export const PageHeader: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <div className={`mb-1 ${className}`}>
-    <h1 className="text-[15px] font-semibold tracking-tight sm:text-base text-foreground">
-      {children}
-    </h1>
-  </div>
+  <h1
+    className={`font-display text-xl font-bold tracking-tight text-foreground sm:text-2xl ${className}`}
+  >
+    {children}
+  </h1>
 );
 
 export const PageSubHeader: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <div className={`text-[12px] text-muted-foreground ${className}`}>
+  <p className={`max-w-2xl text-[13px] text-muted-foreground ${className}`}>
     {children}
-  </div>
+  </p>
 );
 
 export const PageActions: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <div className={`flex flex-wrap items-center gap-1.5 ${className}`}>
+  <div className={`flex flex-wrap items-center gap-2 ${className}`}>
     {children}
   </div>
 );
@@ -63,7 +65,7 @@ export const PageContent: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => (
-  <main className={`flex-1 w-full ${className}`}>{children}</main>
+  <main className={`w-full flex-1 ${className}`}>{children}</main>
 );
 
 const extractTextContent = (element: React.ReactNode): string => {
@@ -105,31 +107,17 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   const [isAssetSearchOpen, setIsAssetSearchOpen] = useState(false);
   const showSidebarLayout = Boolean(accessToken || isGuest);
 
-  // Use clean variant on mobile by default
-  const effectiveVariant =
-    variant === 'default' && isMobile ? 'clean' : variant;
+  const isFullWidth = variant === 'full-width';
 
-  const getContainerClasses = () => {
-    switch (effectiveVariant) {
-      case 'clean':
-        return 'mx-auto w-full max-w-[1600px] px-3 py-3 sm:px-4 sm:py-4';
-      case 'full-width':
-        return 'w-full px-3 py-3 sm:px-4 sm:py-4';
-      default:
-        return 'mx-auto w-full max-w-[1600px] px-3 py-3 sm:px-4 sm:py-4';
-    }
-  };
+  // Tablets get the collapsed icon rail by default so content keeps its width.
+  const defaultSidebarOpen =
+    typeof window === 'undefined' ? true : window.innerWidth >= 1280;
 
-  const getContentClasses = () => {
-    switch (effectiveVariant) {
-      case 'clean':
-        return `${contentClassName}`;
-      case 'full-width':
-        return `${contentClassName}`;
-      default:
-        return `${contentClassName}`;
-    }
-  };
+  // Full-width pages (charts) go edge-to-edge; everything else is measured
+  // against a readable column that still fills ultrawide displays.
+  const containerClasses = isFullWidth
+    ? 'w-full px-3 sm:px-4 lg:px-6'
+    : 'mx-auto w-full max-w-[--content-max] px-4 sm:px-6 lg:px-8';
 
   const handleLogin = () => {
     clearGuestMode();
@@ -138,58 +126,53 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   };
 
   const guestBanner = isGuest ? (
-    <div className="p-4 mb-6 text-sm border rounded-lg border-primary/20 bg-primary/5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="font-semibold text-foreground">Guest mode</p>
-          <p className="text-muted-foreground">
+    <div className="mb-5 flex flex-col gap-3 rounded-md border border-primary/25 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <div className="flex items-start gap-2.5">
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+        <div className="space-y-0.5">
+          <p className="text-[13px] font-semibold text-foreground">
+            Guest mode
+          </p>
+          <p className="text-[12px] text-muted-foreground">
             Read-only access. Log in to save watchlists, sync assets, and enable
             live updates.
           </p>
         </div>
-        <Button size="sm" onClick={handleLogin}>
-          Log in
-        </Button>
       </div>
+      <Button size="sm" className="shrink-0" onClick={handleLogin}>
+        Log in
+      </Button>
     </div>
   ) : null;
 
-  // If user is not logged in and not in guest mode, show simplified layout without sidebar
+  const pageIntro = (header || subheader || actions) && (
+    <div className="mb-5 flex flex-col gap-3 border-b border-border pb-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
+      <div className="min-w-0 flex-1 space-y-1">
+        {header}
+        {subheader}
+      </div>
+      {actions && <div className="shrink-0">{actions}</div>}
+    </div>
+  );
+
+  const body = (
+    <div className={`${containerClasses} py-5 sm:py-6 lg:py-8`}>
+      {guestBanner}
+      {pageIntro}
+      <div className={contentClassName}>{children}</div>
+    </div>
+  );
+
+  // Unauthenticated: no rail, no chrome — just the page on the shell backdrop.
   if (!showSidebarLayout) {
     return (
       <>
         <Helmet key={pageTitle}>
           <title>{pageTitle} - Alpaca Trading</title>
         </Helmet>
-        <div
-          className={`flex min-h-[100dvh] flex-col bg-background ${className}`}
-        >
-          <div className="flex-1 w-full">
-            <div className={getContainerClasses()}>
-              {guestBanner}
-              {/* Header Section */}
-              {(header || subheader || actions) && (
-                <div className="mb-4">
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex-1 space-y-1">
-                      {header}
-                      {subheader}
-                    </div>
-                    {actions && (
-                      <div className="flex-shrink-0">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          {actions}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Content Section */}
-              <div className={getContentClasses()}>{children}</div>
-            </div>
-          </div>
+        <div className={`app-shell flex min-h-[100dvh] flex-col ${className}`}>
+          <div className="amber-rule h-[2px] w-full shrink-0" />
+          <div className="flex-1">{body}</div>
         </div>
       </>
     );
@@ -198,35 +181,42 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   return (
     <>
       <Helmet title={`${pageTitle} - Alpaca Trading`} key={pageTitle} />
-      <SidebarProvider>
+      <SidebarProvider defaultOpen={defaultSidebarOpen}>
         <AppSidebar />
-        <SidebarInset
-          className={`md:rounded shadow-sm border border-border/50 m-auto h-[100dvh] md:max-h-[calc(100dvh-1rem)] flex flex-col bg-background ${className}`}
-        >
-          {/* Header with sidebar trigger */}
-          <header className="sticky top-0 z-10 flex items-center h-12 gap-2 px-3 transition-[width,height] ease-linear shrink-0 border-b border-border/60 bg-card/95 backdrop-blur-sm supports-[backdrop-filter]:bg-card/80">
-            <SidebarTrigger className="w-6 h-6 -ml-1" />
-            <Separator orientation="vertical" className="h-6 mr-2" />
-            <div className="flex items-center justify-between flex-1 gap-2">
-              <h2 className="text-[13px] font-semibold tracking-tight text-foreground/90">
-                {pageTitle}
-              </h2>
-              {/* search button cntrl + k to open */}
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 h-7 text-[11px] px-2 border-border/60 bg-background/50 hover:bg-primary/5 hover:border-primary/30"
-                onClick={() => setIsAssetSearchOpen(true)}
-              >
-                <Search className="w-3 h-3 text-muted-foreground" />
-                <span className="hidden sm:inline text-muted-foreground">
-                  Search
-                </span>
-                <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-border/60 bg-muted/50 px-1 font-mono text-[10px] text-muted-foreground">
-                  <span className="text-[9px]">⌘</span>K
-                </kbd>
-              </Button>
-            </div>
+        <SidebarInset className={`app-shell min-h-[100dvh] ${className}`}>
+          <header className="shell-topbar sticky top-0 z-20 flex h-[--topbar-height] shrink-0 items-center gap-2 px-3 sm:px-4">
+            <SidebarTrigger className="size-8 shrink-0 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground" />
+            <Separator orientation="vertical" className="mr-1 h-5" />
+
+            <h2 className="min-w-0 flex-1 truncate text-[13px] font-semibold tracking-tight text-foreground">
+              {pageTitle}
+            </h2>
+
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label="Search assets"
+              className="hidden h-8 min-w-[200px] justify-start gap-2 px-2.5 text-[12px] font-normal text-muted-foreground sm:inline-flex lg:min-w-[260px]"
+              onClick={() => setIsAssetSearchOpen(true)}
+            >
+              <Search className="h-3.5 w-3.5" />
+              <span>Search assets…</span>
+              <kbd className="ml-auto inline-flex items-center gap-0.5 rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                ⌘K
+              </kbd>
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Search assets"
+              className="size-8 shrink-0 text-muted-foreground sm:hidden"
+              onClick={() => setIsAssetSearchOpen(true)}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+
+            <ModeToggle />
           </header>
 
           <AssetSearch
@@ -235,35 +225,14 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             isMobile={isMobile}
           />
 
-          {/* Scrollable content area */}
-          <div className="flex-1 overflow-auto scrollbar-hidden">
-            <div className="w-full min-h-full">
-              <div className={getContainerClasses()}>
-                {guestBanner}
-                {/* Header Section */}
-                {(header || subheader || actions) && (
-                  <div className="mb-4">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="flex-1 space-y-1">
-                        {header}
-                        {subheader}
-                      </div>
-                      {actions && (
-                        <div className="flex-shrink-0">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            {actions}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+          {/* Bottom padding clears the mobile tab bar */}
+          <div className="flex-1 pb-[--mobile-nav-height] md:pb-0">{body}</div>
 
-                {/* Content Section */}
-                <div className={getContentClasses()}>{children}</div>
-              </div>
-            </div>
-          </div>
+          <MobileTabBar
+            onSearch={() => setIsAssetSearchOpen(true)}
+            isAuthenticated={Boolean(accessToken)}
+            onLogin={handleLogin}
+          />
         </SidebarInset>
       </SidebarProvider>
     </>

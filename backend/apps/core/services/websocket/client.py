@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from collections import defaultdict
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal, InvalidOperation
 import json
 import logging
 from queue import Queue
@@ -9,13 +9,17 @@ import threading
 import time
 from typing import Any
 
+from django.core.cache import cache
 from django.db import close_old_connections
 import websocket
 
+from apps.core.services.alpaca_service import AlpacaService
+from main.cache_keys import cache_keys
 from main.settings.base import APCA_API_KEY, APCA_API_SECRET_KEY
 
 from .aggregator import TimeframeAggregator
 from .backfill import BackfillGuard
+from .bar_builder import MinuteBarBuilder
 from .persistence import CandlePersistence
 from .subscriptions import SubscriptionManager
 from .utils import is_regular_trading_hours, parse_tick_timestamp
@@ -47,6 +51,15 @@ class WebsocketClient:
 
         # Buffer for producer/consumer
         self.message_buffer: Queue[dict[str, Any]] = Queue()
+        self.bar_builder = MinuteBarBuilder()
+        self._prepared_batch: tuple[list[dict], dict] | None = None
+        self._replay_buffer: dict[tuple[int, datetime], dict[str, Any]] = {}
+        self._socket_authenticated = {"stocks": False, "crypto": False}
+        self._socket_auth_started: dict[str, float | None] = {
+            "stocks": None,
+            "crypto": None,
+        }
+        self._state_lock = threading.Lock()
 
         # Persistence + aggregation stack
         self.repo = CandlePersistence()
@@ -64,6 +77,7 @@ class WebsocketClient:
             backfill=self.backfill_guard,
             logger=logger,
             open_flush_secs=_flush_secs,
+            database_rollup=True,
         )
 
         # Subscriptions
@@ -81,7 +95,16 @@ class WebsocketClient:
             if self.sandbox
             else "stream.data.alpaca.markets"
         )
-        return f"wss://{domain}/v2/iex"
+        api_key, secret_key = self._get_api_credentials()
+        data_domain = (
+            "data.sandbox.alpaca.markets" if self.sandbox else "data.alpaca.markets"
+        )
+        feed = AlpacaService(
+            api_key=api_key,
+            secret_key=secret_key,
+            data_base_url=f"https://{data_domain}",
+        ).resolve_stock_feed()
+        return f"wss://{domain}/v2/{feed}"
 
     def _get_crypto_url(self) -> str:
         domain = (
@@ -174,7 +197,11 @@ class WebsocketClient:
         self._authenticate(ws)
 
     def _authenticate(self, ws):
-        self.auth_start_time = time.time()
+        with self._state_lock:
+            self.auth_start_time = time.time()
+            source = "crypto" if ws is self.ws_crypto else "stocks"
+            self._socket_auth_started[source] = self.auth_start_time
+            self._socket_authenticated[source] = False
         payload = {"action": "auth", "key": self.api_key, "secret": self.secret_key}
         try:
             ws.send(json.dumps(payload))
@@ -197,13 +224,13 @@ class WebsocketClient:
                         self.stop()
                 elif typ == "success":
                     if "authenticated" in msg.get("msg", "").lower():
-                        self.authenticated = True
+                        self._mark_authenticated("stocks")
                         logger.info("✅ Stocks Authenticated")
                         # kick a subscription refresh
-                        self._update_subscriptions()
+                        self._restore_subscriptions("stocks")
                 elif typ == "subscription":
                     logger.info("Stocks now subscribed: %s", msg)
-                elif typ == "t":  # trade tick
+                elif typ in ("t", "b", "u"):
                     self.message_buffer.put(msg)
                 else:
                     logger.debug("Unhandled stocks WS msg: %s", msg)
@@ -227,10 +254,10 @@ class WebsocketClient:
                         self.stop()
                 elif typ == "success":
                     if "authenticated" in msg.get("msg", "").lower():
-                        self.authenticated = True
+                        self._mark_authenticated("crypto")
                         logger.info("✅ Crypto Authenticated")
                         # kick a subscription refresh
-                        self._update_subscriptions()
+                        self._restore_subscriptions("crypto")
                 elif typ == "subscription":
                     logger.info("Crypto now subscribed: %s", msg)
                 elif typ in ("t", "b"):  # trade or bar
@@ -245,10 +272,49 @@ class WebsocketClient:
     def on_error(self, _ws, error):
         logger.error("WS error: %s", error)
 
-    def on_close(self, *_args):
-        self.authenticated = False
-        self.auth_start_time = None
+    def on_close(self, ws=None, *_args):
+        with self._state_lock:
+            sources = (
+                ["stocks", "crypto"]
+                if ws is None
+                else ["crypto" if ws is self.ws_crypto else "stocks"]
+            )
+            for source in sources:
+                self._socket_authenticated[source] = False
+                self._socket_auth_started[source] = None
+            self.authenticated = any(self._socket_authenticated.values())
+            pending = [t for t in self._socket_auth_started.values() if t is not None]
+            self.auth_start_time = min(pending) if pending else None
         logger.warning("Socket closed")
+
+    def _mark_authenticated(self, source: str) -> None:
+        with self._state_lock:
+            self._socket_authenticated[source] = True
+            self._socket_auth_started[source] = None
+            self.authenticated = True
+            pending = [t for t in self._socket_auth_started.values() if t is not None]
+            self.auth_start_time = min(pending) if pending else None
+
+    def _restore_subscriptions(self, source: str) -> None:
+        # Reconnects do not change the desired set, but the server lost it.
+        with self.subscriptions._sub_lock:
+            symbols = list(self.subscriptions.subscribed_symbols)
+        with self.subscriptions._asset_lock:
+            symbols = [
+                symbol
+                for symbol in symbols
+                if (
+                    self.subscriptions.asset_class_cache.get(
+                        self.subscriptions.asset_cache.get(symbol)
+                    )
+                    == "crypto"
+                )
+                == (source == "crypto")
+            ]
+        if source == "crypto":
+            self._send_subscription_crypto("subscribe", symbols)
+        else:
+            self._send_subscription_stocks("subscribe", symbols)
 
     # Subscriptions
     def _subscription_manager_loop(self):
@@ -282,18 +348,32 @@ class WebsocketClient:
         self._send_subscription_crypto(action, crypto_symbols)
 
     def _send_subscription_stocks(self, action: str, symbols: list[str]) -> None:
-        if not (self.authenticated and self._sock_ready_stocks() and symbols):
+        if not (
+            self._socket_authenticated["stocks"]
+            and self._sock_ready_stocks()
+            and symbols
+        ):
             return
         try:
             assert self.ws_stocks is not None
-            payload = {"action": action, "trades": symbols}
+            payload = {
+                "action": action,
+                "trades": symbols,
+                "bars": symbols,
+                "updatedBars": symbols,
+            }
             self.ws_stocks.send(json.dumps(payload))
             logger.info("→ stocks %s %s", action, symbols)
         except Exception as exc:  # noqa: BLE001
             logger.exception("%s stocks failed: %s", action, exc)
+            raise
 
     def _send_subscription_crypto(self, action: str, symbols: list[str]) -> None:
-        if not (self.authenticated and self._sock_ready_crypto() and symbols):
+        if not (
+            self._socket_authenticated["crypto"]
+            and self._sock_ready_crypto()
+            and symbols
+        ):
             return
         try:
             assert self.ws_crypto is not None
@@ -302,6 +382,7 @@ class WebsocketClient:
             logger.info("→ crypto %s %s", action, symbols)
         except Exception as exc:  # noqa: BLE001
             logger.exception("%s crypto failed: %s", action, exc)
+            raise
 
     def _on_assets_added(self, symbols: set[str]) -> None:
         # Convert to asset ids and schedule backfill if stale
@@ -340,7 +421,18 @@ class WebsocketClient:
         logger.debug("batch_processor started")
         while self.running:
             close_old_connections()
+            if self._prepared_batch is not None:
+                try:
+                    self._process_batch(self._prepared_batch[0])
+                except Exception:
+                    logger.exception("Failed to retry prepared market data")
+                    time.sleep(1)
+                continue
             if self.message_buffer.empty():
+                try:
+                    self._process_batch([])
+                except Exception:
+                    logger.exception("Failed to flush pending market data")
                 time.sleep(1)
                 continue
             messages: list[dict] = []
@@ -371,140 +463,104 @@ class WebsocketClient:
         logger.debug("batch_processor stopped")
 
     def _process_batch(self, messages: list[dict]):
-        """
-        Process a batch of WebSocket messages (trades and bars).
-
-        Aggregates trade ticks into 1-minute candles and persists them,
-        then rolls up to higher timeframes.
-        """
-        from decimal import Decimal
-
-        # Separate trades and bars
-        trades = [m for m in messages if m.get("T") == "t"]
-        bars = [m for m in messages if m.get("T") == "b"]
-
-        # Snapshot caches for this batch
-        with self.subscriptions._asset_lock:
-            sym_to_id = self.subscriptions.asset_cache.copy()
-            id_to_class = self.subscriptions.asset_class_cache.copy()
-
-        # Process bars directly as 1T candles
-        bar_candles_list: list[dict[str, Any]] = []
-        bar_candles_map: dict[tuple[int, datetime], dict[str, Any]] = {}
-
-        if bars:
-            for b in bars:
-                sym = b.get("S")
-                aid = sym_to_id.get(sym)
+        """Prepare once, then retry idempotent snapshots without replaying trades."""
+        if self._prepared_batch is None:
+            with self.subscriptions._asset_lock:
+                sym_to_id = self.subscriptions.asset_cache.copy()
+                id_to_class = self.subscriptions.asset_class_cache.copy()
+            minutes = {}
+            for msg in messages:
+                aid = sym_to_id.get(msg.get("S"))
                 if aid is None:
                     continue
-                ts_str = b.get("t")
-                if ts_str is None:
-                    continue
-                ts = parse_tick_timestamp(ts_str)
-                # For crypto, no trading hours filter
-                asset_class = id_to_class.get(aid)
-                if asset_class == "crypto":
-                    # No filter
-                    pass
-                elif asset_class in {
-                    "us_equity",
-                    "us_option",
-                } and not is_regular_trading_hours(ts):
-                    continue
+                try:
+                    if not isinstance(msg.get("t"), str):
+                        raise ValueError("Market-data timestamp must be a string")
+                    ts = parse_tick_timestamp(msg["t"], minute_precision=False)
+                    crypto = id_to_class.get(aid) == "crypto"
+                    if not crypto and not is_regular_trading_hours(ts):
+                        continue
+                    minute = ts.replace(second=0, microsecond=0)
+                    if msg.get("T") == "t":
+                        candle = self.bar_builder.ingest(aid, ts, msg, crypto=crypto)
+                        if candle:
+                            minutes[(aid, minute)] = candle
+                    elif msg.get("T") in {"b", "u"}:
+                        candle = {
+                            name: Decimal(str(msg[field]))
+                            for name, field in (
+                                ("open", "o"),
+                                ("high", "h"),
+                                ("low", "l"),
+                                ("close", "c"),
+                                ("volume", "v"),
+                            )
+                        }
+                        if any(not value.is_finite() for value in candle.values()):
+                            raise ValueError("Market-data fields must be finite")
+                        candle["trade_count"] = msg.get("n")
+                        candle["vwap"] = msg.get("vw")
+                        candle["_authoritative"] = True
+                        minutes[(aid, minute)] = candle
+                        self.bar_builder.mark_authoritative(aid, minute)
+                except ValueError, TypeError, KeyError, InvalidOperation:
+                    logger.exception(
+                        "Rejected malformed market data for asset_id=%s", aid
+                    )
+            self._prepared_batch = (messages, minutes)
+        elif self._prepared_batch[0] is not messages:
+            raise RuntimeError(
+                "A failed market-data batch must be retried before processing new messages"
+            )
 
-                candle = {
-                    "asset_id": aid,
-                    "timestamp": ts,
-                    "open": Decimal(str(b.get("o"))) if b.get("o") else None,
-                    "high": Decimal(str(b.get("h"))) if b.get("h") else None,
-                    "low": Decimal(str(b.get("l"))) if b.get("l") else None,
-                    "close": Decimal(str(b.get("c"))) if b.get("c") else None,
-                    "volume": Decimal(str(b.get("v", 0))),
-                }
-                bar_candles_list.append(candle)
-                bar_candles_map[(aid, ts)] = candle
-
-            if bar_candles_list:
-                self.repo.upsert_minutes(bar_candles_list, mode="snapshot")
-
-        # Aggregate trades into 1T bars
-        m1_map: dict[tuple[int, datetime], dict[str, Any]] = defaultdict(
-            lambda: {
-                "open": None,
-                "high": None,
-                "low": None,
-                "close": None,
-                "volume": Decimal("0"),
-            }
+        minutes = {**self._replay_buffer, **self._prepared_batch[1]}
+        asset_ids = {aid for aid, _ts in minutes}
+        keys = {
+            aid: (cache_keys.backfill(aid).running(), cache_keys.backfill(aid).queued())
+            for aid in asset_ids
+        }
+        flags = (
+            cache.get_many([key for pair in keys.values() for key in pair])
+            if keys
+            else {}
         )
-
-        latest_ts: datetime | None = None
-        for t in trades:
-            sym = t.get("S")
-            aid = sym_to_id.get(sym)
-            if aid is None:
-                continue
-            price = t.get("p")
-            vol = t.get("s", 0)
-            ts_str = t.get("t")
-            if price is None or ts_str is None:
-                continue
-            ts = parse_tick_timestamp(ts_str)
-            # Filter out after-hours ticks for non-24/7 asset classes
-            asset_class = id_to_class.get(aid)
-            if asset_class in {
-                "us_equity",
-                "us_option",
-            } and not is_regular_trading_hours(ts):
-                continue
-
-            key = (aid, ts)
-            c = m1_map[key]
-            price_dec = Decimal(str(price))
-            vol_dec = Decimal(str(vol))
-
-            if c["open"] is None:
-                c["open"] = c["close"] = price_dec
-                c["high"] = c["low"] = price_dec
+        ready = {}
+        for key, candle in minutes.items():
+            aid, _ts = key
+            if any(flags.get(flag) for flag in keys[aid]):
+                # Do not replace REST history with a partial observed-trade ledger
+                # when replaying after a backfill.
+                if candle.get("_authoritative"):
+                    self._replay_buffer[key] = candle
             else:
-                c["high"] = max(c["high"], price_dec)
-                c["low"] = min(c["low"], price_dec)
-            c["close"] = price_dec
-            c["volume"] += vol_dec
-            latest_ts = max(latest_ts, ts) if latest_ts else ts
-
-        # Convert m1_map to list format and persist
-        if m1_map:
-            m1_list = [
-                {"asset_id": aid, "timestamp": ts, **data}
-                for (aid, ts), data in m1_map.items()
-            ]
-            self.repo.upsert_minutes(m1_list, mode="delta")
-
-        # Combine latest_ts from bars and trades
-        if bars:
-            for b in bars:
-                ts_str = b.get("t")
-                if ts_str:
-                    ts = parse_tick_timestamp(ts_str)
-                    latest_ts = max(latest_ts, ts) if latest_ts else ts
-
-        # Merge bar-based minutes into trade-based minutes for rollup authority
-        # Prefer bar values when present as authoritative 1T OHLCV
-        if bar_candles_map:
-            for k, v in bar_candles_map.items():
-                m1_map[k] = v
-
-        # Update higher timeframes
-        # Note: minute_candle_ids tracking is removed in the new design
-        # Relationships can be reconstructed via timestamps if needed
+                ready[key] = candle
+        if ready:
+            self.repo.upsert_minutes(
+                [
+                    {"asset_id": aid, "timestamp": ts, **data}
+                    for (aid, ts), data in ready.items()
+                ],
+                mode="snapshot",
+            )
+            self.aggregator.rollup_from_minutes(ready)
+        latest_ts = max((ts for _aid, ts in minutes), default=None)
+        if latest_ts is None and any(self.aggregator._tf_acc.values()):
+            latest_ts = datetime.now(UTC).replace(second=0, microsecond=0)
         if latest_ts:
-            touched_by_tf = self.aggregator.rollup_from_minutes(m1_map)
-            # Persist open buckets immediately for lower latency updates
-            self.aggregator.persist_open(touched_by_tf, latest_ts)
-            # Flush any closed buckets
+            # Include previously throttled buckets, even when no further ticks arrive.
+            touched = {tf: set(acc) for tf, acc in self.aggregator._tf_acc.items()}
+            self.aggregator.persist_open(touched, latest_ts)
             self.aggregator.flush_closed(latest_ts)
+        for key in ready:
+            self._replay_buffer.pop(key, None)
+        if latest_ts:
+            cutoff = latest_ts - timedelta(minutes=5)
+            self._replay_buffer = {
+                key: data
+                for key, data in self._replay_buffer.items()
+                if key[1] >= cutoff
+            }
+        self._prepared_batch = None
 
     # Backfill scheduling helper used by BackfillGuard
     def _schedule_backfill_for_asset(self, asset_id: int) -> None:
@@ -522,16 +578,20 @@ class WebsocketClient:
         logger.debug("auth_timeout_checker started")
         while self.running:
             close_old_connections()
-            if (
-                self.auth_start_time
-                and not self.authenticated
-                and time.time() - self.auth_start_time > self.auth_timeout
-            ):
-                logger.error("Auth timeout — restart sockets")
-                self.auth_start_time = None
-                if self.ws_stocks:
-                    self.ws_stocks.close()
-                if self.ws_crypto:
-                    self.ws_crypto.close()
+            with self._state_lock:
+                timed_out = [
+                    source
+                    for source, started in self._socket_auth_started.items()
+                    if started is not None
+                    and time.time() - started > self.auth_timeout
+                    and not self._socket_authenticated[source]
+                ]
+                for source in timed_out:
+                    self._socket_auth_started[source] = None
+            for source in timed_out:
+                logger.error("Auth timeout for %s — restart socket", source)
+                ws = self.ws_crypto if source == "crypto" else self.ws_stocks
+                if ws:
+                    ws.close()
             time.sleep(5)
         logger.debug("auth_timeout_checker stopped")

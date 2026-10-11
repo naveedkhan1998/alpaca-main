@@ -109,6 +109,8 @@ class CandleRepository:
         """
         if not candles:
             return 0
+        if mode not in {"snapshot", "delta"}:
+            raise ValueError(f"Invalid candle write mode: {mode}")
 
         total_affected = 0
 
@@ -132,8 +134,20 @@ class CandleRepository:
         # Build the volume update expression based on mode
         if mode == "snapshot":
             volume_expr = "EXCLUDED.volume"
+            open_expr = "EXCLUDED.open"
+            high_expr = "EXCLUDED.high"
+            low_expr = "EXCLUDED.low"
+            count_expr = "EXCLUDED.trade_count"
+            vwap_expr = "EXCLUDED.vwap"
         else:  # delta mode - add volumes
             volume_expr = "COALESCE(core_minute_candle.volume, 0) + EXCLUDED.volume"
+            open_expr = "COALESCE(core_minute_candle.open, EXCLUDED.open)"
+            high_expr = "GREATEST(core_minute_candle.high, EXCLUDED.high)"
+            low_expr = "LEAST(core_minute_candle.low, EXCLUDED.low)"
+            count_expr = (
+                "COALESCE(EXCLUDED.trade_count, core_minute_candle.trade_count)"
+            )
+            vwap_expr = "COALESCE(EXCLUDED.vwap, core_minute_candle.vwap)"
 
         # Build VALUES clause with placeholders
         placeholders = []
@@ -161,16 +175,13 @@ class CandleRepository:
             )
             VALUES {", ".join(placeholders)}
             ON CONFLICT (asset_id, timestamp) DO UPDATE SET
-                open = CASE
-                    WHEN core_minute_candle.open IS NULL THEN EXCLUDED.open
-                    ELSE core_minute_candle.open
-                END,
-                high = GREATEST(COALESCE(core_minute_candle.high, EXCLUDED.high), EXCLUDED.high),
-                low = LEAST(COALESCE(core_minute_candle.low, EXCLUDED.low), EXCLUDED.low),
+                open = {open_expr},
+                high = {high_expr},
+                low = {low_expr},
                 close = EXCLUDED.close,
                 volume = {volume_expr},
-                trade_count = COALESCE(EXCLUDED.trade_count, core_minute_candle.trade_count),
-                vwap = COALESCE(EXCLUDED.vwap, core_minute_candle.vwap)
+                trade_count = {count_expr},
+                vwap = {vwap_expr}
         """
 
         with connection.cursor() as cursor:
@@ -201,6 +212,8 @@ class CandleRepository:
         """
         if not candles:
             return 0
+        if mode not in {"snapshot", "delta"}:
+            raise ValueError(f"Invalid candle write mode: {mode}")
 
         # Validate timeframe
         valid_timeframes = {"5T", "15T", "30T", "1H", "4H", "1D"}
@@ -230,8 +243,20 @@ class CandleRepository:
 
         if mode == "snapshot":
             volume_expr = "EXCLUDED.volume"
+            open_expr = "EXCLUDED.open"
+            high_expr = "EXCLUDED.high"
+            low_expr = "EXCLUDED.low"
+            count_expr = "EXCLUDED.trade_count"
+            vwap_expr = "EXCLUDED.vwap"
         else:
             volume_expr = "COALESCE(core_aggregated_candle.volume, 0) + EXCLUDED.volume"
+            open_expr = "COALESCE(core_aggregated_candle.open, EXCLUDED.open)"
+            high_expr = "GREATEST(core_aggregated_candle.high, EXCLUDED.high)"
+            low_expr = "LEAST(core_aggregated_candle.low, EXCLUDED.low)"
+            count_expr = (
+                "COALESCE(EXCLUDED.trade_count, core_aggregated_candle.trade_count)"
+            )
+            vwap_expr = "COALESCE(EXCLUDED.vwap, core_aggregated_candle.vwap)"
 
         placeholders = []
         params = []
@@ -259,16 +284,13 @@ class CandleRepository:
             )
             VALUES {", ".join(placeholders)}
             ON CONFLICT (asset_id, timeframe, timestamp) DO UPDATE SET
-                open = CASE
-                    WHEN core_aggregated_candle.open IS NULL THEN EXCLUDED.open
-                    ELSE core_aggregated_candle.open
-                END,
-                high = GREATEST(COALESCE(core_aggregated_candle.high, EXCLUDED.high), EXCLUDED.high),
-                low = LEAST(COALESCE(core_aggregated_candle.low, EXCLUDED.low), EXCLUDED.low),
+                open = {open_expr},
+                high = {high_expr},
+                low = {low_expr},
                 close = EXCLUDED.close,
                 volume = {volume_expr},
-                trade_count = COALESCE(EXCLUDED.trade_count, core_aggregated_candle.trade_count),
-                vwap = COALESCE(EXCLUDED.vwap, core_aggregated_candle.vwap)
+                trade_count = {count_expr},
+                vwap = {vwap_expr}
         """
 
         with connection.cursor() as cursor:
@@ -384,9 +406,8 @@ class CandleRepository:
 
         interval = interval_map[timeframe]
 
-        # Market open anchor for bucket alignment (9:30 AM ET)
-        # Using a fixed timestamp that represents market open
-        anchor = "1970-01-01 09:30:00-05:00"
+        # Match the UTC buckets used by realtime aggregation and chart queries.
+        anchor = "1970-01-01 00:00:00+00:00"
 
         sql = """
             INSERT INTO core_aggregated_candle (
@@ -406,7 +427,7 @@ class CandleRepository:
                 NOW() as created_at
             FROM core_minute_candle
             WHERE asset_id = %s
-              AND timestamp >= %s
+              AND timestamp >= date_bin(%s::interval, %s::timestamptz, %s::timestamptz)
               AND timestamp < %s
             GROUP BY asset_id, bucket
             ON CONFLICT (asset_id, timeframe, timestamp) DO UPDATE SET
@@ -420,7 +441,10 @@ class CandleRepository:
         """
 
         with connection.cursor() as cursor:
-            cursor.execute(sql, [timeframe, interval, anchor, asset_id, start, end])
+            cursor.execute(
+                sql,
+                [timeframe, interval, anchor, asset_id, interval, start, anchor, end],
+            )
             return cursor.rowcount
 
     @staticmethod

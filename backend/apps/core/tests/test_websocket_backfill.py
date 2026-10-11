@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from django.utils import timezone
 import pytest
 
-from apps.core.models import Asset, Candle, WatchListAsset
+from apps.core.models import AggregatedCandle, Asset, MinuteCandle, WatchListAsset
 from apps.core.services.websocket.backfill import BackfillGuard
 from main import const
 
@@ -49,10 +49,9 @@ class TestBackfillGuard:
         """Test not scheduling when asset has recent data."""
         # Create recent candle
         recent_ts = timezone.now() - timedelta(minutes=1)
-        Candle.objects.create(
+        MinuteCandle.objects.create(
             asset_id=self.asset.id,
             timestamp=recent_ts,
-            timeframe=const.TF_1T,
             open=100.0,
             high=105.0,
             low=95.0,
@@ -69,10 +68,9 @@ class TestBackfillGuard:
         """Test scheduling when asset has stale data."""
         # Create old candle
         old_ts = timezone.now() - timedelta(minutes=10)  # Older than gap_threshold
-        Candle.objects.create(
+        MinuteCandle.objects.create(
             asset_id=self.asset.id,
             timestamp=old_ts,
-            timeframe=const.TF_1T,
             open=100.0,
             high=105.0,
             low=95.0,
@@ -131,7 +129,9 @@ class TestBackfillGuard:
     def test_maybe_schedule_for_assets_exception_handling(self):
         """Test exception handling in scheduling."""
         # Create scenario that might cause exception
-        with patch.object(Candle.objects, "filter", side_effect=Exception("DB error")):
+        with patch.object(
+            MinuteCandle.objects, "filter", side_effect=Exception("DB error")
+        ):
             scheduled = self.guard.maybe_schedule_for_assets([self.asset.id])
 
             # Should handle exception gracefully and not schedule
@@ -152,7 +152,7 @@ class TestBackfillGuard:
         """Test completion check with explicit completion flag."""
         with patch("apps.core.services.websocket.backfill.cache.get") as mock_get:
             # First call returns None (not running), second returns True (completed)
-            mock_get.side_effect = [None, True]
+            mock_get.side_effect = [None, None, True]
 
             result = self.guard.is_historical_complete(
                 self.asset.id, const.TF_5T, datetime.now()
@@ -173,10 +173,9 @@ class TestBackfillGuard:
         """Test completion check with only recent data."""
         # Create recent candle
         recent_ts = timezone.now() - timedelta(hours=1)
-        Candle.objects.create(
+        MinuteCandle.objects.create(
             asset_id=self.asset.id,
             timestamp=recent_ts,
-            timeframe=const.TF_1T,
             open=100.0,
             high=105.0,
             low=95.0,
@@ -196,10 +195,9 @@ class TestBackfillGuard:
         """Test completion check with sufficient historical data."""
         # Create old candle (more than 4 days ago)
         old_ts = timezone.now() - timedelta(days=5)
-        Candle.objects.create(
+        MinuteCandle.objects.create(
             asset_id=self.asset.id,
             timestamp=old_ts,
-            timeframe=const.TF_1T,
             open=100.0,
             high=105.0,
             low=95.0,
@@ -209,10 +207,9 @@ class TestBackfillGuard:
 
         # Create recent candle
         recent_ts = timezone.now() - timedelta(hours=1)
-        Candle.objects.create(
+        MinuteCandle.objects.create(
             asset_id=self.asset.id,
             timestamp=recent_ts,
-            timeframe=const.TF_1T,
             open=102.0,
             high=107.0,
             low=97.0,
@@ -222,7 +219,7 @@ class TestBackfillGuard:
 
         # Create historical 5T candle to indicate completion
         historical_5t_ts = timezone.now() - timedelta(days=2)
-        Candle.objects.create(
+        AggregatedCandle.objects.create(
             asset_id=self.asset.id,
             timestamp=historical_5t_ts,
             timeframe=const.TF_5T,
@@ -245,10 +242,9 @@ class TestBackfillGuard:
         """Test completion check when higher timeframe has historical data."""
         # Create 1T data for coverage
         old_ts = timezone.now() - timedelta(days=5)
-        Candle.objects.create(
+        MinuteCandle.objects.create(
             asset_id=self.asset.id,
             timestamp=old_ts,
-            timeframe=const.TF_1T,
             open=100.0,
             high=105.0,
             low=95.0,
@@ -256,10 +252,9 @@ class TestBackfillGuard:
             volume=1000,
         )
         recent_ts = timezone.now() - timedelta(hours=1)
-        Candle.objects.create(
+        MinuteCandle.objects.create(
             asset_id=self.asset.id,
             timestamp=recent_ts,
-            timeframe=const.TF_1T,
             open=102.0,
             high=107.0,
             low=97.0,
@@ -269,7 +264,7 @@ class TestBackfillGuard:
 
         # Create historical 5T candle
         historical_ts = timezone.now() - timedelta(days=2)
-        Candle.objects.create(
+        AggregatedCandle.objects.create(
             asset_id=self.asset.id,
             timestamp=historical_ts,
             timeframe=const.TF_5T,

@@ -14,6 +14,7 @@ import { ArrowLeft, Heart, AlertTriangle } from 'lucide-react';
 import { AssetDetails } from './components/AssetDetails';
 import { useGetAssetByIdQuery } from '@/api/assetService';
 import { AddToWatchlistDialog } from './components/AddToWatchlistDialog';
+import { getAssetClassColor } from '@/lib/assetTheme';
 
 export const AssetDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,19 +34,6 @@ export const AssetDetailPage: React.FC = () => {
 
   const handleBack = () => {
     navigate('/instruments');
-  };
-
-  const getAssetClassColor = (assetClass: string) => {
-    switch (assetClass) {
-      case 'us_equity':
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800';
-      case 'us_option':
-        return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-purple-200 dark:border-purple-800';
-      case 'crypto':
-        return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 border-orange-200 dark:border-orange-800';
-      default:
-        return 'bg-secondary text-secondary-foreground border-border';
-    }
   };
 
   // --- Render Logic ---

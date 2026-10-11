@@ -143,8 +143,8 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ asset }) => {
           <CardContent>
             {asset.marginable ? (
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 border rounded-lg bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/50">
-                  <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-primary/5 border-primary/20">
+                  <span className="text-sm font-medium text-primary">
                     Marginable Status
                   </span>
                   <Badge variant="outline" className="bg-background">
@@ -163,7 +163,7 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({ asset }) => {
                   </div>
                   <div className="w-full h-2 overflow-hidden rounded-full bg-secondary">
                     <div
-                      className="h-full bg-blue-500"
+                      className="h-full bg-primary"
                       style={{
                         width: `${(asset.maintenance_margin_requirement || 0) * 100}%`,
                       }}

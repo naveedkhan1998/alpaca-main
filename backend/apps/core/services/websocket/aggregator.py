@@ -57,11 +57,14 @@ class TimeframeAggregator:
     )
     # Throttle for persisting open buckets; configurable
     open_flush_secs: float = 0.25
+    database_rollup: bool = False
     _open_flush_secs: float = field(init=False)
 
     def __post_init__(self):
         # Mirror configurable open flush throttle into internal field
         self._open_flush_secs = self.open_flush_secs
+        self._tf_acc = {tf: {} for tf in self.tf_cfg if tf != const.TF_1T}
+        self._last_open_flush = dict.fromkeys(self._tf_acc, 0.0)
 
     def reset_for_asset(self, asset_id: int) -> None:
         """
@@ -109,6 +112,12 @@ class TimeframeAggregator:
                 bucket = floor_to_bucket(m1_ts, delta)
                 acc = self._tf_acc[tf]
                 key = (aid, bucket)
+                if self.database_rollup:
+                    # Only track dirty buckets; SQL includes all persisted minutes,
+                    # including history from before this process started.
+                    acc[key] = {}
+                    touched[tf].add(key)
+                    continue
 
                 # Convert to Decimal for precision
                 open_val = self._to_decimal(data.get("open"))
@@ -186,8 +195,12 @@ class TimeframeAggregator:
                 aid, bucket_ts = key
                 end_ts = bucket_ts + delta
 
-                if end_ts > latest_m1:
+                if self.database_rollup or end_ts > latest_m1:
                     if self.backfill.is_historical_complete(aid, tf, bucket_ts):
+                        if self.database_rollup:
+                            self.repo.aggregate_to_timeframe(aid, tf, bucket_ts, end_ts)
+                            self._last_open_flush[tf] = now
+                            continue
                         data = acc.get(key)
                         if data:
                             to_persist.append(
@@ -234,6 +247,10 @@ class TimeframeAggregator:
 
                 if end_ts <= latest_m1:
                     if self.backfill.is_historical_complete(aid, tf, bucket_ts):
+                        if self.database_rollup:
+                            self.repo.aggregate_to_timeframe(aid, tf, bucket_ts, end_ts)
+                            acc.pop((aid, bucket_ts), None)
+                            continue
                         closed_data = acc.pop((aid, bucket_ts), None)
                         if closed_data:
                             self.repo.upsert_aggregated(

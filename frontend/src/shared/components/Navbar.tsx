@@ -77,14 +77,14 @@ const Navbar: React.FC = () => {
       label: 'Watchlists',
       icon: TrendingUp,
       description: 'Manage your watchlists',
-      color: 'from-purple-500 to-pink-500',
+      color: 'from-primary to-accent',
     },
     {
       path: '/instruments',
       label: 'Instruments',
       icon: BarChart3,
       description: 'Trading instruments',
-      color: 'from-green-500 to-emerald-500',
+      color: 'from-success to-success/60',
     },
 
     {
@@ -92,7 +92,7 @@ const Navbar: React.FC = () => {
       label: 'Support',
       icon: Mail,
       description: 'Help & contact',
-      color: 'from-indigo-500 to-purple-500',
+      color: 'from-accent to-primary',
     },
   ];
 
@@ -438,7 +438,7 @@ const Navbar: React.FC = () => {
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         <div className="flex items-center space-x-3">
-                          <div className="flex items-center justify-center shadow-lg w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500">
+                          <div className="flex items-center justify-center shadow-lg w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-accent">
                             <User className="w-5 h-5 text-white" />
                           </div>
                           <div>

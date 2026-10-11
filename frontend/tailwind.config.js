@@ -181,7 +181,7 @@ export default {
           'Roboto',
           'sans-serif',
         ],
-        display: ['Plus Jakarta Sans', 'Inter', '-apple-system', 'sans-serif'],
+        display: ['Space Grotesk', 'Inter', '-apple-system', 'sans-serif'],
       },
       spacing: {
         18: '4.5rem',

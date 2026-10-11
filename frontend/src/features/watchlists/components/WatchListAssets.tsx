@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AlertTriangle } from 'lucide-react';
 import { useGetWatchListByIdQuery } from '@/api/watchlistService';
 import { Asset } from '@/types/common-types';
+import { getAssetClassColor } from '@/lib/assetTheme';
 
 interface WatchListAssetsProps {
   watchlistId: number;
@@ -59,19 +60,6 @@ export const WatchListAssets: React.FC<WatchListAssetsProps> = ({
       </div>
     );
   }
-
-  const getAssetClassColor = (assetClass: string) => {
-    switch (assetClass) {
-      case 'us_equity':
-        return 'bg-primary/10 text-primary';
-      case 'us_option':
-        return 'bg-violet-500/10 text-violet-600 dark:text-violet-400';
-      case 'crypto':
-        return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-      default:
-        return 'bg-muted text-muted-foreground';
-    }
-  };
 
   return (
     <div className="overflow-hidden">
