@@ -11,6 +11,7 @@ from apps.core.services.alpaca_service import AlpacaService
 from apps.core.services.websocket.bar_builder import MinuteBarBuilder
 from apps.core.services.websocket.client import WebsocketClient
 from apps.core.tasks import _load_historical_minutes
+from apps.core.views.main import AssetViewSet
 
 
 def response(status=200, data=None, headers=None):
@@ -118,6 +119,184 @@ def test_historical_endpoint_normalization(asset_class, symbol, normalized, path
     assert not {"feed", "adjustment", "currency", "asof"} & params.keys()
     assert result["bars"] == [{"v": 0.5}]
     assert result["next_page_token"] == "next"
+
+
+def test_option_expirations_are_paginated_and_normalized():
+    service = AlpacaService()
+    responses = [
+        {
+            "option_contracts": [
+                {"symbol": "AAPL261016C00150000", "expiration_date": "2026-10-16"},
+                {"symbol": "AAPL261023C00150000", "expiration_date": "2026-10-23"},
+            ],
+            "next_page_token": "next",
+        },
+        {
+            "option_contracts": [
+                {"symbol": "AAPL261023P00150000", "expiration_date": "2026-10-23"}
+            ],
+            "next_page_token": None,
+        },
+    ]
+    with patch.object(service, "_make_request", side_effect=responses) as request:
+        result = service.get_option_expirations(" AAPL ")
+
+    assert request.call_count == 2
+    assert request.call_args_list[0].args[1].endswith("/v2/options/contracts")
+    assert request.call_args_list[1].kwargs["params"]["page_token"] == "next"
+    assert result == {
+        "underlying": "AAPL",
+        "expirations": ["2026-10-16", "2026-10-23"],
+    }
+
+
+def test_option_chain_snapshots_are_normalized_for_frontend():
+    service = AlpacaService()
+    alpaca_response = {
+        "snapshots": {
+            "AAPL261016C00155000": {
+                "latestQuote": {"bp": 6.0, "ap": 6.4},
+            },
+            "AAPL261016C00150000": {
+                "latestQuote": {"bp": 9.8, "ap": 10.2, "bs": 3, "as": 5},
+                "latestTrade": {"p": 10.1, "s": 2},
+                "dailyBar": {"v": 42, "n": 7, "vw": 10.05},
+                "greeks": {"delta": 0.61, "gamma": 0.02, "theta": -0.11, "vega": 0.09},
+                "impliedVolatility": 0.31,
+            },
+            "AAPL261016P00150000": {
+                "latestQuote": {"bp": 1.1, "ap": 1.3},
+                "latestTrade": {"p": 1.2},
+                "dailyBar": {"v": 21, "n": 4, "vw": 1.19},
+            },
+        },
+        "next_page_token": None,
+    }
+    with patch.object(
+        service, "_make_request", return_value=alpaca_response
+    ) as request:
+        result = service.get_option_chain("AAPL", "2026-10-16")
+
+    assert request.call_args.args[1].endswith("/v1beta1/options/snapshots/AAPL")
+    assert request.call_args.kwargs["params"] == {
+        "expiration_date": "2026-10-16",
+        "limit": 1000,
+    }
+    assert result["underlying"] == "AAPL"
+    assert result["expiration"] == "2026-10-16"
+    assert [contract["symbol"] for contract in result["contracts"]] == [
+        "AAPL261016C00150000",
+        "AAPL261016P00150000",
+        "AAPL261016C00155000",
+    ]
+    assert result["contracts"][0] == {
+        "symbol": "AAPL261016C00150000",
+        "underlying": "AAPL",
+        "expiration": "2026-10-16",
+        "option_type": "call",
+        "strike": 150.0,
+        "bid": 9.8,
+        "ask": 10.2,
+        "bid_size": 3,
+        "ask_size": 5,
+        "last_price": 10.1,
+        "last_size": 2,
+        "volume": 42,
+        "trade_count": 7,
+        "vwap": 10.05,
+        "open_interest": None,
+        "implied_volatility": 0.31,
+        "delta": 0.61,
+        "gamma": 0.02,
+        "theta": -0.11,
+        "vega": 0.09,
+        "rho": None,
+    }
+
+
+def test_option_chain_view_caches_each_instrument_and_expiration_for_30_seconds():
+    view = AssetViewSet()
+    view.get_object = Mock(return_value=SimpleNamespace(symbol="AAPL"))
+    request = SimpleNamespace(query_params={"expiration": "2026-10-16"})
+    chain = {
+        "underlying": "AAPL",
+        "expiration": "2026-10-16",
+        "contracts": [],
+    }
+
+    with (
+        patch("apps.core.views.main.cache") as cache,
+        patch(
+            "apps.core.views.main.alpaca_service.get_option_chain",
+            return_value=chain,
+        ) as get_chain,
+    ):
+        cache.get.return_value = None
+        response = view.get_options_chain(request)
+
+    get_chain.assert_called_once_with("AAPL", "2026-10-16")
+    cache.set.assert_called_once_with(
+        "asset_options_chain:AAPL:2026-10-16", chain, timeout=30
+    )
+    assert response.data["data"] == chain
+
+
+def test_option_bars_view_normalizes_candles_and_caches_them():
+    view = AssetViewSet()
+    view.get_object = Mock(return_value=SimpleNamespace(symbol="AAPL"))
+    request = SimpleNamespace(
+        query_params={"symbol": "aapl261016c00150000", "timeframe": "1Min", "days": "3"}
+    )
+    bars = {
+        "bars": [
+            {"t": "2026-10-01T13:30:00Z", "o": 1, "h": 2, "l": 0.5, "c": 1.5, "v": 9}
+        ]
+    }
+
+    with (
+        patch("apps.core.views.main.cache") as cache,
+        patch(
+            "apps.core.views.main.alpaca_service.get_historic_bars",
+            return_value=bars,
+        ) as get_bars,
+    ):
+        cache.get.return_value = None
+        response = view.get_options_bars(request)
+
+    assert get_bars.call_args.args == ("AAPL261016C00150000",)
+    assert get_bars.call_args.kwargs["asset_class"] == "us_option"
+    assert get_bars.call_args.kwargs["timeframe"] == "1Min"
+    assert response.data["data"]["candles"] == [
+        {"t": "2026-10-01T13:30:00Z", "o": 1, "h": 2, "l": 0.5, "c": 1.5, "v": 9}
+    ]
+    cache.set.assert_called_once_with(
+        "asset_option_bars:AAPL261016C00150000:1Min:3",
+        response.data["data"],
+        timeout=30,
+    )
+
+
+def test_option_expirations_view_caches_per_instrument():
+    view = AssetViewSet()
+    view.get_object = Mock(return_value=SimpleNamespace(symbol="AAPL"))
+    request = SimpleNamespace(query_params={})
+    expirations = {"underlying": "AAPL", "expirations": ["2026-10-16"]}
+
+    with (
+        patch("apps.core.views.main.cache") as cache,
+        patch(
+            "apps.core.views.main.alpaca_service.get_option_expirations",
+            return_value=expirations,
+        ) as get_expirations,
+    ):
+        cache.get.return_value = None
+        response = view.get_options_expirations(request)
+
+    get_expirations.assert_called_once_with("AAPL")
+    cache.set.assert_called_once_with(
+        "asset_options_expirations:AAPL", expirations, timeout=30
+    )
+    assert response.data["data"] == expirations
 
 
 def test_stock_feed_and_timeframe_are_shared():

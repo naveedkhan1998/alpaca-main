@@ -65,6 +65,8 @@ const GraphsPage: React.FC = () => {
     skip: !shouldFetchAsset,
   });
   const asset = obj ?? assetFromApi;
+  const activeAssetId = asset?.id;
+  const activeAssetClass = asset?.asset_class;
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
 
@@ -97,6 +99,7 @@ const GraphsPage: React.FC = () => {
   const mainChartRef = useRef<ITimeScaleApi<Time> | null>(null);
   const [mainTimeScale, setMainTimeScaleState] =
     useState<ITimeScaleApi<Time> | null>(null);
+  const [optionsOpen, setOptionsOpen] = useState(true);
   const indicatorChartsRef = useRef<Map<string, ITimeScaleApi<Time>>>(
     new Map()
   );
@@ -304,6 +307,11 @@ const GraphsPage: React.FC = () => {
 
   // Effects
   useEffect(() => {
+    if (activeAssetId == null || activeAssetClass == null) return;
+    setOptionsOpen(activeAssetClass === 'us_equity');
+  }, [activeAssetId, activeAssetClass]);
+
+  useEffect(() => {
     if (isGuest && autoRefresh) {
       dispatch(setAutoRefresh(false));
     }
@@ -367,6 +375,8 @@ const GraphsPage: React.FC = () => {
           previousClose={previousClose}
           handleDownload={handleDownload}
           toggleFullscreen={toggleFullscreen}
+          optionsOpen={asset.asset_class === 'us_equity' && optionsOpen}
+          onToggleOptions={() => setOptionsOpen(open => !open)}
           refetch={handleRefetch}
           replayControls={headerReplayControls}
         />
@@ -400,6 +410,11 @@ const GraphsPage: React.FC = () => {
             onRemoveIndicator={handleRemoveIndicator}
             onToggleVisibility={handleToggleVisibility}
             mainTimeScale={mainTimeScale}
+            assetId={asset.id}
+            symbol={asset.symbol}
+            currentPrice={lastPrice}
+            optionsOpen={asset.asset_class === 'us_equity' && optionsOpen}
+            onToggleOptions={() => setOptionsOpen(open => !open)}
           />
 
           {/* Mobile Replay Controls */}

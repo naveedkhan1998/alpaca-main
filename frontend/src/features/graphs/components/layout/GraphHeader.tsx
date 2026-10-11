@@ -24,6 +24,7 @@ import {
   TrendingUp,
   TrendingDown,
   BarChart2,
+  CandlestickChart,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from 'src/app/hooks';
@@ -48,6 +49,8 @@ interface GraphHeaderProps {
   handleDownload: () => void;
   refetch: () => void;
   toggleFullscreen: () => void;
+  optionsOpen: boolean;
+  onToggleOptions: () => void;
   replayControls: {
     enabled: boolean;
     playing: boolean;
@@ -73,6 +76,8 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
   handleDownload,
   refetch,
   toggleFullscreen,
+  optionsOpen,
+  onToggleOptions,
   replayControls,
 }) => {
   const navigate = useNavigate();
@@ -295,6 +300,30 @@ const GraphHeader: React.FC<GraphHeaderProps> = ({
               </div>
             )}
           </TooltipProvider>
+
+          {obj.asset_class === 'us_equity' && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={optionsOpen ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={onToggleOptions}
+                    className={cn(
+                      'w-8 h-8 transition-colors',
+                      optionsOpen &&
+                        'bg-primary/10 text-primary hover:bg-primary/20'
+                    )}
+                  >
+                    <CandlestickChart className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="text-xs">
+                  {optionsOpen ? 'Hide options' : 'Show options'}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
 
           <div className="h-4 w-px bg-border/50 hidden sm:block mx-1" />
 

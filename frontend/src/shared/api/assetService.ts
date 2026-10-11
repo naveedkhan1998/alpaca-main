@@ -6,6 +6,9 @@ import {
   Candle,
   CompactCandlesResponse,
   GetCandlesV3Params,
+  OptionChainResponse,
+  OptionExpirationsResponse,
+  OptionBarsResponse,
 } from '@/types/common-types';
 import { baseApi } from './baseApi';
 
@@ -168,6 +171,75 @@ const assetApi = baseApi.injectEndpoints({
       providesTags: (_result, _error, id) => [{ type: 'Asset', id }],
     }),
 
+    getAssetOptionsChain: builder.query<
+      OptionChainResponse,
+      { id: number; expiration?: string }
+    >({
+      query: ({ id, expiration }) => {
+        const searchParams = new URLSearchParams();
+        if (expiration) {
+          searchParams.append('expiration', expiration);
+        }
+        const queryString = searchParams.toString();
+
+        return {
+          url: `core/assets/${id}/options_chain/${queryString ? `?${queryString}` : ''}`,
+          method: 'GET',
+          headers: {
+            'Content-type': 'application/json',
+          },
+        };
+      },
+      transformResponse: (response: {
+        msg: string;
+        data: OptionChainResponse;
+      }) => response.data,
+      keepUnusedDataFor: 30,
+    }),
+
+    getAssetOptionExpirations: builder.query<OptionExpirationsResponse, number>(
+      {
+        query: id => ({
+          url: `core/assets/${id}/options_expirations/`,
+          method: 'GET',
+          headers: {
+            'Content-type': 'application/json',
+          },
+        }),
+        transformResponse: (response: {
+          msg: string;
+          data: OptionExpirationsResponse;
+        }) => response.data,
+        keepUnusedDataFor: 300,
+      }
+    ),
+
+    getAssetOptionBars: builder.query<
+      OptionBarsResponse,
+      { id: number; symbol: string; timeframe?: string; days?: number }
+    >({
+      query: ({ id, symbol, timeframe = '5Min', days = 14 }) => {
+        const searchParams = new URLSearchParams({
+          symbol,
+          timeframe,
+          days: days.toString(),
+        });
+
+        return {
+          url: `core/assets/${id}/options_bars/?${searchParams.toString()}`,
+          method: 'GET',
+          headers: {
+            'Content-type': 'application/json',
+          },
+        };
+      },
+      transformResponse: (response: {
+        msg: string;
+        data: OptionBarsResponse;
+      }) => response.data,
+      keepUnusedDataFor: 60,
+    }),
+
     getAssetCandles: builder.query<
       PaginatedApiResponse<Candle>,
       { id: number; tf?: number; limit?: number; offset?: number }
@@ -277,6 +349,9 @@ export const {
   useSearchAssetsOptimizedQuery,
   useGetAssetStatsQuery,
   useGetAssetByIdQuery,
+  useGetAssetOptionsChainQuery,
+  useGetAssetOptionExpirationsQuery,
+  useGetAssetOptionBarsQuery,
   useGetAssetCandlesQuery,
   useLazyGetAssetCandlesQuery,
   useGetAssetCandlesV3Query,

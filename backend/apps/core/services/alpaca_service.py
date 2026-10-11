@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date, datetime
 from email.utils import parsedate_to_datetime
 import hashlib
+import re
 import threading
 import time
 from typing import TYPE_CHECKING, ClassVar, Literal
@@ -18,6 +20,10 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
 logger = get_task_logger(__name__)
+
+OPTION_SYMBOL_PATTERN = re.compile(
+    r"^(?P<root>.+)(?P<expiration>\d{6})(?P<type>[CP])(?P<strike>\d{8})$"
+)
 
 
 @dataclass
@@ -259,6 +265,159 @@ class AlpacaService:
             if not isinstance(resp, dict):
                 raise ValueError("Alpaca historical bars response must be an object")
             return resp
+
+    @staticmethod
+    def _parse_option_symbol(option_symbol: str) -> tuple[str, str, str, float]:
+        match = OPTION_SYMBOL_PATTERN.fullmatch(option_symbol)
+        if match is None:
+            raise ValueError(
+                f"Invalid OCC option symbol returned by Alpaca: {option_symbol}"
+            )
+
+        expiration = (
+            datetime.strptime(match.group("expiration"), "%y%m%d").date().isoformat()
+        )
+        option_type = "call" if match.group("type") == "C" else "put"
+        strike_price = int(match.group("strike")) / 1000
+        return match.group("root"), expiration, option_type, strike_price
+
+    def get_option_expirations(self, symbol: str) -> dict:
+        """Fetch every active expiration date available for an equity."""
+        normalized = self.normalize_symbol(symbol, "us_equity")
+        url = f"{self.base_url}/v2/options/contracts"
+        expirations: set[str] = set()
+        page_token: str | None = None
+        seen_tokens: set[str] = set()
+
+        while True:
+            params = {
+                "underlying_symbols": normalized,
+                "status": "active",
+                "expiration_date_gte": date.today().isoformat(),
+                "limit": 1000,
+            }
+            if page_token:
+                params["page_token"] = page_token
+
+            response = self._make_request("GET", url, params=params)
+            if not isinstance(response, dict):
+                raise ValueError("Alpaca option contracts response must be an object")
+
+            contracts = response.get("option_contracts")
+            if not isinstance(contracts, list):
+                raise ValueError(
+                    "Alpaca option contracts response must include option_contracts"
+                )
+            for contract in contracts:
+                expiration = contract.get("expiration_date")
+                if expiration:
+                    expirations.add(expiration)
+
+            page_token = response.get("next_page_token")
+            if not page_token:
+                break
+            if page_token in seen_tokens:
+                raise RuntimeError(
+                    "Alpaca returned a repeated option contracts page token"
+                )
+            seen_tokens.add(page_token)
+
+        return {
+            "underlying": normalized,
+            "expirations": sorted(expirations),
+        }
+
+    def get_option_chain(self, symbol: str, expiration: str | None = None) -> dict:
+        """Fetch and normalize option-chain snapshots for one expiration."""
+        normalized = self.normalize_symbol(symbol, "us_equity")
+        if not expiration:
+            available = self.get_option_expirations(normalized)["expirations"]
+            if not available:
+                return {
+                    "underlying": normalized,
+                    "expiration": None,
+                    "contracts": [],
+                }
+            expiration = available[0]
+
+        url = f"{self.data_base_url}/v1beta1/options/snapshots/{normalized}"
+        snapshots: dict[str, dict] = {}
+        page_token: str | None = None
+        seen_tokens: set[str] = set()
+
+        while True:
+            params = {"expiration_date": expiration, "limit": 1000}
+            if page_token:
+                params["page_token"] = page_token
+
+            response = self._make_request("GET", url, params=params)
+            if not isinstance(response, dict):
+                raise ValueError("Alpaca option chain response must be an object")
+            page_snapshots = response.get("snapshots")
+            if not isinstance(page_snapshots, dict):
+                raise ValueError(
+                    "Alpaca option chain response must include a snapshots object"
+                )
+            snapshots.update(page_snapshots)
+
+            page_token = response.get("next_page_token")
+            if not page_token:
+                break
+            if page_token in seen_tokens:
+                raise RuntimeError("Alpaca returned a repeated option chain page token")
+            seen_tokens.add(page_token)
+
+        contracts: list[dict] = []
+        for option_symbol, snapshot in snapshots.items():
+            if not isinstance(snapshot, dict):
+                raise ValueError(
+                    f"Alpaca snapshot for {option_symbol} must be an object"
+                )
+            root, contract_expiration, option_type, strike_price = (
+                self._parse_option_symbol(option_symbol)
+            )
+            if contract_expiration != expiration:
+                raise ValueError(
+                    f"Alpaca returned {option_symbol} outside requested expiration "
+                    f"{expiration}"
+                )
+
+            latest_quote = snapshot.get("latestQuote") or {}
+            latest_trade = snapshot.get("latestTrade") or {}
+            daily_bar = snapshot.get("dailyBar") or {}
+            greeks = snapshot.get("greeks") or {}
+            contracts.append(
+                {
+                    "symbol": option_symbol,
+                    "underlying": root,
+                    "expiration": contract_expiration,
+                    "option_type": option_type,
+                    "strike": strike_price,
+                    "bid": latest_quote.get("bp"),
+                    "ask": latest_quote.get("ap"),
+                    "bid_size": latest_quote.get("bs"),
+                    "ask_size": latest_quote.get("as"),
+                    "last_price": latest_trade.get("p"),
+                    "last_size": latest_trade.get("s"),
+                    "volume": daily_bar.get("v"),
+                    "trade_count": daily_bar.get("n"),
+                    "vwap": daily_bar.get("vw"),
+                    "open_interest": snapshot.get("openInterest"),
+                    "implied_volatility": snapshot.get("impliedVolatility"),
+                    "delta": greeks.get("delta"),
+                    "gamma": greeks.get("gamma"),
+                    "theta": greeks.get("theta"),
+                    "vega": greeks.get("vega"),
+                    "rho": greeks.get("rho"),
+                }
+            )
+
+        contracts.sort(key=lambda contract: (contract["strike"], contract["symbol"]))
+        return {
+            "underlying": normalized,
+            "expiration": expiration,
+            "contracts": contracts,
+        }
 
     def iter_historic_bars(self, symbol: str, **kwargs) -> Iterator[dict]:
         """Yield every page without collecting an entire history in memory."""

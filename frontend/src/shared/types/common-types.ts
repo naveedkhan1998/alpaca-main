@@ -62,6 +62,56 @@ export interface Asset {
   updated_at: string;
 }
 
+export interface OptionContract {
+  symbol: string;
+  underlying: string;
+  expiration: string;
+  option_type: 'call' | 'put';
+  strike: number;
+  bid: number | null;
+  ask: number | null;
+  bid_size: number | null;
+  ask_size: number | null;
+  last_price: number | null;
+  last_size: number | null;
+  volume: number | null;
+  trade_count: number | null;
+  vwap: number | null;
+  open_interest: number | null;
+  implied_volatility: number | null;
+  delta: number | null;
+  gamma: number | null;
+  theta: number | null;
+  vega: number | null;
+  rho: number | null;
+}
+
+export interface OptionChainResponse {
+  underlying: string;
+  expiration: string | null;
+  contracts: OptionContract[];
+}
+
+export interface OptionExpirationsResponse {
+  underlying: string;
+  expirations: string[];
+}
+
+export interface OptionBar {
+  t: string;
+  o: number;
+  h: number;
+  l: number;
+  c: number;
+  v: number;
+}
+
+export interface OptionBarsResponse {
+  symbol: string;
+  timeframe: string;
+  candles: OptionBar[];
+}
+
 export interface WatchListAsset {
   id: number;
   asset: Asset;

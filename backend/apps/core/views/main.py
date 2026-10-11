@@ -7,6 +7,7 @@ from django.core.cache import cache
 from django.db import connection
 from django.db.models import Case, Count, IntegerField, Q, When
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
@@ -46,6 +47,10 @@ from apps.core.views.candle_views import (
 )
 
 logger = logging.getLogger(__name__)
+
+OPTION_BAR_TIMEFRAMES = frozenset(
+    {"1Min", "5Min", "15Min", "30Min", "1Hour", "4Hour", "1Day"}
+)
 
 
 class AlpacaAccountViewSet(viewsets.ModelViewSet):
@@ -322,6 +327,130 @@ class AssetViewSet(PublicReadOnlyMixin, viewsets.ReadOnlyModelViewSet):
                     pass
 
         return queryset
+
+    @action(detail=True, methods=["get"], url_path="options_chain")
+    def get_options_chain(self, request, pk=None):
+        """Return the equity options chain for an asset, cached for 30 seconds."""
+        asset = self.get_object()
+        expiration = request.query_params.get("expiration")
+        cache_key = f"asset_options_chain:{asset.symbol.upper()}"
+        if expiration:
+            cache_key = f"{cache_key}:{expiration}"
+
+        cached_response = cache.get(cache_key)
+        if cached_response is not None:
+            return Response(
+                {"msg": "Option chain retrieved successfully", "data": cached_response}
+            )
+
+        try:
+            option_chain = alpaca_service.get_option_chain(asset.symbol, expiration)
+        except Exception as exc:  # pragma: no cover - defensive backend guard
+            logger.exception("Failed to fetch option chain for %s", asset.symbol)
+            return Response(
+                {"msg": "Unable to fetch option chain", "detail": str(exc)},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        cache.set(cache_key, option_chain, timeout=30)
+        return Response(
+            {"msg": "Option chain retrieved successfully", "data": option_chain}
+        )
+
+    @action(detail=True, methods=["get"], url_path="options_expirations")
+    def get_options_expirations(self, request, pk=None):
+        """Return every tradable expiration date for an asset, cached for 30s."""
+        asset = self.get_object()
+        cache_key = f"asset_options_expirations:{asset.symbol.upper()}"
+
+        cached_response = cache.get(cache_key)
+        if cached_response is not None:
+            return Response(
+                {
+                    "msg": "Option expirations retrieved successfully",
+                    "data": cached_response,
+                }
+            )
+
+        try:
+            expirations = alpaca_service.get_option_expirations(asset.symbol)
+        except Exception as exc:  # pragma: no cover - defensive backend guard
+            logger.exception("Failed to fetch option expirations for %s", asset.symbol)
+            return Response(
+                {"msg": "Unable to fetch option expirations", "detail": str(exc)},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        cache.set(cache_key, expirations, timeout=30)
+        return Response(
+            {"msg": "Option expirations retrieved successfully", "data": expirations}
+        )
+
+    @action(detail=True, methods=["get"], url_path="options_bars")
+    def get_options_bars(self, request, pk=None):
+        """Return historical bars for a single option contract, cached for 30s."""
+        self.get_object()
+        option_symbol = (request.query_params.get("symbol") or "").strip().upper()
+        if not option_symbol:
+            return Response(
+                {"msg": "A contract symbol query parameter is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        timeframe = request.query_params.get("timeframe") or "5Min"
+        if timeframe not in OPTION_BAR_TIMEFRAMES:
+            return Response(
+                {
+                    "msg": "Unsupported timeframe",
+                    "detail": f"Allowed timeframes: {sorted(OPTION_BAR_TIMEFRAMES)}",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            days = min(max(int(request.query_params.get("days", 14)), 1), 365)
+        except TypeError, ValueError:
+            days = 14
+
+        cache_key = f"asset_option_bars:{option_symbol}:{timeframe}:{days}"
+        cached_response = cache.get(cache_key)
+        if cached_response is not None:
+            return Response(
+                {"msg": "Option bars retrieved successfully", "data": cached_response}
+            )
+
+        start = (timezone.now() - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        try:
+            response = alpaca_service.get_historic_bars(
+                option_symbol,
+                asset_class="us_option",
+                timeframe=timeframe,
+                start=start,
+            )
+        except Exception as exc:  # pragma: no cover - defensive backend guard
+            logger.exception("Failed to fetch option bars for %s", option_symbol)
+            return Response(
+                {"msg": "Unable to fetch option bars", "detail": str(exc)},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        payload = {
+            "symbol": option_symbol,
+            "timeframe": timeframe,
+            "candles": [
+                {
+                    "t": bar["t"],
+                    "o": bar["o"],
+                    "h": bar["h"],
+                    "l": bar["l"],
+                    "c": bar["c"],
+                    "v": bar.get("v", 0),
+                }
+                for bar in response.get("bars") or []
+            ],
+        }
+        cache.set(cache_key, payload, timeout=30)
+        return Response({"msg": "Option bars retrieved successfully", "data": payload})
 
     def list(self, request, *args, **kwargs):
         """
