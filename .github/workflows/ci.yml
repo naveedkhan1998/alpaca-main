@@ -47,7 +47,7 @@ jobs:
         run: npm ci
 
       - name: Set Nx SHAs
-        uses: nrwl/nx-set-shas@v4
+        uses: nrwl/nx-set-shas@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
